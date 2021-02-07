@@ -1,0 +1,11 @@
+func main(int, argv: []char) -> int {
+    return 5;
+}
+
+func main(argv: []char) -> uint {
+    return -5;
+}
+
+func main() -> byte {
+    return "5";
+}

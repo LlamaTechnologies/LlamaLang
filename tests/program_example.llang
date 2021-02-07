@@ -1,0 +1,8 @@
+/*
+ * First iteration:
+ * - functions define
+ */
+
+func Entrypoint() -> int {
+    return -1;
+}
