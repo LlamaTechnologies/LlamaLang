@@ -10,7 +10,7 @@ namespace llang::ast {
     /**
     * Represents a function definition
     **/
-    struct FunctionNode : public Node {
+    struct FunctionNode : public Node, REGISTER_AST_TYPE(FunctionNode) {
         std::string Name;
         std::string ReturnType;
         std::vector<std::shared_ptr<VariableDeclNode*>> Parameters;

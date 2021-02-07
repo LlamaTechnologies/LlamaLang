@@ -17,7 +17,7 @@ namespace llang::ast
     /**
      * Represents any compile time constant like the one above
      **/
-    struct ConstantNode : public RightValueNode
+    struct ConstantNode : public RightValueNode, REGISTER_AST_TYPE(ConstantNode)
     {
         std::string Value;
         CONSTANT_TYPE ConstType;

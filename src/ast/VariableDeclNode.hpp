@@ -6,7 +6,7 @@ namespace llang::ast {
     /**
      * Represents a variable declaration
      **/
-    struct VariableDeclNode : public Node {
+    struct VariableDeclNode : public Node, REGISTER_AST_TYPE(VariableDeclNode) {
         std::string Name;
         std::string VarType;
         

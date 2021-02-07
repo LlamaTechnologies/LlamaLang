@@ -43,6 +43,8 @@
         "xlocnum": "cpp",
         "list": "cpp",
         "unordered_map": "cpp",
-        "xhash": "cpp"
-    }
+        "xhash": "cpp",
+        "typeindex": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

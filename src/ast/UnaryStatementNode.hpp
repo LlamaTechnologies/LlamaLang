@@ -11,7 +11,7 @@ namespace llang::ast {
      * - binary expressions
      * - calls
      **/
-    struct UnaryStatementNode : public StatementNode
+    struct UnaryStatementNode : public StatementNode, REGISTER_AST_TYPE(UnaryStatementNode)
     {
         std::shared_ptr<RightValueNode> Right;
         

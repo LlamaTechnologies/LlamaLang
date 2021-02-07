@@ -22,7 +22,7 @@ namespace llang::ast {
     /**
     * Represents an instruction
     **/
-    struct StatementNode : public Node {
+    struct StatementNode : public Node, REGISTER_AST_TYPE(StatementNode) {
         STATEMENT_TYPE StmntType;
         
         StatementNode(STATEMENT_TYPE type) : StmntType(type) {}

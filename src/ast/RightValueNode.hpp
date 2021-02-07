@@ -8,7 +8,7 @@ namespace llang::ast {
      * - binary expressions
      * - calls
      **/
-    struct RightValueNode : public StatementNode
+    struct RightValueNode : public StatementNode, , REGISTER_AST_TYPE(RightValueNode)
     {
         RightValueNode(STATEMENT_TYPE type)
            : StatementNode(type) {}

@@ -1,10 +1,13 @@
 #pragma once
 #include <string>
+#include <typeindex>
 #include "SupportedCompilers.hpp"
 
 #ifdef LLANG_VISUALSTUDIO
 #define __PRETTY_FUNCTION__  __FUNCSIG__
 #endif
+
+#define GET_TYPE_NAME(X) #X
 
 template <typename E, E V> constexpr std::string GetEnumValueName() {
   std::string name =  __PRETTY_FUNCTION__;
@@ -19,7 +22,6 @@ template <typename E, E V> constexpr std::string GetEnumValueName() {
   return enumValue;
 }
 
-
 template <typename E, E V> constexpr std::string GetEnumClassValueName() {
   std::string name =  __PRETTY_FUNCTION__;
   auto i = name.find_last_of(':') + 1;
@@ -33,7 +35,7 @@ template <typename E, E V> constexpr std::string GetEnumClassValueName() {
   return enumValue;
 }
 
-template <typename E> constexpr std::string GetTypeName() {
+template <typename E> constexpr std::string GetEnumName() {
   std::string name =  __PRETTY_FUNCTION__;
   auto i = name.find_last_of(' ') + 1;
   

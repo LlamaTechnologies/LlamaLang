@@ -14,7 +14,7 @@ namespace llang::ast
     *   - etc
     * Any statement that has two sides involved
     **/
-    struct BinaryStatementNode : public RightValueNode
+    struct BinaryStatementNode : public RightValueNode, REGISTER_AST_TYPE(BinaryStatementNode)
     {
         std::string left; // only identifiers
         std::shared_ptr<StatementNode> right; // any statement
