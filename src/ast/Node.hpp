@@ -8,8 +8,8 @@ namespace llang::ast {
     struct Node {
         using Action = void (*)(std::shared_ptr<RegisterAstType>);
         std::vector<std::shared_ptr<RegisterAstType>> children;
-        std::string fileName;
-        long line;
+        std::string FileName;
+        long Line;
 
         virtual void ToString(std::string& str, const int tabLevel) const = 0;
 
