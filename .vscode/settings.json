@@ -108,5 +108,12 @@
         "xtree": "cpp",
         "*.idl": "cpp"
     },
-    "C_Cpp.errorSquiggles": "Disabled"
+    "C_Cpp.errorSquiggles": "Disabled",
+    "antlr4.generation": {
+        "mode": "external",
+        "outputDir": "src\\antlr",
+        "language": "Cpp",
+        "listeners": false,
+        "visitors": true
+    },
 }

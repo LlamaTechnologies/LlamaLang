@@ -1,1 +1,1 @@
-java org.antlr.v4.Tool -no-listener -visitor -Dlanguage=CSharp LlamaLang.g4 -o ./CSharp/src/antlr
+java -jar ../antlr-4.9.1-complete.jar -no-listener -visitor -Dlanguage=Cpp ../../LlamaLang.g4 -o ../../src/antlr
