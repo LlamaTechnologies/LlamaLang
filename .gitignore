@@ -33,6 +33,7 @@
 
 # Folders
 /bin
+/project
 
 # User-specific files
 *.rsuser

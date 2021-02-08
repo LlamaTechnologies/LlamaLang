@@ -1,13 +1,14 @@
 #include "Primitives.hpp"
 #include "CppReflection.hpp"
+#include <unordered_map>
 
 #define ENUM_VALUE(enum_type, enum_val)\
-{GetEnumClassValueName<enum_type, enum_value>(), enum_val}
+{GetEnumClassValueName<enum_type, enum_val>(), enum_val}
 
 
 namespace llang
 {
-    using PrimitivesMap = std::unordered_map<const std::string, PRIMITIVE_TYPE>;
+    using PrimitivesMap = std::unordered_map<std::string, PRIMITIVE_TYPE>;
     static PrimitivesMap _primitives = {
         /* SPECIALS */
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::VOID),
@@ -33,15 +34,10 @@ namespace llang
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::FLOAT64)
     };
 
-    namespace Primitives
-    {
-        bool Exists(std::string &name) {
-            return _primitives.find(name) != _primitives.end();
-        }
-
-        PRIMITIVE_TYPE Get(std::string &name);
-        {
-            return _primitives[name];
-        }
+    namespace Primitives {
+    bool Exists(const std::string &name) {
+      return _primitives.find(name) != _primitives.end();
+    }
+    PRIMITIVE_TYPE Get(const std::string &name) { return _primitives[name]; }
     }
 }

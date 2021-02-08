@@ -48,10 +48,12 @@ template <typename E> constexpr std::string GetEnumName() {
   return enumValue;
 }
 
-template <typename E, E V> constexpr void AssertEnumValueGraterThan(E correctValue, const char *msg) {
-  static_assert (!(V > correctValue), msg);
+template <typename E>
+void AssertEnumValueGraterThan(E value, E correctValue, const char *msg) {
+    _ASSERT_EXPR(!(value > correctValue), msg);
 }
 
-template <typename E, E V> constexpr void AssertEnumValueLessThan(E correctValue, const char *msg) {
-  static_assert (!(V < correctValue), msg);
+template <typename E>
+void AssertEnumValueLessThan(E value, E correctValue, const char *msg) {
+    _ASSERT_EXPR(!(value < correctValue), msg);
 }

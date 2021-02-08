@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "Node.hpp"
+#include "AST_Types.hpp"
 
 namespace llang::ast {
     enum class STATEMENT_TYPE
@@ -22,13 +23,14 @@ namespace llang::ast {
     /**
     * Represents an instruction
     **/
-    struct StatementNode : public Node, REGISTER_AST_TYPE(StatementNode) {
+    struct StatementNode : public Node {
         STATEMENT_TYPE StmntType;
         
+        
+        void ToString(std::string& str, const int tabLevel) const override {}
+
+    protected:
         StatementNode(STATEMENT_TYPE type) : StmntType(type) {}
 
-        void ToString(std::string& str, const int tabLevel) const override {
-
-        }
     };
 }

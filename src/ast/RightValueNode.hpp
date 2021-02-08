@@ -1,5 +1,6 @@
 #pragma once
 #include "StatementNode.hpp"
+#include "AST_Types.hpp"
 
 namespace llang::ast {
     /**
@@ -8,10 +9,14 @@ namespace llang::ast {
      * - binary expressions
      * - calls
      **/
-    struct RightValueNode : public StatementNode, , REGISTER_AST_TYPE(RightValueNode)
+    struct RightValueNode : public StatementNode
     {
         RightValueNode(STATEMENT_TYPE type)
            : StatementNode(type) {}
+
+         AST_TYPE GetType() const override {
+          return GET_AST_TYPE(RightValueNode);
+        }
  
         void ToString(std::string& str, const int tabLevel) const override {
 /*

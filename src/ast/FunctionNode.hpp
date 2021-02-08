@@ -5,17 +5,22 @@
 #include "Node.hpp"
 #include "VariableDeclNode.hpp"
 #include "StatementNode.hpp"
+#include "AST_Types.hpp"
 
 namespace llang::ast {
     /**
     * Represents a function definition
     **/
-    struct FunctionNode : public Node, REGISTER_AST_TYPE(FunctionNode) {
+    struct FunctionNode : public Node {
         std::string Name;
         std::string ReturnType;
-        std::vector<std::shared_ptr<VariableDeclNode*>> Parameters;
-        std::vector<std::shared_ptr<StatementNode*>> Block;
+        std::vector<std::shared_ptr<VariableDeclNode>> Parameters;
+        std::vector<std::shared_ptr<StatementNode>> Block;
         
+        AST_TYPE GetType() const override { 
+            return GET_AST_TYPE(FunctionNode);
+        }
+
         void ToString(std::string& str, const int tabLevel) const override {
 /*
             var tabs = new string('\t', tabLevel);

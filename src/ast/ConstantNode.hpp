@@ -3,6 +3,7 @@
 #include <vector>
 #include "RightValueNode.hpp"
 #include "../CppReflection.hpp"
+#include "AST_Types.hpp"
 
 namespace llang::ast 
 {
@@ -17,7 +18,7 @@ namespace llang::ast
     /**
      * Represents any compile time constant like the one above
      **/
-    struct ConstantNode : public RightValueNode, REGISTER_AST_TYPE(ConstantNode)
+    struct ConstantNode : public RightValueNode
     {
         std::string Value;
         CONSTANT_TYPE ConstType;
@@ -25,6 +26,9 @@ namespace llang::ast
         ConstantNode(CONSTANT_TYPE constType)
             : RightValueNode(STATEMENT_TYPE::CONSTANT), ConstType(constType)
             {}
+
+        AST_TYPE GetType() const override { return GET_AST_TYPE(ConstantNode); }
+
 
         void ToString(std::string& str, const int tabLevel) const override {
             /*

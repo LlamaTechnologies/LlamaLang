@@ -1,9 +1,7 @@
 ﻿#pragma once
 #include <string>
-#include <unordered_map>
 
-namespace llang
-{
+namespace llang {
     /**
     * This enum contains all prmitives names
     **/
@@ -43,8 +41,8 @@ namespace llang
      **/
     namespace Primitives
     {
-        static bool Exists(std::string &name);
+        bool Exists(const std::string &name);
         
-        static PRIMITIVE_TYPE Get(std::string &name);
+        PRIMITIVE_TYPE Get(const std::string &name);
     };
 }

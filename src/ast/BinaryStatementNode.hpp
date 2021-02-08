@@ -4,6 +4,7 @@
 #include "StatementNode.hpp"
 #include "RightValueNode.hpp"
 #include "../CppReflection.hpp"
+#include "AST_Types.hpp"
 
 namespace llang::ast 
 {
@@ -14,7 +15,7 @@ namespace llang::ast
     *   - etc
     * Any statement that has two sides involved
     **/
-    struct BinaryStatementNode : public RightValueNode, REGISTER_AST_TYPE(BinaryStatementNode)
+    struct BinaryStatementNode : public RightValueNode
     {
         std::string left; // only identifiers
         std::shared_ptr<StatementNode> right; // any statement
@@ -22,7 +23,11 @@ namespace llang::ast
         BinaryStatementNode(STATEMENT_TYPE type)
             : RightValueNode(type)
         {
-            AssertEnumValueGraterThan<STATEMENT_TYPE, type>(STATEMENT_TYPE::BINARY_STMNT, "Statement type is not a binary statement");
+            AssertEnumValueGraterThan<STATEMENT_TYPE>(type, STATEMENT_TYPE::BINARY_STMNT, "Statement type is not a binary statement");
+        }
+
+        AST_TYPE GetType() const override {
+          return GET_AST_TYPE(BinaryStatementNode);
         }
 
         void ToString(std::string& str, const int tabLevel) const override {
