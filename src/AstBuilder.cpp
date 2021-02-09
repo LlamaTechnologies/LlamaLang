@@ -158,23 +158,16 @@ AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
     return nullptr;
 
-  var parentContext = (LlamaLangParseContext)context.Parent;
-  var returnStnt = (ASTUnaryStatementNode)parentContext.AstNode;
-  context.AstNode = returnStnt;
+  auto parentContext = (LlamaLangParseContext *)context->parent;
+  auto returnStnt = CastNode<ast::UnaryStatementNode>(parentContext->AstNode);
+  context->AstNode = returnStnt;
 
-  string msg =
-      context.GetType().Name + "\t| Parent :: " + parentContext.GetType().Name +
-      "\t| AstNode :: " + parentContext.AstNode
-      ?.GetType().Name;
-  Console.WriteLine(msg);
-
-  var exprNode = base.VisitChildren(context);
+  auto exprNode = visitChildren(context);
 
   // Unary expression
-  var exprType = exprNode.GetType().BaseType;
-  if (exprType == typeof(ASTRightValueNode)) {
-    var rightValue = (ASTRightValueNode)exprNode;
-    returnStnt.Right = rightValue;
+  if (exprNode.is<ast::RightValueNode>()) {
+    auto rightValue = CastNode<ast::RightValueNode>(exprNode);
+    returnStnt->Right = rightValue;
   }
 
   return returnStnt;
@@ -188,16 +181,16 @@ AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {
   ASTConstantNode constantNode;
 
   if (context.integer() != null) {
-    constantNode = new ASTConstantNode(CONSTANT_TYPE.INTEGER);
+    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::INTEGER);
     constantNode.Value = context.integer().GetText();
   } else if (context.FLOAT_LIT() != null) {
-    constantNode = new ASTConstantNode(CONSTANT_TYPE.FLOAT);
+    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::FLOAT);
     constantNode.Value = context.FLOAT_LIT().GetText();
   } else if (context.RUNE_LIT() != null) {
-    constantNode = new ASTConstantNode(CONSTANT_TYPE.CHAR);
+    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::CHAR);
     constantNode.Value = context.RUNE_LIT().GetText();
   } else {
-    constantNode = new ASTConstantNode(CONSTANT_TYPE.STRING);
+    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::STRING);
     constantNode.Value = context.string_().GetText();
   }
 
