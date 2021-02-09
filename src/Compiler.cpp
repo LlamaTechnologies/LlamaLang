@@ -9,6 +9,7 @@
 #include "error_handling/SyntaxErrorListener.hpp"
 #include "semantic_analyzer/SemanticAnalyzer.hpp"
 #include "AstBuilder.hpp"
+#include "IR.hpp"
 
 static std::string logFileName = "../../../../../Examples/log_antlr4.txt";
 // std::string inputFileName =
@@ -42,7 +43,7 @@ int main(int argc, const char *argv[]) {
     parser.addErrorListener(&syntaxErrorListener);
 
     auto tree = parser.sourceFile();
-    auto ast = AstBuilder(std::filesystem::path(inputFileName).filename().string()).visitSourceFile(tree);
+    auto ast = AstBuilder(std::filesystem::path(inputFileName).filename().string()).visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
 
     auto errors = syntaxErrorListener.Errors;
     auto analisedAST = semantics::SemanticAnalyzer(ast, errors).check();
@@ -59,7 +60,7 @@ int main(int argc, const char *argv[]) {
     Console::WriteLine();
     Console::WriteLine("======== Abstract Syntax Tree ========");
     Console::WriteLine();
-    Console::WriteLine(analisedAST->ToString());
+    Console::WriteLine(std::static_pointer_cast<ast::Node, ast::ProgramNode>(analisedAST)->ToString());
 
     // Close logFile
     logFile.close();
@@ -67,11 +68,11 @@ int main(int argc, const char *argv[]) {
 
     // If errors do not create executable
     if (errors.size() > 0)
-        return;
+        return 1;
 
     // Create IR
     Console::WriteLine("======== Intermediate Representation ========");
-    IR.Translate(analisedAST);
+    IR::Translate(analisedAST);
 
     Console::ReadKey();
 

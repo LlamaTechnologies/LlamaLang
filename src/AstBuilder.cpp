@@ -7,11 +7,6 @@
 
 using namespace llang;
 
-template <typename T>
-std::shared_ptr<T> constexpr CastNode(ast::Node::ChildType node) {
-    return std::static_pointer_cast<T, ast::Node>(node);
-}
-
 antlrcpp::Any
 AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *context) {
     Console::WriteLine();
@@ -33,7 +28,7 @@ AstBuilder::visitFunctionDecl(LlamaLangParser::FunctionDeclContext *context) {
   auto parentContext = (LlamaLangParseContext*) context->parent;
   context->AstNode = std::make_shared<ast::FunctionNode>();
 
-  std::shared_ptr<ast::FunctionNode> funcNode = CastNode<ast::FunctionNode>(context->AstNode);
+  std::shared_ptr<ast::FunctionNode> funcNode = ast::CastNode<ast::FunctionNode>(context->AstNode);
 
   funcNode->FileName = FileName;
   funcNode->Line = context->start->getLine();
@@ -63,7 +58,7 @@ AstBuilder::VisitParameters(LlamaLangParser::ParametersContext *context) {
     return nullptr;
 
   auto parentContext = (LlamaLangParseContext*) context->parent;
-  auto funcNode = CastNode<ast::FunctionNode>(parentContext->AstNode);
+  auto funcNode = ast::CastNode<ast::FunctionNode>(parentContext->AstNode);
 
   auto parameters = context->parameterDecl();
 
@@ -97,7 +92,7 @@ antlrcpp::Any llang::AstBuilder::visitStatementList(
     return nullptr;
 
   auto parentContext = (LlamaLangParseContext*)context->parent;
-  auto funcNode = CastNode<ast::FunctionNode>(parentContext->AstNode);
+  auto funcNode = ast::CastNode<ast::FunctionNode>(parentContext->AstNode);
   auto statementContexts = context->statement();
 
   for (auto statementContext : statementContexts) {
@@ -117,7 +112,7 @@ AstBuilder::visitReturnStmt(LlamaLangParser::ReturnStmtContext *context) {
       return nullptr;
 
     auto parentContext = (LlamaLangParseContext*) context->parent;
-    auto funcNode = CastNode<ast::FunctionNode>(parentContext->AstNode);
+    auto funcNode = ast::CastNode<ast::FunctionNode>(parentContext->AstNode);
 
     auto statement = std::make_shared<ast::UnaryStatementNode>(ast::STATEMENT_TYPE::RETURN);
     statement->FileName = FileName;
@@ -137,7 +132,8 @@ AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) {
     return nullptr;
 
   auto parentContext = (LlamaLangParseContext *)context->parent;
-  auto returnStnt = CastNode<ast::UnaryStatementNode>(parentContext->AstNode);
+  auto returnStnt =
+      ast::CastNode<ast::UnaryStatementNode>(parentContext->AstNode);
   context->AstNode = returnStnt;
 
   auto childNode = visitChildren(context);
@@ -145,7 +141,7 @@ AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) {
     auto node = childNode.as<std::shared_ptr<ast::UnaryStatementNode>>();
     auto nodeType = node->Right->GetType();
     if (nodeType == ast::AST_TYPE::ConstantNode) {
-      auto constNode = CastNode<ast::ConstantNode>(node->Right);
+      auto constNode = ast::CastNode<ast::ConstantNode>(node->Right);
       constNode->Value = context->unaryOp()->getText() + constNode->Value;
     }
   }
@@ -159,14 +155,15 @@ AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *context) {
     return nullptr;
 
   auto parentContext = (LlamaLangParseContext *)context->parent;
-  auto returnStnt = CastNode<ast::UnaryStatementNode>(parentContext->AstNode);
+  auto returnStnt =
+      ast::CastNode<ast::UnaryStatementNode>(parentContext->AstNode);
   context->AstNode = returnStnt;
 
   auto exprNode = visitChildren(context);
 
   // Unary expression
   if (exprNode.is<ast::RightValueNode>()) {
-    auto rightValue = CastNode<ast::RightValueNode>(exprNode);
+    auto rightValue = ast::CastNode<ast::RightValueNode>(exprNode);
     returnStnt->Right = rightValue;
   }
 
