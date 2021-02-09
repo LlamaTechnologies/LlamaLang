@@ -16,6 +16,11 @@ namespace llang::error_handling
         : Line(line), Column(column), FileName(file), Message(message)
         {}
 
+        std::string ToString() const { 
+            std::string str;
+            ToString(str, 0);
+            return str;
+        }
         void ToString(std::string &str, const int tabLevel) const {
           str += FileName + "\t:: line: " + std::to_string(Line) +
                  "\t:: col: " + std::to_string(Column) + "\t:: " + Message;
