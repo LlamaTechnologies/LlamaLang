@@ -1,5 +1,6 @@
+ #include "../ast/Node.hpp" 
 
-// Generated from ../../LlamaLang.g4 by ANTLR 4.9.1
+// Generated from c:\Users\narbl\Documents\GitHub\LlamaLang-Cpp\LlamaLang.g4 by ANTLR 4.8
 
 #pragma once
 
@@ -7,7 +8,6 @@
 #include "antlr4-runtime.h"
 
 
-namespace llang {
 
 
 class  LlamaLangLexer : public antlr4::Lexer {
@@ -25,8 +25,11 @@ public:
     WS = 47, COMMENT = 48, TERMINATOR = 49, LINE_COMMENT = 50
   };
 
-  explicit LlamaLangLexer(antlr4::CharStream *input);
+  LlamaLangLexer(antlr4::CharStream *input);
   ~LlamaLangLexer();
+
+
+  std::shared_ptr<ast::Node> AstNode;
 
   virtual std::string getGrammarFileName() const override;
   virtual const std::vector<std::string>& getRuleNames() const override;
@@ -64,4 +67,3 @@ private:
   static Initializer _init;
 };
 
-}  // namespace llang

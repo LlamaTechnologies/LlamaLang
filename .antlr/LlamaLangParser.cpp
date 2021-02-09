@@ -1,14 +1,13 @@
+ #include "../ast/Node.hpp" 
 
-// Generated from ../../LlamaLang.g4 by ANTLR 4.9.1
+// Generated from c:\Users\narbl\Documents\GitHub\LlamaLang-Cpp\LlamaLang.g4 by ANTLR 4.8
 
 
-#include "LlamaLangVisitor.h"
 
 #include "LlamaLangParser.h"
 
 
 using namespace antlrcpp;
-using namespace llang;
 using namespace antlr4;
 
 LlamaLangParser::LlamaLangParser(TokenStream *input) : Parser(input) {
@@ -35,7 +34,7 @@ dfa::Vocabulary& LlamaLangParser::getVocabulary() const {
 //----------------- SourceFileContext ------------------------------------------------------------------
 
 LlamaLangParser::SourceFileContext::SourceFileContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::EosContext* LlamaLangParser::SourceFileContext::eos() {
@@ -64,23 +63,12 @@ size_t LlamaLangParser::SourceFileContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::SourceFileContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitSourceFile(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::SourceFileContext* LlamaLangParser::sourceFile() {
   SourceFileContext *_localctx = _tracker.createInstance<SourceFileContext>(_ctx, getState());
   enterRule(_localctx, 0, LlamaLangParser::RuleSourceFile);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -129,7 +117,7 @@ LlamaLangParser::SourceFileContext* LlamaLangParser::sourceFile() {
 //----------------- IdentifierListContext ------------------------------------------------------------------
 
 LlamaLangParser::IdentifierListContext::IdentifierListContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 std::vector<tree::TerminalNode *> LlamaLangParser::IdentifierListContext::IDENTIFIER() {
@@ -154,23 +142,12 @@ size_t LlamaLangParser::IdentifierListContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::IdentifierListContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitIdentifierList(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::IdentifierListContext* LlamaLangParser::identifierList() {
   IdentifierListContext *_localctx = _tracker.createInstance<IdentifierListContext>(_ctx, getState());
   enterRule(_localctx, 2, LlamaLangParser::RuleIdentifierList);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -203,7 +180,7 @@ LlamaLangParser::IdentifierListContext* LlamaLangParser::identifierList() {
 //----------------- ExpressionListContext ------------------------------------------------------------------
 
 LlamaLangParser::ExpressionListContext::ExpressionListContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 std::vector<LlamaLangParser::ExpressionContext *> LlamaLangParser::ExpressionListContext::expression() {
@@ -228,22 +205,11 @@ size_t LlamaLangParser::ExpressionListContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ExpressionListContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitExpressionList(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ExpressionListContext* LlamaLangParser::expressionList() {
   ExpressionListContext *_localctx = _tracker.createInstance<ExpressionListContext>(_ctx, getState());
   enterRule(_localctx, 4, LlamaLangParser::RuleExpressionList);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -279,7 +245,7 @@ LlamaLangParser::ExpressionListContext* LlamaLangParser::expressionList() {
 //----------------- FunctionDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::FunctionDeclContext::FunctionDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::FunctionDeclContext::FUNC() {
@@ -312,22 +278,11 @@ size_t LlamaLangParser::FunctionDeclContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::FunctionDeclContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitFunctionDecl(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::FunctionDeclContext* LlamaLangParser::functionDecl() {
   FunctionDeclContext *_localctx = _tracker.createInstance<FunctionDeclContext>(_ctx, getState());
   enterRule(_localctx, 6, LlamaLangParser::RuleFunctionDecl);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -358,7 +313,7 @@ LlamaLangParser::FunctionDeclContext* LlamaLangParser::functionDecl() {
 //----------------- VarDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::VarDeclContext::VarDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::VarSpecContext* LlamaLangParser::VarDeclContext::varSpec() {
@@ -371,22 +326,11 @@ size_t LlamaLangParser::VarDeclContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::VarDeclContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitVarDecl(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::VarDeclContext* LlamaLangParser::varDecl() {
   VarDeclContext *_localctx = _tracker.createInstance<VarDeclContext>(_ctx, getState());
   enterRule(_localctx, 8, LlamaLangParser::RuleVarDecl);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -407,7 +351,7 @@ LlamaLangParser::VarDeclContext* LlamaLangParser::varDecl() {
 //----------------- VarSpecContext ------------------------------------------------------------------
 
 LlamaLangParser::VarSpecContext::VarSpecContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::IdentifierListContext* LlamaLangParser::VarSpecContext::identifierList() {
@@ -440,23 +384,12 @@ size_t LlamaLangParser::VarSpecContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::VarSpecContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitVarSpec(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::VarSpecContext* LlamaLangParser::varSpec() {
   VarSpecContext *_localctx = _tracker.createInstance<VarSpecContext>(_ctx, getState());
   enterRule(_localctx, 10, LlamaLangParser::RuleVarSpec);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -493,7 +426,7 @@ LlamaLangParser::VarSpecContext* LlamaLangParser::varSpec() {
 //----------------- BlockContext ------------------------------------------------------------------
 
 LlamaLangParser::BlockContext::BlockContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::BlockContext::L_CURLY() {
@@ -514,23 +447,12 @@ size_t LlamaLangParser::BlockContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::BlockContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitBlock(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::BlockContext* LlamaLangParser::block() {
   BlockContext *_localctx = _tracker.createInstance<BlockContext>(_ctx, getState());
   enterRule(_localctx, 12, LlamaLangParser::RuleBlock);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -580,7 +502,7 @@ LlamaLangParser::BlockContext* LlamaLangParser::block() {
 //----------------- StatementListContext ------------------------------------------------------------------
 
 LlamaLangParser::StatementListContext::StatementListContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 std::vector<LlamaLangParser::StatementContext *> LlamaLangParser::StatementListContext::statement() {
@@ -605,23 +527,12 @@ size_t LlamaLangParser::StatementListContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::StatementListContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitStatementList(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::StatementListContext* LlamaLangParser::statementList() {
   StatementListContext *_localctx = _tracker.createInstance<StatementListContext>(_ctx, getState());
   enterRule(_localctx, 14, LlamaLangParser::RuleStatementList);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -671,7 +582,7 @@ LlamaLangParser::StatementListContext* LlamaLangParser::statementList() {
 //----------------- StatementContext ------------------------------------------------------------------
 
 LlamaLangParser::StatementContext::StatementContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::VarDeclContext* LlamaLangParser::StatementContext::varDecl() {
@@ -696,22 +607,11 @@ size_t LlamaLangParser::StatementContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::StatementContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitStatement(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::StatementContext* LlamaLangParser::statement() {
   StatementContext *_localctx = _tracker.createInstance<StatementContext>(_ctx, getState());
   enterRule(_localctx, 16, LlamaLangParser::RuleStatement);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -746,8 +646,6 @@ LlamaLangParser::StatementContext* LlamaLangParser::statement() {
       break;
     }
 
-    default:
-      break;
     }
    
   }
@@ -763,7 +661,7 @@ LlamaLangParser::StatementContext* LlamaLangParser::statement() {
 //----------------- SimpleStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::SimpleStmtContext::SimpleStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::ExpressionStmtContext* LlamaLangParser::SimpleStmtContext::expressionStmt() {
@@ -784,22 +682,11 @@ size_t LlamaLangParser::SimpleStmtContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::SimpleStmtContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitSimpleStmt(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::SimpleStmtContext* LlamaLangParser::simpleStmt() {
   SimpleStmtContext *_localctx = _tracker.createInstance<SimpleStmtContext>(_ctx, getState());
   enterRule(_localctx, 18, LlamaLangParser::RuleSimpleStmt);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -827,8 +714,6 @@ LlamaLangParser::SimpleStmtContext* LlamaLangParser::simpleStmt() {
       break;
     }
 
-    default:
-      break;
     }
    
   }
@@ -844,7 +729,7 @@ LlamaLangParser::SimpleStmtContext* LlamaLangParser::simpleStmt() {
 //----------------- ExpressionStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::ExpressionStmtContext::ExpressionStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::ExpressionContext* LlamaLangParser::ExpressionStmtContext::expression() {
@@ -857,22 +742,11 @@ size_t LlamaLangParser::ExpressionStmtContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ExpressionStmtContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitExpressionStmt(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ExpressionStmtContext* LlamaLangParser::expressionStmt() {
   ExpressionStmtContext *_localctx = _tracker.createInstance<ExpressionStmtContext>(_ctx, getState());
   enterRule(_localctx, 20, LlamaLangParser::RuleExpressionStmt);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -893,7 +767,7 @@ LlamaLangParser::ExpressionStmtContext* LlamaLangParser::expressionStmt() {
 //----------------- AssignmentContext ------------------------------------------------------------------
 
 LlamaLangParser::AssignmentContext::AssignmentContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 std::vector<LlamaLangParser::ExpressionListContext *> LlamaLangParser::AssignmentContext::expressionList() {
@@ -914,22 +788,11 @@ size_t LlamaLangParser::AssignmentContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::AssignmentContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitAssignment(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::AssignmentContext* LlamaLangParser::assignment() {
   AssignmentContext *_localctx = _tracker.createInstance<AssignmentContext>(_ctx, getState());
   enterRule(_localctx, 22, LlamaLangParser::RuleAssignment);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -954,7 +817,7 @@ LlamaLangParser::AssignmentContext* LlamaLangParser::assignment() {
 //----------------- Assign_opContext ------------------------------------------------------------------
 
 LlamaLangParser::Assign_opContext::Assign_opContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::Assign_opContext::ASSIGN() {
@@ -1011,23 +874,12 @@ size_t LlamaLangParser::Assign_opContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::Assign_opContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitAssign_op(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::Assign_opContext* LlamaLangParser::assign_op() {
   Assign_opContext *_localctx = _tracker.createInstance<Assign_opContext>(_ctx, getState());
   enterRule(_localctx, 24, LlamaLangParser::RuleAssign_op);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1085,7 +937,7 @@ LlamaLangParser::Assign_opContext* LlamaLangParser::assign_op() {
 //----------------- EmptyStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::EmptyStmtContext::EmptyStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::EmptyStmtContext::SEMI() {
@@ -1098,22 +950,11 @@ size_t LlamaLangParser::EmptyStmtContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::EmptyStmtContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitEmptyStmt(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::EmptyStmtContext* LlamaLangParser::emptyStmt() {
   EmptyStmtContext *_localctx = _tracker.createInstance<EmptyStmtContext>(_ctx, getState());
   enterRule(_localctx, 26, LlamaLangParser::RuleEmptyStmt);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1134,7 +975,7 @@ LlamaLangParser::EmptyStmtContext* LlamaLangParser::emptyStmt() {
 //----------------- ReturnStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::ReturnStmtContext::ReturnStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ReturnStmtContext::RETURN() {
@@ -1151,23 +992,12 @@ size_t LlamaLangParser::ReturnStmtContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ReturnStmtContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitReturnStmt(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ReturnStmtContext* LlamaLangParser::returnStmt() {
   ReturnStmtContext *_localctx = _tracker.createInstance<ReturnStmtContext>(_ctx, getState());
   enterRule(_localctx, 28, LlamaLangParser::RuleReturnStmt);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1212,7 +1042,7 @@ LlamaLangParser::ReturnStmtContext* LlamaLangParser::returnStmt() {
 //----------------- Type_Context ------------------------------------------------------------------
 
 LlamaLangParser::Type_Context::Type_Context(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::TypeNameContext* LlamaLangParser::Type_Context::typeName() {
@@ -1233,22 +1063,11 @@ size_t LlamaLangParser::Type_Context::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::Type_Context::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitType_(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::Type_Context* LlamaLangParser::type_() {
   Type_Context *_localctx = _tracker.createInstance<Type_Context>(_ctx, getState());
   enterRule(_localctx, 30, LlamaLangParser::RuleType_);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1293,7 +1112,7 @@ LlamaLangParser::Type_Context* LlamaLangParser::type_() {
 //----------------- PointerContext ------------------------------------------------------------------
 
 LlamaLangParser::PointerContext::PointerContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::PointerContext::STAR() {
@@ -1310,22 +1129,11 @@ size_t LlamaLangParser::PointerContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::PointerContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitPointer(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::PointerContext* LlamaLangParser::pointer() {
   PointerContext *_localctx = _tracker.createInstance<PointerContext>(_ctx, getState());
   enterRule(_localctx, 32, LlamaLangParser::RulePointer);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1348,7 +1156,7 @@ LlamaLangParser::PointerContext* LlamaLangParser::pointer() {
 //----------------- ArrayContext ------------------------------------------------------------------
 
 LlamaLangParser::ArrayContext::ArrayContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ArrayContext::L_BRACKET() {
@@ -1369,22 +1177,11 @@ size_t LlamaLangParser::ArrayContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ArrayContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitArray(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ArrayContext* LlamaLangParser::array() {
   ArrayContext *_localctx = _tracker.createInstance<ArrayContext>(_ctx, getState());
   enterRule(_localctx, 34, LlamaLangParser::RuleArray);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1409,7 +1206,7 @@ LlamaLangParser::ArrayContext* LlamaLangParser::array() {
 //----------------- TypeNameContext ------------------------------------------------------------------
 
 LlamaLangParser::TypeNameContext::TypeNameContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::TypeNameContext::IDENTIFIER() {
@@ -1426,22 +1223,11 @@ size_t LlamaLangParser::TypeNameContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::TypeNameContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitTypeName(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::TypeNameContext* LlamaLangParser::typeName() {
   TypeNameContext *_localctx = _tracker.createInstance<TypeNameContext>(_ctx, getState());
   enterRule(_localctx, 36, LlamaLangParser::RuleTypeName);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1462,8 +1248,6 @@ LlamaLangParser::TypeNameContext* LlamaLangParser::typeName() {
       break;
     }
 
-    default:
-      break;
     }
    
   }
@@ -1479,7 +1263,7 @@ LlamaLangParser::TypeNameContext* LlamaLangParser::typeName() {
 //----------------- SignatureContext ------------------------------------------------------------------
 
 LlamaLangParser::SignatureContext::SignatureContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::ParametersContext* LlamaLangParser::SignatureContext::parameters() {
@@ -1492,22 +1276,11 @@ size_t LlamaLangParser::SignatureContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::SignatureContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitSignature(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::SignatureContext* LlamaLangParser::signature() {
   SignatureContext *_localctx = _tracker.createInstance<SignatureContext>(_ctx, getState());
   enterRule(_localctx, 38, LlamaLangParser::RuleSignature);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1528,7 +1301,7 @@ LlamaLangParser::SignatureContext* LlamaLangParser::signature() {
 //----------------- ResultContext ------------------------------------------------------------------
 
 LlamaLangParser::ResultContext::ResultContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::ParametersContext* LlamaLangParser::ResultContext::parameters() {
@@ -1545,22 +1318,11 @@ size_t LlamaLangParser::ResultContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ResultContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitResult(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ResultContext* LlamaLangParser::result() {
   ResultContext *_localctx = _tracker.createInstance<ResultContext>(_ctx, getState());
   enterRule(_localctx, 40, LlamaLangParser::RuleResult);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1600,7 +1362,7 @@ LlamaLangParser::ResultContext* LlamaLangParser::result() {
 //----------------- ParametersContext ------------------------------------------------------------------
 
 LlamaLangParser::ParametersContext::ParametersContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ParametersContext::L_PAREN() {
@@ -1633,23 +1395,12 @@ size_t LlamaLangParser::ParametersContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ParametersContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitParameters(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ParametersContext* LlamaLangParser::parameters() {
   ParametersContext *_localctx = _tracker.createInstance<ParametersContext>(_ctx, getState());
   enterRule(_localctx, 42, LlamaLangParser::RuleParameters);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1692,7 +1443,7 @@ LlamaLangParser::ParametersContext* LlamaLangParser::parameters() {
 //----------------- ParameterDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::ParameterDeclContext::ParameterDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ParameterDeclContext::IDENTIFIER() {
@@ -1713,22 +1464,11 @@ size_t LlamaLangParser::ParameterDeclContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ParameterDeclContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitParameterDecl(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ParameterDeclContext* LlamaLangParser::parameterDecl() {
   ParameterDeclContext *_localctx = _tracker.createInstance<ParameterDeclContext>(_ctx, getState());
   enterRule(_localctx, 44, LlamaLangParser::RuleParameterDecl);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -1753,7 +1493,7 @@ LlamaLangParser::ParameterDeclContext* LlamaLangParser::parameterDecl() {
 //----------------- ExpressionContext ------------------------------------------------------------------
 
 LlamaLangParser::ExpressionContext::ExpressionContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::PrimaryExprContext* LlamaLangParser::ExpressionContext::primaryExpr() {
@@ -1854,13 +1594,6 @@ size_t LlamaLangParser::ExpressionContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ExpressionContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitExpression(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 
 LlamaLangParser::ExpressionContext* LlamaLangParser::expression() {
    return expression(0);
@@ -1877,11 +1610,7 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
 
     size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     unrollRecursionContexts(parentContext);
   });
   try {
@@ -1902,8 +1631,6 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
       break;
     }
 
-    default:
-      break;
     }
     _ctx->stop = _input->LT(-1);
     setState(227);
@@ -2020,8 +1747,6 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
           break;
         }
 
-        default:
-          break;
         } 
       }
       setState(229);
@@ -2040,7 +1765,7 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
 //----------------- PrimaryExprContext ------------------------------------------------------------------
 
 LlamaLangParser::PrimaryExprContext::PrimaryExprContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::OperandContext* LlamaLangParser::PrimaryExprContext::operand() {
@@ -2073,13 +1798,6 @@ size_t LlamaLangParser::PrimaryExprContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::PrimaryExprContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitPrimaryExpr(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 
 LlamaLangParser::PrimaryExprContext* LlamaLangParser::primaryExpr() {
    return primaryExpr(0);
@@ -2096,11 +1814,7 @@ LlamaLangParser::PrimaryExprContext* LlamaLangParser::primaryExpr(int precedence
 
     
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     unrollRecursionContexts(parentContext);
   });
   try {
@@ -2121,8 +1835,6 @@ LlamaLangParser::PrimaryExprContext* LlamaLangParser::primaryExpr(int precedence
       break;
     }
 
-    default:
-      break;
     }
     _ctx->stop = _input->LT(-1);
     setState(243);
@@ -2175,7 +1887,7 @@ LlamaLangParser::PrimaryExprContext* LlamaLangParser::primaryExpr(int precedence
 //----------------- UnaryExprContext ------------------------------------------------------------------
 
 LlamaLangParser::UnaryExprContext::UnaryExprContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::PrimaryExprContext* LlamaLangParser::UnaryExprContext::primaryExpr() {
@@ -2196,22 +1908,11 @@ size_t LlamaLangParser::UnaryExprContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::UnaryExprContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitUnaryExpr(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::UnaryExprContext* LlamaLangParser::unaryExpr() {
   UnaryExprContext *_localctx = _tracker.createInstance<UnaryExprContext>(_ctx, getState());
   enterRule(_localctx, 50, LlamaLangParser::RuleUnaryExpr);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2234,8 +1935,6 @@ LlamaLangParser::UnaryExprContext* LlamaLangParser::unaryExpr() {
       break;
     }
 
-    default:
-      break;
     }
    
   }
@@ -2251,7 +1950,7 @@ LlamaLangParser::UnaryExprContext* LlamaLangParser::unaryExpr() {
 //----------------- ConversionContext ------------------------------------------------------------------
 
 LlamaLangParser::ConversionContext::ConversionContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::Type_Context* LlamaLangParser::ConversionContext::type_() {
@@ -2280,23 +1979,12 @@ size_t LlamaLangParser::ConversionContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ConversionContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitConversion(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ConversionContext* LlamaLangParser::conversion() {
   ConversionContext *_localctx = _tracker.createInstance<ConversionContext>(_ctx, getState());
   enterRule(_localctx, 52, LlamaLangParser::RuleConversion);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2331,7 +2019,7 @@ LlamaLangParser::ConversionContext* LlamaLangParser::conversion() {
 //----------------- OperandContext ------------------------------------------------------------------
 
 LlamaLangParser::OperandContext::OperandContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::LiteralContext* LlamaLangParser::OperandContext::literal() {
@@ -2364,22 +2052,11 @@ size_t LlamaLangParser::OperandContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::OperandContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitOperand(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::OperandContext* LlamaLangParser::operand() {
   OperandContext *_localctx = _tracker.createInstance<OperandContext>(_ctx, getState());
   enterRule(_localctx, 54, LlamaLangParser::RuleOperand);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2418,8 +2095,6 @@ LlamaLangParser::OperandContext* LlamaLangParser::operand() {
       break;
     }
 
-    default:
-      break;
     }
    
   }
@@ -2435,7 +2110,7 @@ LlamaLangParser::OperandContext* LlamaLangParser::operand() {
 //----------------- UnaryOpContext ------------------------------------------------------------------
 
 LlamaLangParser::UnaryOpContext::UnaryOpContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::UnaryOpContext::PLUS() {
@@ -2468,23 +2143,12 @@ size_t LlamaLangParser::UnaryOpContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::UnaryOpContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitUnaryOp(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::UnaryOpContext* LlamaLangParser::unaryOp() {
   UnaryOpContext *_localctx = _tracker.createInstance<UnaryOpContext>(_ctx, getState());
   enterRule(_localctx, 56, LlamaLangParser::RuleUnaryOp);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2519,7 +2183,7 @@ LlamaLangParser::UnaryOpContext* LlamaLangParser::unaryOp() {
 //----------------- LiteralContext ------------------------------------------------------------------
 
 LlamaLangParser::LiteralContext::LiteralContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::BasicLitContext* LlamaLangParser::LiteralContext::basicLit() {
@@ -2532,22 +2196,11 @@ size_t LlamaLangParser::LiteralContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::LiteralContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitLiteral(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::LiteralContext* LlamaLangParser::literal() {
   LiteralContext *_localctx = _tracker.createInstance<LiteralContext>(_ctx, getState());
   enterRule(_localctx, 58, LlamaLangParser::RuleLiteral);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2568,7 +2221,7 @@ LlamaLangParser::LiteralContext* LlamaLangParser::literal() {
 //----------------- BasicLitContext ------------------------------------------------------------------
 
 LlamaLangParser::BasicLitContext::BasicLitContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::IntegerContext* LlamaLangParser::BasicLitContext::integer() {
@@ -2593,22 +2246,11 @@ size_t LlamaLangParser::BasicLitContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::BasicLitContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitBasicLit(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::BasicLitContext* LlamaLangParser::basicLit() {
   BasicLitContext *_localctx = _tracker.createInstance<BasicLitContext>(_ctx, getState());
   enterRule(_localctx, 60, LlamaLangParser::RuleBasicLit);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2662,7 +2304,7 @@ LlamaLangParser::BasicLitContext* LlamaLangParser::basicLit() {
 //----------------- IntegerContext ------------------------------------------------------------------
 
 LlamaLangParser::IntegerContext::IntegerContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::IntegerContext::DECIMAL_LIT() {
@@ -2683,23 +2325,12 @@ size_t LlamaLangParser::IntegerContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::IntegerContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitInteger(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::IntegerContext* LlamaLangParser::integer() {
   IntegerContext *_localctx = _tracker.createInstance<IntegerContext>(_ctx, getState());
   enterRule(_localctx, 62, LlamaLangParser::RuleInteger);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2730,7 +2361,7 @@ LlamaLangParser::IntegerContext* LlamaLangParser::integer() {
 //----------------- OperandNameContext ------------------------------------------------------------------
 
 LlamaLangParser::OperandNameContext::OperandNameContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::OperandNameContext::IDENTIFIER() {
@@ -2747,22 +2378,11 @@ size_t LlamaLangParser::OperandNameContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::OperandNameContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitOperandName(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::OperandNameContext* LlamaLangParser::operandName() {
   OperandNameContext *_localctx = _tracker.createInstance<OperandNameContext>(_ctx, getState());
   enterRule(_localctx, 64, LlamaLangParser::RuleOperandName);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2783,8 +2403,6 @@ LlamaLangParser::OperandNameContext* LlamaLangParser::operandName() {
       break;
     }
 
-    default:
-      break;
     }
    
   }
@@ -2800,7 +2418,7 @@ LlamaLangParser::OperandNameContext* LlamaLangParser::operandName() {
 //----------------- QualifiedIdentContext ------------------------------------------------------------------
 
 LlamaLangParser::QualifiedIdentContext::QualifiedIdentContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 std::vector<tree::TerminalNode *> LlamaLangParser::QualifiedIdentContext::IDENTIFIER() {
@@ -2821,22 +2439,11 @@ size_t LlamaLangParser::QualifiedIdentContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::QualifiedIdentContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitQualifiedIdent(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::QualifiedIdentContext* LlamaLangParser::qualifiedIdent() {
   QualifiedIdentContext *_localctx = _tracker.createInstance<QualifiedIdentContext>(_ctx, getState());
   enterRule(_localctx, 66, LlamaLangParser::RuleQualifiedIdent);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2861,7 +2468,7 @@ LlamaLangParser::QualifiedIdentContext* LlamaLangParser::qualifiedIdent() {
 //----------------- LiteralTypeContext ------------------------------------------------------------------
 
 LlamaLangParser::LiteralTypeContext::LiteralTypeContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::TypeNameContext* LlamaLangParser::LiteralTypeContext::typeName() {
@@ -2874,22 +2481,11 @@ size_t LlamaLangParser::LiteralTypeContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::LiteralTypeContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitLiteralType(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::LiteralTypeContext* LlamaLangParser::literalType() {
   LiteralTypeContext *_localctx = _tracker.createInstance<LiteralTypeContext>(_ctx, getState());
   enterRule(_localctx, 68, LlamaLangParser::RuleLiteralType);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2910,7 +2506,7 @@ LlamaLangParser::LiteralTypeContext* LlamaLangParser::literalType() {
 //----------------- FieldDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::FieldDeclContext::FieldDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::IdentifierListContext* LlamaLangParser::FieldDeclContext::identifierList() {
@@ -2931,23 +2527,12 @@ size_t LlamaLangParser::FieldDeclContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::FieldDeclContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitFieldDecl(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::FieldDeclContext* LlamaLangParser::fieldDecl() {
   FieldDeclContext *_localctx = _tracker.createInstance<FieldDeclContext>(_ctx, getState());
   enterRule(_localctx, 70, LlamaLangParser::RuleFieldDecl);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -2978,7 +2563,7 @@ LlamaLangParser::FieldDeclContext* LlamaLangParser::fieldDecl() {
 //----------------- String_Context ------------------------------------------------------------------
 
 LlamaLangParser::String_Context::String_Context(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::String_Context::INTERPRETED_STRING_LIT() {
@@ -2991,22 +2576,11 @@ size_t LlamaLangParser::String_Context::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::String_Context::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitString_(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::String_Context* LlamaLangParser::string_() {
   String_Context *_localctx = _tracker.createInstance<String_Context>(_ctx, getState());
   enterRule(_localctx, 72, LlamaLangParser::RuleString_);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -3027,7 +2601,7 @@ LlamaLangParser::String_Context* LlamaLangParser::string_() {
 //----------------- ArgumentsContext ------------------------------------------------------------------
 
 LlamaLangParser::ArgumentsContext::ArgumentsContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ArgumentsContext::L_PAREN() {
@@ -3064,23 +2638,12 @@ size_t LlamaLangParser::ArgumentsContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ArgumentsContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitArguments(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ArgumentsContext* LlamaLangParser::arguments() {
   ArgumentsContext *_localctx = _tracker.createInstance<ArgumentsContext>(_ctx, getState());
   enterRule(_localctx, 74, LlamaLangParser::RuleArguments);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -3132,14 +2695,10 @@ LlamaLangParser::ArgumentsContext* LlamaLangParser::arguments() {
           break;
         }
 
-        default:
-          break;
         }
         break;
       }
 
-      default:
-        break;
       }
       setState(308);
       _errHandler->sync(this);
@@ -3174,7 +2733,7 @@ LlamaLangParser::ArgumentsContext* LlamaLangParser::arguments() {
 //----------------- MethodExprContext ------------------------------------------------------------------
 
 LlamaLangParser::MethodExprContext::MethodExprContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::ReceiverTypeContext* LlamaLangParser::MethodExprContext::receiverType() {
@@ -3195,22 +2754,11 @@ size_t LlamaLangParser::MethodExprContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::MethodExprContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitMethodExpr(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::MethodExprContext* LlamaLangParser::methodExpr() {
   MethodExprContext *_localctx = _tracker.createInstance<MethodExprContext>(_ctx, getState());
   enterRule(_localctx, 76, LlamaLangParser::RuleMethodExpr);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -3235,7 +2783,7 @@ LlamaLangParser::MethodExprContext* LlamaLangParser::methodExpr() {
 //----------------- ReceiverTypeContext ------------------------------------------------------------------
 
 LlamaLangParser::ReceiverTypeContext::ReceiverTypeContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 LlamaLangParser::TypeNameContext* LlamaLangParser::ReceiverTypeContext::typeName() {
@@ -3264,22 +2812,11 @@ size_t LlamaLangParser::ReceiverTypeContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::ReceiverTypeContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitReceiverType(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::ReceiverTypeContext* LlamaLangParser::receiverType() {
   ReceiverTypeContext *_localctx = _tracker.createInstance<ReceiverTypeContext>(_ctx, getState());
   enterRule(_localctx, 78, LlamaLangParser::RuleReceiverType);
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {
@@ -3340,7 +2877,7 @@ LlamaLangParser::ReceiverTypeContext* LlamaLangParser::receiverType() {
 //----------------- EosContext ------------------------------------------------------------------
 
 LlamaLangParser::EosContext::EosContext(ParserRuleContext *parent, size_t invokingState)
-  : LlamaLangParseContext(parent, invokingState) {
+  : ParserRuleContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::EosContext::SEMI() {
@@ -3357,23 +2894,12 @@ size_t LlamaLangParser::EosContext::getRuleIndex() const {
 }
 
 
-antlrcpp::Any LlamaLangParser::EosContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<LlamaLangVisitor*>(visitor))
-    return parserVisitor->visitEos(this);
-  else
-    return visitor->visitChildren(this);
-}
-
 LlamaLangParser::EosContext* LlamaLangParser::eos() {
   EosContext *_localctx = _tracker.createInstance<EosContext>(_ctx, getState());
   enterRule(_localctx, 80, LlamaLangParser::RuleEos);
   size_t _la = 0;
 
-#if __cplusplus > 201703L
-  auto onExit = finally([=, this] {
-#else
   auto onExit = finally([=] {
-#endif
     exitRule();
   });
   try {

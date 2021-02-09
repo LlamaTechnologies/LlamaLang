@@ -1,5 +1,6 @@
+ #include "../ast/Node.hpp" 
 
-// Generated from ../../LlamaLang.g4 by ANTLR 4.9.1
+// Generated from c:\Users\narbl\Documents\GitHub\LlamaLang-Cpp\LlamaLang.g4 by ANTLR 4.8
 
 
 #include "LlamaLangLexer.h"
@@ -7,7 +8,6 @@
 
 using namespace antlr4;
 
-using namespace llang;
 
 LlamaLangLexer::LlamaLangLexer(CharStream *input) : Lexer(input) {
   _interpreter = new atn::LexerATNSimulator(this, _atn, _decisionToDFA, _sharedContextCache);
@@ -61,15 +61,17 @@ atn::ATN LlamaLangLexer::_atn;
 std::vector<uint16_t> LlamaLangLexer::_serializedATN;
 
 std::vector<std::string> LlamaLangLexer::_ruleNames = {
-  "T__0", "FUNC", "RETURN", "IDENTIFIER", "L_PAREN", "R_PAREN", "L_CURLY", 
-  "R_CURLY", "L_BRACKET", "R_BRACKET", "ASSIGN", "COMMA", "SEMI", "COLON", 
-  "DOT", "PLUS_PLUS", "MINUS_MINUS", "DECLARE_ASSIGN", "ELLIPSIS", "LOGICAL_OR", 
-  "LOGICAL_AND", "EQUALS", "NOT_EQUALS", "LESS", "LESS_OR_EQUALS", "GREATER", 
-  "GREATER_OR_EQUALS", "OR", "DIV", "MOD", "LSHIFT", "RSHIFT", "BIT_CLEAR", 
-  "EXCLAMATION", "PLUS", "MINUS", "CARET", "STAR", "AMPERSAND", "ARROW", 
-  "DECIMAL_LIT", "OCTAL_LIT", "HEX_LIT", "FLOAT_LIT", "RUNE_LIT", "INTERPRETED_STRING_LIT", 
-  "WS", "COMMENT", "TERMINATOR", "LINE_COMMENT", "ESCAPED_VALUE", "DECIMALS", 
-  "OCTAL_DIGIT", "HEX_DIGIT", "EXPONENT", "LETTER", "UNICODE_DIGIT", "UNICODE_LETTER"
+  u8"T__0", u8"FUNC", u8"RETURN", u8"IDENTIFIER", u8"L_PAREN", u8"R_PAREN", 
+  u8"L_CURLY", u8"R_CURLY", u8"L_BRACKET", u8"R_BRACKET", u8"ASSIGN", u8"COMMA", 
+  u8"SEMI", u8"COLON", u8"DOT", u8"PLUS_PLUS", u8"MINUS_MINUS", u8"DECLARE_ASSIGN", 
+  u8"ELLIPSIS", u8"LOGICAL_OR", u8"LOGICAL_AND", u8"EQUALS", u8"NOT_EQUALS", 
+  u8"LESS", u8"LESS_OR_EQUALS", u8"GREATER", u8"GREATER_OR_EQUALS", u8"OR", 
+  u8"DIV", u8"MOD", u8"LSHIFT", u8"RSHIFT", u8"BIT_CLEAR", u8"EXCLAMATION", 
+  u8"PLUS", u8"MINUS", u8"CARET", u8"STAR", u8"AMPERSAND", u8"ARROW", u8"DECIMAL_LIT", 
+  u8"OCTAL_LIT", u8"HEX_LIT", u8"FLOAT_LIT", u8"RUNE_LIT", u8"INTERPRETED_STRING_LIT", 
+  u8"WS", u8"COMMENT", u8"TERMINATOR", u8"LINE_COMMENT", u8"ESCAPED_VALUE", 
+  u8"DECIMALS", u8"OCTAL_DIGIT", u8"HEX_DIGIT", u8"EXPONENT", u8"LETTER", 
+  u8"UNICODE_DIGIT", u8"UNICODE_LETTER"
 };
 
 std::vector<std::string> LlamaLangLexer::_channelNames = {
@@ -77,26 +79,28 @@ std::vector<std::string> LlamaLangLexer::_channelNames = {
 };
 
 std::vector<std::string> LlamaLangLexer::_modeNames = {
-  "DEFAULT_MODE"
+  u8"DEFAULT_MODE"
 };
 
 std::vector<std::string> LlamaLangLexer::_literalNames = {
-  "", "'<-'", "'func'", "'return'", "", "'('", "')'", "'{'", "'}'", "'['", 
-  "']'", "'='", "','", "';'", "':'", "'.'", "'++'", "'--'", "':='", "'...'", 
-  "'||'", "'&&'", "'=='", "'!='", "'<'", "'<='", "'>'", "'>='", "'|'", "'/'", 
-  "'%'", "'<<'", "'>>'", "'&^'", "'!'", "'+'", "'-'", "'^'", "'*'", "'&'", 
-  "'->'"
+  "", u8"'<-'", u8"'func'", u8"'return'", "", u8"'('", u8"')'", u8"'{'", 
+  u8"'}'", u8"'['", u8"']'", u8"'='", u8"','", u8"';'", u8"':'", u8"'.'", 
+  u8"'++'", u8"'--'", u8"':='", u8"'...'", u8"'||'", u8"'&&'", u8"'=='", 
+  u8"'!='", u8"'<'", u8"'<='", u8"'>'", u8"'>='", u8"'|'", u8"'/'", u8"'%'", 
+  u8"'<<'", u8"'>>'", u8"'&^'", u8"'!'", u8"'+'", u8"'-'", u8"'^'", u8"'*'", 
+  u8"'&'", u8"'->'"
 };
 
 std::vector<std::string> LlamaLangLexer::_symbolicNames = {
-  "", "", "FUNC", "RETURN", "IDENTIFIER", "L_PAREN", "R_PAREN", "L_CURLY", 
-  "R_CURLY", "L_BRACKET", "R_BRACKET", "ASSIGN", "COMMA", "SEMI", "COLON", 
-  "DOT", "PLUS_PLUS", "MINUS_MINUS", "DECLARE_ASSIGN", "ELLIPSIS", "LOGICAL_OR", 
-  "LOGICAL_AND", "EQUALS", "NOT_EQUALS", "LESS", "LESS_OR_EQUALS", "GREATER", 
-  "GREATER_OR_EQUALS", "OR", "DIV", "MOD", "LSHIFT", "RSHIFT", "BIT_CLEAR", 
-  "EXCLAMATION", "PLUS", "MINUS", "CARET", "STAR", "AMPERSAND", "ARROW", 
-  "DECIMAL_LIT", "OCTAL_LIT", "HEX_LIT", "FLOAT_LIT", "RUNE_LIT", "INTERPRETED_STRING_LIT", 
-  "WS", "COMMENT", "TERMINATOR", "LINE_COMMENT"
+  "", "", u8"FUNC", u8"RETURN", u8"IDENTIFIER", u8"L_PAREN", u8"R_PAREN", 
+  u8"L_CURLY", u8"R_CURLY", u8"L_BRACKET", u8"R_BRACKET", u8"ASSIGN", u8"COMMA", 
+  u8"SEMI", u8"COLON", u8"DOT", u8"PLUS_PLUS", u8"MINUS_MINUS", u8"DECLARE_ASSIGN", 
+  u8"ELLIPSIS", u8"LOGICAL_OR", u8"LOGICAL_AND", u8"EQUALS", u8"NOT_EQUALS", 
+  u8"LESS", u8"LESS_OR_EQUALS", u8"GREATER", u8"GREATER_OR_EQUALS", u8"OR", 
+  u8"DIV", u8"MOD", u8"LSHIFT", u8"RSHIFT", u8"BIT_CLEAR", u8"EXCLAMATION", 
+  u8"PLUS", u8"MINUS", u8"CARET", u8"STAR", u8"AMPERSAND", u8"ARROW", u8"DECIMAL_LIT", 
+  u8"OCTAL_LIT", u8"HEX_LIT", u8"FLOAT_LIT", u8"RUNE_LIT", u8"INTERPRETED_STRING_LIT", 
+  u8"WS", u8"COMMENT", u8"TERMINATOR", u8"LINE_COMMENT"
 };
 
 dfa::Vocabulary LlamaLangLexer::_vocabulary(_literalNames, _symbolicNames);

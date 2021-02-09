@@ -1,21 +1,23 @@
 
-// Generated from c:\Users\narbl\Documents\GitHub\LlamaLang-Cpp\LlamaLang.g4 by ANTLR 4.8
+// Generated from ../../LlamaLang.g4 by ANTLR 4.9.1
 
 #pragma once
+
 
 #include "antlr4-runtime.h"
 #include "LlamaLangParser.h"
 
-namespace llang
-{
-  /**
+
+namespace llang {
+
+/**
  * This class defines an abstract visitor for a parse tree
  * produced by LlamaLangParser.
  */
-  class LlamaLangVisitor : public antlr4::tree::AbstractParseTreeVisitor
-  {
-  public:
-    /**
+class  LlamaLangVisitor : public antlr4::tree::AbstractParseTreeVisitor {
+public:
+
+  /**
    * Visit parse trees produced by LlamaLangParser.
    */
     virtual antlrcpp::Any visitSourceFile(LlamaLangParser::SourceFileContext *context) = 0;
@@ -99,5 +101,8 @@ namespace llang
     virtual antlrcpp::Any visitReceiverType(LlamaLangParser::ReceiverTypeContext *context) = 0;
 
     virtual antlrcpp::Any visitEos(LlamaLangParser::EosContext *context) = 0;
-  };
-} // namespace llang
+
+
+};
+
+}  // namespace llang
