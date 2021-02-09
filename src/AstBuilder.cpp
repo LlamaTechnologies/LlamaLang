@@ -1,5 +1,6 @@
 #include "AstBuilder.hpp"
 #include "Console.hpp"
+#include "ast/VariableDeclNode.hpp"
 #include "ast/FunctionNode.hpp"
 
 using namespace llang;
@@ -60,52 +61,49 @@ AstBuilder::VisitParameters(LlamaLangParser::ParametersContext *context) {
     return nullptr;
 
   auto parentContext = (LlamaLangParseContext*) context->parent;
-  auto funcNode = parentContext->AstNode;
+  auto funcNode = CastNode<ast::FunctionNode>(parentContext->AstNode);
 
-  std::string msg =
-      context.GetType().Name + "\t| Parent :: " + parentContext.GetType().Name +
-      "\t| AstNode :: " + parentContext.AstNode
-      ?.GetType().Name;
-  Console.WriteLine(msg);
+  auto parameters = context->parameterDecl();
 
-  var parameters = new List<ParameterDeclContext>(context.parameterDecl());
-  foreach (var paramContext in parameters) {
-    if (paramContext.IsEmpty || paramContext.exception != null)
+  for (auto paramContext : parameters) {
+    if (paramContext->isEmpty() || paramContext->exception != nullptr)
       continue;
 
-    var param = new ASTVariableDeclNode();
-    param.File = fileName;
-    param.Line = context.Start.Line;
-    param.Name = paramContext.IDENTIFIER().GetText();
-    param.VarType = paramContext.type_().GetText();
-    funcNode.Parameters.Add(param);
+    auto param = std::make_shared<ast::VariableDeclNode>();
+    param->FileName = FileName;
+    param->Line = context->start->getLine();
+    param->Name = paramContext->IDENTIFIER()->getText();
+    param->VarType = paramContext->type_()->getText();
+    funcNode->Parameters.push_back(param);
   }
 
   return visitChildren(context);
 }
+
 antlrcpp::Any AstBuilder::visitBlock(LlamaLangParser::BlockContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
     return nullptr;
   
-  var parentContext = (LlamaLangParseContext)context.Parent;
-  context.AstNode = parentContext.AstNode;
-  return base.VisitChildren(context);
+  auto parentContext = (LlamaLangParseContext*) context->parent;
+  context->AstNode = parentContext->AstNode;
+  return visitChildren(context);
 }
+
 antlrcpp::Any llang::AstBuilder::visitStatementList(
     LlamaLangParser::StatementListContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
     return nullptr;
 
-  var parentContext = (LlamaLangParseContext)context.Parent;
-  var funcNode = (ASTFunctionNode)parentContext.AstNode;
-  var statementContexts = new List<StatementContext>(context.statement());
+  auto parentContext = (LlamaLangParseContext*)context->parent;
+  auto funcNode = CastNode<ast::FunctionNode>(parentContext->AstNode);
+  auto statementContexts = context->statement();
 
-  foreach (var statementContext in statementContexts) {
-    if (statementContext.IsEmpty || statementContext.exception != null)
-      return null;
+  for (auto statementContext : statementContexts) {
+    if (statementContext->isEmpty() || statementContext->exception != nullptr)
+      continue;
 
-    statementContext.AstNode = funcNode;
-    base.VisitChildren(statementContext);
+    statementContext->AstNode = funcNode;
+    visitChildren(statementContext);
   }
 
   return funcNode;
@@ -136,6 +134,7 @@ AstBuilder::visitReturnStmt(LlamaLangParser::ReturnStmtContext *context) {
 
     return null;
 }
+
 antlrcpp::Any
 AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
@@ -164,6 +163,7 @@ AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) {
 
   return childNode;
 }
+
 antlrcpp::Any
 AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
@@ -190,6 +190,7 @@ AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *context) {
 
   return returnStnt;
 }
+
 antlrcpp::Any
 AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
