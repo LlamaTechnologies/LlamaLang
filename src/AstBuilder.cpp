@@ -2,6 +2,8 @@
 #include "Console.hpp"
 #include "ast/VariableDeclNode.hpp"
 #include "ast/FunctionNode.hpp"
+#include "ast/UnaryStatementNode.hpp"
+#include "ast/ConstantNode.hpp"
 
 using namespace llang;
 
@@ -114,25 +116,19 @@ AstBuilder::visitReturnStmt(LlamaLangParser::ReturnStmtContext *context) {
     if (context->isEmpty() || context->exception != nullptr)
       return nullptr;
 
-    var parentContext = (LlamaLangParseContext)context.Parent;
-    var funcNode = (ASTFunctionNode)parentContext.AstNode;
+    auto parentContext = (LlamaLangParseContext*) context->parent;
+    auto funcNode = CastNode<ast::FunctionNode>(parentContext->AstNode);
 
-    string msg = context.GetType().Name +
-                 "\t| Parent :: " + parentContext.GetType().Name +
-                 "\t| AstNode :: " + parentContext.AstNode
-        ?.GetType().Name;
-    Console.WriteLine(msg);
+    auto statement = std::make_shared<ast::UnaryStatementNode>(ast::STATEMENT_TYPE::RETURN);
+    statement->FileName = FileName;
+    statement->Line = context->start->getLine();
 
-    var statement = new ASTUnaryStatementNode(STATEMENT_TYPE.RETURN);
-    statement.File = fileName;
-    statement.Line = context.Start.Line;
+    funcNode->Block.push_back(statement);
+    context->AstNode = statement;
 
-    funcNode.Block.Add(statement);
-    context.AstNode = statement;
+    visitChildren(context);
 
-    base.VisitChildren(context);
-
-    return null;
+    return nullptr;
 }
 
 antlrcpp::Any
@@ -140,24 +136,17 @@ AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
     return nullptr;
 
-  var parentContext = (LlamaLangParseContext)context.Parent;
-  var returnStnt = (ASTUnaryStatementNode)parentContext.AstNode;
-  context.AstNode = returnStnt;
+  auto parentContext = (LlamaLangParseContext *)context->parent;
+  auto returnStnt = CastNode<ast::UnaryStatementNode>(parentContext->AstNode);
+  context->AstNode = returnStnt;
 
-  string msg =
-      context.GetType().Name + "\t| Parent :: " + parentContext.GetType().Name +
-      "\t| AstNode :: " + parentContext.AstNode
-      ?.GetType().Name;
-  Console.WriteLine(msg);
-
-  var childNode = base.VisitChildren(context);
-  var childNodeType = childNode.GetType();
-  if (childNodeType == typeof(ASTUnaryStatementNode)) {
-    var node = (ASTUnaryStatementNode)childNode;
-    var nodeType = node.Right.GetType();
-    if (nodeType == typeof(ASTConstantNode)) {
-      var constNode = (ASTConstantNode)node.Right;
-      constNode.Value = context.unaryOp().GetText() + constNode.Value;
+  auto childNode = visitChildren(context);
+  if (childNode.is<std::shared_ptr<ast::UnaryStatementNode>>()) {
+    auto node = childNode.as<std::shared_ptr<ast::UnaryStatementNode>>();
+    auto nodeType = node->Right->GetType();
+    if (nodeType == ast::AST_TYPE::ConstantNode) {
+      auto constNode = CastNode<ast::ConstantNode>(node->Right);
+      constNode->Value = context->unaryOp()->getText() + constNode->Value;
     }
   }
 
