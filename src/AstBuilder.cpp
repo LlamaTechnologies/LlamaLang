@@ -178,25 +178,28 @@ AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {
   if (context->isEmpty() || context->exception != nullptr)
     return nullptr;
 
-  ASTConstantNode constantNode;
+  std::shared_ptr<ast::ConstantNode> constantNode = nullptr;
+  
 
-  if (context.integer() != null) {
-    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::INTEGER);
-    constantNode.Value = context.integer().GetText();
-  } else if (context.FLOAT_LIT() != null) {
-    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::FLOAT);
-    constantNode.Value = context.FLOAT_LIT().GetText();
-  } else if (context.RUNE_LIT() != null) {
-    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::CHAR);
-    constantNode.Value = context.RUNE_LIT().GetText();
+  if (context->integer() != nullptr) {
+    (ast::CONSTANT_TYPE::INTEGER);
+    constantNode->Value = context->integer()->getText();
+  } else if (context->FLOAT_LIT() != nullptr) {
+    constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::FLOAT);
+    constantNode->Value = context->FLOAT_LIT()->getText();
+  } else if (context->RUNE_LIT() != nullptr) {
+    constantNode =
+        std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::CHAR);
+    constantNode->Value = context->RUNE_LIT()->getText();
   } else {
-    constantNode = new ASTConstantNode(ast::CONSTANT_TYPE::STRING);
-    constantNode.Value = context.string_().GetText();
+    std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::CHAR);
+    (ast::CONSTANT_TYPE::STRING);
+    constantNode->Value = context->string_()->getText();
   }
 
-  if (constantNode != null) {
-    constantNode.File = fileName;
-    constantNode.Line = context.Start.Line;
+  if (constantNode != nullptr) {
+    constantNode->FileName = FileName;
+    constantNode->Line = context->start->getLine();
   }
 
   return constantNode;
