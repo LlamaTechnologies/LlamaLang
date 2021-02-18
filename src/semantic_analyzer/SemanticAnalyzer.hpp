@@ -1,14 +1,16 @@
 ﻿#pragma once
 #include <vector>
 #include <memory>
-#include "../Primitives.hpp"
 #include "../ast/ProgramNode.hpp"
-#include "../ast/FunctionNode.hpp"
-#include "../ast/ConstantNode.hpp"
-#include "../ast/UnaryStatementNode.hpp"
+#include "../Primitives.hpp"
 #include "../symbol_table/Symbol.hpp"
 #include "../built-in/Built-inTypes.hpp"
 #include "../error_handling/ErrorDescription.hpp"
+
+namespace llang::ast
+{
+    struct FunctionDefNode;
+}
 
 namespace llang::semantics {
 struct SemanticAnalyzer {
@@ -27,7 +29,7 @@ struct SemanticAnalyzer {
 private:
   static bool checkNode(ast::Node::ChildType node);
 
-  static bool checkNode(std::shared_ptr<ast::FunctionNode> funcNode);
+  static bool checkNode(std::shared_ptr<ast::FunctionDefNode> funcNode);
 };
 } // namespace llang::semantics
 

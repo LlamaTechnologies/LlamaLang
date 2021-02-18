@@ -57,17 +57,21 @@ src/antlr/LlamaLangParser.cpp
 src/antlr/LlamaLangParser.h
 src/antlr/LlamaLangVisitor.cpp
 src/antlr/LlamaLangVisitor.h
+src/antlr/LlamaLangParseContext.hpp
 
+src/ast/AssignNode.hpp
 src/ast/AST_Types.hpp
-src/ast/BinaryStatementNode.hpp
+src/ast/AST_Types.cpp
+src/ast/BinaryOperationNode.hpp
 src/ast/ConstantNode.hpp
-src/ast/FunctionNode.hpp
+src/ast/FunctionCallNode.hpp
+src/ast/FunctionDefNode.hpp
 src/ast/Node.hpp
 src/ast/ProgramNode.hpp
-src/ast/RightValueNode.hpp
 src/ast/StatementNode.hpp
-src/ast/UnaryStatementNode.hpp
+src/ast/UnaryOperationNode.hpp
 src/ast/VariableDeclNode.hpp
+src/ast/VariableRefNode.hpp
 
 src/built-in/Built-inTypes.hpp
 
@@ -85,8 +89,11 @@ src/symbol_table/VarSymbol.hpp
 src/symbol_table/SymbolTableScope.hpp
 
 src/Compiler.cpp
+src/Console.hpp
 src/Primitives.cpp
 src/Primitives.hpp
+src/AstBuilder.cpp
+src/AstBuilder.hpp
 src/IR.cpp
 src/IR.hpp
 src/CppReflection.hpp
