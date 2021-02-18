@@ -21,7 +21,7 @@ namespace llang::ast {
     struct UnaryOperationNode : public StatementNode
     {
         UNARY_STATEMENT_TYPE Op;
-        std::shared_ptr<VariableRefNode> Right;
+        std::shared_ptr<StatementNode> Right;
         
         UnaryOperationNode(UNARY_STATEMENT_TYPE unaryOp)
            : StatementNode(STATEMENT_TYPE::UNARY_OP), Op(unaryOp)
