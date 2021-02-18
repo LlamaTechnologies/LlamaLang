@@ -61,6 +61,9 @@ namespace llang::IR
     static std::unique_ptr<llvm::Module> TheModule;
 
     void Translate(std::shared_ptr<ast::ProgramNode> program) {
+        // Make the module, which holds all the code.
+        TheModule = std::make_unique<llvm::Module>(program->FileName, TheContext);
+
         for( auto node : program->children ) {
             auto nodeType = node->GetType();
 
