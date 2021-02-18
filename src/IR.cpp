@@ -32,7 +32,7 @@ namespace llang::IR
      * @param stmnt: the statement to translate
      * @return the llvm value representing the statement result
     */
-    static llvm::Value *TranslateNode(std::shared_ptr<ast::StatementNode> stmnt);
+    static llvm::Value *TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, bool *isRet = nullptr);
 
     static llvm::Value *TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef);
 
@@ -182,8 +182,10 @@ namespace llang::IR
         }
     }
 
-    llvm::Value *TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, bool &isRet) {
-        isRet = false;
+    llvm::Value *TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, bool *isRet) {
+        if (isRet)
+            *isRet = false;
+
         auto stmntType = stmnt->GetType();
         switch( stmntType ) {
         case llang::ast::AST_TYPE::BinaryOperationNode:
@@ -198,6 +200,9 @@ namespace llang::IR
         }
         case llang::ast::AST_TYPE::UnaryOperationNode:
         {
+            if( !isRet )
+                return nullptr;
+
             auto unaryStmnt = CastNode<ast::UnaryOperationNode>(stmnt);
             return TranslateNode(unaryStmnt, isRet);
         }
@@ -238,7 +243,7 @@ namespace llang::IR
         case ast::STATEMENT_TYPE::BINARY_OP:
         {
             auto binStmnt = CastNode<ast::BinaryOperationNode>(operand);
-            return TranslateNode(binStmnt, isInt);
+            return TranslateNode(binStmnt, &isInt);
         }
         case ast::STATEMENT_TYPE::CALL:
         default:
@@ -299,7 +304,7 @@ namespace llang::IR
         llvm::Value *lastVal = nullptr;
         for( auto stmnt : stmnts ) {
             bool isRet;
-            auto retVal = TranslateNode(stmnt, isRet);
+            auto retVal = TranslateNode(stmnt, &isRet);
             if( isRet )
                 lastVal = retVal;
         }

@@ -122,6 +122,14 @@ antlrcpp::Any AstBuilder::visitReturnStmt(LlamaLangParser::ReturnStmtContext *co
     return nullptr;
 }
 
+/*
+* Can be:
+* -(NUMBER/STRING)
+* +(NUMBER/STRING)
+* (NUMBER/STRING)++
+* (NUMBER/STRING)--
+* IDENTIFIER/NUMBER/STRING
+*/
 antlrcpp::Any AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) {
     if( context->isEmpty() || context->exception != nullptr )
         return nullptr;
@@ -131,13 +139,9 @@ antlrcpp::Any AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *cont
     context->AstNode = returnStnt;
 
     auto childNode = visitChildren(context);
-    if( childNode.is<std::shared_ptr<ast::UnaryOperationNode>>() ) {
-        auto node = childNode.as<std::shared_ptr<ast::UnaryOperationNode>>();
-        auto nodeType = node->Right->GetType();
-        if( nodeType == ast::AST_TYPE::ConstantNode ) {
-            auto constNode = CastNode<ast::ConstantNode>(node->Right);
-            constNode->Value = context->unaryOp()->getText() + constNode->Value;
-        }
+    if( childNode.is<std::shared_ptr<ast::ConstantNode>>() ) {
+        auto constNode = childNode.as<std::shared_ptr<ast::ConstantNode>>();
+        constNode->Value = context->unaryOp()->getText() + constNode->Value;
     }
 
     return childNode;
@@ -154,8 +158,8 @@ antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *co
     auto exprNode = visitChildren(context);
 
     // Unary expression
-    if( exprNode.is<ast::RightValueNode>() ) {
-        auto rightValue = ast::CastNode<ast::RightValueNode>(exprNode);
+    if( exprNode.is<ast::UnaryOperationNode>() ) {
+        auto rightValue = CastNode<ast::UnaryOperationNode>(exprNode);
         returnStnt->Right = rightValue;
     }
 

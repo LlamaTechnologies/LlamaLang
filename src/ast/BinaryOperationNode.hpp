@@ -32,25 +32,23 @@ namespace llang::ast
     *   - etc
     * Any statement that has two sides involved
     **/
-    struct BinaryOperationNode : public StatementNode
-    {
+    struct BinaryOperationNode : public StatementNode {
         BINARY_OPERATION Op;
         std::shared_ptr<StatementNode> Left;
         std::shared_ptr<StatementNode> Right;
 
         BinaryOperationNode(BINARY_OPERATION binOp)
-            : StatementNode(STATEMENT_TYPE::BINARY_OP), Op(binOp)
-        {}
+            : StatementNode(STATEMENT_TYPE::BINARY_OP), Op(binOp) {}
 
         AST_TYPE GetType() const override {
-          return GET_AST_TYPE(BinaryOperationNode);
+            return GET_AST_TYPE(BinaryOperationNode);
         }
 
-        void ToString(std::string& str, const int tabLevel) const override {
+        void ToString(std::string &str, const int tabLevel) const override {
             /*
             var tabs = new string('\t', tabLevel);
             return tabs + GetType().Name;
             */
         }
-    }
+    };
 }
