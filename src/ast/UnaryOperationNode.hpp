@@ -1,29 +1,35 @@
 #pragma once
 #include <memory>
 #include "StatementNode.hpp"
-#include "RightValueNode.hpp"
+#include "VariableRefNode.hpp"
 #include "../CppReflection.hpp"
 #include "AST_Types.hpp"
 
 namespace llang::ast {
+    enum class UNARY_STATEMENT_TYPE {
+        INCREMENT,
+        DECREMENT,
+        RETURN
+    };
+
     /**
-     * Represents any right side expresion
-     * - constants
-     * - binary expressions
-     * - calls
+     * Represents
+     * - inc/dec
+     * - return
+     * - etc
      **/
-    struct UnaryStatementNode : public StatementNode
+    struct UnaryOperationNode : public StatementNode
     {
-        std::shared_ptr<RightValueNode> Right;
+        UNARY_STATEMENT_TYPE Op;
+        std::shared_ptr<VariableRefNode> Right;
         
-        UnaryStatementNode(STATEMENT_TYPE type)
-           : StatementNode(type) {
-               AssertEnumValueLessThan<STATEMENT_TYPE>(type, STATEMENT_TYPE::BINARY_STMNT, "Statement type is not a unary statement");
-           }
+        UnaryOperationNode(UNARY_STATEMENT_TYPE unaryOp)
+           : StatementNode(STATEMENT_TYPE::UNARY_OP), Op(unaryOp)
+        {}
  
         AST_TYPE GetType() const override {
-             return GET_AST_TYPE(UnaryStatementNode);
-           }
+            return GET_AST_TYPE(UnaryOperationNode);
+        }
 
         void ToString(std::string& str, const int tabLevel) const override {
 /*

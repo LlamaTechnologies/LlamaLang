@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "RightValueNode.hpp"
+#include "StatementNode.hpp"
 #include "../CppReflection.hpp"
 #include "AST_Types.hpp"
 
@@ -18,13 +18,13 @@ namespace llang::ast
     /**
      * Represents any compile time constant like the one above
      **/
-    struct ConstantNode : public RightValueNode
+    struct ConstantNode : public StatementNode
     {
         std::string Value;
         CONSTANT_TYPE ConstType;
 
         ConstantNode(CONSTANT_TYPE constType)
-            : RightValueNode(STATEMENT_TYPE::CONSTANT), ConstType(constType)
+            : StatementNode(STATEMENT_TYPE::CONSTANT), ConstType(constType)
             {}
 
         AST_TYPE GetType() const override { return GET_AST_TYPE(ConstantNode); }

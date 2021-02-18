@@ -9,13 +9,13 @@ namespace llang::ast {
      * - binary expressions
      * - calls
      **/
-    struct RightValueNode : public StatementNode
+    struct LeftValueNode : public StatementNode
     {
-        RightValueNode(STATEMENT_TYPE type)
+        LeftValueNode(STATEMENT_TYPE type)
            : StatementNode(type) {}
 
          AST_TYPE GetType() const override {
-          return GET_AST_TYPE(RightValueNode);
+          return GET_AST_TYPE(LeftValueNode);
         }
  
         void ToString(std::string& str, const int tabLevel) const override {

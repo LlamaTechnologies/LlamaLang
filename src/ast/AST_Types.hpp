@@ -4,24 +4,28 @@
 #define SET_VALUE(value) value
 
 namespace llang::ast {
-    struct ProgramNode;
-    struct RightValueNode;
-    struct BinaryStatementNode;
+    struct AssignNode;
+    struct BinaryOperationNode;
     struct ConstantNode;
-    struct FunctionNode; 
+    struct FunctionCallNode;
+    struct FunctionDefNode;
+    struct ProgramNode;
     struct StatementNode;
-    struct UnaryStatementNode;
+    struct UnaryOperationNode;
     struct VariableDeclNode;
+    struct VariableRefNode;
 
     enum class AST_TYPE {
-        SET_VALUE(ProgramNode),
-        SET_VALUE(RightValueNode),
-        SET_VALUE(BinaryStatementNode),
+        SET_VALUE(AssignNode),
+        SET_VALUE(BinaryOperationNode),
         SET_VALUE(ConstantNode),
-        SET_VALUE(FunctionNode),
+        SET_VALUE(FunctionCallNode),
+        SET_VALUE(FunctionDefNode),
         SET_VALUE(StatementNode),
-        SET_VALUE(UnaryStatementNode),
+        SET_VALUE(ProgramNode),
+        SET_VALUE(UnaryOperationNode),
         SET_VALUE(VariableDeclNode),
+        SET_VALUE(VariableRefNode),
         COUNT
     };
 

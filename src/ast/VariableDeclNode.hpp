@@ -5,7 +5,7 @@
 
 namespace llang::ast {
     /**
-     * Represents a variable declaration
+     * Represents a variable/param declaration
      **/
     struct VariableDeclNode : public Node {
         std::string Name;

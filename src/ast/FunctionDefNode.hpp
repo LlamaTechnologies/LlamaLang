@@ -11,14 +11,14 @@ namespace llang::ast {
     /**
     * Represents a function definition
     **/
-    struct FunctionNode : public Node {
+    struct FunctionDefNode : public Node {
         std::string Name;
         std::string ReturnType;
         std::vector<std::shared_ptr<VariableDeclNode>> Parameters;
         std::vector<std::shared_ptr<StatementNode>> Block;
         
         AST_TYPE GetType() const override { 
-            return GET_AST_TYPE(FunctionNode);
+            return GET_AST_TYPE(FunctionDefNode);
         }
 
         void ToString(std::string& str, const int tabLevel) const override {

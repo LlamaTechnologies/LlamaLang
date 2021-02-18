@@ -4,6 +4,20 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# find llvm
+find_package(LLVM REQUIRED CONFIG)
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+# Set your project compile flags.
+# E.g. if using the C++ header files
+# you will need to enable C++11 support
+# for your compiler.
+
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+
 # set configuration types and make them advanced option on cmake.
 mark_as_advanced(CMAKE_INSTALL_PREFIX)
 set(CMAKE_CONFIGURATION_TYPES Release Debug)
@@ -73,6 +87,8 @@ src/symbol_table/SymbolTableScope.hpp
 src/Compiler.cpp
 src/Primitives.cpp
 src/Primitives.hpp
+src/IR.cpp
+src/IR.hpp
 src/CppReflection.hpp
 src/SupportedCompilers.hpp
 )
@@ -91,22 +107,12 @@ target_include_directories(${EXEC_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/include/antl
 # Link to antlr4
 target_link_libraries(${EXEC_NAME} antlr4-runtime)
 
-# find llvm
-find_package(LLVM REQUIRED CONFIG)
-
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-
-# llvm includes
-include_directories(${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
-
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link against LLVM libraries
-target_link_libraries(${EXEC_NAME} ${llvm_libs})
+target_link_libraries(${EXEC_NAME} LLVM)
 
 # set filters
 foreach(_source IN ITEMS ${LLAMALANG_SRC})

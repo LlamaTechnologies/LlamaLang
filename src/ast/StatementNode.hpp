@@ -7,16 +7,11 @@
 namespace llang::ast {
     enum class STATEMENT_TYPE
     {
-        EMPTY,
-        RETURN,
         CONSTANT,   // any constant statement
-        BINARY_STMNT,
+        BINARY_OP,
+        UNARY_OP,
+        VAR_REF,
         ASSIGN,
-        ADD,
-        SUB,
-        MUL,
-        DIV,
-        MOD,
         CALL,
     };
 
@@ -26,6 +21,9 @@ namespace llang::ast {
     struct StatementNode : public Node {
         STATEMENT_TYPE StmntType;
         
+        AST_TYPE GetType() const override {
+            return GET_AST_TYPE(StatementNode);
+        }
         
         void ToString(std::string& str, const int tabLevel) const override {}
 
