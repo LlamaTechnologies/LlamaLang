@@ -115,7 +115,7 @@ set_target_properties(${EXEC_NAME} PROPERTIES PROJECT_LABEL ${EXEC_NAME})
 target_include_directories(${EXEC_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/include/antlr4-runtime")
 
 # Link to antlr4
-target_link_libraries(${EXEC_NAME} antlr4-runtime)
+target_link_libraries(${EXEC_NAME} optimized antlr4-runtime debug antlr4-runtime-d)
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
@@ -138,11 +138,7 @@ endforeach()
 #####################################
 # SET BUILD TARGETS
 #####################################
-
-# DEBUG
-set_property(TARGET ${EXEC_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:LT_DEBUG>)
-#RELEASE
-set_property(TARGET ${EXEC_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>:LT_RELEASE>)
+set_property(TARGET ${EXEC_NAME} APPEND PROPERTY COMPILE_DEFINITIONS ANTLR4CPP_STATIC)
 
 
 #####################################
