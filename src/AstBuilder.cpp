@@ -1,6 +1,7 @@
 #include "AstBuilder.hpp"
 #include "Console.hpp"
 #include "ast/Node.hpp"
+#include "ast/ProgramNode.hpp"
 #include "ast/VariableDeclNode.hpp"
 #include "ast/FunctionDefNode.hpp"
 #include "ast/UnaryOperationNode.hpp"

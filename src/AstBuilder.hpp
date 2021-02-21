@@ -2,12 +2,15 @@
 #include <string>
 #include <vector>
 #include "antlr/LlamaLangBaseVisitor.h"
-#include "ast/Node.hpp"
-#include "ast/ProgramNode.hpp"
 #include "error_handling/ErrorDescription.hpp"
 
 namespace llang
 {
+    namespace ast
+    {
+        struct ProgramNode;
+    }
+
     /**
      * Builds an Abstract Syntax Tree (AST) to represent the program and report
      *syntax errors. The AST contains only the information needed to check semantics

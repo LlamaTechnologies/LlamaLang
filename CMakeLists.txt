@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# MSVC runtime library flags are selected by an abstraction.
+cmake_policy(SET CMP0091 NEW)
+
 # find llvm
 find_package(LLVM REQUIRED CONFIG)
 
@@ -100,7 +103,7 @@ src/CppReflection.hpp
 src/SupportedCompilers.hpp
 )
 
-link_directories("${CMAKE_SOURCE_DIR}/lib")
+link_directories("${CMAKE_SOURCE_DIR}/lib" "${LLVM_DIR}/lib")
 
 # Engine executable name
 add_executable(${EXEC_NAME} ${LLAMALANG_SRC})
@@ -119,7 +122,7 @@ target_link_libraries(${EXEC_NAME} antlr4-runtime)
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link against LLVM libraries
-target_link_libraries(${EXEC_NAME} LLVM)
+target_link_libraries(${EXEC_NAME} ${llvm_libs})
 
 # set filters
 foreach(_source IN ITEMS ${LLAMALANG_SRC})
@@ -140,3 +143,13 @@ endforeach()
 set_property(TARGET ${EXEC_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:LT_DEBUG>)
 #RELEASE
 set_property(TARGET ${EXEC_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Release>:LT_RELEASE>)
+
+
+#####################################
+# VISUAL STUDIO COMPILER OPTIONS
+#####################################
+
+if (MSVC)
+        set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Release>>")
+        set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
