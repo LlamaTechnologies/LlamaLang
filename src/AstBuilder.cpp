@@ -171,7 +171,7 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
 
 
     if( context->integer() != nullptr ) {
-        ( ast::CONSTANT_TYPE::INTEGER );
+        constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::INTEGER);
         constantNode->Value = context->integer()->getText();
     } else if( context->FLOAT_LIT() != nullptr ) {
         constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::FLOAT);
