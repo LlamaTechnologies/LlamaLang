@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <antlr4-runtime.h>
+#include <string>
+#include <fstream>
 
 namespace Console
 {
@@ -12,17 +14,26 @@ namespace Console
         std::cout << msg << std::endl;
     }
 
-    inline void WriteLine(const std::fstream &msg) {
-        std::cout << msg.rdbuf() << std::endl;
-    }
+    inline bool WriteLine(std::istream &msg) {
 
-    inline void WriteLine(antlr4::ANTLRInputStream &msg) {
-        std::cout << msg.toString() << std::endl;
+        std::string line;
+        while( !msg.eof() ) {
+            if( std::getline(msg, line) )
+            {
+                std::cout << line << std::endl;
+            } else {
+                std::cout << "Reading failure" << std::endl;
+                return false;
+            }
+        }
+
+        std::cout.flush();
+        msg.clear();
+        msg.seekg(0, std::ios::beg);
+        return true;
     }
 
     inline char ReadKey() {
-        char key;
-        std::cin >> key;
-        return key;
+        return std::cin.get();
     }
 } // namespace Console

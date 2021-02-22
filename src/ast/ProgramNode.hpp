@@ -10,7 +10,10 @@ namespace llang::ast {
      * It is the root node of the tree.
      **/
     struct ProgramNode : public Node {
-        
+        ProgramNode(const std::string &fileName) {
+            FileName = fileName;
+        }
+
         AST_TYPE GetType() const override { 
             return GET_AST_TYPE(ProgramNode);
         }

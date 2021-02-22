@@ -1,5 +1,4 @@
 #include "AstBuilder.hpp"
-#include "Console.hpp"
 #include "ast/Node.hpp"
 #include "ast/ProgramNode.hpp"
 #include "ast/VariableDeclNode.hpp"
@@ -10,9 +9,6 @@
 using namespace llang;
 
 antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *context) {
-    Console::WriteLine();
-    Console::WriteLine("========== SOURCE FILE NODE ===========");
-
     context->AstNode = ASTree;
 
     // add program source to the program tree

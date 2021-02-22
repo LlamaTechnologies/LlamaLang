@@ -3,6 +3,7 @@
 #include <vector>
 #include "antlr/LlamaLangBaseVisitor.h"
 #include "error_handling/ErrorDescription.hpp"
+#include <memory>
 
 namespace llang
 {
@@ -19,9 +20,11 @@ namespace llang
     struct AstBuilder : public LlamaLangBaseVisitor {
         std::shared_ptr<ast::ProgramNode> ASTree;
         std::vector<error_handling::Error> Errors;
-        std::string FileName;
+        const std::string FileName;
 
-        AstBuilder(std::string &fileName) : FileName(fileName) {}
+        AstBuilder(const std::string &fileName)
+            : FileName(fileName), ASTree(std::make_shared<ast::ProgramNode>(fileName)) {
+        }
 
         antlrcpp::Any visitSourceFile(LlamaLangParser::SourceFileContext *context) override;
         antlrcpp::Any visitFunctionDecl(LlamaLangParser::FunctionDeclContext *context);

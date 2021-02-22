@@ -11,63 +11,106 @@
 #include "AstBuilder.hpp"
 #include "IR.hpp"
 
-static std::string logFileName = "../../../../../Examples/log_antlr4.txt";
-// std::string inputFileName =
-// "../../../../Examples/test_function_syntax_errors.llang";
-static std::string inputFileName = "../../../../../Examples/test_function.llang";
+static std::string logFileName = "../tests/log_antlr4.txt";
 
+
+// std::string inputFileName = "../tests/test_function_syntax_errors.llang";
+
+
+static std::string inputFileName = "../tests/test_function.llang";
+
+#ifdef _WIN32
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+
+std::string get_current_dir() {
+    char buff[FILENAME_MAX]; //create string buffer to hold path
+    GetCurrentDir(buff, FILENAME_MAX);
+    std::string current_working_dir(buff);
+    return current_working_dir;
+}
 
 
 int main(int argc, const char *argv[]) {
     using namespace llang;
 
+    std::string execution_path = get_current_dir();
+    Console::WriteLine("Running in: " + execution_path);
+
+
     // Log file
-    auto logFile = std::fstream(logFileName, std::ios_base::out);
+    std::fstream logFile(logFileName, std::ios::out);
 
     // Read arguments
 
     // Prepare files
-    auto sourceFile = antlr4::ANTLRInputStream(inputFileName);
+    
+    std::fstream sourceFile(inputFileName, std::ios::in);
+    if( sourceFile.fail() ) {
+        Console::WriteLine("File does not exists!");
+        return 1;
+    }
+
+    auto sourceStream = antlr4::ANTLRInputStream(sourceFile);
 
     Console::WriteLine("======== Source File ========");
     Console::WriteLine();
-    Console::WriteLine(sourceFile);
-
-    auto lexer = LlamaLangLexer(&sourceFile);
-    auto tokens = antlr4::CommonTokenStream(&lexer);
     
+    if( !Console::WriteLine(sourceFile) ) {
+        return 1;
+    }
+
+    Console::WriteLine();
+
+    auto lexer = LlamaLangLexer(&sourceStream);
+    auto tokens = antlr4::CommonTokenStream(&lexer);
+
     auto parser = LlamaLangParser(&tokens);
     parser.setBuildParseTree(true);
 
-    auto syntaxErrorListener = error_handling::SyntaxErrorListener();
+    auto fileName = std::filesystem::path(inputFileName).filename().string();
+    auto syntaxErrorListener = error_handling::SyntaxErrorListener(fileName);
     parser.addErrorListener(&syntaxErrorListener);
 
     auto tree = parser.sourceFile();
-    auto ast = AstBuilder(std::filesystem::path(inputFileName).filename().string()).visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
-
     auto errors = syntaxErrorListener.Errors;
+    sourceFile.close();
+
+
+    auto ast = AstBuilder(fileName).visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
     auto analisedAST = semantics::SemanticAnalyzer(ast, errors).check();
 
     // Print Errors
-    Console::WriteLine("======== Errors ========");
-    Console::WriteLine("count: " + std::to_string(parser.getNumberOfSyntaxErrors()));
-    Console::WriteLine();
+    if( !errors.empty() ) {
+        Console::WriteLine();
+        Console::WriteLine("======== Errors ========");
+        Console::WriteLine("count: " + std::to_string(parser.getNumberOfSyntaxErrors()));
+        Console::WriteLine();
 
-    for (auto error : errors) { 
-        Console::WriteLine(error.ToString());
+        for( auto error : errors ) {
+            Console::WriteLine(error.ToString());
+        }
     }
 
     Console::WriteLine();
     Console::WriteLine("======== Abstract Syntax Tree ========");
     Console::WriteLine();
-    Console::WriteLine(std::static_pointer_cast<ast::Node, ast::ProgramNode>(analisedAST)->ToString());
+    Console::WriteLine(std::static_pointer_cast<ast::Node, ast::ProgramNode>( analisedAST )->ToString());
+    Console::WriteLine();
 
     // Close logFile
     logFile.close();
+    
+    Console::WriteLine();
+    Console::WriteLine(">> Press any key to continue << ");
     Console::ReadKey();
 
     // If errors do not create executable
-    if (errors.size() > 0)
+    if( !errors.empty() )
         return 1;
 
     // Create IR
