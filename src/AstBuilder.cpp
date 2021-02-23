@@ -33,6 +33,7 @@ antlrcpp::Any AstBuilder::visitFunctionDecl(LlamaLangParser::FunctionDeclContext
 
     parentContext->AstNode->children.push_back(funcNode);
 
+    /* Get the result of the last child visited (block) */
     visitChildren(context);
 
     return nullptr;
@@ -107,14 +108,17 @@ antlrcpp::Any AstBuilder::visitReturnStmt(LlamaLangParser::ReturnStmtContext *co
     auto parentContext = (LlamaLangParseContext *) context->parent;
     auto funcNode = CastNode<ast::FunctionDefNode>(parentContext->AstNode);
 
-    auto statement = std::make_shared<ast::UnaryOperationNode>(ast::UNARY_STATEMENT_TYPE::RETURN);
-    statement->FileName = FileName;
-    statement->Line = context->start->getLine();
+    auto retStmnt = std::make_shared<ast::UnaryOperationNode>(ast::UNARY_STATEMENT_TYPE::RETURN);
+    retStmnt->FileName = FileName;
+    retStmnt->Line = context->start->getLine();
 
-    funcNode->Block.push_back(statement);
-    context->AstNode = statement;
+    funcNode->Block.push_back(retStmnt);
+    context->AstNode = retStmnt;
 
-    visitChildren(context);
+    auto rightAny = visitChildren(context);
+    
+    auto rightStmnt = rightAny.as<std::shared_ptr<ast::StatementNode>>();
+    retStmnt->Right = rightStmnt;
 
     return nullptr;
 }
@@ -131,17 +135,7 @@ antlrcpp::Any AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *cont
     if( context->isEmpty() || context->exception != nullptr )
         return nullptr;
 
-    auto parentContext = (LlamaLangParseContext *) context->parent;
-    auto returnStnt = CastNode<ast::UnaryOperationNode>(parentContext->AstNode);
-    context->AstNode = returnStnt;
-
-    auto childNode = visitChildren(context);
-    if( childNode.is<std::shared_ptr<ast::ConstantNode>>() ) {
-        auto constNode = childNode.as<std::shared_ptr<ast::ConstantNode>>();
-        constNode->Value = context->unaryOp()->getText() + constNode->Value;
-    }
-
-    return childNode;
+    return nullptr;
 }
 
 antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *context) {
@@ -155,12 +149,9 @@ antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *co
     auto exprNode = visitChildren(context);
 
     // Unary expression
-    if( exprNode.is<ast::UnaryOperationNode>() ) {
-        auto rightValue = CastNode<ast::UnaryOperationNode>(exprNode);
-        returnStnt->Right = rightValue;
-    }
+    auto rightValue = exprNode.as<std::shared_ptr<ast::StatementNode>>();
 
-    return returnStnt;
+    return rightValue;
 }
 
 antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {
@@ -191,5 +182,5 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
         constantNode->Line = context->start->getLine();
     }
 
-    return constantNode;
+    return CastNode<ast::StatementNode>(constantNode);
 }
