@@ -32,12 +32,12 @@ namespace llang::ast {
         }
 
         void ToString(std::string& str, const int tabLevel) const override {
-/*
-            var tabs = new string('\t', tabLevel);
-            string name = Enum.GetName(typeof(STATEMENT_TYPE), StmntType);
-            string str = tabs + name + " " + Right?.ToString();
-            return ConcatenateChildren(str, tabLevel);
-*/
+            auto tabs = GetTabs(tabLevel);
+            auto name = "RETURN";
+            str += tabs + name + " ";
+
+            if ( Right )
+                Right->ToString(str, 0);
         }
     };
 }

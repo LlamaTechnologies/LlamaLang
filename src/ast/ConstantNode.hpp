@@ -31,11 +31,9 @@ namespace llang::ast
 
 
         void ToString(std::string& str, const int tabLevel) const override {
-            /*
-            var tabs = new string('\t', tabLevel);
-            string typeName = Enum.GetName(typeof(CONSTANT_TYPE), ConstType);
-            return tabs + "%" + typeName + " " + Value;
-            */
+            auto tabs = GetTabs(tabLevel);
+            auto constType = "INTEGER";
+            str += tabs + "%" + constType + " " + Value;
         }
     };
 }

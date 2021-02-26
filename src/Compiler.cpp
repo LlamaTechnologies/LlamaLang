@@ -96,10 +96,12 @@ int main(int argc, const char *argv[]) {
         }
     }
 
+    auto programNode = std::static_pointer_cast<ast::Node, ast::ProgramNode>( analisedAST );
+    auto programNodesString = programNode->ToString();
     Console::WriteLine();
     Console::WriteLine("======== Abstract Syntax Tree ========");
     Console::WriteLine();
-    Console::WriteLine(std::static_pointer_cast<ast::Node, ast::ProgramNode>( analisedAST )->ToString());
+    Console::WriteLine(programNodesString);
     Console::WriteLine();
 
     // Close logFile

@@ -16,11 +16,8 @@ namespace llang::ast {
         }
 
         void ToString(std::string& str, const int tabLevel) const override {
-/*
-            var tabs = new string('\t', tabLevel);
-            string str = tabs + Name + " : " + VarType;
-            return ConcatenateChildren(str, tabLevel);
-*/
+            auto tabs = GetTabs(tabLevel);
+            str += tabs + Name + " : " + VarType;
         }
     };
 }

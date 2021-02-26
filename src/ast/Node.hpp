@@ -43,6 +43,17 @@ namespace llang
 
         protected:
             Node() = default;
+            
+            static std::string GetTabs(const int tabLevel) {
+                long tabs = tabLevel * 4L;
+                return std::string(tabs, ' ');
+            }
+
+            static std::string GetNodeBeginChar(const int tabLevel) {
+                int count = tabLevel == 0 ? 2 : tabLevel * 4 - 2;
+                auto backspaces = std::string(count, '\b');
+                return backspaces + ">>";
+            }
         };
     } // namespace ast
 

@@ -19,8 +19,14 @@ namespace llang::ast {
         }
         
         void ToString(std::string& str, const int tabLevel) const override {
-            auto tabs = std::string('\t', tabLevel);
-            str += tabs + GET_TYPE_NAME(ProgramNode);
+            auto tabs = GetTabs(tabLevel);
+            str += tabs + GetNodeBeginChar(tabLevel) + GET_TYPE_NAME(ProgramNode) + ": "+ FileName;
+            
+            const int childTabLevel = tabLevel + 1;
+            for( auto child : children ) {
+                str += "\n";
+                child->ToString(str, childTabLevel);
+            }
         }
     };
 }

@@ -25,24 +25,27 @@ namespace llang::ast {
         }
 
         void ToString(std::string& str, const int tabLevel) const override {
-/*
-            var tabs = new string('\t', tabLevel);
-            string str = tabs + "function: " +  Name + " (";
-            
-            foreach (ASTVariableDeclNode param in Parameters)
-            {
-                str += "\n\t" + tabs + param.ToString();
+            auto tabs = GetTabs(tabLevel);
+            str += tabs + GetNodeBeginChar(tabLevel) + GET_TYPE_NAME(FunctionDefNode) + ": " + Name + "(";
+
+            const int childTabLevel = tabLevel + 1;
+            if( Parameters.size() ) {
+                for( auto param : Parameters ) {
+                    str += "\n";
+                    param->ToString(str, childTabLevel);
+                }
+                str += "\n" + tabs;
             }
             
-            str += "\n" + tabs + ") {";
+            str += ") {";
 
-            foreach (ASTStatementNode param in Block)
+            for( auto stmnt: Block)
             {
-                str += "\n\t  " + tabs + param.ToString();
+                str += "\n";
+                stmnt->ToString(str, childTabLevel);
             }
 
             str += "\n" + tabs + "}";
-*/
         }
     };
 }
