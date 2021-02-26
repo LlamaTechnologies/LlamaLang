@@ -1,10 +1,16 @@
 #include "Primitives.hpp"
 #include "CppReflection.hpp"
 #include <unordered_map>
+#include <algorithm>
 
 #define ENUM_VALUE(enum_type, enum_val)\
 {GetEnumClassValueName<enum_type, enum_val>(), enum_val}
 
+static std::string GetSearchName(const std::string& name) {
+    auto searchName = name;
+    std::transform(searchName.begin(), searchName.end(), searchName.begin(), ::toupper);
+    return searchName;
+}
 
 namespace llang
 {
@@ -23,7 +29,7 @@ namespace llang
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::CHAR),
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::WCHAR),
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::UCHAR),
-         /* UNSIGNED */
+        /* UNSIGNED */
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::BYTE),   // Alias for uint
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::UINT8),
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::UINT16),
@@ -34,10 +40,13 @@ namespace llang
         ENUM_VALUE(PRIMITIVE_TYPE, PRIMITIVE_TYPE::FLOAT64)
     };
 
-    namespace Primitives {
-    bool Exists(const std::string &name) {
-      return _primitives.find(name) != _primitives.end();
-    }
-    PRIMITIVE_TYPE Get(const std::string &name) { return _primitives[name]; }
+    namespace Primitives
+    {
+        bool Exists(const std::string &name) {
+            return _primitives.find(GetSearchName(name)) != _primitives.end();
+        }
+        PRIMITIVE_TYPE Get(const std::string &name) {
+            return _primitives[GetSearchName(name)];
+        }
     }
 }

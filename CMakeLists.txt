@@ -119,7 +119,7 @@ target_link_libraries(${EXEC_NAME} optimized antlr4-runtime debug antlr4-runtime
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libnames(llvm_libs support core irreader)
+llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter)
 
 # Link against LLVM libraries
 target_link_libraries(${EXEC_NAME} ${llvm_libs})

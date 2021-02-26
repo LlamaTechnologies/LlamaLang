@@ -9,10 +9,12 @@
 #include "ast/VariableRefNode.hpp"
 #include "Primitives.hpp"
 #include "symbol_table/Symbol.hpp"
+#include <system_error>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
 
 
 namespace llang::IR
@@ -60,7 +62,7 @@ namespace llang::IR
     static llvm::IRBuilder<> Builder(TheContext);
     static std::unique_ptr<llvm::Module> TheModule;
 
-    void Translate(std::shared_ptr<ast::ProgramNode> program) {
+    void Translate(std::shared_ptr<ast::ProgramNode> program, const std::string &outputFileName) {
         // Make the module, which holds all the code.
         TheModule = std::make_unique<llvm::Module>(program->FileName, TheContext);
 
@@ -80,7 +82,12 @@ namespace llang::IR
             }
         }
 
+    #ifdef _DEBUG
         TheModule->dump();
+    #endif
+        std::error_code errorCode(1, std::iostream_category());
+        llvm::raw_ostream& llvmOutputFile = llvm::raw_fd_ostream(outputFileName, errorCode);
+        llvm::WriteBitcodeToFile(*TheModule, llvmOutputFile);
     }
 
     llvm::Function *TranslateNode(std::shared_ptr<ast::FunctionDefNode> functionNode) {
@@ -183,7 +190,7 @@ namespace llang::IR
     }
 
     llvm::Value *TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, bool *isRet) {
-        if (isRet)
+        if( isRet )
             *isRet = false;
 
         auto stmntType = stmnt->GetType();
@@ -204,7 +211,7 @@ namespace llang::IR
                 return nullptr;
 
             auto unaryStmnt = CastNode<ast::UnaryOperationNode>(stmnt);
-            return TranslateNode(unaryStmnt, isRet);
+            return TranslateNode(unaryStmnt, *isRet);
         }
         default:
             // Not a statement
