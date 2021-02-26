@@ -37,7 +37,7 @@ namespace llang
             void ForEachDeep(Action action) {
                 for( auto child : children ) {
                     action(child);
-                    ForEachDeep(action);
+                    child->ForEachDeep(action);
                 }
             }
 

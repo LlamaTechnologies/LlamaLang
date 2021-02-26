@@ -36,5 +36,11 @@ namespace llang
         antlrcpp::Any visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) override;
         antlrcpp::Any visitExpression(LlamaLangParser::ExpressionContext *context) override;
         antlrcpp::Any visitBasicLit(LlamaLangParser::BasicLitContext *context) override;
+
+        antlrcpp::Any AstBuilder::visitChildren(antlr4::tree::ParseTree *node) override;
+        bool shouldVisitNextChild(antlr4::tree::ParseTree *node, const antlrcpp::Any &currentResult);
+        antlrcpp::Any& aggregateResult(antlrcpp::Any &result, antlrcpp::Any &nextResult);
+    private:
+        antlrcpp::Any AstBuilder::visitBlockChildren(LlamaLangParser::BlockContext *node);
     };
 } // namespace LlamaLangCompiler

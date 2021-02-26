@@ -470,7 +470,7 @@ public class LlamaLangParser extends Parser {
 			setState(127);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << RETURN) | (1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_CURLY) | (1L << L_BRACKET) | (1L << SEMI) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << CARET) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << RETURN) | (1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_CURLY) | (1L << L_BRACKET) | (1L << SEMI) | (1L << PLUS_PLUS) | (1L << MINUS_MINUS) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0)) {
 				{
 				setState(126);
 				statementList();
@@ -533,7 +533,7 @@ public class LlamaLangParser extends Parser {
 				setState(136); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << RETURN) | (1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_CURLY) | (1L << L_BRACKET) | (1L << SEMI) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << CARET) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0) );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << RETURN) | (1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_CURLY) | (1L << L_BRACKET) | (1L << SEMI) | (1L << PLUS_PLUS) | (1L << MINUS_MINUS) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0) );
 			}
 		}
 		catch (RecognitionException re) {
@@ -854,7 +854,7 @@ public class LlamaLangParser extends Parser {
 			setState(164);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_BRACKET) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << CARET) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_BRACKET) | (1L << PLUS_PLUS) | (1L << MINUS_MINUS) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0)) {
 				{
 				setState(163);
 				expression(0);
@@ -1712,9 +1712,10 @@ public class LlamaLangParser extends Parser {
 		public TerminalNode PLUS() { return getToken(LlamaLangParser.PLUS, 0); }
 		public TerminalNode MINUS() { return getToken(LlamaLangParser.MINUS, 0); }
 		public TerminalNode EXCLAMATION() { return getToken(LlamaLangParser.EXCLAMATION, 0); }
-		public TerminalNode CARET() { return getToken(LlamaLangParser.CARET, 0); }
 		public TerminalNode STAR() { return getToken(LlamaLangParser.STAR, 0); }
 		public TerminalNode AMPERSAND() { return getToken(LlamaLangParser.AMPERSAND, 0); }
+		public TerminalNode MINUS_MINUS() { return getToken(LlamaLangParser.MINUS_MINUS, 0); }
+		public TerminalNode PLUS_PLUS() { return getToken(LlamaLangParser.PLUS_PLUS, 0); }
 		public UnaryOpContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1730,7 +1731,7 @@ public class LlamaLangParser extends Parser {
 			{
 			setState(269);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << CARET) | (1L << STAR) | (1L << AMPERSAND))) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << PLUS_PLUS) | (1L << MINUS_MINUS) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << STAR) | (1L << AMPERSAND))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -2113,7 +2114,7 @@ public class LlamaLangParser extends Parser {
 			setState(313);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_BRACKET) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << CARET) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << IDENTIFIER) | (1L << L_PAREN) | (1L << L_BRACKET) | (1L << PLUS_PLUS) | (1L << MINUS_MINUS) | (1L << EXCLAMATION) | (1L << PLUS) | (1L << MINUS) | (1L << STAR) | (1L << AMPERSAND) | (1L << DECIMAL_LIT) | (1L << OCTAL_LIT) | (1L << HEX_LIT) | (1L << FLOAT_LIT) | (1L << RUNE_LIT) | (1L << INTERPRETED_STRING_LIT))) != 0)) {
 				{
 				setState(305);
 				_errHandler.sync(this);
@@ -2391,34 +2392,34 @@ public class LlamaLangParser extends Parser {
 		"\n\'\3\'\5\'\u013a\n\'\5\'\u013c\n\'\3\'\3\'\3(\3(\3(\3(\3)\3)\3)\3)\3"+
 		")\5)\u0149\n)\3)\3)\5)\u014d\n)\3*\3*\3*\2\4\60\62+\2\4\6\b\n\f\16\20"+
 		"\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BDFHJLNPR\2\t\4\2\35\""+
-		"$(\4\2\36\"\'(\4\2\35\35$&\3\2\27\34\3\2#(\3\2*,\3\3\16\16\2\u0155\2X"+
-		"\3\2\2\2\4]\3\2\2\2\6e\3\2\2\2\bm\3\2\2\2\nt\3\2\2\2\fv\3\2\2\2\16\177"+
-		"\3\2\2\2\20\u0088\3\2\2\2\22\u0090\3\2\2\2\24\u0095\3\2\2\2\26\u0097\3"+
-		"\2\2\2\30\u0099\3\2\2\2\32\u009e\3\2\2\2\34\u00a2\3\2\2\2\36\u00a4\3\2"+
-		"\2\2 \u00ab\3\2\2\2\"\u00ad\3\2\2\2$\u00b0\3\2\2\2&\u00b6\3\2\2\2(\u00b8"+
-		"\3\2\2\2*\u00bc\3\2\2\2,\u00be\3\2\2\2.\u00cb\3\2\2\2\60\u00d2\3\2\2\2"+
-		"\62\u00eb\3\2\2\2\64\u00fc\3\2\2\2\66\u00fe\3\2\2\28\u010d\3\2\2\2:\u010f"+
-		"\3\2\2\2<\u0111\3\2\2\2>\u0117\3\2\2\2@\u0119\3\2\2\2B\u011d\3\2\2\2D"+
-		"\u011f\3\2\2\2F\u0123\3\2\2\2H\u0125\3\2\2\2J\u012a\3\2\2\2L\u012c\3\2"+
-		"\2\2N\u013f\3\2\2\2P\u014c\3\2\2\2R\u014e\3\2\2\2TW\5\b\5\2UW\5\n\6\2"+
-		"VT\3\2\2\2VU\3\2\2\2WZ\3\2\2\2XV\3\2\2\2XY\3\2\2\2Y[\3\2\2\2ZX\3\2\2\2"+
-		"[\\\5R*\2\\\3\3\2\2\2]b\7\5\2\2^_\7\r\2\2_a\7\5\2\2`^\3\2\2\2ad\3\2\2"+
-		"\2b`\3\2\2\2bc\3\2\2\2c\5\3\2\2\2db\3\2\2\2ej\5\60\31\2fg\7\r\2\2gi\5"+
-		"\60\31\2hf\3\2\2\2il\3\2\2\2jh\3\2\2\2jk\3\2\2\2k\7\3\2\2\2lj\3\2\2\2"+
-		"mn\7\3\2\2no\7\5\2\2op\5(\25\2pq\7)\2\2qr\5 \21\2rs\5\16\b\2s\t\3\2\2"+
-		"\2tu\5\f\7\2u\13\3\2\2\2vw\5\4\3\2wx\7\17\2\2x{\5 \21\2yz\7\f\2\2z|\5"+
-		"\6\4\2{y\3\2\2\2{|\3\2\2\2|}\3\2\2\2}~\5R*\2~\r\3\2\2\2\177\u0081\7\b"+
-		"\2\2\u0080\u0082\5\20\t\2\u0081\u0080\3\2\2\2\u0081\u0082\3\2\2\2\u0082"+
-		"\u0083\3\2\2\2\u0083\u0084\7\t\2\2\u0084\17\3\2\2\2\u0085\u0086\5\22\n"+
-		"\2\u0086\u0087\5R*\2\u0087\u0089\3\2\2\2\u0088\u0085\3\2\2\2\u0089\u008a"+
-		"\3\2\2\2\u008a\u0088\3\2\2\2\u008a\u008b\3\2\2\2\u008b\21\3\2\2\2\u008c"+
-		"\u0091\5\n\6\2\u008d\u0091\5\24\13\2\u008e\u0091\5\36\20\2\u008f\u0091"+
-		"\5\16\b\2\u0090\u008c\3\2\2\2\u0090\u008d\3\2\2\2\u0090\u008e\3\2\2\2"+
-		"\u0090\u008f\3\2\2\2\u0091\23\3\2\2\2\u0092\u0096\5\26\f\2\u0093\u0096"+
-		"\5\30\r\2\u0094\u0096\5\34\17\2\u0095\u0092\3\2\2\2\u0095\u0093\3\2\2"+
-		"\2\u0095\u0094\3\2\2\2\u0096\25\3\2\2\2\u0097\u0098\5\60\31\2\u0098\27"+
-		"\3\2\2\2\u0099\u009a\5\6\4\2\u009a\u009b\5\32\16\2\u009b\u009c\5\6\4\2"+
-		"\u009c\31\3\2\2\2\u009d\u009f\t\2\2\2\u009e\u009d\3\2\2\2\u009e\u009f"+
+		"$(\4\2\36\"\'(\4\2\35\35$&\3\2\27\34\5\2\21\22#%\'(\3\2*,\3\3\16\16\2"+
+		"\u0155\2X\3\2\2\2\4]\3\2\2\2\6e\3\2\2\2\bm\3\2\2\2\nt\3\2\2\2\fv\3\2\2"+
+		"\2\16\177\3\2\2\2\20\u0088\3\2\2\2\22\u0090\3\2\2\2\24\u0095\3\2\2\2\26"+
+		"\u0097\3\2\2\2\30\u0099\3\2\2\2\32\u009e\3\2\2\2\34\u00a2\3\2\2\2\36\u00a4"+
+		"\3\2\2\2 \u00ab\3\2\2\2\"\u00ad\3\2\2\2$\u00b0\3\2\2\2&\u00b6\3\2\2\2"+
+		"(\u00b8\3\2\2\2*\u00bc\3\2\2\2,\u00be\3\2\2\2.\u00cb\3\2\2\2\60\u00d2"+
+		"\3\2\2\2\62\u00eb\3\2\2\2\64\u00fc\3\2\2\2\66\u00fe\3\2\2\28\u010d\3\2"+
+		"\2\2:\u010f\3\2\2\2<\u0111\3\2\2\2>\u0117\3\2\2\2@\u0119\3\2\2\2B\u011d"+
+		"\3\2\2\2D\u011f\3\2\2\2F\u0123\3\2\2\2H\u0125\3\2\2\2J\u012a\3\2\2\2L"+
+		"\u012c\3\2\2\2N\u013f\3\2\2\2P\u014c\3\2\2\2R\u014e\3\2\2\2TW\5\b\5\2"+
+		"UW\5\n\6\2VT\3\2\2\2VU\3\2\2\2WZ\3\2\2\2XV\3\2\2\2XY\3\2\2\2Y[\3\2\2\2"+
+		"ZX\3\2\2\2[\\\5R*\2\\\3\3\2\2\2]b\7\5\2\2^_\7\r\2\2_a\7\5\2\2`^\3\2\2"+
+		"\2ad\3\2\2\2b`\3\2\2\2bc\3\2\2\2c\5\3\2\2\2db\3\2\2\2ej\5\60\31\2fg\7"+
+		"\r\2\2gi\5\60\31\2hf\3\2\2\2il\3\2\2\2jh\3\2\2\2jk\3\2\2\2k\7\3\2\2\2"+
+		"lj\3\2\2\2mn\7\3\2\2no\7\5\2\2op\5(\25\2pq\7)\2\2qr\5 \21\2rs\5\16\b\2"+
+		"s\t\3\2\2\2tu\5\f\7\2u\13\3\2\2\2vw\5\4\3\2wx\7\17\2\2x{\5 \21\2yz\7\f"+
+		"\2\2z|\5\6\4\2{y\3\2\2\2{|\3\2\2\2|}\3\2\2\2}~\5R*\2~\r\3\2\2\2\177\u0081"+
+		"\7\b\2\2\u0080\u0082\5\20\t\2\u0081\u0080\3\2\2\2\u0081\u0082\3\2\2\2"+
+		"\u0082\u0083\3\2\2\2\u0083\u0084\7\t\2\2\u0084\17\3\2\2\2\u0085\u0086"+
+		"\5\22\n\2\u0086\u0087\5R*\2\u0087\u0089\3\2\2\2\u0088\u0085\3\2\2\2\u0089"+
+		"\u008a\3\2\2\2\u008a\u0088\3\2\2\2\u008a\u008b\3\2\2\2\u008b\21\3\2\2"+
+		"\2\u008c\u0091\5\n\6\2\u008d\u0091\5\24\13\2\u008e\u0091\5\36\20\2\u008f"+
+		"\u0091\5\16\b\2\u0090\u008c\3\2\2\2\u0090\u008d\3\2\2\2\u0090\u008e\3"+
+		"\2\2\2\u0090\u008f\3\2\2\2\u0091\23\3\2\2\2\u0092\u0096\5\26\f\2\u0093"+
+		"\u0096\5\30\r\2\u0094\u0096\5\34\17\2\u0095\u0092\3\2\2\2\u0095\u0093"+
+		"\3\2\2\2\u0095\u0094\3\2\2\2\u0096\25\3\2\2\2\u0097\u0098\5\60\31\2\u0098"+
+		"\27\3\2\2\2\u0099\u009a\5\6\4\2\u009a\u009b\5\32\16\2\u009b\u009c\5\6"+
+		"\4\2\u009c\31\3\2\2\2\u009d\u009f\t\2\2\2\u009e\u009d\3\2\2\2\u009e\u009f"+
 		"\3\2\2\2\u009f\u00a0\3\2\2\2\u00a0\u00a1\7\f\2\2\u00a1\33\3\2\2\2\u00a2"+
 		"\u00a3\7\16\2\2\u00a3\35\3\2\2\2\u00a4\u00a6\7\4\2\2\u00a5\u00a7\5\60"+
 		"\31\2\u00a6\u00a5\3\2\2\2\u00a6\u00a7\3\2\2\2\u00a7\37\3\2\2\2\u00a8\u00ac"+

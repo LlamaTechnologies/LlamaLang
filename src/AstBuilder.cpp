@@ -8,6 +8,24 @@
 
 using namespace llang;
 
+antlrcpp::Any AstBuilder::visitBlockChildren(LlamaLangParser::BlockContext *node) {
+    auto result = ast::FunctionDefNode::BlockType();
+    auto stmntList = node->statementList();
+    auto children = stmntList->children;
+
+    for( size_t i = 0; i < children.size(); i++ ) {
+        auto child = children[i];
+        if( child == stmntList->eos(0) )
+            break;
+
+        antlrcpp::Any childResultAny = child->accept(this);
+        auto childResult = childResultAny.as<ast::FunctionDefNode::StatementType>();
+        result.push_back(childResult);
+    }
+
+    return result;
+}
+
 antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *context) {
     context->AstNode = ASTree;
 
@@ -18,9 +36,6 @@ antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *co
 }
 
 antlrcpp::Any AstBuilder::visitFunctionDecl(LlamaLangParser::FunctionDeclContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
-
     auto parentContext = (LlamaLangParseContext *) context->parent;
     context->AstNode = std::make_shared<ast::FunctionDefNode>();
 
@@ -34,24 +49,27 @@ antlrcpp::Any AstBuilder::visitFunctionDecl(LlamaLangParser::FunctionDeclContext
     parentContext->AstNode->children.push_back(funcNode);
 
     /* Get the result of the last child visited (block) */
-    visitChildren(context);
+    auto blockAny = visitChildren(context);
+
+    if( blockAny.is<ast::FunctionDefNode::BlockType*>() ) {
+        funcNode->Block = *blockAny.as<ast::FunctionDefNode::BlockType*>();
+    }
 
     return nullptr;
 }
 
 antlrcpp::Any AstBuilder::visitSignature(LlamaLangParser::SignatureContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
-
     auto parentContext = (LlamaLangParseContext *) context->parent;
+    // parent context ASTnode is a FunctionDefNode
     context->AstNode = parentContext->AstNode;
-    return visitChildren(context);
+
+    // set parameters
+    visitChildren(context);
+
+    return nullptr;
 }
 
 antlrcpp::Any AstBuilder::VisitParameters(LlamaLangParser::ParametersContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
-
     auto parentContext = (LlamaLangParseContext *) context->parent;
     auto funcNode = CastNode<ast::FunctionDefNode>(parentContext->AstNode);
 
@@ -69,95 +87,90 @@ antlrcpp::Any AstBuilder::VisitParameters(LlamaLangParser::ParametersContext *co
         funcNode->Parameters.push_back(param);
     }
 
-    return visitChildren(context);
+    // It is not necesary to visit children after this visit
+    return nullptr;
 }
 
 antlrcpp::Any AstBuilder::visitBlock(LlamaLangParser::BlockContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
-
-    auto parentContext = (LlamaLangParseContext *) context->parent;
-    context->AstNode = parentContext->AstNode;
+    // returns the std::vector from visitStatementList
     return visitChildren(context);
+    //return visitBlockChildren(context);
 }
 
-antlrcpp::Any llang::AstBuilder::visitStatementList(
-    LlamaLangParser::StatementListContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
-
-    auto parentContext = (LlamaLangParseContext *) context->parent;
-    auto funcNode = CastNode<ast::FunctionDefNode>(parentContext->AstNode);
+antlrcpp::Any llang::AstBuilder::visitStatementList(LlamaLangParser::StatementListContext *context) {
     auto statementContexts = context->statement();
+
+    auto stmntList = new ast::FunctionDefNode::BlockType();
 
     for( auto statementContext : statementContexts ) {
         if( statementContext->isEmpty() || statementContext->exception != nullptr )
             continue;
 
-        statementContext->AstNode = funcNode;
-        visitChildren(statementContext);
+        auto stmntAny = visitChildren(statementContext);
+        if( stmntAny.is<ast::FunctionDefNode::StatementType>() ) {
+            auto stmnt = stmntAny.as<ast::FunctionDefNode::StatementType>();
+            stmntList->push_back(stmnt);
+        }
     }
 
-    return funcNode;
+    return stmntList;
 }
 
 antlrcpp::Any AstBuilder::visitReturnStmt(LlamaLangParser::ReturnStmtContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
-
-    auto parentContext = (LlamaLangParseContext *) context->parent;
-    auto funcNode = CastNode<ast::FunctionDefNode>(parentContext->AstNode);
-
     auto retStmnt = std::make_shared<ast::UnaryOperationNode>(ast::UNARY_STATEMENT_TYPE::RETURN);
     retStmnt->FileName = FileName;
     retStmnt->Line = context->start->getLine();
 
-    funcNode->Block.push_back(retStmnt);
     context->AstNode = retStmnt;
 
     auto rightAny = visitChildren(context);
-    
-    auto rightStmnt = rightAny.as<std::shared_ptr<ast::StatementNode>>();
-    retStmnt->Right = rightStmnt;
 
-    return nullptr;
+    if( rightAny.isNotNull() ) {
+        auto rightStmnt = rightAny.as<std::shared_ptr<ast::StatementNode>>();
+        retStmnt->Right = rightStmnt;
+    }
+
+    return CastNode<ast::StatementNode>(retStmnt);
+}
+
+antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *context) {
+    // Unary || Primary expression
+    // returns ConstantNode, UnaryOperationNode
+    return visitChildren(context);
 }
 
 /*
 * Can be:
-* -(NUMBER/STRING)
-* +(NUMBER/STRING)
-* (NUMBER/STRING)++
-* (NUMBER/STRING)--
-* IDENTIFIER/NUMBER/STRING
+* -(IDENTIFIER|NUMBER|STRING)
+* +(IDENTIFIER|NUMBER|STRING)
+* (IDENTIFIER|NUMBER|STRING)++
+* (IDENTIFIER|NUMBER|STRING)--
 */
 antlrcpp::Any AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
+    auto childAny = visitChildren(context);
 
-    return nullptr;
-}
+    if( childAny.is<std::shared_ptr<ast::ConstantNode>>() ) {
+        auto constChild = childAny.as<std::shared_ptr<ast::ConstantNode>>();
+        if( context->unaryOp()->MINUS() ) {
+            constChild->Value = "-" + constChild->Value;
+        }
+        return constChild;
+    }
 
-antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
+    std::shared_ptr<ast::UnaryOperationNode> unaryStmnt;
 
-    auto parentContext = (LlamaLangParseContext *) context->parent;
-    auto returnStnt = CastNode<ast::UnaryOperationNode>(parentContext->AstNode);
-    context->AstNode = returnStnt;
+    /*
+    if( context->unaryOp()->MINUSMINUS() )
+        unaryStmnt = std::make_shared<ast::UnaryOperationNode>(ast::UNARY_STATEMENT_TYPE::DECREMENT);
+    else if( context->unaryOp()->PLUSPLUS() )
+        unaryStmnt = std::make_shared<ast::UnaryOperationNode>(ast::UNARY_STATEMENT_TYPE::INCREMENT);
+    */
 
-    auto exprNode = visitChildren(context);
-
-    // Unary expression
-    auto rightValue = exprNode.as<std::shared_ptr<ast::StatementNode>>();
-
-    return rightValue;
+    unaryStmnt->Right = childAny.as<std::shared_ptr<ast::StatementNode>>();
+    return unaryStmnt;
 }
 
 antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {
-    if( context->isEmpty() || context->exception != nullptr )
-        return nullptr;
-
     std::shared_ptr<ast::ConstantNode> constantNode = nullptr;
 
 
@@ -183,4 +196,44 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
     }
 
     return CastNode<ast::StatementNode>(constantNode);
+}
+
+
+
+/*****************************
+* TREE BEHAVIOUR OVERRIDES
+*****************************/
+
+antlrcpp::Any AstBuilder::visitChildren(antlr4::tree::ParseTree *node) {
+    antlrcpp::Any result = defaultResult();
+    for( size_t i = 0; i < node->children.size(); i++ ) {
+        auto child = node->children[i];
+        if( !shouldVisitNextChild(child, result) ) {
+            continue;
+        }
+
+        antlrcpp::Any childResult = child->accept(this);
+        result = this->aggregateResult(result, childResult);
+    }
+
+    return result;
+}
+
+bool llang::AstBuilder::shouldVisitNextChild(antlr4::tree::ParseTree *node, const antlrcpp::Any &currentResult) {
+    auto terminalNode = dynamic_cast<antlr4::tree::TerminalNode *>( node );
+
+    if( terminalNode )
+        return false;
+
+    auto context = dynamic_cast<antlr4::ParserRuleContext *>( node );
+    if( context )
+        return context->children.size() > 0 || context->isEmpty() || context->exception != nullptr;
+
+    return false;
+}
+
+antlrcpp::Any& llang::AstBuilder::aggregateResult(antlrcpp::Any &result, antlrcpp::Any &nextResult) {
+    if( result.isNotNull() && nextResult.isNull() )
+        return result;
+    return nextResult;
 }

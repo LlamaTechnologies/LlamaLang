@@ -12,10 +12,13 @@ namespace llang::ast {
     * Represents a function definition
     **/
     struct FunctionDefNode : public Node {
+        using StatementType = std::shared_ptr<ast::StatementNode>;
+        using BlockType = std::vector<StatementType>;
+
         std::string Name;
         std::string ReturnType;
         std::vector<std::shared_ptr<VariableDeclNode>> Parameters;
-        std::vector<std::shared_ptr<StatementNode>> Block;
+        BlockType Block;
         
         AST_TYPE GetType() const override { 
             return GET_AST_TYPE(FunctionDefNode);

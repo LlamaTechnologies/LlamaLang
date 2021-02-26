@@ -13,11 +13,18 @@ namespace llang::semantics
         SemanticAnalyzer::ast = ast;
         SemanticAnalyzer::errors = &errors;
     }
+
+    std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::check() {
+        ast->ForEachDeep([](ast::Node::ChildType child) { checkNode(child); });
+
+        return ast;
+    }
+
     bool SemanticAnalyzer::checkNode(ast::Node::ChildType node) {
         switch( node->GetType() ) {
         case ast::AST_TYPE::FunctionDefNode:
         {
-            checkNode(std::static_pointer_cast<ast::FunctionDefNode, ast::Node>( node ));
+            return checkNode(std::static_pointer_cast<ast::FunctionDefNode, ast::Node>( node ));
         } break;
         }
         return false;
