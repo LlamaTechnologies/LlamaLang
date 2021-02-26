@@ -113,3 +113,5 @@ ipch/
 
 #Except
 !/scripts/windows/*.exe
+*.ll
+*.s

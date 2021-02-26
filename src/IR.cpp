@@ -121,7 +121,7 @@ namespace llang::IR
             Builder.CreateRetVoid();
 
         // Validate the generated code, checking for consistency.
-        if( !llvm::verifyFunction(*function) ) {
+        if( llvm::verifyFunction(*function) ) {
             // Error reading body, remove function.
             function->eraseFromParent();
             return nullptr;
@@ -137,7 +137,7 @@ namespace llang::IR
         case ast::CONSTANT_TYPE::CHAR:
             return llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
         case ast::CONSTANT_TYPE::INTEGER:
-            return llvm::ConstantInt::get(TheContext, llvm::APInt(64, std::stol(constant->Value), true));
+            return llvm::ConstantInt::get(TheContext, llvm::APInt(32, std::stol(constant->Value), true));
         case ast::CONSTANT_TYPE::STRING:
         default:
             return nullptr;;
