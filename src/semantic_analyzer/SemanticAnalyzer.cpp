@@ -61,11 +61,11 @@ namespace llang::semantics
                 auto constStmnt = std::static_pointer_cast<ast::ConstantNode, ast::StatementNode>( returnStmnt->Right );
                 switch( retType ) {
                 case PRIMITIVE_TYPE::CHAR:
-                case PRIMITIVE_TYPE::WCHAR:
-                case PRIMITIVE_TYPE::UCHAR:
                 case PRIMITIVE_TYPE::BYTE:
                 case PRIMITIVE_TYPE::UINT8:
+                case PRIMITIVE_TYPE::WCHAR:
                 case PRIMITIVE_TYPE::UINT16:
+                case PRIMITIVE_TYPE::UCHAR:
                 case PRIMITIVE_TYPE::UINT32:
                 case PRIMITIVE_TYPE::UINT64:
                     if( constStmnt->Value[0] == '-' ) {
@@ -75,22 +75,52 @@ namespace llang::semantics
                             "Function return type is unsigned, signed type is returned");
                         errors->emplace_back(error);
                         return false;
-                    }
+                    } break;
                 case PRIMITIVE_TYPE::SCHAR:
                 case PRIMITIVE_TYPE::INT8:
-                case PRIMITIVE_TYPE::INT16:
-                case PRIMITIVE_TYPE::INT32:
-                case PRIMITIVE_TYPE::INT64:
-                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::INTEGER &&
-                       constStmnt->ConstType != ast::CONSTANT_TYPE::CHAR ) {
+                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I8 ) {
+                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I8);
+                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
                         auto name = constStmnt->FileName + ":" + funcNode->Name;
                         error_handling::Error error(
                             (int) constStmnt->Line, name,
-                            "Function return type is Integer, no integer is returned");
+                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
                         errors->emplace_back(error);
                         return false;
-                    }
-                    break;
+                    } break;
+                case PRIMITIVE_TYPE::INT16:
+                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I16 ) {
+                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I16);
+                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                        auto name = constStmnt->FileName + ":" + funcNode->Name;
+                        error_handling::Error error(
+                            (int) constStmnt->Line, name,
+                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    } break;
+                case PRIMITIVE_TYPE::INT32:
+                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I32 ) {
+                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I32);
+                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                        auto name = constStmnt->FileName + ":" + funcNode->Name;
+                        error_handling::Error error(
+                            (int) constStmnt->Line, name,
+                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    } break;
+                case PRIMITIVE_TYPE::INT64:
+                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I64 ) {
+                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I64);
+                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                        auto name = constStmnt->FileName + ":" + funcNode->Name;
+                        error_handling::Error error(
+                            (int) constStmnt->Line, name,
+                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    } break;
                 case PRIMITIVE_TYPE::FLOAT32:
                 case PRIMITIVE_TYPE::FLOAT64:
                     if( constStmnt->ConstType != ast::CONSTANT_TYPE::FLOAT ) {

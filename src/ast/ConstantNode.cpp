@@ -12,9 +12,12 @@ namespace llang::ast
     std::string GetConstantTypeName(CONSTANT_TYPE type) {
         if( !init ) {
             init = true;
-            PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::INTEGER);
+            PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I8);
+            PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I16);
+            PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I32);
+            PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I64);
             PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::FLOAT);
-            PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::CHAR);
+            PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::DOUBLE);
             PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::STRING);
         }
         return contantTypes.at(size_t(type));

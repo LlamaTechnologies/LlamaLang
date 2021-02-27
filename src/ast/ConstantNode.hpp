@@ -9,9 +9,13 @@ namespace llang::ast
 {
     enum class CONSTANT_TYPE
     {
-        INTEGER,
-        FLOAT,
         CHAR,
+        I8 = CHAR,
+        I16,
+        I32,
+        I64,
+        FLOAT,
+        DOUBLE,
         STRING,
 
         _COUNT
