@@ -12,8 +12,12 @@ namespace llang::ast
         INTEGER,
         FLOAT,
         CHAR,
-        STRING
+        STRING,
+
+        _COUNT
     };
+
+    std::string GetConstantTypeName(CONSTANT_TYPE type);
 
     /**
      * Represents any compile time constant like the one above
@@ -32,8 +36,8 @@ namespace llang::ast
 
         void ToString(std::string& str, const int tabLevel) const override {
             auto tabs = GetTabs(tabLevel);
-            auto constType = "INTEGER";
-            str += tabs + "%" + constType + " " + Value;
+            auto constTypeName = GetConstantTypeName(ConstType);
+            str += tabs + "%" + constTypeName + " " + Value;
         }
     };
 }

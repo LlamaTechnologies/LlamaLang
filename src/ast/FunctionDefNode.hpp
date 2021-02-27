@@ -26,7 +26,7 @@ namespace llang::ast {
 
         void ToString(std::string& str, const int tabLevel) const override {
             auto tabs = GetTabs(tabLevel);
-            str += tabs + GetNodeBeginChar(tabLevel) + GET_TYPE_NAME(FunctionDefNode) + ": " + Name + "(";
+            str += tabs + GetNodeBeginChar(tabLevel) + GET_TYPE_NAME(FunctionDefNode) + ": " + ReturnType + " :: " + Name + "(";
 
             const int childTabLevel = tabLevel + 1;
             if( Parameters.size() ) {

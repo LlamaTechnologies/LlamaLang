@@ -173,7 +173,6 @@ antlrcpp::Any AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *cont
 antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {
     std::shared_ptr<ast::ConstantNode> constantNode = nullptr;
 
-
     if( context->integer() != nullptr ) {
         constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::INTEGER);
         constantNode->Value = context->integer()->getText();
@@ -181,21 +180,20 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
         constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::FLOAT);
         constantNode->Value = context->FLOAT_LIT()->getText();
     } else if( context->RUNE_LIT() != nullptr ) {
-        constantNode =
-            std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::CHAR);
+        constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::CHAR);
         constantNode->Value = context->RUNE_LIT()->getText();
-    } else {
-        std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::CHAR);
-        ( ast::CONSTANT_TYPE::STRING );
+    } else if ( context->string_() ){
+        constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::STRING);
         constantNode->Value = context->string_()->getText();
     }
 
     if( constantNode != nullptr ) {
         constantNode->FileName = FileName;
         constantNode->Line = context->start->getLine();
+        return CastNode<ast::StatementNode>(constantNode);
     }
 
-    return CastNode<ast::StatementNode>(constantNode);
+    return nullptr;
 }
 
 
