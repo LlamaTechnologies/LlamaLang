@@ -1922,6 +1922,7 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
         switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 17, _ctx)) {
         case 1: {
           _localctx = _tracker.createInstance<ExpressionContext>(parentContext, parentState);
+          _localctx->left = previousContext;
           pushNewRecursionContext(_localctx, startState, RuleExpression);
           setState(212);
 
@@ -1943,12 +1944,13 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
             consume();
           }
           setState(214);
-          expression(6);
+          dynamic_cast<ExpressionContext *>(_localctx)->right = expression(6);
           break;
         }
 
         case 2: {
           _localctx = _tracker.createInstance<ExpressionContext>(parentContext, parentState);
+          _localctx->left = previousContext;
           pushNewRecursionContext(_localctx, startState, RuleExpression);
           setState(215);
 
@@ -1967,12 +1969,13 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
             consume();
           }
           setState(217);
-          expression(5);
+          dynamic_cast<ExpressionContext *>(_localctx)->right = expression(5);
           break;
         }
 
         case 3: {
           _localctx = _tracker.createInstance<ExpressionContext>(parentContext, parentState);
+          _localctx->left = previousContext;
           pushNewRecursionContext(_localctx, startState, RuleExpression);
           setState(218);
 
@@ -1993,12 +1996,13 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
             consume();
           }
           setState(220);
-          expression(4);
+          dynamic_cast<ExpressionContext *>(_localctx)->right = expression(4);
           break;
         }
 
         case 4: {
           _localctx = _tracker.createInstance<ExpressionContext>(parentContext, parentState);
+          _localctx->left = previousContext;
           pushNewRecursionContext(_localctx, startState, RuleExpression);
           setState(221);
 
@@ -2006,12 +2010,13 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
           setState(222);
           match(LlamaLangParser::LOGICAL_AND);
           setState(223);
-          expression(3);
+          dynamic_cast<ExpressionContext *>(_localctx)->right = expression(3);
           break;
         }
 
         case 5: {
           _localctx = _tracker.createInstance<ExpressionContext>(parentContext, parentState);
+          _localctx->left = previousContext;
           pushNewRecursionContext(_localctx, startState, RuleExpression);
           setState(224);
 
@@ -2019,7 +2024,7 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
           setState(225);
           match(LlamaLangParser::LOGICAL_OR);
           setState(226);
-          expression(2);
+          dynamic_cast<ExpressionContext *>(_localctx)->right = expression(2);
           break;
         }
 
