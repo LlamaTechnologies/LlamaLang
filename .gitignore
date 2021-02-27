@@ -34,7 +34,7 @@
 # Folders
 /bin
 /project
-/.antlr4
+#/.antlr4
 
 # User-specific files
 *.rsuser
