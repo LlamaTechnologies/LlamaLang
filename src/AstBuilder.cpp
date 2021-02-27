@@ -133,7 +133,9 @@ antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *co
             
             // Initialize it in I64
             auto resultNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::I64);
+            // TODO: check for overflow and handle it
             bool checkOverflow;
+
             if( context->PLUS() ) {
                 // ADDITION EXPRESSION
                 resultNode->ConstType = ast::GetResultType(ast::BINARY_OPERATION::ADD, rightNode, leftNode, checkOverflow);
