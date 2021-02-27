@@ -9,8 +9,8 @@ namespace llang::ast
 {
     enum class CONSTANT_TYPE
     {
-        CHAR,
-        I8 = CHAR,
+        I8,
+        CHAR = I8,
         I16,
         I32,
         I64,

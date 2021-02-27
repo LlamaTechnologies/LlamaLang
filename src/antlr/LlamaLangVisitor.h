@@ -84,6 +84,8 @@ public:
 
     virtual antlrcpp::Any visitInteger(LlamaLangParser::IntegerContext *context) = 0;
 
+    virtual antlrcpp::Any visitFloatingPoint(LlamaLangParser::FloatingPointContext *context) = 0;
+
     virtual antlrcpp::Any visitOperandName(LlamaLangParser::OperandNameContext *context) = 0;
 
     virtual antlrcpp::Any visitQualifiedIdent(LlamaLangParser::QualifiedIdentContext *context) = 0;

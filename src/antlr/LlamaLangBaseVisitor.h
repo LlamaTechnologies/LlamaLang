@@ -145,6 +145,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitFloatingPoint(LlamaLangParser::FloatingPointContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitOperandName(LlamaLangParser::OperandNameContext *ctx) override {
     return visitChildren(ctx);
   }

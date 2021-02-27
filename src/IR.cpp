@@ -142,6 +142,8 @@ namespace llang::IR
             return llvm::ConstantInt::get(TheContext, llvm::APInt(64, std::stol(constant->Value), true));
         case ast::CONSTANT_TYPE::FLOAT:
             return llvm::ConstantFP::get(TheContext, llvm::APFloat(std::stof(constant->Value)));
+        case ast::CONSTANT_TYPE::DOUBLE:
+            return llvm::ConstantFP::get(TheContext, llvm::APFloat(std::stod(constant->Value)));
         case ast::CONSTANT_TYPE::STRING:
         default:
             return nullptr;;

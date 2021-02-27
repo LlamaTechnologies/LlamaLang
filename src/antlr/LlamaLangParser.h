@@ -1,3 +1,4 @@
+
 // Generated from ../../LlamaLang.g4 by ANTLR 4.9.1
 
 #pragma once
@@ -20,8 +21,8 @@ public:
     OR = 27, DIV = 28, MOD = 29, LSHIFT = 30, RSHIFT = 31, BIT_CLEAR = 32, 
     EXCLAMATION = 33, PLUS = 34, MINUS = 35, CARET = 36, STAR = 37, AMPERSAND = 38, 
     ARROW = 39, DECIMAL_LIT = 40, OCTAL_LIT = 41, HEX_LIT = 42, FLOAT_LIT = 43, 
-    RUNE_LIT = 44, INTERPRETED_STRING_LIT = 45, WS = 46, COMMENT = 47, TERMINATOR = 48, 
-    LINE_COMMENT = 49
+    DOUBLE_LIT = 44, RUNE_LIT = 45, INTERPRETED_STRING_LIT = 46, WS = 47, 
+    COMMENT = 48, TERMINATOR = 49, LINE_COMMENT = 50
   };
 
   enum {
@@ -33,9 +34,9 @@ public:
     RuleSignature = 19, RuleResult = 20, RuleParameters = 21, RuleParameterDecl = 22, 
     RuleExpression = 23, RulePrimaryExpr = 24, RuleUnaryExpr = 25, RuleConversion = 26, 
     RuleOperand = 27, RuleUnaryOp = 28, RuleLiteral = 29, RuleBasicLit = 30, 
-    RuleInteger = 31, RuleOperandName = 32, RuleQualifiedIdent = 33, RuleLiteralType = 34, 
-    RuleFieldDecl = 35, RuleString_ = 36, RuleArguments = 37, RuleMethodExpr = 38, 
-    RuleReceiverType = 39, RuleEos = 40
+    RuleInteger = 31, RuleFloatingPoint = 32, RuleOperandName = 33, RuleQualifiedIdent = 34, 
+    RuleLiteralType = 35, RuleFieldDecl = 36, RuleString_ = 37, RuleArguments = 38, 
+    RuleMethodExpr = 39, RuleReceiverType = 40, RuleEos = 41
   };
 
   explicit LlamaLangParser(antlr4::TokenStream *input);
@@ -80,6 +81,7 @@ public:
   class LiteralContext;
   class BasicLitContext;
   class IntegerContext;
+  class FloatingPointContext;
   class OperandNameContext;
   class QualifiedIdentContext;
   class LiteralTypeContext;
@@ -557,9 +559,10 @@ public:
     antlr4::tree::TerminalNode *PLUS();
     antlr4::tree::TerminalNode *MINUS();
     antlr4::tree::TerminalNode *EXCLAMATION();
-    antlr4::tree::TerminalNode *CARET();
     antlr4::tree::TerminalNode *STAR();
     antlr4::tree::TerminalNode *AMPERSAND();
+    antlr4::tree::TerminalNode *MINUS_MINUS();
+    antlr4::tree::TerminalNode *PLUS_PLUS();
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -587,7 +590,7 @@ public:
     virtual size_t getRuleIndex() const override;
     IntegerContext *integer();
     String_Context *string_();
-    antlr4::tree::TerminalNode *FLOAT_LIT();
+    FloatingPointContext *floatingPoint();
     antlr4::tree::TerminalNode *RUNE_LIT();
 
 
@@ -611,6 +614,20 @@ public:
   };
 
   IntegerContext* integer();
+
+  class  FloatingPointContext : public LlamaLangParseContext {
+  public:
+    FloatingPointContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *FLOAT_LIT();
+    antlr4::tree::TerminalNode *DOUBLE_LIT();
+
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  FloatingPointContext* floatingPoint();
 
   class  OperandNameContext : public LlamaLangParseContext {
   public:

@@ -194,9 +194,17 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
         }
         constantNode = std::make_shared<ast::ConstantNode>(intType);
         constantNode->Value = context->integer()->getText();
-    } else if( context->FLOAT_LIT() != nullptr ) {
-        constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::FLOAT);
-        constantNode->Value = context->FLOAT_LIT()->getText();
+    } else if( context->floatingPoint() != nullptr ) {
+        auto text = context->floatingPoint()->getText();
+        ast::CONSTANT_TYPE floatingPointType;
+        if( tolower(text.back()) == 'f' ) {
+            text.pop_back();
+            floatingPointType = ast::CONSTANT_TYPE::FLOAT;
+        } else 
+            floatingPointType = ast::CONSTANT_TYPE::DOUBLE;
+
+        constantNode = std::make_shared<ast::ConstantNode>(floatingPointType);
+        constantNode->Value = text;
     } else if( context->RUNE_LIT() != nullptr ) {
         constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::CHAR);
         constantNode->Value = context->RUNE_LIT()->getText();
