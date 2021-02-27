@@ -1,3 +1,3 @@
 func main(argc: int, argv: []char) -> int32 {
-    return 5;
+    return 10 / (4 + 8 * 2 - 10);
 }

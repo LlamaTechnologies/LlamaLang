@@ -105,11 +105,11 @@ parameterDecl
 expression
     : primaryExpr
     | unaryExpr
-    | expression ('*' | '/' | '%' | '<<' | '>>' | '&' | '&^') expression
-    | expression ('+' | '-' | '|' | '^') expression
-    | expression ('==' | '!=' | '<' | '<=' | '>' | '>=') expression
-    | expression '&&' expression
-    | expression '||' expression
+    | left=expression ('*' | '/' | '%' | '<<' | '>>' | '&' | '&^') right=expression
+    | left=expression ('+' | '-' | '|' | '^') right=expression
+    | left=expression ('==' | '!=' | '<' | '<=' | '>' | '>=') right=expression
+    | left=expression '&&' right=expression
+    | left=expression '||' right=expression
     ;
 
 primaryExpr

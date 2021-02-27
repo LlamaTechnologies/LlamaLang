@@ -451,6 +451,8 @@ public:
 
   class  ExpressionContext : public LlamaLangParseContext {
   public:
+    LlamaLangParser::ExpressionContext *left = nullptr;
+    LlamaLangParser::ExpressionContext *right = nullptr;
     ExpressionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     PrimaryExprContext *primaryExpr();
