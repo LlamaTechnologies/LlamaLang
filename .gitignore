@@ -34,6 +34,7 @@
 # Folders
 /bin
 /project
+/.antlr4
 
 # User-specific files
 *.rsuser
@@ -111,7 +112,11 @@ ipch/
 # Visual Studio 6 auto-generated workspace file (contains which files were open etc.)
 *.vbw
 
+# llvm files
+*.ll
+# assembly files
+*.s
+
 #Except
 !/scripts/windows/*.exe
-*.ll
-*.s
+
