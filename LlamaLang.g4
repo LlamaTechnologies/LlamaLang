@@ -257,11 +257,12 @@ ARROW                  : '->';
 DECIMAL_LIT            : [1-9] [0-9]*;
 OCTAL_LIT              : '0' OCTAL_DIGIT*;
 HEX_LIT                : '0' [xX] HEX_DIGIT+;
+FLOAT_LIT              : DOUBLE_LIT [Ff];
 DOUBLE_LIT             : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT)
                        | '.' DECIMALS EXPONENT?
                        ;
 
-FLOAT_LIT              : DOUBLE_LIT [Ff];
+
 
 // Rune literals
 RUNE_LIT               : '\'' (~[\n\\] | ESCAPED_VALUE) '\'';

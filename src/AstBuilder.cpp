@@ -5,6 +5,7 @@
 #include "ast/FunctionDefNode.hpp"
 #include "ast/UnaryOperationNode.hpp"
 #include "ast/ConstantNode.hpp"
+#include <sstream>
 
 using namespace llang;
 
@@ -174,7 +175,24 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
     std::shared_ptr<ast::ConstantNode> constantNode = nullptr;
 
     if( context->integer() != nullptr ) {
-        constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::INTEGER);
+        auto textStream = std::istringstream(context->integer()->getText());
+        int8_t isInt8;
+        int16_t isInt16;
+        int32_t isInt32;
+        int64_t isInt64;
+        ast::CONSTANT_TYPE intType;
+        if( textStream >> isInt8  && !textStream.fail() ) {
+            intType = ast::CONSTANT_TYPE::I8;
+        } else if( textStream >> isInt16 ) {
+            intType = ast::CONSTANT_TYPE::I16;
+        } else if( textStream >> isInt32 ) {
+            intType = ast::CONSTANT_TYPE::I32;
+        } else if( textStream >> isInt64 ) {
+            intType = ast::CONSTANT_TYPE::I64;
+        } else {
+            return nullptr;
+        }
+        constantNode = std::make_shared<ast::ConstantNode>(intType);
         constantNode->Value = context->integer()->getText();
     } else if( context->FLOAT_LIT() != nullptr ) {
         constantNode = std::make_shared<ast::ConstantNode>(ast::CONSTANT_TYPE::FLOAT);

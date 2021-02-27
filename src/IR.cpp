@@ -132,12 +132,16 @@ namespace llang::IR
 
     llvm::Value *TranslateNode(std::shared_ptr<ast::ConstantNode> constant) {
         switch( constant->ConstType ) {
+        case ast::CONSTANT_TYPE::I8:
+            return llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
+        case ast::CONSTANT_TYPE::I16:
+            return llvm::ConstantInt::get(TheContext, llvm::APInt(16, std::stol(constant->Value), true));
+        case ast::CONSTANT_TYPE::I32:
+            return llvm::ConstantInt::get(TheContext, llvm::APInt(32, std::stol(constant->Value), true));
+        case ast::CONSTANT_TYPE::I64:
+            return llvm::ConstantInt::get(TheContext, llvm::APInt(64, std::stol(constant->Value), true));
         case ast::CONSTANT_TYPE::FLOAT:
             return llvm::ConstantFP::get(TheContext, llvm::APFloat(std::stof(constant->Value)));
-        case ast::CONSTANT_TYPE::CHAR:
-            return llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
-        case ast::CONSTANT_TYPE::INTEGER:
-            return llvm::ConstantInt::get(TheContext, llvm::APInt(32, std::stol(constant->Value), true));
         case ast::CONSTANT_TYPE::STRING:
         default:
             return nullptr;;
@@ -228,7 +232,7 @@ namespace llang::IR
         case ast::STATEMENT_TYPE::CONSTANT:
         {
             auto constant = CastNode<ast::ConstantNode>(operand);
-            isInt = constant->ConstType == ast::CONSTANT_TYPE::INTEGER;
+            isInt = constant->ConstType <= ast::CONSTANT_TYPE::I64;
             return TranslateNode(constant);
         }
         case ast::STATEMENT_TYPE::VAR_REF:

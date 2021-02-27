@@ -27,7 +27,7 @@ static void AwaitUserInput();
 static std::string logFileName = "../tests/log_antlr4.txt";
 static std::string ouputFileName = "../tests/output_bitcode.ll";
 //static std::string inputFileName = "../tests/test.llang";
-static std::string inputFileName = "../tests/test_syntax_errors.llang";
+static std::string inputFileName = "../tests/test_semantic_errors.llang";
 
 int main(int argc, const char *argv[]) {
     using namespace llang;

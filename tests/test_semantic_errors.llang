@@ -1,33 +1,33 @@
 /*
-* Should give warning
+* ERROR int8 overflow!
 */
 func main(int, argv: []char) -> int8 {
-    return 5;
+    return 600;
 }
 
 /*
-* Should give error
+* ERROR uint16 cant represetn signed values!
 */
 func main(argv: []char) -> uint16 {
     return -5;
 }
 
 /*
-* Should give error
+* ERROR mismatch type string -> int8
 */
 func main() -> byte {
     return "5";
 }
 
 /*
-* Should give error
+* ERROR mismatch type double -> int8
 */
 func main() -> int8 {
     return .4216;
 }
 
 /*
-* Should give warning NOT an error
+* WARNING implicit double -> float convertion
 */
 func main() -> float {
     return 5.02;
@@ -35,7 +35,7 @@ func main() -> float {
 
 
 /*
-* NOT an error OR warning
+* OK
 */
 func main() -> double {
     return 2.5F;
