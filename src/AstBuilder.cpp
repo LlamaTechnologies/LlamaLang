@@ -176,18 +176,20 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
 
     if( context->integer() != nullptr ) {
         auto textStream = std::istringstream(context->integer()->getText());
-        int8_t isInt8;
-        int16_t isInt16;
-        int32_t isInt32;
-        int64_t isInt64;
+        uint64_t number;
+        textStream >> number;
+
         ast::CONSTANT_TYPE intType;
-        if( textStream >> isInt8  && !textStream.fail() ) {
+        if( number <= std::numeric_limits<uint8_t>::max() &&
+           number >= std::numeric_limits<uint8_t>::min() ) {
             intType = ast::CONSTANT_TYPE::I8;
-        } else if( textStream >> isInt16 ) {
+        } else if( number <= std::numeric_limits<uint16_t>::max() &&
+                  number >= std::numeric_limits<uint16_t>::min() ) {
             intType = ast::CONSTANT_TYPE::I16;
-        } else if( textStream >> isInt32 ) {
+        } else if( number <= std::numeric_limits<uint32_t>::max() &&
+                  number >= std::numeric_limits<uint32_t>::min() ) {
             intType = ast::CONSTANT_TYPE::I32;
-        } else if( textStream >> isInt64 ) {
+        } else if( textStream.good() ) {
             intType = ast::CONSTANT_TYPE::I64;
         } else {
             return nullptr;

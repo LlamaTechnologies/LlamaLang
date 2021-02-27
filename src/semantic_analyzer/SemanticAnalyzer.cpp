@@ -72,63 +72,110 @@ namespace llang::semantics
                         auto name = constStmnt->FileName + ":" + funcNode->Name;
                         error_handling::Error error(
                             constStmnt->Line, name,
-                            "Function return type is unsigned, signed type is returned");
+                            "SIGN MISMATCH :: Function return type is unsigned, signed type is returned");
                         errors->emplace_back(error);
                         return false;
                     } break;
                 case PRIMITIVE_TYPE::SCHAR:
                 case PRIMITIVE_TYPE::INT8:
-                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I8 ) {
-                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I8);
-                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
-                        auto name = constStmnt->FileName + ":" + funcNode->Name;
+                {
+                    auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I8);
+                    auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                    auto name = constStmnt->FileName + ":" + funcNode->Name;
+                    if( constStmnt->ConstType > ast::CONSTANT_TYPE::I64 ) {
                         error_handling::Error error(
                             (int) constStmnt->Line, name,
-                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
+                            "TYPE MISMATCH :: Function return type is " + constantName + ", " + actualConstName + " is returned");
                         errors->emplace_back(error);
                         return false;
-                    } break;
+                    } else if( constStmnt->ConstType != ast::CONSTANT_TYPE::I8 ) {
+                        error_handling::Error error(
+                            (int) constStmnt->Line, name,
+                            "I8 OVERFLOW :: Function return type is " + constantName + ", " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    }
+                } break;
                 case PRIMITIVE_TYPE::INT16:
-                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I16 ) {
-                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I16);
-                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
-                        auto name = constStmnt->FileName + ":" + funcNode->Name;
+                {
+                    auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I16);
+                    auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                    auto name = constStmnt->FileName + ":" + funcNode->Name;
+
+                    if( constStmnt->ConstType > ast::CONSTANT_TYPE::I64 ) {
                         error_handling::Error error(
                             (int) constStmnt->Line, name,
-                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
+                            "TYPE MISMATCH :: Function return type is " + constantName + ", " + actualConstName + " is returned");
                         errors->emplace_back(error);
                         return false;
-                    } break;
+                    } else if( constStmnt->ConstType > ast::CONSTANT_TYPE::I16 ) {
+                        error_handling::Error error(
+                            (int) constStmnt->Line, name,
+                            "I16 OVERFLOW :: Function return type is " + constantName + ", " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    }
+                } break;
                 case PRIMITIVE_TYPE::INT32:
-                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I32 ) {
-                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I32);
-                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
-                        auto name = constStmnt->FileName + ":" + funcNode->Name;
+                {
+                    auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I32);
+                    auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                    auto name = constStmnt->FileName + ":" + funcNode->Name;
+
+                    if( constStmnt->ConstType > ast::CONSTANT_TYPE::I64 ) {
                         error_handling::Error error(
                             (int) constStmnt->Line, name,
-                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
+                            "TYPE MISMATCH :: Function return type is " + constantName + ", " + actualConstName + " is returned");
                         errors->emplace_back(error);
                         return false;
-                    } break;
+                    } else if( constStmnt->ConstType > ast::CONSTANT_TYPE::I32 ) {
+                        error_handling::Error error(
+                            (int) constStmnt->Line, name,
+                            "I32 OVERFLOW :: Function return type is " + constantName + ", " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    }
+                } break;
                 case PRIMITIVE_TYPE::INT64:
-                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::I64 ) {
-                        auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I64);
-                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
-                        auto name = constStmnt->FileName + ":" + funcNode->Name;
+                {
+                    auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I64);
+                    auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                    auto name = constStmnt->FileName + ":" + funcNode->Name;
+
+                    if( constStmnt->ConstType > ast::CONSTANT_TYPE::I64 ) {
                         error_handling::Error error(
                             (int) constStmnt->Line, name,
-                            "Function return type is " + constantName + ", " + actualConstName + " is returned");
+                            "TYPE MISMATCH :: Function return type is " + constantName + ", " + actualConstName + " is returned");
                         errors->emplace_back(error);
                         return false;
-                    } break;
+                    }
+                } break;
                 case PRIMITIVE_TYPE::FLOAT32:
+                {
+                    auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
+                    auto name = constStmnt->FileName + ":" + funcNode->Name;
+
+                    if( constStmnt->ConstType < ast::CONSTANT_TYPE::FLOAT ) {
+                        error_handling::Error error(
+                            constStmnt->Line, name,
+                            "TYPE MISMATCH :: Function return type is float, " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    } else if( constStmnt->ConstType > ast::CONSTANT_TYPE::FLOAT ) {
+                        error_handling::Error error(
+                            constStmnt->Line, name,
+                            "F32 OVERFLOW :: Function return type is float, " + actualConstName + " is returned");
+                        errors->emplace_back(error);
+                        return false;
+                    }
+                }  break;
                 case PRIMITIVE_TYPE::FLOAT64:
-                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::FLOAT ) {
+                    if( constStmnt->ConstType != ast::CONSTANT_TYPE::DOUBLE && constStmnt->ConstType != ast::CONSTANT_TYPE::FLOAT ) {
+                        auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
                         auto name = constStmnt->FileName + ":" + funcNode->Name;
                         error_handling::Error error(
                             constStmnt->Line, name,
-                            "Function return type is Floating "
-                            "point, no floating point is returned");
+                            "Function return type is double point, " + actualConstName + " is returned");
                         errors->emplace_back(error);
                         return false;
                     }
