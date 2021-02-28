@@ -8,6 +8,7 @@ namespace llang::ast {
     enum class STATEMENT_TYPE
     {
         CONSTANT,   // any constant statement
+        VARIABLE,   // variable definition statement
         BINARY_OP,
         UNARY_OP,
         VAR_REF,

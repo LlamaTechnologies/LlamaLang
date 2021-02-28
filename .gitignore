@@ -35,6 +35,7 @@
 /bin
 /project
 /.antlr4
+/.antlr
 
 # User-specific files
 *.rsuser

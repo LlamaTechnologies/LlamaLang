@@ -74,7 +74,7 @@ src/ast/Node.hpp
 src/ast/ProgramNode.hpp
 src/ast/StatementNode.hpp
 src/ast/UnaryOperationNode.hpp
-src/ast/VariableDeclNode.hpp
+src/ast/VariableDefNode.hpp
 src/ast/VariableRefNode.hpp
 
 src/built-in/Built-inTypes.hpp

@@ -27,7 +27,7 @@ namespace llang
         }
 
         antlrcpp::Any visitSourceFile(LlamaLangParser::SourceFileContext *context) override;
-        antlrcpp::Any visitFunctionDecl(LlamaLangParser::FunctionDeclContext *context);
+        antlrcpp::Any visitFunctionDef(LlamaLangParser::FunctionDefContext *context);
         antlrcpp::Any visitSignature(LlamaLangParser::SignatureContext *context);
         antlrcpp::Any VisitParameters(LlamaLangParser::ParametersContext *context);
         antlrcpp::Any visitBlock(LlamaLangParser::BlockContext *context);
@@ -35,6 +35,8 @@ namespace llang
         antlrcpp::Any visitReturnStmt(LlamaLangParser::ReturnStmtContext *context) override;
         antlrcpp::Any visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) override;
         antlrcpp::Any visitExpression(LlamaLangParser::ExpressionContext *context) override;
+        antlrcpp::Any visitVarDef(LlamaLangParser::VarDefContext *context) override;
+        antlrcpp::Any visitAssignment(LlamaLangParser::AssignmentContext* context) override;
         antlrcpp::Any visitBasicLit(LlamaLangParser::BasicLitContext *context) override;
 
         antlrcpp::Any AstBuilder::visitChildren(antlr4::tree::ParseTree *node) override;

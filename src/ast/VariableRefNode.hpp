@@ -1,6 +1,6 @@
 #pragma once
 #include "StatementNode.hpp"
-#include "VariableDeclNode.hpp"
+#include "VariableDefNode.hpp"
 
 namespace llang::ast
 {
@@ -8,7 +8,7 @@ namespace llang::ast
      * Represents a variable reference
     */
     struct VariableRefNode : public StatementNode {
-        std::shared_ptr<VariableDeclNode> Var;
+        std::shared_ptr<VariableDefNode> Var;
 
         VariableRefNode() :
             StatementNode(STATEMENT_TYPE::VAR_REF) {}
@@ -17,8 +17,8 @@ namespace llang::ast
             return GET_AST_TYPE(VariableRefNode);
         }
 
-        void ToString(std::string &str, const int tabLevel) const override {
-        
+        inline void ToString(std::string &str, const int tabLevel) const override {
+            Var->ToString(str, tabLevel);
         }
     };
 }

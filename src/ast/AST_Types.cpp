@@ -22,7 +22,7 @@ namespace llang::ast
             PUSH_VAL(AST_TYPE, GET_AST_TYPE(StatementNode));
             PUSH_VAL(AST_TYPE, GET_AST_TYPE(ProgramNode));
             PUSH_VAL(AST_TYPE, GET_AST_TYPE(UnaryOperationNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(VariableDeclNode));
+            PUSH_VAL(AST_TYPE, GET_AST_TYPE(VariableDefNode));
             PUSH_VAL(AST_TYPE, GET_AST_TYPE(VariableRefNode));
         }
         return astTypes.at(size_t(type));

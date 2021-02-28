@@ -12,7 +12,7 @@ namespace llang::ast {
     struct ProgramNode;
     struct StatementNode;
     struct UnaryOperationNode;
-    struct VariableDeclNode;
+    struct VariableDefNode;
     struct VariableRefNode;
 
     enum class AST_TYPE {
@@ -24,7 +24,7 @@ namespace llang::ast {
         SET_VALUE(StatementNode),
         SET_VALUE(ProgramNode),
         SET_VALUE(UnaryOperationNode),
-        SET_VALUE(VariableDeclNode),
+        SET_VALUE(VariableDefNode),
         SET_VALUE(VariableRefNode),
         COUNT
     };

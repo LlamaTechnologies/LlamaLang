@@ -1,8 +1,13 @@
-func main(argc: int, argv: []char) -> int32 {
+f : int32 = 0;
+
+func main(argc: int, argv: []char) -> void {
     x : int32;
+    /*
     y : int32 = 8;
     
     x = 10;
 
     return x / (4 + y * 2 - x);
+    */
+    return;
 }

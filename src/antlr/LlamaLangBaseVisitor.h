@@ -29,15 +29,11 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitFunctionDecl(LlamaLangParser::FunctionDeclContext *ctx) override {
+  virtual antlrcpp::Any visitFunctionDef(LlamaLangParser::FunctionDefContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitVarDecl(LlamaLangParser::VarDeclContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual antlrcpp::Any visitVarSpec(LlamaLangParser::VarSpecContext *ctx) override {
+  virtual antlrcpp::Any visitVarDef(LlamaLangParser::VarDefContext *ctx) override {
     return visitChildren(ctx);
   }
 

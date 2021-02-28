@@ -1,7 +1,7 @@
 #include "AstBuilder.hpp"
 #include "ast/Node.hpp"
 #include "ast/ProgramNode.hpp"
-#include "ast/VariableDeclNode.hpp"
+#include "ast/VariableDefNode.hpp"
 #include "ast/FunctionDefNode.hpp"
 #include "ast/UnaryOperationNode.hpp"
 #include "ast/BinaryOperationNode.hpp"
@@ -19,7 +19,7 @@ antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *co
     return ASTree;
 }
 
-antlrcpp::Any AstBuilder::visitFunctionDecl(LlamaLangParser::FunctionDeclContext *context) {
+antlrcpp::Any AstBuilder::visitFunctionDef(LlamaLangParser::FunctionDefContext *context) {
     auto parentContext = (LlamaLangParseContext *) context->parent;
     context->AstNode = std::make_shared<ast::FunctionDefNode>();
 
@@ -63,7 +63,7 @@ antlrcpp::Any AstBuilder::VisitParameters(LlamaLangParser::ParametersContext *co
         if( paramContext->isEmpty() || paramContext->exception != nullptr )
             continue;
 
-        auto param = std::make_shared<ast::VariableDeclNode>();
+        auto param = std::make_shared<ast::VariableDefNode>();
         param->FileName = FileName;
         param->Line = context->start->getLine();
         param->Name = paramContext->IDENTIFIER()->getText();
@@ -243,6 +243,26 @@ runtime_expr:
         // returns ConstantNode, UnaryOperationNode
         return visitChildren(context);
     }
+}
+
+antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
+    // variable definition
+    auto varDefNode = std::make_shared<ast::VariableDefNode>();
+    varDefNode->FileName = FileName;
+    varDefNode->Line = context->start->getLine();
+    varDefNode->Name = context->IDENTIFIER()->getText();
+    varDefNode->VarType = context->type_()->getText();
+
+    if( context->ASSIGN() ) {
+        // variable define assign
+        // TODO assignment
+    } 
+ 
+    return CastNode<ast::StatementNode>(varDefNode);
+}
+
+antlrcpp::Any AstBuilder::visitAssignment(LlamaLangParser::AssignmentContext *context) {
+    return antlrcpp::Any();
 }
 
 /*

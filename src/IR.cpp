@@ -5,7 +5,7 @@
 #include "ast/ConstantNode.hpp"
 #include "ast/BinaryOperationNode.hpp"
 #include "ast/UnaryOperationNode.hpp"
-#include "ast/VariableDeclNode.hpp"
+#include "ast/VariableDefNode.hpp"
 #include "ast/VariableRefNode.hpp"
 #include "Primitives.hpp"
 #include "symbol_table/Symbol.hpp"
@@ -23,6 +23,7 @@ namespace llang::IR
         bool isReturnStmnt;
         bool isInt;
         ast::CONSTANT_TYPE retType;
+        llvm::BasicBlock *block;
     };
 
     static llvm::Function *TranslateNode(std::shared_ptr<ast::FunctionDefNode> function);
@@ -41,18 +42,18 @@ namespace llang::IR
      * @return the llvm value representing the statement result
     */
     static llvm::Value *TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, IR_INFO *irInfo);
-
-    static llvm::Value *TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_INFO *irInfo = nullptr);
+    static llvm::Value *TranslateNode(std::shared_ptr<ast::VariableDefNode> varDef, IR_INFO *irInfo);
+    static llvm::Value *TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_INFO *irInfo);
 
     // Helpers
     static llvm::Type *TranslateType(std::string &type, ast::CONSTANT_TYPE *retType);
-    static std::vector<llvm::Type *> TranslateParameters(std::vector<std::shared_ptr<ast::VariableDeclNode>> &params);
+    static std::vector<llvm::Type *> TranslateParameters(std::vector<std::shared_ptr<ast::VariableDefNode>> &params);
     /**
      * @brief Translate a function block/body
      * @param stmnts statements in body
      * @return returns the return statement
     */
-    static llvm::Value *TranslateFunctionBlock(std::vector<std::shared_ptr<ast::StatementNode>> &stmnts, ast::CONSTANT_TYPE retType);
+    static llvm::Value *TranslateFunctionBlock(llvm::BasicBlock &block, std::vector<std::shared_ptr<ast::StatementNode>> &stmnts, ast::CONSTANT_TYPE retType);
     static llvm::Value *TranslateAdd(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types);
     static llvm::Value *TranslateSub(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types);
     static llvm::Value *TranslateMul(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types);
@@ -122,7 +123,7 @@ namespace llang::IR
         Builder.SetInsertPoint(BB);
 
         // Genereate body and finish the function with the return value
-        llvm::Value *retVal = TranslateFunctionBlock(functionNode->Block, retType);
+        llvm::Value *retVal = TranslateFunctionBlock(*BB, functionNode->Block, retType);
         if( retVal )
             Builder.CreateRet(retVal);
         else
@@ -240,6 +241,11 @@ namespace llang::IR
             auto constant = CastNode<ast::ConstantNode>(stmnt);
             return TranslateNode(constant, irInfo);
         }
+        case llang::ast::AST_TYPE::VariableDefNode:
+        {
+            auto constant = CastNode<ast::VariableDefNode>(stmnt);
+            return TranslateNode(constant, irInfo);
+        }
         case llang::ast::AST_TYPE::UnaryOperationNode:
         {
             if( !irInfo)
@@ -254,6 +260,17 @@ namespace llang::IR
         }
     }
 
+    llvm::Value *TranslateNode(std::shared_ptr<ast::VariableDefNode> varDef, IR_INFO *irInfo) {
+        if( !irInfo ) {
+            Console::WriteLine("TranslateVariableDefNode :: idInfo is null!");
+            return nullptr;
+        }
+
+        auto type = TranslateType(varDef->VarType, nullptr);
+        auto name = varDef->Name;
+        return new llvm::AllocaInst(type, NULL, name, irInfo->block);
+    }
+
     llvm::Value *TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_INFO *irInfo) {
         return nullptr;
     }
@@ -265,20 +282,6 @@ namespace llang::IR
             auto constant = CastNode<ast::ConstantNode>(operand);
             irInfo->isInt = constant->ConstType <= ast::CONSTANT_TYPE::I64;
             return TranslateNode(constant, nullptr);
-        }
-        case ast::STATEMENT_TYPE::VAR_REF:
-        {
-            auto varRef = CastNode<ast::VariableRefNode>(operand);
-            auto varType = varRef->Var->VarType;
-
-            if( symbol_table::Symbol::IsPrimitive(varType) ) {
-                auto primitive = Primitives::Get(varType);
-                irInfo->isInt = primitive <= PRIMITIVE_TYPE::UINT64;
-            } else {
-                irInfo->isInt = false;
-            }
-
-            return TranslateNode(varRef);
         }
         case ast::STATEMENT_TYPE::UNARY_OP:
             return nullptr;
@@ -354,7 +357,7 @@ namespace llang::IR
         }
     }
 
-    std::vector<llvm::Type *> TranslateParameters(std::vector<std::shared_ptr<ast::VariableDeclNode>> &params) {
+    std::vector<llvm::Type *> TranslateParameters(std::vector<std::shared_ptr<ast::VariableDefNode>> &params) {
         std::vector<llvm::Type *> types;
         for( auto param : params ) {
             auto type = TranslateType(param->VarType, nullptr);
@@ -363,14 +366,17 @@ namespace llang::IR
         return types;
     }
 
-    llvm::Value *TranslateFunctionBlock(std::vector<std::shared_ptr<ast::StatementNode>> &stmnts, ast::CONSTANT_TYPE retType) {
+    llvm::Value *TranslateFunctionBlock(llvm::BasicBlock &block, std::vector<std::shared_ptr<ast::StatementNode>> &stmnts, ast::CONSTANT_TYPE retType) {
         if( stmnts.empty() )
             return nullptr;
 
+        IR_INFO irInfo = { 0 };
+        irInfo.block = &block;
+        irInfo.retType = retType;
+
         llvm::Value *lastVal = nullptr;
         for( auto stmnt : stmnts ) {
-            IR_INFO irInfo = { 0 };
-            irInfo.retType = retType;
+            irInfo.isReturnStmnt = false;
             auto retVal = TranslateNode(stmnt, &irInfo);
             if( irInfo.isReturnStmnt )
                 lastVal = retVal;
