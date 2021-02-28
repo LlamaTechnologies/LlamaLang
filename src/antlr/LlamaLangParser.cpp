@@ -35,7 +35,7 @@ dfa::Vocabulary& LlamaLangParser::getVocabulary() const {
 //----------------- SourceFileContext ------------------------------------------------------------------
 
 LlamaLangParser::SourceFileContext::SourceFileContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::EosContext* LlamaLangParser::SourceFileContext::eos() {
@@ -129,7 +129,7 @@ LlamaLangParser::SourceFileContext* LlamaLangParser::sourceFile() {
 //----------------- IdentifierListContext ------------------------------------------------------------------
 
 LlamaLangParser::IdentifierListContext::IdentifierListContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 std::vector<tree::TerminalNode *> LlamaLangParser::IdentifierListContext::IDENTIFIER() {
@@ -203,7 +203,7 @@ LlamaLangParser::IdentifierListContext* LlamaLangParser::identifierList() {
 //----------------- ExpressionListContext ------------------------------------------------------------------
 
 LlamaLangParser::ExpressionListContext::ExpressionListContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 std::vector<LlamaLangParser::ExpressionContext *> LlamaLangParser::ExpressionListContext::expression() {
@@ -279,7 +279,7 @@ LlamaLangParser::ExpressionListContext* LlamaLangParser::expressionList() {
 //----------------- FunctionDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::FunctionDeclContext::FunctionDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::FunctionDeclContext::FUNC() {
@@ -358,7 +358,7 @@ LlamaLangParser::FunctionDeclContext* LlamaLangParser::functionDecl() {
 //----------------- VarDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::VarDeclContext::VarDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::VarSpecContext* LlamaLangParser::VarDeclContext::varSpec() {
@@ -407,7 +407,7 @@ LlamaLangParser::VarDeclContext* LlamaLangParser::varDecl() {
 //----------------- VarSpecContext ------------------------------------------------------------------
 
 LlamaLangParser::VarSpecContext::VarSpecContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::VarSpecContext::IDENTIFIER() {
@@ -493,7 +493,7 @@ LlamaLangParser::VarSpecContext* LlamaLangParser::varSpec() {
 //----------------- BlockContext ------------------------------------------------------------------
 
 LlamaLangParser::BlockContext::BlockContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::BlockContext::L_CURLY() {
@@ -581,7 +581,7 @@ LlamaLangParser::BlockContext* LlamaLangParser::block() {
 //----------------- StatementListContext ------------------------------------------------------------------
 
 LlamaLangParser::StatementListContext::StatementListContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 std::vector<LlamaLangParser::StatementContext *> LlamaLangParser::StatementListContext::statement() {
@@ -673,7 +673,7 @@ LlamaLangParser::StatementListContext* LlamaLangParser::statementList() {
 //----------------- StatementContext ------------------------------------------------------------------
 
 LlamaLangParser::StatementContext::StatementContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::VarDeclContext* LlamaLangParser::StatementContext::varDecl() {
@@ -765,7 +765,7 @@ LlamaLangParser::StatementContext* LlamaLangParser::statement() {
 //----------------- SimpleStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::SimpleStmtContext::SimpleStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::ExpressionStmtContext* LlamaLangParser::SimpleStmtContext::expressionStmt() {
@@ -846,7 +846,7 @@ LlamaLangParser::SimpleStmtContext* LlamaLangParser::simpleStmt() {
 //----------------- ExpressionStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::ExpressionStmtContext::ExpressionStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::ExpressionContext* LlamaLangParser::ExpressionStmtContext::expression() {
@@ -895,7 +895,7 @@ LlamaLangParser::ExpressionStmtContext* LlamaLangParser::expressionStmt() {
 //----------------- AssignmentContext ------------------------------------------------------------------
 
 LlamaLangParser::AssignmentContext::AssignmentContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::AssignmentContext::IDENTIFIER() {
@@ -956,7 +956,7 @@ LlamaLangParser::AssignmentContext* LlamaLangParser::assignment() {
 //----------------- Assign_opContext ------------------------------------------------------------------
 
 LlamaLangParser::Assign_opContext::Assign_opContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::Assign_opContext::ASSIGN() {
@@ -1087,7 +1087,7 @@ LlamaLangParser::Assign_opContext* LlamaLangParser::assign_op() {
 //----------------- EmptyStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::EmptyStmtContext::EmptyStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::EmptyStmtContext::SEMI() {
@@ -1136,7 +1136,7 @@ LlamaLangParser::EmptyStmtContext* LlamaLangParser::emptyStmt() {
 //----------------- ReturnStmtContext ------------------------------------------------------------------
 
 LlamaLangParser::ReturnStmtContext::ReturnStmtContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ReturnStmtContext::RETURN() {
@@ -1215,7 +1215,7 @@ LlamaLangParser::ReturnStmtContext* LlamaLangParser::returnStmt() {
 //----------------- Type_Context ------------------------------------------------------------------
 
 LlamaLangParser::Type_Context::Type_Context(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::TypeNameContext* LlamaLangParser::Type_Context::typeName() {
@@ -1296,7 +1296,7 @@ LlamaLangParser::Type_Context* LlamaLangParser::type_() {
 //----------------- PointerContext ------------------------------------------------------------------
 
 LlamaLangParser::PointerContext::PointerContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::PointerContext::STAR() {
@@ -1351,7 +1351,7 @@ LlamaLangParser::PointerContext* LlamaLangParser::pointer() {
 //----------------- ArrayContext ------------------------------------------------------------------
 
 LlamaLangParser::ArrayContext::ArrayContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ArrayContext::L_BRACKET() {
@@ -1412,7 +1412,7 @@ LlamaLangParser::ArrayContext* LlamaLangParser::array() {
 //----------------- TypeNameContext ------------------------------------------------------------------
 
 LlamaLangParser::TypeNameContext::TypeNameContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::TypeNameContext::IDENTIFIER() {
@@ -1482,7 +1482,7 @@ LlamaLangParser::TypeNameContext* LlamaLangParser::typeName() {
 //----------------- SignatureContext ------------------------------------------------------------------
 
 LlamaLangParser::SignatureContext::SignatureContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::ParametersContext* LlamaLangParser::SignatureContext::parameters() {
@@ -1531,7 +1531,7 @@ LlamaLangParser::SignatureContext* LlamaLangParser::signature() {
 //----------------- ResultContext ------------------------------------------------------------------
 
 LlamaLangParser::ResultContext::ResultContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::ParametersContext* LlamaLangParser::ResultContext::parameters() {
@@ -1603,7 +1603,7 @@ LlamaLangParser::ResultContext* LlamaLangParser::result() {
 //----------------- ParametersContext ------------------------------------------------------------------
 
 LlamaLangParser::ParametersContext::ParametersContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ParametersContext::L_PAREN() {
@@ -1695,7 +1695,7 @@ LlamaLangParser::ParametersContext* LlamaLangParser::parameters() {
 //----------------- ParameterDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::ParameterDeclContext::ParameterDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ParameterDeclContext::IDENTIFIER() {
@@ -1756,7 +1756,7 @@ LlamaLangParser::ParameterDeclContext* LlamaLangParser::parameterDecl() {
 //----------------- ExpressionContext ------------------------------------------------------------------
 
 LlamaLangParser::ExpressionContext::ExpressionContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::PrimaryExprContext* LlamaLangParser::ExpressionContext::primaryExpr() {
@@ -2048,7 +2048,7 @@ LlamaLangParser::ExpressionContext* LlamaLangParser::expression(int precedence) 
 //----------------- PrimaryExprContext ------------------------------------------------------------------
 
 LlamaLangParser::PrimaryExprContext::PrimaryExprContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::OperandContext* LlamaLangParser::PrimaryExprContext::operand() {
@@ -2183,7 +2183,7 @@ LlamaLangParser::PrimaryExprContext* LlamaLangParser::primaryExpr(int precedence
 //----------------- UnaryExprContext ------------------------------------------------------------------
 
 LlamaLangParser::UnaryExprContext::UnaryExprContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::PrimaryExprContext* LlamaLangParser::UnaryExprContext::primaryExpr() {
@@ -2259,7 +2259,7 @@ LlamaLangParser::UnaryExprContext* LlamaLangParser::unaryExpr() {
 //----------------- ConversionContext ------------------------------------------------------------------
 
 LlamaLangParser::ConversionContext::ConversionContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::Type_Context* LlamaLangParser::ConversionContext::type_() {
@@ -2339,7 +2339,7 @@ LlamaLangParser::ConversionContext* LlamaLangParser::conversion() {
 //----------------- OperandContext ------------------------------------------------------------------
 
 LlamaLangParser::OperandContext::OperandContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::LiteralContext* LlamaLangParser::OperandContext::literal() {
@@ -2443,7 +2443,7 @@ LlamaLangParser::OperandContext* LlamaLangParser::operand() {
 //----------------- UnaryOpContext ------------------------------------------------------------------
 
 LlamaLangParser::UnaryOpContext::UnaryOpContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::UnaryOpContext::PLUS() {
@@ -2531,7 +2531,7 @@ LlamaLangParser::UnaryOpContext* LlamaLangParser::unaryOp() {
 //----------------- LiteralContext ------------------------------------------------------------------
 
 LlamaLangParser::LiteralContext::LiteralContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::BasicLitContext* LlamaLangParser::LiteralContext::basicLit() {
@@ -2580,7 +2580,7 @@ LlamaLangParser::LiteralContext* LlamaLangParser::literal() {
 //----------------- BasicLitContext ------------------------------------------------------------------
 
 LlamaLangParser::BasicLitContext::BasicLitContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::IntegerContext* LlamaLangParser::BasicLitContext::integer() {
@@ -2675,7 +2675,7 @@ LlamaLangParser::BasicLitContext* LlamaLangParser::basicLit() {
 //----------------- IntegerContext ------------------------------------------------------------------
 
 LlamaLangParser::IntegerContext::IntegerContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::IntegerContext::DECIMAL_LIT() {
@@ -2743,7 +2743,7 @@ LlamaLangParser::IntegerContext* LlamaLangParser::integer() {
 //----------------- FloatingPointContext ------------------------------------------------------------------
 
 LlamaLangParser::FloatingPointContext::FloatingPointContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::FloatingPointContext::FLOAT_LIT() {
@@ -2806,7 +2806,7 @@ LlamaLangParser::FloatingPointContext* LlamaLangParser::floatingPoint() {
 //----------------- OperandNameContext ------------------------------------------------------------------
 
 LlamaLangParser::OperandNameContext::OperandNameContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::OperandNameContext::IDENTIFIER() {
@@ -2876,7 +2876,7 @@ LlamaLangParser::OperandNameContext* LlamaLangParser::operandName() {
 //----------------- QualifiedIdentContext ------------------------------------------------------------------
 
 LlamaLangParser::QualifiedIdentContext::QualifiedIdentContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 std::vector<tree::TerminalNode *> LlamaLangParser::QualifiedIdentContext::IDENTIFIER() {
@@ -2937,7 +2937,7 @@ LlamaLangParser::QualifiedIdentContext* LlamaLangParser::qualifiedIdent() {
 //----------------- LiteralTypeContext ------------------------------------------------------------------
 
 LlamaLangParser::LiteralTypeContext::LiteralTypeContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::TypeNameContext* LlamaLangParser::LiteralTypeContext::typeName() {
@@ -2986,7 +2986,7 @@ LlamaLangParser::LiteralTypeContext* LlamaLangParser::literalType() {
 //----------------- FieldDeclContext ------------------------------------------------------------------
 
 LlamaLangParser::FieldDeclContext::FieldDeclContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::IdentifierListContext* LlamaLangParser::FieldDeclContext::identifierList() {
@@ -3054,7 +3054,7 @@ LlamaLangParser::FieldDeclContext* LlamaLangParser::fieldDecl() {
 //----------------- String_Context ------------------------------------------------------------------
 
 LlamaLangParser::String_Context::String_Context(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::String_Context::INTERPRETED_STRING_LIT() {
@@ -3103,7 +3103,7 @@ LlamaLangParser::String_Context* LlamaLangParser::string_() {
 //----------------- ArgumentsContext ------------------------------------------------------------------
 
 LlamaLangParser::ArgumentsContext::ArgumentsContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::ArgumentsContext::L_PAREN() {
@@ -3251,7 +3251,7 @@ LlamaLangParser::ArgumentsContext* LlamaLangParser::arguments() {
 //----------------- MethodExprContext ------------------------------------------------------------------
 
 LlamaLangParser::MethodExprContext::MethodExprContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::ReceiverTypeContext* LlamaLangParser::MethodExprContext::receiverType() {
@@ -3312,7 +3312,7 @@ LlamaLangParser::MethodExprContext* LlamaLangParser::methodExpr() {
 //----------------- ReceiverTypeContext ------------------------------------------------------------------
 
 LlamaLangParser::ReceiverTypeContext::ReceiverTypeContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 LlamaLangParser::TypeNameContext* LlamaLangParser::ReceiverTypeContext::typeName() {
@@ -3417,7 +3417,7 @@ LlamaLangParser::ReceiverTypeContext* LlamaLangParser::receiverType() {
 //----------------- EosContext ------------------------------------------------------------------
 
 LlamaLangParser::EosContext::EosContext(ParserRuleContext *parent, size_t invokingState)
-  : ParserRuleContext(parent, invokingState) {
+  : LlamaLangParseContext(parent, invokingState) {
 }
 
 tree::TerminalNode* LlamaLangParser::EosContext::SEMI() {
