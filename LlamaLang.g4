@@ -23,7 +23,7 @@ varDecl
     ;
 
 varSpec
-    : identifierList COLON type_ ('=' expressionList)? eos
+    : IDENTIFIER ':' type_ ('=' expressionList)? eos
     ;
 
 block
@@ -52,7 +52,7 @@ expressionStmt
     ;
 
 assignment
-    : expressionList assign_op expressionList
+    : IDENTIFIER assign_op expressionList
     ;
 
 assign_op

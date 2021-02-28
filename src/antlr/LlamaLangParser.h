@@ -5,7 +5,7 @@
 
 
 #include "antlr4-runtime.h"
-#include "LlamaLangParseContext.hpp"
+
 
 namespace llang {
 
@@ -92,7 +92,7 @@ public:
   class ReceiverTypeContext;
   class EosContext; 
 
-  class  SourceFileContext : public LlamaLangParseContext {
+  class  SourceFileContext : public antlr4::ParserRuleContext {
   public:
     SourceFileContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -109,7 +109,7 @@ public:
 
   SourceFileContext* sourceFile();
 
-  class  IdentifierListContext : public LlamaLangParseContext {
+  class  IdentifierListContext : public antlr4::ParserRuleContext {
   public:
     IdentifierListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -125,7 +125,7 @@ public:
 
   IdentifierListContext* identifierList();
 
-  class  ExpressionListContext : public LlamaLangParseContext {
+  class  ExpressionListContext : public antlr4::ParserRuleContext {
   public:
     ExpressionListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -141,7 +141,7 @@ public:
 
   ExpressionListContext* expressionList();
 
-  class  FunctionDeclContext : public LlamaLangParseContext {
+  class  FunctionDeclContext : public antlr4::ParserRuleContext {
   public:
     FunctionDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -159,7 +159,7 @@ public:
 
   FunctionDeclContext* functionDecl();
 
-  class  VarDeclContext : public LlamaLangParseContext {
+  class  VarDeclContext : public antlr4::ParserRuleContext {
   public:
     VarDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -172,11 +172,11 @@ public:
 
   VarDeclContext* varDecl();
 
-  class  VarSpecContext : public LlamaLangParseContext {
+  class  VarSpecContext : public antlr4::ParserRuleContext {
   public:
     VarSpecContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    IdentifierListContext *identifierList();
+    antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *COLON();
     Type_Context *type_();
     EosContext *eos();
@@ -190,7 +190,7 @@ public:
 
   VarSpecContext* varSpec();
 
-  class  BlockContext : public LlamaLangParseContext {
+  class  BlockContext : public antlr4::ParserRuleContext {
   public:
     BlockContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -205,7 +205,7 @@ public:
 
   BlockContext* block();
 
-  class  StatementListContext : public LlamaLangParseContext {
+  class  StatementListContext : public antlr4::ParserRuleContext {
   public:
     StatementListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -221,7 +221,7 @@ public:
 
   StatementListContext* statementList();
 
-  class  StatementContext : public LlamaLangParseContext {
+  class  StatementContext : public antlr4::ParserRuleContext {
   public:
     StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -237,7 +237,7 @@ public:
 
   StatementContext* statement();
 
-  class  SimpleStmtContext : public LlamaLangParseContext {
+  class  SimpleStmtContext : public antlr4::ParserRuleContext {
   public:
     SimpleStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -252,7 +252,7 @@ public:
 
   SimpleStmtContext* simpleStmt();
 
-  class  ExpressionStmtContext : public LlamaLangParseContext {
+  class  ExpressionStmtContext : public antlr4::ParserRuleContext {
   public:
     ExpressionStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -265,13 +265,13 @@ public:
 
   ExpressionStmtContext* expressionStmt();
 
-  class  AssignmentContext : public LlamaLangParseContext {
+  class  AssignmentContext : public antlr4::ParserRuleContext {
   public:
     AssignmentContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    std::vector<ExpressionListContext *> expressionList();
-    ExpressionListContext* expressionList(size_t i);
+    antlr4::tree::TerminalNode *IDENTIFIER();
     Assign_opContext *assign_op();
+    ExpressionListContext *expressionList();
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -280,7 +280,7 @@ public:
 
   AssignmentContext* assignment();
 
-  class  Assign_opContext : public LlamaLangParseContext {
+  class  Assign_opContext : public antlr4::ParserRuleContext {
   public:
     Assign_opContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -304,7 +304,7 @@ public:
 
   Assign_opContext* assign_op();
 
-  class  EmptyStmtContext : public LlamaLangParseContext {
+  class  EmptyStmtContext : public antlr4::ParserRuleContext {
   public:
     EmptyStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -317,7 +317,7 @@ public:
 
   EmptyStmtContext* emptyStmt();
 
-  class  ReturnStmtContext : public LlamaLangParseContext {
+  class  ReturnStmtContext : public antlr4::ParserRuleContext {
   public:
     ReturnStmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -331,7 +331,7 @@ public:
 
   ReturnStmtContext* returnStmt();
 
-  class  Type_Context : public LlamaLangParseContext {
+  class  Type_Context : public antlr4::ParserRuleContext {
   public:
     Type_Context(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -346,7 +346,7 @@ public:
 
   Type_Context* type_();
 
-  class  PointerContext : public LlamaLangParseContext {
+  class  PointerContext : public antlr4::ParserRuleContext {
   public:
     PointerContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -360,7 +360,7 @@ public:
 
   PointerContext* pointer();
 
-  class  ArrayContext : public LlamaLangParseContext {
+  class  ArrayContext : public antlr4::ParserRuleContext {
   public:
     ArrayContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -375,7 +375,7 @@ public:
 
   ArrayContext* array();
 
-  class  TypeNameContext : public LlamaLangParseContext {
+  class  TypeNameContext : public antlr4::ParserRuleContext {
   public:
     TypeNameContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -389,7 +389,7 @@ public:
 
   TypeNameContext* typeName();
 
-  class  SignatureContext : public LlamaLangParseContext {
+  class  SignatureContext : public antlr4::ParserRuleContext {
   public:
     SignatureContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -402,7 +402,7 @@ public:
 
   SignatureContext* signature();
 
-  class  ResultContext : public LlamaLangParseContext {
+  class  ResultContext : public antlr4::ParserRuleContext {
   public:
     ResultContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -416,7 +416,7 @@ public:
 
   ResultContext* result();
 
-  class  ParametersContext : public LlamaLangParseContext {
+  class  ParametersContext : public antlr4::ParserRuleContext {
   public:
     ParametersContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -434,7 +434,7 @@ public:
 
   ParametersContext* parameters();
 
-  class  ParameterDeclContext : public LlamaLangParseContext {
+  class  ParameterDeclContext : public antlr4::ParserRuleContext {
   public:
     ParameterDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -449,7 +449,7 @@ public:
 
   ParameterDeclContext* parameterDecl();
 
-  class  ExpressionContext : public LlamaLangParseContext {
+  class  ExpressionContext : public antlr4::ParserRuleContext {
   public:
     LlamaLangParser::ExpressionContext *left = nullptr;
     LlamaLangParser::ExpressionContext *right = nullptr;
@@ -486,7 +486,7 @@ public:
 
   ExpressionContext* expression();
   ExpressionContext* expression(int precedence);
-  class  PrimaryExprContext : public LlamaLangParseContext {
+  class  PrimaryExprContext : public antlr4::ParserRuleContext {
   public:
     PrimaryExprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -504,7 +504,7 @@ public:
 
   PrimaryExprContext* primaryExpr();
   PrimaryExprContext* primaryExpr(int precedence);
-  class  UnaryExprContext : public LlamaLangParseContext {
+  class  UnaryExprContext : public antlr4::ParserRuleContext {
   public:
     UnaryExprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -519,7 +519,7 @@ public:
 
   UnaryExprContext* unaryExpr();
 
-  class  ConversionContext : public LlamaLangParseContext {
+  class  ConversionContext : public antlr4::ParserRuleContext {
   public:
     ConversionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -536,7 +536,7 @@ public:
 
   ConversionContext* conversion();
 
-  class  OperandContext : public LlamaLangParseContext {
+  class  OperandContext : public antlr4::ParserRuleContext {
   public:
     OperandContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -554,7 +554,7 @@ public:
 
   OperandContext* operand();
 
-  class  UnaryOpContext : public LlamaLangParseContext {
+  class  UnaryOpContext : public antlr4::ParserRuleContext {
   public:
     UnaryOpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -573,7 +573,7 @@ public:
 
   UnaryOpContext* unaryOp();
 
-  class  LiteralContext : public LlamaLangParseContext {
+  class  LiteralContext : public antlr4::ParserRuleContext {
   public:
     LiteralContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -586,7 +586,7 @@ public:
 
   LiteralContext* literal();
 
-  class  BasicLitContext : public LlamaLangParseContext {
+  class  BasicLitContext : public antlr4::ParserRuleContext {
   public:
     BasicLitContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -602,7 +602,7 @@ public:
 
   BasicLitContext* basicLit();
 
-  class  IntegerContext : public LlamaLangParseContext {
+  class  IntegerContext : public antlr4::ParserRuleContext {
   public:
     IntegerContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -617,7 +617,7 @@ public:
 
   IntegerContext* integer();
 
-  class  FloatingPointContext : public LlamaLangParseContext {
+  class  FloatingPointContext : public antlr4::ParserRuleContext {
   public:
     FloatingPointContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -631,7 +631,7 @@ public:
 
   FloatingPointContext* floatingPoint();
 
-  class  OperandNameContext : public LlamaLangParseContext {
+  class  OperandNameContext : public antlr4::ParserRuleContext {
   public:
     OperandNameContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -645,7 +645,7 @@ public:
 
   OperandNameContext* operandName();
 
-  class  QualifiedIdentContext : public LlamaLangParseContext {
+  class  QualifiedIdentContext : public antlr4::ParserRuleContext {
   public:
     QualifiedIdentContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -660,7 +660,7 @@ public:
 
   QualifiedIdentContext* qualifiedIdent();
 
-  class  LiteralTypeContext : public LlamaLangParseContext {
+  class  LiteralTypeContext : public antlr4::ParserRuleContext {
   public:
     LiteralTypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -673,7 +673,7 @@ public:
 
   LiteralTypeContext* literalType();
 
-  class  FieldDeclContext : public LlamaLangParseContext {
+  class  FieldDeclContext : public antlr4::ParserRuleContext {
   public:
     FieldDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -688,7 +688,7 @@ public:
 
   FieldDeclContext* fieldDecl();
 
-  class  String_Context : public LlamaLangParseContext {
+  class  String_Context : public antlr4::ParserRuleContext {
   public:
     String_Context(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -701,7 +701,7 @@ public:
 
   String_Context* string_();
 
-  class  ArgumentsContext : public LlamaLangParseContext {
+  class  ArgumentsContext : public antlr4::ParserRuleContext {
   public:
     ArgumentsContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -720,7 +720,7 @@ public:
 
   ArgumentsContext* arguments();
 
-  class  MethodExprContext : public LlamaLangParseContext {
+  class  MethodExprContext : public antlr4::ParserRuleContext {
   public:
     MethodExprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -735,7 +735,7 @@ public:
 
   MethodExprContext* methodExpr();
 
-  class  ReceiverTypeContext : public LlamaLangParseContext {
+  class  ReceiverTypeContext : public antlr4::ParserRuleContext {
   public:
     ReceiverTypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
@@ -752,7 +752,7 @@ public:
 
   ReceiverTypeContext* receiverType();
 
-  class  EosContext : public LlamaLangParseContext {
+  class  EosContext : public antlr4::ParserRuleContext {
   public:
     EosContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
