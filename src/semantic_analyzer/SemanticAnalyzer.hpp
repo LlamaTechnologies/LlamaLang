@@ -3,7 +3,6 @@
 #include <memory>
 #include "../ast/ProgramNode.hpp"
 #include "../Primitives.hpp"
-#include "../symbol_table/Symbol.hpp"
 #include "../built-in/Built-inTypes.hpp"
 #include "../error_handling/ErrorDescription.hpp"
 

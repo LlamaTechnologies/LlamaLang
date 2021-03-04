@@ -3,12 +3,12 @@
 #include "ast/StatementNode.hpp"
 #include "ast/FunctionDefNode.hpp"
 #include "ast/ConstantNode.hpp"
+#include "ast/AssignNode.hpp"
 #include "ast/BinaryOperationNode.hpp"
 #include "ast/UnaryOperationNode.hpp"
 #include "ast/VariableDefNode.hpp"
 #include "ast/VariableRefNode.hpp"
 #include "Primitives.hpp"
-#include "symbol_table/Symbol.hpp"
 #include <system_error>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
@@ -44,6 +44,7 @@ namespace llang::IR
     static llvm::Value *TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, IR_INFO *irInfo);
     static llvm::Value *TranslateNode(std::shared_ptr<ast::VariableDefNode> varDef, IR_INFO *irInfo);
     static llvm::Value *TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_INFO *irInfo);
+    static llvm::Value *TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, IR_INFO *irInfo);
 
     // Helpers
     static llvm::Type *TranslateType(std::string &type, ast::CONSTANT_TYPE *retType);
@@ -68,6 +69,7 @@ namespace llang::IR
     static llvm::LLVMContext TheContext;
     static llvm::IRBuilder<> Builder(TheContext);
     static std::unique_ptr<llvm::Module> TheModule;
+    static std::unordered_map<std::string, llvm::Value*> symbols;
 
     void Translate(std::shared_ptr<ast::ProgramNode> program, const std::string &outputFileName) {
         // Make the module, which holds all the code.
@@ -161,23 +163,31 @@ namespace llang::IR
         } else {
             constType = constant->ConstType;
         }
+        llvm::Value *constantLLVM;
         switch( constType ) {
         case ast::CONSTANT_TYPE::I8:
-            return llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
+            constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
+            break;
         case ast::CONSTANT_TYPE::I16:
-            return llvm::ConstantInt::get(TheContext, llvm::APInt(16, std::stol(constant->Value), true));
+            constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(16, std::stol(constant->Value), true));
+            break;
         case ast::CONSTANT_TYPE::I32:
-            return llvm::ConstantInt::get(TheContext, llvm::APInt(32, std::stol(constant->Value), true));
+            constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(32, std::stol(constant->Value), true));
+            break;
         case ast::CONSTANT_TYPE::I64:
-            return llvm::ConstantInt::get(TheContext, llvm::APInt(64, std::stol(constant->Value), true));
+            constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(64, std::stol(constant->Value), true));
+            break;
         case ast::CONSTANT_TYPE::FLOAT:
-            return llvm::ConstantFP::get(TheContext, llvm::APFloat(std::stof(constant->Value)));
+            constantLLVM = llvm::ConstantFP::get(TheContext, llvm::APFloat(std::stof(constant->Value)));
+            break;
         case ast::CONSTANT_TYPE::DOUBLE:
-            return llvm::ConstantFP::get(TheContext, llvm::APFloat(std::stod(constant->Value)));
+            constantLLVM = llvm::ConstantFP::get(TheContext, llvm::APFloat(std::stod(constant->Value)));
+            break;
         case ast::CONSTANT_TYPE::STRING:
         default:
-            return nullptr;;
+            break;
         }
+        return constantLLVM;
     }
 
     llvm::Value *TranslateNode(std::shared_ptr<ast::BinaryOperationNode> binStmnt, IR_INFO *irInfo) {
@@ -246,6 +256,11 @@ namespace llang::IR
             auto constant = CastNode<ast::VariableDefNode>(stmnt);
             return TranslateNode(constant, irInfo);
         }
+        case llang::ast::AST_TYPE::VariableRefNode:
+        {
+            auto constant = CastNode<ast::VariableRefNode>(stmnt);
+            return TranslateNode(constant, irInfo);
+        }
         case llang::ast::AST_TYPE::UnaryOperationNode:
         {
             if( !irInfo)
@@ -268,10 +283,47 @@ namespace llang::IR
 
         auto type = TranslateType(varDef->VarType, nullptr);
         auto name = varDef->Name;
-        return new llvm::AllocaInst(type, NULL, name, irInfo->block);
+        auto allocInst = Builder.CreateAlloca(type, nullptr, name);
+        symbols.insert({ name ,allocInst });
+
+        if( varDef->assignmentStmnt ) {
+            TranslateNode(varDef->assignmentStmnt, irInfo);
+        }
+
+        return allocInst;
     }
 
     llvm::Value *TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_INFO *irInfo) {
+        auto varName = varRef->Var->Name;
+        auto allocInst = symbols.at(varName);
+        if( !irInfo->isReturnStmnt ) {
+            return allocInst;
+        }
+
+        auto name = std::string("tmp" + varName);
+        auto type = allocInst->getType();
+                
+        auto loadInst = Builder.CreateLoad(type->getPointerElementType(), allocInst, name);
+        return loadInst;
+    }
+
+    llvm::Value *TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, IR_INFO *irInfo) {
+        llvm::Value *left = TranslateNode(assignmentNode->Left, irInfo);
+        llvm::Value *right = nullptr;
+        if( assignmentNode->Right->GetType() == ast::AST_TYPE::ConstantNode ) {
+            auto retStmntBackup = irInfo->isReturnStmnt;
+            auto retTypeBackup = irInfo->retType;
+            irInfo->isReturnStmnt = true;
+            irInfo->retType = ast::GetConstantType(Primitives::Get(assignmentNode->Left->Var->VarType));
+
+            auto constant = CastNode<ast::ConstantNode>(assignmentNode->Right);
+            right = TranslateNode(constant, irInfo);
+
+            irInfo->isReturnStmnt = retStmntBackup;
+            irInfo->retType = retTypeBackup;
+        }
+        if (right)
+            return Builder.CreateStore(right, left);
         return nullptr;
     }
 
@@ -290,6 +342,11 @@ namespace llang::IR
             auto binStmnt = CastNode<ast::BinaryOperationNode>(operand);
             return TranslateNode(binStmnt, irInfo);
         }
+        case ast::STATEMENT_TYPE::ASSIGN:
+        {
+            auto constant = CastNode<ast::AssignNode>(operand);
+            return TranslateNode(constant, irInfo);
+        }
         case ast::STATEMENT_TYPE::CALL:
         default:
             // unsuported statment
@@ -298,7 +355,7 @@ namespace llang::IR
     }
 
     llvm::Type *TranslateType(std::string &type, ast::CONSTANT_TYPE *retType) {
-        if( symbol_table::Symbol::IsPrimitive(type) ) {
+        if( Primitives::Exists(type) ) {
             auto primitiveType = Primitives::Get(type);
             switch( primitiveType ) {
             case llang::PRIMITIVE_TYPE::VOID:
@@ -346,6 +403,7 @@ namespace llang::IR
                 }
                 return llvm::Type::getFloatTy(TheContext);
             case llang::PRIMITIVE_TYPE::FLOAT64:
+            default:
                 if( retType ) {
                     *retType = ast::CONSTANT_TYPE::DOUBLE;
                 }

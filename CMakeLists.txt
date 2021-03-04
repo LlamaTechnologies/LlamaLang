@@ -62,6 +62,7 @@ src/antlr/LlamaLangVisitor.cpp
 src/antlr/LlamaLangVisitor.h
 src/antlr/LlamaLangParseContext.hpp
 
+src/ast/AssignNode.cpp
 src/ast/AssignNode.hpp
 src/ast/AST_Types.hpp
 src/ast/AST_Types.cpp
@@ -74,6 +75,7 @@ src/ast/Node.hpp
 src/ast/ProgramNode.hpp
 src/ast/StatementNode.hpp
 src/ast/UnaryOperationNode.hpp
+src/ast/VariableDefNode.cpp
 src/ast/VariableDefNode.hpp
 src/ast/VariableRefNode.hpp
 
@@ -85,12 +87,8 @@ src/error_handling/SyntaxErrorListener.hpp
 src/semantic_analyzer/SemanticAnalyzer.cpp
 src/semantic_analyzer/SemanticAnalyzer.hpp
 
-src/symbol_table/ComplexTypeSymbol.hpp
-src/symbol_table/FunctionSymbol.hpp
-src/symbol_table/Symbol.hpp
-src/symbol_table/TypeSymbol.hpp
-src/symbol_table/VarSymbol.hpp
 src/symbol_table/SymbolTableScope.hpp
+src/symbol_table/SymbolTableScope.cpp
 
 src/Compiler.cpp
 src/Console.hpp
@@ -120,7 +118,7 @@ target_link_libraries(${EXEC_NAME} optimized antlr4-runtime debug antlr4-runtime
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter)
+llvm_map_components_to_libnames(llvm_libs support core binaryformat bitwriter)
 
 # Link against LLVM libraries
 target_link_libraries(${EXEC_NAME} ${llvm_libs})

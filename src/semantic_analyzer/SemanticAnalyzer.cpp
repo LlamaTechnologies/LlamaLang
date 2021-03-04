@@ -42,7 +42,7 @@ namespace llang::semantics
             return false;
         }
 
-        if( symbol_table::Symbol::IsPrimitive(funcNode->ReturnType) ) {
+        if( Primitives::Exists(funcNode->ReturnType) ) {
             auto retType = Primitives::Get(funcNode->ReturnType);
 
             // return type is void and the return statement has a return value

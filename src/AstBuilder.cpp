@@ -1,12 +1,15 @@
 #include "AstBuilder.hpp"
 #include "ast/Node.hpp"
 #include "ast/ProgramNode.hpp"
+#include "ast/AssignNode.hpp"
 #include "ast/VariableDefNode.hpp"
+#include "ast/VariableRefNode.hpp"
 #include "ast/FunctionDefNode.hpp"
 #include "ast/UnaryOperationNode.hpp"
 #include "ast/BinaryOperationNode.hpp"
 #include "ast/ConstantNode.hpp"
 #include <sstream>
+#include <memory>
 
 using namespace llang;
 
@@ -32,12 +35,18 @@ antlrcpp::Any AstBuilder::visitFunctionDef(LlamaLangParser::FunctionDefContext *
 
     parentContext->AstNode->children.push_back(funcNode);
 
+    // Add function scope to parent scope and make it current
+    currentScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode);
+
+
     /* Get the result of the last child visited (block) */
     auto blockAny = visitChildren(context);
 
     if( blockAny.is<ast::FunctionDefNode::BlockType *>() ) {
         funcNode->Block = *blockAny.as<ast::FunctionDefNode::BlockType *>();
     }
+
+    currentScope = currentScope->Parent;
 
     return nullptr;
 }
@@ -253,16 +262,44 @@ antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
     varDefNode->Name = context->IDENTIFIER()->getText();
     varDefNode->VarType = context->type_()->getText();
 
+    // Add symbol
+    currentScope->addSymbol(varDefNode->Name, varDefNode);
+
     if( context->ASSIGN() ) {
-        // variable define assign
-        // TODO assignment
+        auto assignmentStmnt = std::make_shared<ast::AssignNode>();
+        assignmentStmnt->Left = std::make_shared<ast::VariableRefNode>();
+        assignmentStmnt->Left->Var = varDefNode;
+        assignmentStmnt->Right = visit(context->expressionList());
+        varDefNode->assignmentStmnt = assignmentStmnt;
     } 
  
     return CastNode<ast::StatementNode>(varDefNode);
 }
 
 antlrcpp::Any AstBuilder::visitAssignment(LlamaLangParser::AssignmentContext *context) {
-    return antlrcpp::Any();
+    auto assignmentStmnt = std::make_shared<ast::AssignNode>();
+    
+    auto varName = context->IDENTIFIER()->getText();
+    auto varDefNode = CastNode<ast::VariableDefNode>(currentScope->findSymbol(varName));
+
+    auto varRefNode = std::make_shared<ast::VariableRefNode>();
+    varRefNode->Var = varDefNode;
+    varRefNode->SetFound(varName);
+
+    assignmentStmnt->Left = varRefNode;
+    assignmentStmnt->Right = visit(context->expressionList());
+
+    return CastNode<ast::StatementNode>(assignmentStmnt);
+}
+
+antlrcpp::Any llang::AstBuilder::visitOperandName(LlamaLangParser::OperandNameContext *context) {
+    auto varName = context->IDENTIFIER()->getText();
+    auto varDefNode = CastNode<ast::VariableDefNode>(currentScope->findSymbol(varName));
+
+    auto varRefNode = std::make_shared<ast::VariableRefNode>();
+    varRefNode->Var = varDefNode;
+    varRefNode->SetFound(varName);
+    return varRefNode;
 }
 
 /*
