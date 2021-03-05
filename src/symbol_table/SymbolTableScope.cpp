@@ -4,10 +4,16 @@ using namespace llang;
 using namespace symbol_table;
 
 void SymbolTableScope::addSymbol(const std::string &name, std::shared_ptr<ast::Node> data) {
-    Symbols.insert({ name, data });
+    if( Symbols.find(name) == Symbols.end() ) {
+        SymbolsVector vec;
+        vec.push_back(data);
+        Symbols.insert({ name, vec});
+    }
+    else
+        Symbols.at(name).push_back(data);
 }
 
-std::shared_ptr<ast::Node> SymbolTableScope::findSymbol(const std::string &name) {
+SymbolTableScope::SymbolsVector SymbolTableScope::findSymbol(const std::string &name, bool searchParentScopes) {
     if( Symbols.find(name) != Symbols.end() ) {
         return Symbols.at(name);
     }
@@ -16,18 +22,30 @@ std::shared_ptr<ast::Node> SymbolTableScope::findSymbol(const std::string &name)
     while( current ) {
         if( current->Symbols.find(name) != current->Symbols.end() )
             return current->Symbols.at(name);
-        current = current->Parent;
+        
+        if( searchParentScopes )
+            current = current->Parent;
+        else
+            current = nullptr;
     }
-    return nullptr;
+    return SymbolTableScope::SymbolsVector();
 }
 
 
-std::shared_ptr<SymbolTableScope> SymbolTableScope::addChild(SCOPE_TYPE childType, const std::string &name, std::shared_ptr<ast::Node> data) {
+SymbolTableScope::ScopesVector SymbolTableScope::addChild(SCOPE_TYPE childType, const std::string &name, std::shared_ptr<ast::Node> data) {
     addSymbol(name, data);
-
-    Data = data;
+    
     auto child = std::make_shared<SymbolTableScope>(childType);
-    children.insert({ name, child });
+    child->Data = data;
 
-    return child;
+    if( children.find(name) == children.end() ) {
+        ScopesVector vec;
+        vec.push_back(child);
+        children.insert({ name, vec });
+        return children.at(name);
+    } else {
+        auto vec = children.at(name);
+        vec.push_back(child);
+        return vec;
+    }
 }

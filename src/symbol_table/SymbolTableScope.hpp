@@ -24,19 +24,22 @@ namespace llang::symbol_table
      *    - namespace.
      **/
     struct SymbolTableScope {
+        using SymbolsVector = std::vector<std::shared_ptr<ast::Node>>;
+        using ScopesVector = std::vector<std::shared_ptr<SymbolTableScope>>;
+        
         SCOPE_TYPE ScopeType;
-        std::shared_ptr<SymbolTableScope> Parent;
         std::shared_ptr<ast::Node> Data;
-        std::unordered_map<std::string, std::shared_ptr<ast::Node>> Symbols;
-        std::unordered_map<std::string, std::shared_ptr<SymbolTableScope>> children;
+        std::shared_ptr<SymbolTableScope> Parent;
+        std::unordered_map<std::string, SymbolsVector> Symbols;
+        std::unordered_map<std::string, ScopesVector> children;
         
         SymbolTableScope(SCOPE_TYPE scopeType)
             : ScopeType(scopeType) {}
 
 
         void addSymbol(const std::string &name, std::shared_ptr<ast::Node> data);
-        std::shared_ptr<ast::Node> findSymbol(const std::string& name);
-        std::shared_ptr<SymbolTableScope> addChild(SCOPE_TYPE childType, const std::string& name, std::shared_ptr<ast::Node> data);
+        SymbolsVector findSymbol(const std::string& name, bool searchParentScopes);
+        ScopesVector addChild(SCOPE_TYPE childType, const std::string& name, std::shared_ptr<ast::Node> data);
 
         void printScopeTree(int indentLevel = 0) {
             /*

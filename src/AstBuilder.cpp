@@ -17,26 +17,28 @@ antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *co
     context->AstNode = ASTree;
 
     // add program source to the program tree
-    visitChildren(context);
+    for( auto child : context->children ) {
+        auto result = visit(child);
+        if( result.isNotNull() ) {
+            auto resultVal = result.as<ast::Node::ChildType>();
+            ASTree->children.push_back(result);
+        }
+    }
 
     return ASTree;
 }
 
 antlrcpp::Any AstBuilder::visitFunctionDef(LlamaLangParser::FunctionDefContext *context) {
-    auto parentContext = (LlamaLangParseContext *) context->parent;
-    context->AstNode = std::make_shared<ast::FunctionDefNode>();
-
-    auto funcNode = CastNode<ast::FunctionDefNode>(context->AstNode);
+    auto funcNode = std::make_shared<ast::FunctionDefNode>(); 
+    context->AstNode = funcNode;
 
     funcNode->FileName = FileName;
     funcNode->Line = context->start->getLine();
     funcNode->Name = context->IDENTIFIER()->getText();
     funcNode->ReturnType = context->type_()->getText();
 
-    parentContext->AstNode->children.push_back(funcNode);
-
     // Add function scope to parent scope and make it current
-    currentScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode);
+    currentScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode).back();
 
 
     /* Get the result of the last child visited (block) */
@@ -48,7 +50,7 @@ antlrcpp::Any AstBuilder::visitFunctionDef(LlamaLangParser::FunctionDefContext *
 
     currentScope = currentScope->Parent;
 
-    return nullptr;
+    return CastNode<ast::Node>(funcNode);
 }
 
 antlrcpp::Any AstBuilder::visitSignature(LlamaLangParser::SignatureContext *context) {
@@ -87,7 +89,6 @@ antlrcpp::Any AstBuilder::VisitParameters(LlamaLangParser::ParametersContext *co
 antlrcpp::Any AstBuilder::visitBlock(LlamaLangParser::BlockContext *context) {
     // returns the std::vector from visitStatementList
     return visitChildren(context);
-    //return visitBlockChildren(context);
 }
 
 antlrcpp::Any llang::AstBuilder::visitStatementList(LlamaLangParser::StatementListContext *context) {
@@ -261,18 +262,20 @@ antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
     varDefNode->Line = context->start->getLine();
     varDefNode->Name = context->IDENTIFIER()->getText();
     varDefNode->VarType = context->type_()->getText();
-
-    // Add symbol
-    currentScope->addSymbol(varDefNode->Name, varDefNode);
+    varDefNode->isGlobal = currentScope == globalScope;
 
     if( context->ASSIGN() ) {
         auto assignmentStmnt = std::make_shared<ast::AssignNode>();
         assignmentStmnt->Left = std::make_shared<ast::VariableRefNode>();
+        assignmentStmnt->Left->WasFound = true;
         assignmentStmnt->Left->Var = varDefNode;
         assignmentStmnt->Right = visit(context->expressionList());
         varDefNode->assignmentStmnt = assignmentStmnt;
-    } 
- 
+    }
+
+    // Add symbol
+    currentScope->addSymbol(varDefNode->Name, varDefNode);
+
     return CastNode<ast::StatementNode>(varDefNode);
 }
 
@@ -280,11 +283,8 @@ antlrcpp::Any AstBuilder::visitAssignment(LlamaLangParser::AssignmentContext *co
     auto assignmentStmnt = std::make_shared<ast::AssignNode>();
     
     auto varName = context->IDENTIFIER()->getText();
-    auto varDefNode = CastNode<ast::VariableDefNode>(currentScope->findSymbol(varName));
-
     auto varRefNode = std::make_shared<ast::VariableRefNode>();
-    varRefNode->Var = varDefNode;
-    varRefNode->SetFound(varName);
+    varRefNode->SetAsNotFound(varName);
 
     assignmentStmnt->Left = varRefNode;
     assignmentStmnt->Right = visit(context->expressionList());
@@ -294,11 +294,10 @@ antlrcpp::Any AstBuilder::visitAssignment(LlamaLangParser::AssignmentContext *co
 
 antlrcpp::Any llang::AstBuilder::visitOperandName(LlamaLangParser::OperandNameContext *context) {
     auto varName = context->IDENTIFIER()->getText();
-    auto varDefNode = CastNode<ast::VariableDefNode>(currentScope->findSymbol(varName));
 
     auto varRefNode = std::make_shared<ast::VariableRefNode>();
-    varRefNode->Var = varDefNode;
-    varRefNode->SetFound(varName);
+    varRefNode->SetAsNotFound(varName);
+    
     return varRefNode;
 }
 

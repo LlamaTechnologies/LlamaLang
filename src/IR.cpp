@@ -85,6 +85,12 @@ namespace llang::IR
                 TranslateNode(funcNode);
                 break;
             }
+            case ast::AST_TYPE::VariableDefNode:
+            {
+                auto varDefNode = CastNode<ast::VariableDefNode>(node);
+                TranslateNode(varDefNode, nullptr);
+                break;
+            }
             default:
                 Console::WriteLine(ast::GetAstTypeName(nodeType) + " Not implemented");
                 break;
@@ -95,6 +101,7 @@ namespace llang::IR
         Console::WriteLine();
         TheModule->dump();
     #endif
+    
         std::error_code errorCode(1, std::iostream_category());
         llvm::raw_ostream& llvmOutputFile = llvm::raw_fd_ostream(outputFileName, errorCode);
         llvm::WriteBitcodeToFile(*TheModule, llvmOutputFile);
@@ -261,6 +268,11 @@ namespace llang::IR
             auto constant = CastNode<ast::VariableRefNode>(stmnt);
             return TranslateNode(constant, irInfo);
         }
+        case llang::ast::AST_TYPE::AssignNode:
+        {
+            auto constant = CastNode<ast::AssignNode>(stmnt);
+            return TranslateNode(constant, irInfo);
+        }
         case llang::ast::AST_TYPE::UnaryOperationNode:
         {
             if( !irInfo)
@@ -277,8 +289,11 @@ namespace llang::IR
 
     llvm::Value *TranslateNode(std::shared_ptr<ast::VariableDefNode> varDef, IR_INFO *irInfo) {
         if( !irInfo ) {
-            Console::WriteLine("TranslateVariableDefNode :: idInfo is null!");
-            return nullptr;
+            if( !varDef->isGlobal ) {
+                Console::WriteLine("IR_Info is null!");
+                return nullptr;
+            }
+
         }
 
         auto type = TranslateType(varDef->VarType, nullptr);
@@ -321,7 +336,12 @@ namespace llang::IR
 
             irInfo->isReturnStmnt = retStmntBackup;
             irInfo->retType = retTypeBackup;
+        } else if( assignmentNode->Right->GetType() == ast::AST_TYPE::VariableRefNode ) {
+            auto variableRef= CastNode<ast::VariableRefNode>(assignmentNode->Right);
+            auto rightPtr = TranslateNode(variableRef, irInfo);
+            right = Builder.CreateLoad(rightPtr->getType()->getPointerElementType(), rightPtr, "tmp" + variableRef->Var->Name);
         }
+
         if (right)
             return Builder.CreateStore(right, left);
         return nullptr;

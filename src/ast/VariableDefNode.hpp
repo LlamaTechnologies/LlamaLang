@@ -11,6 +11,7 @@ namespace llang::ast {
      * Represents a variable/param definition
      **/
     struct VariableDefNode : public StatementNode {
+        bool isGlobal = false;
         std::string Name;
         std::string VarType;
         std::shared_ptr<AssignNode> assignmentStmnt;
