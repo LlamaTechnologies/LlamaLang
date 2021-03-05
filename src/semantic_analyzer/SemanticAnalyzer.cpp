@@ -288,6 +288,8 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNod
 
 
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode, Scope scope) {
+    // TODO: Check if types match
+
     // Check left node
     if( !checkNode(assignmentNode->Left, scope) )
         return false;
@@ -303,9 +305,6 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode
     default:
         break;
     }
-    
-
-    // TODO: Check if types match
 
     return true;
 }

@@ -9,7 +9,7 @@ func main(argc: int, argv: []char) -> int32 {
 }
 
 /*
-* ERROR left reference to b doesnt exists
+* ERROR left reference to b doesn't exists
 */
 func main(argv: []char) -> uint16 {
     x : int32;
@@ -19,7 +19,7 @@ func main(argv: []char) -> uint16 {
 }
 
 /*
-* ERROR right reference to b doesnt exists
+* ERROR right reference to b doesn't exists
 */
 func main(argv: []char) -> uint16 {
     x : int32;
