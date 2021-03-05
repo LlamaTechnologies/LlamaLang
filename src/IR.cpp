@@ -22,12 +22,13 @@ namespace llang::IR
     struct IR_INFO {
         bool isReturnStmnt;
         bool isInt;
+        bool isGlobal;
         ast::CONSTANT_TYPE retType;
         llvm::BasicBlock *block;
     };
 
     static llvm::Function *TranslateNode(std::shared_ptr<ast::FunctionDefNode> function);
-    static llvm::Value *TranslateNode(std::shared_ptr<ast::ConstantNode> constant, IR_INFO *irInfo);
+    static llvm::Constant *TranslateNode(std::shared_ptr<ast::ConstantNode> constant, IR_INFO *irInfo);
     /**
      * @brief Translate a binary operation
      * @param binStmnt the binary operation
@@ -69,7 +70,7 @@ namespace llang::IR
     static llvm::LLVMContext TheContext;
     static llvm::IRBuilder<> Builder(TheContext);
     static std::unique_ptr<llvm::Module> TheModule;
-    static std::unordered_map<std::string, llvm::Value*> symbols;
+    static std::unordered_map<std::string, llvm::Value *> symbols;
 
     void Translate(std::shared_ptr<ast::ProgramNode> program, const std::string &outputFileName) {
         // Make the module, which holds all the code.
@@ -101,9 +102,9 @@ namespace llang::IR
         Console::WriteLine();
         TheModule->dump();
     #endif
-    
+
         std::error_code errorCode(1, std::iostream_category());
-        llvm::raw_ostream& llvmOutputFile = llvm::raw_fd_ostream(outputFileName, errorCode);
+        llvm::raw_ostream &llvmOutputFile = llvm::raw_fd_ostream(outputFileName, errorCode);
         llvm::WriteBitcodeToFile(*TheModule, llvmOutputFile);
     }
 
@@ -147,7 +148,7 @@ namespace llang::IR
             function->dump();
 
             Console::WriteLine();
-            
+
             // Error reading body, remove function.
             function->eraseFromParent();
             return nullptr;
@@ -156,9 +157,9 @@ namespace llang::IR
         return function;
     }
 
-    llvm::Value *TranslateNode(std::shared_ptr<ast::ConstantNode> constant, IR_INFO *irInfo) {
+    llvm::Constant *TranslateNode(std::shared_ptr<ast::ConstantNode> constant, IR_INFO *irInfo) {
         ast::CONSTANT_TYPE constType;
-        if( irInfo && irInfo->isReturnStmnt) {
+        if( irInfo && irInfo->isReturnStmnt ) {
             auto retType = irInfo->retType;
             if( retType == ast::CONSTANT_TYPE::FLOAT || retType == ast::CONSTANT_TYPE::DOUBLE ) {
                 constType = constant->ConstType > retType ? constant->ConstType : retType;
@@ -170,7 +171,7 @@ namespace llang::IR
         } else {
             constType = constant->ConstType;
         }
-        llvm::Value *constantLLVM;
+        llvm::Constant *constantLLVM = nullptr;
         switch( constType ) {
         case ast::CONSTANT_TYPE::I8:
             constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
@@ -208,7 +209,7 @@ namespace llang::IR
 
         auto areInt = ast::BINARY_OPERANDS_TYPES(isLint.isInt << 1 & isRint.isInt);
 
-        if( irInfo!= nullptr )
+        if( irInfo != nullptr )
             irInfo->isInt = areInt == ast::BINARY_OPERANDS_TYPES::INT_INT;
 
         switch( binStmnt->Op ) {
@@ -275,7 +276,7 @@ namespace llang::IR
         }
         case llang::ast::AST_TYPE::UnaryOperationNode:
         {
-            if( !irInfo)
+            if( !irInfo )
                 return nullptr;
 
             auto unaryStmnt = CastNode<ast::UnaryOperationNode>(stmnt);
@@ -293,32 +294,68 @@ namespace llang::IR
                 Console::WriteLine("IR_Info is null!");
                 return nullptr;
             }
-
+            irInfo = new IR_INFO();
         }
 
         auto type = TranslateType(varDef->VarType, nullptr);
         auto name = varDef->Name;
-        auto allocInst = Builder.CreateAlloca(type, nullptr, name);
-        symbols.insert({ name ,allocInst });
 
-        if( varDef->assignmentStmnt ) {
+        if( varDef->isGlobal ) {
+            TheModule->getOrInsertGlobal(name, type);
+            auto globalVar = TheModule->getNamedGlobal(name);
+            auto assignStmnt = varDef->assignmentStmnt;
+            if( assignStmnt ) {
+                if( assignStmnt->Right->GetType() == ast::AST_TYPE::ConstantNode ) {
+                    IR_INFO backUp;
+                    backUp.isGlobal = irInfo->isGlobal;
+                    backUp.isReturnStmnt = irInfo->isReturnStmnt;
+                    backUp.retType = irInfo->retType;
+                    irInfo->isReturnStmnt = irInfo->isGlobal = true;
+                    irInfo->retType = ast::GetConstantType(Primitives::Get(varDef->VarType));
+                    auto initVal = TranslateNode(CastNode<ast::ConstantNode>(assignStmnt->Right), irInfo);
+                    
+                    if( initVal->getType()->isPointerTy() ) {
+                        Console::WriteLine("Is pointer");
+                    }
+                    
+                    globalVar->setInitializer(initVal);
+                    irInfo->isGlobal = backUp.isGlobal;
+                    irInfo->isReturnStmnt = backUp.isReturnStmnt;
+                    irInfo->retType = backUp.retType;
+                }
+            }
+            delete irInfo;
+            irInfo = nullptr;
+            return globalVar;
+        }
+
+        auto *varInst = Builder.CreateAlloca(type, nullptr, name);
+        symbols.insert({ name , varInst });
+
+        auto assignStmnt = varDef->assignmentStmnt;
+        if( assignStmnt ) {
             TranslateNode(varDef->assignmentStmnt, irInfo);
         }
 
-        return allocInst;
+        return varInst;
     }
 
     llvm::Value *TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_INFO *irInfo) {
         auto varName = varRef->Var->Name;
-        auto allocInst = symbols.at(varName);
+        llvm::Value *varInst = nullptr;
+        if( varRef->Var->isGlobal )
+            varInst = TheModule->getNamedGlobal(varName);
+        else
+            varInst = symbols.at(varName);
+
         if( !irInfo->isReturnStmnt ) {
-            return allocInst;
+            return varInst;
         }
 
         auto name = std::string("tmp" + varName);
-        auto type = allocInst->getType();
-                
-        auto loadInst = Builder.CreateLoad(type->getPointerElementType(), allocInst, name);
+        auto type = varInst->getType();
+
+        auto loadInst = Builder.CreateLoad(type->getPointerElementType(), varInst, name);
         return loadInst;
     }
 
@@ -337,12 +374,12 @@ namespace llang::IR
             irInfo->isReturnStmnt = retStmntBackup;
             irInfo->retType = retTypeBackup;
         } else if( assignmentNode->Right->GetType() == ast::AST_TYPE::VariableRefNode ) {
-            auto variableRef= CastNode<ast::VariableRefNode>(assignmentNode->Right);
+            auto variableRef = CastNode<ast::VariableRefNode>(assignmentNode->Right);
             auto rightPtr = TranslateNode(variableRef, irInfo);
             right = Builder.CreateLoad(rightPtr->getType()->getPointerElementType(), rightPtr, "tmp" + variableRef->Var->Name);
         }
 
-        if (right)
+        if( right )
             return Builder.CreateStore(right, left);
         return nullptr;
     }

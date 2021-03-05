@@ -1,4 +1,4 @@
-f : int32 = 0;
+f : int32 = 55;
 
 func main(argc: int, argv: []char) -> int32 {
     x : int32;
