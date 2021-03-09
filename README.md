@@ -1,9 +1,10 @@
 # LlamaLang
-This is a language for game development heavily inspired by Jonathan Blows language, Jai.
+This language is defined with game development in mind. Also tries to standardize some implementation details so many other implementations are compatible between them in contrast to c++. Its features are heavily inspired by Jonathan Blows language, Jai.
 - Annotations like Java.
 - Sintax Go/TypeScript inspired.
-- Reflection and function compile time excecution.
-- Memory is completly managed by the programmer.
+- Reflection
+- compile time funcitons excecution.
+- Memory management fully up to the programmer.
 - Strongly typed.
 - Compiled.
 
