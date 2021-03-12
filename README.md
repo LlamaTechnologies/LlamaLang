@@ -15,7 +15,7 @@ Features:
 See the [wiki](https://github.com/Pablo96/LlamaLangGo/wiki) for language definition
 
 ## Implementation details
-The compiler is made using ANTLR v4 with Go target.  
+The compiler is made using ANTLR v4 with C++ target.  
 It targets LLVM IR, so it can be compiled for every hardware supported by LLVM and have debugging capabilities.
 
 ## Example
