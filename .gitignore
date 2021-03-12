@@ -34,8 +34,10 @@
 # Folders
 /bin
 /project
+/cmake-build-debug
 /.antlr4
 /.antlr
+/.idea
 
 # User-specific files
 *.rsuser
