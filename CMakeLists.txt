@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # set c++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # MSVC runtime library flags are selected by an abstraction.
@@ -94,8 +94,8 @@ src/Compiler.cpp
 src/Console.hpp
 src/Primitives.cpp
 src/Primitives.hpp
-src/AstBuilder.cpp
-src/AstBuilder.hpp
+        src/ast/AstBuilder.cpp
+        src/ast/AstBuilder.hpp
 src/IR.cpp
 src/IR.hpp
 src/CppReflection.hpp
@@ -138,6 +138,7 @@ endforeach()
 # SET BUILD TARGETS
 #####################################
 set_property(TARGET ${EXEC_NAME} APPEND PROPERTY COMPILE_DEFINITIONS ANTLR4CPP_STATIC)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
 
 #####################################

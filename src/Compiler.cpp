@@ -8,7 +8,7 @@
 #include "antlr/LlamaLangParser.h"
 #include "error_handling/SyntaxErrorListener.hpp"
 #include "semantic_analyzer/SemanticAnalyzer.hpp"
-#include "AstBuilder.hpp"
+#include "ast/AstBuilder.hpp"
 #include "IR.hpp"
 
 #ifdef _WIN32
@@ -76,7 +76,7 @@ int main(int argc, const char *argv[]) {
     auto errors = syntaxErrorListener.Errors;
     sourceFile.close();
 
-    auto astBuilder = AstBuilder(fileName);
+    auto astBuilder = ast::AstBuilder(fileName);
     auto ast = astBuilder.visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
     auto analisedAST = semantics::SemanticAnalyzer(ast, astBuilder.globalScope, errors).check();
 

@@ -20,8 +20,13 @@ namespace llang::ast
 
     enum BINARY_OPERANDS_TYPES {
         INT_INT,
+        INT_UINT,
         INT_FLOAT,
+        UINT_INT,
+        UINT_UINT,
+        UINT_FLOAT,
         FLOAT_INT,
+        FLOAT_UINT,
         FLOAT_FLOAT
     };
 
