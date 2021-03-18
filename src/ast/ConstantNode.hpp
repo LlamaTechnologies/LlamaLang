@@ -4,6 +4,7 @@
 #include <memory>
 #include "StatementNode.hpp"
 #include "../CppReflection.hpp"
+#include "../Primitives.hpp"
 #include "AST_Types.hpp"
 #include "BinaryOperationNode.hpp"
 
@@ -23,6 +24,8 @@ namespace llang::ast
     };
 
     std::string GetConstantTypeName(CONSTANT_TYPE type);
+    CONSTANT_TYPE GetConstantType(std::string name);
+    CONSTANT_TYPE GetConstantType(PRIMITIVE_TYPE primitive);
 
     /**
      * Represents any compile time constant like the one above

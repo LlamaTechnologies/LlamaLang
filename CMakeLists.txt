@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # set c++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # MSVC runtime library flags are selected by an abstraction.
@@ -62,18 +62,21 @@ src/antlr/LlamaLangVisitor.cpp
 src/antlr/LlamaLangVisitor.h
 src/antlr/LlamaLangParseContext.hpp
 
+src/ast/AssignNode.cpp
 src/ast/AssignNode.hpp
 src/ast/AST_Types.hpp
 src/ast/AST_Types.cpp
 src/ast/BinaryOperationNode.hpp
 src/ast/ConstantNode.hpp
+src/ast/ConstantNode.cpp
 src/ast/FunctionCallNode.hpp
 src/ast/FunctionDefNode.hpp
 src/ast/Node.hpp
 src/ast/ProgramNode.hpp
 src/ast/StatementNode.hpp
 src/ast/UnaryOperationNode.hpp
-src/ast/VariableDeclNode.hpp
+src/ast/VariableDefNode.cpp
+src/ast/VariableDefNode.hpp
 src/ast/VariableRefNode.hpp
 
 src/built-in/Built-inTypes.hpp
@@ -84,19 +87,15 @@ src/error_handling/SyntaxErrorListener.hpp
 src/semantic_analyzer/SemanticAnalyzer.cpp
 src/semantic_analyzer/SemanticAnalyzer.hpp
 
-src/symbol_table/ComplexTypeSymbol.hpp
-src/symbol_table/FunctionSymbol.hpp
-src/symbol_table/Symbol.hpp
-src/symbol_table/TypeSymbol.hpp
-src/symbol_table/VarSymbol.hpp
 src/symbol_table/SymbolTableScope.hpp
+src/symbol_table/SymbolTableScope.cpp
 
 src/Compiler.cpp
 src/Console.hpp
 src/Primitives.cpp
 src/Primitives.hpp
-src/AstBuilder.cpp
-src/AstBuilder.hpp
+        src/ast/AstBuilder.cpp
+        src/ast/AstBuilder.hpp
 src/IR.cpp
 src/IR.hpp
 src/CppReflection.hpp
@@ -119,7 +118,7 @@ target_link_libraries(${EXEC_NAME} optimized antlr4-runtime debug antlr4-runtime
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter)
+llvm_map_components_to_libnames(llvm_libs support core binaryformat bitwriter)
 
 # Link against LLVM libraries
 target_link_libraries(${EXEC_NAME} ${llvm_libs})
@@ -139,6 +138,7 @@ endforeach()
 # SET BUILD TARGETS
 #####################################
 set_property(TARGET ${EXEC_NAME} APPEND PROPERTY COMPILE_DEFINITIONS ANTLR4CPP_STATIC)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
 
 #####################################

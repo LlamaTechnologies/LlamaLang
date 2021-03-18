@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 #include "Node.hpp"
-#include "VariableDeclNode.hpp"
+#include "VariableDefNode.hpp"
 #include "StatementNode.hpp"
 #include "AST_Types.hpp"
 
@@ -17,7 +17,7 @@ namespace llang::ast {
 
         std::string Name;
         std::string ReturnType;
-        std::vector<std::shared_ptr<VariableDeclNode>> Parameters;
+        std::vector<std::shared_ptr<VariableDefNode>> Parameters;
         BlockType Block;
         
         AST_TYPE GetType() const override { 

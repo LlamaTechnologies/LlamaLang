@@ -1,42 +1,29 @@
 /*
-* ERROR int8 overflow!
+* ERROR redefinition of x
 */
-func main(int, argv: []char) -> int8 {
-    return 600;
+func main(argc: int, argv: []char) -> int32 {
+    x : int32;
+    x : uint8;
+
+    return x;
 }
 
 /*
-* ERROR uint16 cant represetn signed values!
+* ERROR left reference to b doesn't exists
 */
 func main(argv: []char) -> uint16 {
-    return -5;
+    x : int32;
+    b = x;
+
+    return y;
 }
 
 /*
-* ERROR mismatch type string -> int8
+* ERROR right reference to b doesn't exists
 */
-func main() -> byte {
-    return "5";
-}
+func main(argv: []char) -> uint16 {
+    x : int32;
+    y : int32 = b;
 
-/*
-* ERROR mismatch type double -> int8
-*/
-func main() -> int8 {
-    return .4216;
-}
-
-/*
-* WARNING implicit double -> float convertion
-*/
-func main() -> float {
-    return 5.02;
-}
-
-
-/*
-* OK
-*/
-func main() -> double {
-    return 2.5F;
+    return y;
 }

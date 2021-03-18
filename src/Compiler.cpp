@@ -8,7 +8,7 @@
 #include "antlr/LlamaLangParser.h"
 #include "error_handling/SyntaxErrorListener.hpp"
 #include "semantic_analyzer/SemanticAnalyzer.hpp"
-#include "AstBuilder.hpp"
+#include "ast/AstBuilder.hpp"
 #include "IR.hpp"
 
 #ifdef _WIN32
@@ -48,7 +48,7 @@ int main(int argc, const char *argv[]) {
         Console::WriteLine("File does not exists!");
         return 1;
     }
-    
+
     auto sourceStream = antlr4::ANTLRInputStream(sourceFile);
 
 #ifdef _DEBUG
@@ -76,9 +76,9 @@ int main(int argc, const char *argv[]) {
     auto errors = syntaxErrorListener.Errors;
     sourceFile.close();
 
-
-    auto ast = AstBuilder(fileName).visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
-    auto analisedAST = semantics::SemanticAnalyzer(ast, errors).check();
+    auto astBuilder = ast::AstBuilder(fileName);
+    auto ast = astBuilder.visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
+    auto analisedAST = semantics::SemanticAnalyzer(ast, astBuilder.globalScope, errors).check();
 
     PrintErrors(errors);
     PrintAST(analisedAST);
@@ -87,7 +87,7 @@ int main(int argc, const char *argv[]) {
     logFile.close();
 
     AwaitUserInput();
-    
+
     // If errors do not create executable
     if( !errors.empty() )
         return 1;

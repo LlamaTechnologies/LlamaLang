@@ -26,11 +26,9 @@ public:
 
     virtual antlrcpp::Any visitExpressionList(LlamaLangParser::ExpressionListContext *context) = 0;
 
-    virtual antlrcpp::Any visitFunctionDecl(LlamaLangParser::FunctionDeclContext *context) = 0;
+    virtual antlrcpp::Any visitFunctionDef(LlamaLangParser::FunctionDefContext *context) = 0;
 
-    virtual antlrcpp::Any visitVarDecl(LlamaLangParser::VarDeclContext *context) = 0;
-
-    virtual antlrcpp::Any visitVarSpec(LlamaLangParser::VarSpecContext *context) = 0;
+    virtual antlrcpp::Any visitVarDef(LlamaLangParser::VarDefContext *context) = 0;
 
     virtual antlrcpp::Any visitBlock(LlamaLangParser::BlockContext *context) = 0;
 

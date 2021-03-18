@@ -1,14 +1,14 @@
 ﻿#pragma once
 #include <string>
-#include <vector>
+#include <unordered_map>
 #include <memory>
-#include "Symbol.hpp"
-
+#include "../ast/Node.hpp"
 
 namespace llang::symbol_table
 {
-    enum class SCOPE_TYPE
-    {
+    struct Symbol;
+
+    enum class SCOPE_TYPE {
         GLOBAL,     // program gloabl scope
         FUNC,       // function scope
         METHOD,     // same as func but has access to members
@@ -23,21 +23,25 @@ namespace llang::symbol_table
      *    - method
      *    - namespace.
      **/
-    struct SymbolTableScope
-    {
+    struct SymbolTableScope {
+        using SymbolsVector = std::vector<std::shared_ptr<ast::Node>>;
+        using ScopesVector = std::vector<std::shared_ptr<SymbolTableScope>>;
+        
         SCOPE_TYPE ScopeType;
-
+        std::shared_ptr<ast::Node> Data;
         std::shared_ptr<SymbolTableScope> Parent;
-
-        std::vector<std::shared_ptr<Symbol>> Symbols;
-
-        std::vector<std::shared_ptr<SymbolTableScope>> children;
-
+        std::unordered_map<std::string, SymbolsVector> Symbols;
+        std::unordered_map<std::string, ScopesVector> children;
+        
         SymbolTableScope(SCOPE_TYPE scopeType)
-        : ScopeType(scopeType) {}
+            : ScopeType(scopeType) {}
 
-        void printScopeTree(int indentLevel = 0)
-        {
+
+        void addSymbol(const std::string &name, std::shared_ptr<ast::Node> data);
+        SymbolsVector findSymbol(const std::string& name, bool searchParentScopes);
+        ScopesVector addChild(SCOPE_TYPE childType, const std::string& name, std::shared_ptr<ast::Node> data);
+
+        void printScopeTree(int indentLevel = 0) {
             /*
             string identation = new String('\t', indentLevel);
             Console.WriteLine(identation + ScopeType.ToString() + " {");

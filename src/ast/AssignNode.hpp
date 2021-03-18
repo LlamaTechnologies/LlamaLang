@@ -1,9 +1,10 @@
 #pragma once
 #include "StatementNode.hpp"
-#include "VariableRefNode.hpp"
 
 namespace llang::ast
 {
+    struct VariableRefNode;
+
     /**
      * Represents a assignment to a variable
     */
@@ -18,8 +19,6 @@ namespace llang::ast
             return GET_AST_TYPE(AssignNode);
         }
 
-        void ToString(std::string &str, const int tabLevel) const override {
-
-        }
+        void ToString(std::string &str, const int tabLevel) const override;
     };
 }

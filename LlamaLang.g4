@@ -1,7 +1,7 @@
 grammar LlamaLang;
 
 sourceFile
-    : (functionDecl | varDecl)* eos
+    : (functionDef | varDef eos)* eos
     ;
 
 identifierList
@@ -14,16 +14,12 @@ expressionList
 
 
 // Function declarations
-functionDecl
+functionDef
     : FUNC IDENTIFIER signature ARROW type_ block
     ;
 
-varDecl
-    : varSpec
-    ;
-
-varSpec
-    : identifierList COLON type_ ('=' expressionList)? eos
+varDef
+    : IDENTIFIER ':' type_ ('=' expressionList)?
     ;
 
 block
@@ -35,7 +31,7 @@ statementList
     ;
 
 statement
-    : varDecl
+    : varDef
     | simpleStmt
     | returnStmt
     | block
@@ -52,7 +48,7 @@ expressionStmt
     ;
 
 assignment
-    : expressionList assign_op expressionList
+    : IDENTIFIER assign_op expressionList
     ;
 
 assign_op

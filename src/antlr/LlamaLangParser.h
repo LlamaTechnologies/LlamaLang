@@ -27,16 +27,16 @@ public:
 
   enum {
     RuleSourceFile = 0, RuleIdentifierList = 1, RuleExpressionList = 2, 
-    RuleFunctionDecl = 3, RuleVarDecl = 4, RuleVarSpec = 5, RuleBlock = 6, 
-    RuleStatementList = 7, RuleStatement = 8, RuleSimpleStmt = 9, RuleExpressionStmt = 10, 
-    RuleAssignment = 11, RuleAssign_op = 12, RuleEmptyStmt = 13, RuleReturnStmt = 14, 
-    RuleType_ = 15, RulePointer = 16, RuleArray = 17, RuleTypeName = 18, 
-    RuleSignature = 19, RuleResult = 20, RuleParameters = 21, RuleParameterDecl = 22, 
-    RuleExpression = 23, RulePrimaryExpr = 24, RuleUnaryExpr = 25, RuleConversion = 26, 
-    RuleOperand = 27, RuleUnaryOp = 28, RuleLiteral = 29, RuleBasicLit = 30, 
-    RuleInteger = 31, RuleFloatingPoint = 32, RuleOperandName = 33, RuleQualifiedIdent = 34, 
-    RuleLiteralType = 35, RuleFieldDecl = 36, RuleString_ = 37, RuleArguments = 38, 
-    RuleMethodExpr = 39, RuleReceiverType = 40, RuleEos = 41
+    RuleFunctionDef = 3, RuleVarDef = 4, RuleBlock = 5, RuleStatementList = 6, 
+    RuleStatement = 7, RuleSimpleStmt = 8, RuleExpressionStmt = 9, RuleAssignment = 10, 
+    RuleAssign_op = 11, RuleEmptyStmt = 12, RuleReturnStmt = 13, RuleType_ = 14, 
+    RulePointer = 15, RuleArray = 16, RuleTypeName = 17, RuleSignature = 18, 
+    RuleResult = 19, RuleParameters = 20, RuleParameterDecl = 21, RuleExpression = 22, 
+    RulePrimaryExpr = 23, RuleUnaryExpr = 24, RuleConversion = 25, RuleOperand = 26, 
+    RuleUnaryOp = 27, RuleLiteral = 28, RuleBasicLit = 29, RuleInteger = 30, 
+    RuleFloatingPoint = 31, RuleOperandName = 32, RuleQualifiedIdent = 33, 
+    RuleLiteralType = 34, RuleFieldDecl = 35, RuleString_ = 36, RuleArguments = 37, 
+    RuleMethodExpr = 38, RuleReceiverType = 39, RuleEos = 40
   };
 
   explicit LlamaLangParser(antlr4::TokenStream *input);
@@ -52,9 +52,8 @@ public:
   class SourceFileContext;
   class IdentifierListContext;
   class ExpressionListContext;
-  class FunctionDeclContext;
-  class VarDeclContext;
-  class VarSpecContext;
+  class FunctionDefContext;
+  class VarDefContext;
   class BlockContext;
   class StatementListContext;
   class StatementContext;
@@ -96,11 +95,12 @@ public:
   public:
     SourceFileContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    EosContext *eos();
-    std::vector<FunctionDeclContext *> functionDecl();
-    FunctionDeclContext* functionDecl(size_t i);
-    std::vector<VarDeclContext *> varDecl();
-    VarDeclContext* varDecl(size_t i);
+    std::vector<EosContext *> eos();
+    EosContext* eos(size_t i);
+    std::vector<FunctionDefContext *> functionDef();
+    FunctionDefContext* functionDef(size_t i);
+    std::vector<VarDefContext *> varDef();
+    VarDefContext* varDef(size_t i);
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -141,9 +141,9 @@ public:
 
   ExpressionListContext* expressionList();
 
-  class  FunctionDeclContext : public LlamaLangParseContext {
+  class  FunctionDefContext : public LlamaLangParseContext {
   public:
-    FunctionDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    FunctionDefContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *FUNC();
     antlr4::tree::TerminalNode *IDENTIFIER();
@@ -157,29 +157,15 @@ public:
    
   };
 
-  FunctionDeclContext* functionDecl();
+  FunctionDefContext* functionDef();
 
-  class  VarDeclContext : public LlamaLangParseContext {
+  class  VarDefContext : public LlamaLangParseContext {
   public:
-    VarDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    VarDefContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    VarSpecContext *varSpec();
-
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  VarDeclContext* varDecl();
-
-  class  VarSpecContext : public LlamaLangParseContext {
-  public:
-    VarSpecContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    IdentifierListContext *identifierList();
+    antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *COLON();
     Type_Context *type_();
-    EosContext *eos();
     antlr4::tree::TerminalNode *ASSIGN();
     ExpressionListContext *expressionList();
 
@@ -188,7 +174,7 @@ public:
    
   };
 
-  VarSpecContext* varSpec();
+  VarDefContext* varDef();
 
   class  BlockContext : public LlamaLangParseContext {
   public:
@@ -225,7 +211,7 @@ public:
   public:
     StatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    VarDeclContext *varDecl();
+    VarDefContext *varDef();
     SimpleStmtContext *simpleStmt();
     ReturnStmtContext *returnStmt();
     BlockContext *block();
@@ -269,9 +255,9 @@ public:
   public:
     AssignmentContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    std::vector<ExpressionListContext *> expressionList();
-    ExpressionListContext* expressionList(size_t i);
+    antlr4::tree::TerminalNode *IDENTIFIER();
     Assign_opContext *assign_op();
+    ExpressionListContext *expressionList();
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;

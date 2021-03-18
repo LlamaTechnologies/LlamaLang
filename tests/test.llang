@@ -1,3 +1,10 @@
+f : int32 = 55;
+
 func main(argc: int, argv: []char) -> int32 {
-    return 10 / (4 + 8 * 2 - 10);
+    x : int32;
+    y : int32 = 8;
+    y = f;
+    x = y;
+
+    return x;
 }

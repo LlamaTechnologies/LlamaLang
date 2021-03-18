@@ -2,37 +2,71 @@
 #include "../ast/UnaryOperationNode.hpp"
 #include "../ast/FunctionDefNode.hpp"
 #include "../ast/ConstantNode.hpp"
+#include "../ast/VariableDefNode.hpp"
+#include "../ast/VariableRefNode.hpp"
+#include "../ast/AssignNode.hpp"
+#include "../ast/StatementNode.hpp"
 
-namespace llang::semantics
-{
-    SemanticAnalyzer::ErrorList *SemanticAnalyzer::errors = nullptr;
-    std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::ast = nullptr;
+using namespace llang;
+using namespace semantics;
+SemanticAnalyzer::ErrorList *SemanticAnalyzer::errors = nullptr;
+std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::ast = nullptr;
+SemanticAnalyzer::Scope SemanticAnalyzer::globalScope = nullptr;
 
-    SemanticAnalyzer::SemanticAnalyzer(std::shared_ptr<ast::ProgramNode> ast,
-                                       ErrorList &errors) {
-        SemanticAnalyzer::ast = ast;
-        SemanticAnalyzer::errors = &errors;
+SemanticAnalyzer::SemanticAnalyzer(std::shared_ptr<ast::ProgramNode> ast,
+                                   Scope scope,
+                                   ErrorList &errors) {
+    SemanticAnalyzer::ast = ast;
+    SemanticAnalyzer::globalScope = scope;
+    SemanticAnalyzer::errors = &errors;
+}
+
+std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::check() {
+    ast->ForEachDeep([](ast::Node::ChildType child) { checkNode(child); });
+
+    return ast;
+}
+
+bool SemanticAnalyzer::checkNode(ast::Node::ChildType node, Scope scope) {
+    if( scope == nullptr )
+        scope = globalScope;
+
+    switch( node->GetType() ) {
+    case ast::AST_TYPE::ProgramNode:
+        return false;
+    case ast::AST_TYPE::FunctionDefNode:
+        return checkNode(CastNode<ast::FunctionDefNode>(node), scope);
+    default:
+        return checkNode(CastNode<ast::StatementNode>(node), scope);
     }
+}
 
-    std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::check() {
-        ast->ForEachDeep([](ast::Node::ChildType child) { checkNode(child); });
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::StatementNode> node, Scope scope) {
+    if( !scope )
+        scope = globalScope;
 
-        return ast;
+    switch( node->GetType() ) {
+    case ast::AST_TYPE::VariableDefNode:
+        return checkNode(CastNode<ast::VariableDefNode>(node), scope);
+    case ast::AST_TYPE::AssignNode:
+        return checkNode(CastNode<ast::AssignNode>(node), scope);
+    default:
+        return false;
     }
+}
 
-    bool SemanticAnalyzer::checkNode(ast::Node::ChildType node) {
-        switch( node->GetType() ) {
-        case ast::AST_TYPE::FunctionDefNode:
-        {
-            return checkNode(std::static_pointer_cast<ast::FunctionDefNode, ast::Node>( node ));
-        } break;
-        }
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionDefNode> funcNode, Scope scope) {
+    auto returnStmnt = std::static_pointer_cast<ast::UnaryOperationNode, ast::StatementNode>( funcNode->Block.back() );
+
+    // Check redefinition
+    auto scopesVec = scope->children.at(funcNode->Name);
+    if( scopesVec.size() > 1 ) {
         return false;
     }
 
-    bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionDefNode> funcNode) {
-        auto returnStmnt = std::static_pointer_cast<ast::UnaryOperationNode, ast::StatementNode>( funcNode->Block.back() );
+    auto funcScopeNode = scopesVec.front();
 
+    {   // Function Signature and return type check
         // return type is not void and the last statement isnt a return
         if( funcNode->ReturnType != "void" && returnStmnt->Op != ast::UNARY_STATEMENT_TYPE::RETURN ) {
             error_handling::Error error(funcNode->Line, funcNode->FileName,
@@ -42,7 +76,7 @@ namespace llang::semantics
             return false;
         }
 
-        if( symbol_table::Symbol::IsPrimitive(funcNode->ReturnType) ) {
+        if( Primitives::Exists(funcNode->ReturnType) ) {
             auto retType = Primitives::Get(funcNode->ReturnType);
 
             // return type is void and the return statement has a return value
@@ -201,6 +235,76 @@ namespace llang::semantics
                 }
             }
         }
-        return true;
     }
-} // namespace llang::semantics
+
+
+    // check statements inside the block
+    bool noInternalErrors = true;
+    for( auto stmnt : funcNode->Block ) {
+        bool noError = checkNode(stmnt, funcScopeNode);
+        if( !noError )
+            noInternalErrors = false;
+    }
+
+    return noInternalErrors;
+}
+
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableDefNode> varDefNode, Scope scope) {
+    auto name = varDefNode->Name;
+    auto symbolVec = scope->findSymbol(name, false);
+    if( symbolVec.size() > 1 ) {
+        // Redefinition error
+        error_handling::Error error(varDefNode->Line, name, "Variable redefinition");
+        errors->emplace_back(error);
+        return false;
+    }
+
+    // TODO: Check if type exists
+
+    // If it is a define/assign then check assignment
+    if( varDefNode->assignmentStmnt ) {
+        return checkNode(varDefNode->assignmentStmnt, scope);
+    }
+
+    return true;
+}
+
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNode, Scope scope) {
+    if(!varRefNode->WasFound) {
+        auto name = varRefNode->Var->Name;
+        auto symbolVec = scope->findSymbol(name, true);
+        if( symbolVec.empty() ) {
+            // Variable NotFound error
+            error_handling::Error error(varRefNode->Line, name, "Variable not found");
+            errors->emplace_back(error);
+            return false;
+        }
+        varRefNode->Var = CastNode<ast::VariableDefNode>(symbolVec.front());
+        varRefNode->WasFound = true;
+    }
+
+    return true;
+}
+
+
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode, Scope scope) {
+    // TODO: Check if types match
+
+    // Check left node
+    if( !checkNode(assignmentNode->Left, scope) )
+        return false;
+
+    // Check right node
+    switch( assignmentNode->Right->GetType() ) {
+    case ast::AST_TYPE::VariableRefNode:
+    {
+        auto rightNode = CastNode<ast::VariableRefNode>(assignmentNode->Right);
+        if( !checkNode(rightNode, scope) )
+            return false;
+    } break;
+    default:
+        break;
+    }
+
+    return true;
+}
