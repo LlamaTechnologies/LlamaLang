@@ -104,7 +104,7 @@ namespace llang::IR
     #endif
 
         std::error_code errorCode(1, std::iostream_category());
-        llvm::raw_ostream &llvmOutputFile = llvm::raw_fd_ostream(outputFileName, errorCode);
+        auto llvmOutputFile = llvm::raw_fd_ostream(outputFileName, errorCode);
         llvm::WriteBitcodeToFile(*TheModule, llvmOutputFile);
     }
 
@@ -501,37 +501,73 @@ namespace llang::IR
 
     llvm::Value *TranslateAdd(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types) {
         switch( types ) {
+        case ast::BINARY_OPERANDS_TYPES::UINT_UINT:
+        case ast::BINARY_OPERANDS_TYPES::UINT_INT:
+        case ast::BINARY_OPERANDS_TYPES::INT_UINT:
         case ast::BINARY_OPERANDS_TYPES::INT_INT:
             return Builder.CreateAdd(L, R, "addtmp");
         case ast::BINARY_OPERANDS_TYPES::FLOAT_FLOAT:
             return Builder.CreateFAdd(L, R, "addtmp");
         default:
-            // unsuported operands
+            Console::WriteLine("Unsuported operands!");
             return nullptr;
         }
     }
 
     llvm::Value *TranslateSub(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types) {
-        return nullptr;
+        switch (types) {
+        case ast::BINARY_OPERANDS_TYPES::UINT_UINT:
+        case ast::BINARY_OPERANDS_TYPES::UINT_INT:
+        case ast::BINARY_OPERANDS_TYPES::INT_UINT:
+        case ast::BINARY_OPERANDS_TYPES::INT_INT:
+            return Builder.CreateAdd(L, R, "subtmp");
+        case ast::BINARY_OPERANDS_TYPES::FLOAT_FLOAT:
+            return Builder.CreateFAdd(L, R, "subtmp");
+        default:
+            Console::WriteLine("Unsuported operands!");
+            return nullptr;
+        }
     }
 
     llvm::Value *TranslateMul(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types) {
-        return nullptr;
+        switch (types) {
+        case ast::BINARY_OPERANDS_TYPES::UINT_UINT:
+        case ast::BINARY_OPERANDS_TYPES::UINT_INT:
+        case ast::BINARY_OPERANDS_TYPES::INT_UINT:
+        case ast::BINARY_OPERANDS_TYPES::INT_INT:
+            return Builder.CreateAdd(L, R, "multmp");
+        case ast::BINARY_OPERANDS_TYPES::FLOAT_FLOAT:
+            return Builder.CreateFAdd(L, R, "multmp");
+        default:
+            Console::WriteLine("Unsuported operands!");
+            return nullptr;
+        }
     }
 
     llvm::Value *TranslateDiv(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types) {
-        return nullptr;
+        switch (types) {
+        case ast::BINARY_OPERANDS_TYPES::UINT_UINT:
+            return Builder.CreateUDiv(L, R, "divtmp");
+        case ast::BINARY_OPERANDS_TYPES::INT_INT:
+            return Builder.CreateSDiv(L, R, "divtmp");
+        case ast::BINARY_OPERANDS_TYPES::FLOAT_FLOAT:
+            return Builder.CreateFAdd(L, R, "divtmp");
+        default:
+            Console::WriteLine("Unsuported operands!");
+            return nullptr;
+        }
     }
 
     llvm::Value *TranslateMod(llvm::Value *L, llvm::Value *R, ast::BINARY_OPERANDS_TYPES types) {
         switch( types ) {
-        case ast::BINARY_OPERANDS_TYPES::INT_INT:
-            // unsigned divition
+        case ast::BINARY_OPERANDS_TYPES::UINT_UINT:
             return Builder.CreateURem(L, R, "modtmp");
+        case ast::BINARY_OPERANDS_TYPES::INT_INT:
+            return Builder.CreateSRem(L, R, "modtmp");
         case ast::BINARY_OPERANDS_TYPES::FLOAT_FLOAT:
             return Builder.CreateFRem(L, R, "modtmp");
         default:
-            // unsuported operands
+            Console::WriteLine("Unsuported operands!");
             return nullptr;
         }
     }
