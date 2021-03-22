@@ -21,10 +21,10 @@ namespace llang::semantics
         using ErrorList = std::vector<error_handling::Error>;
         using Scope = std::shared_ptr<symbol_table::SymbolTableScope>;
         static std::shared_ptr<ast::ProgramNode> ast;
-        static ErrorList *errors;
+        static ErrorList* errors;
         static Scope globalScope;
 
-        SemanticAnalyzer(std::shared_ptr<ast::ProgramNode> ast, Scope globalScope,  ErrorList &errors);
+        SemanticAnalyzer(std::shared_ptr<ast::ProgramNode> ast, Scope globalScope, ErrorList& errors);
 
         std::shared_ptr<ast::ProgramNode> check();
 
@@ -39,7 +39,16 @@ namespace llang::semantics
 
         static bool checkNode(std::shared_ptr<ast::VariableRefNode> varRefNode, Scope scope);
 
+        static bool checkNode(std::shared_ptr<ast::UnaryOperationNode> unaryOpNode, Scope scope);
+
+        static bool checkNode(std::shared_ptr<ast::BinaryOperationNode> binaryOpNode, Scope scope);
+
         static bool checkNode(std::shared_ptr<ast::AssignNode> assignmentNode, Scope scope);
+
+        // UTILS
+    private:
+        static bool checkVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant);
+        static bool checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::ConstantNode> constant, Scope scope);
     };
 } // namespace llang::semantics
 

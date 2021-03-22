@@ -27,6 +27,7 @@ namespace llang::ast
     CONSTANT_TYPE GetConstantType(std::string name);
     CONSTANT_TYPE GetConstantType(PRIMITIVE_TYPE primitive);
 
+
     /**
      * Represents any compile time constant like the one above
      **/

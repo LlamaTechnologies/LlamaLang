@@ -4,11 +4,13 @@
 #include "../ast/ConstantNode.hpp"
 #include "../ast/VariableDefNode.hpp"
 #include "../ast/VariableRefNode.hpp"
+#include "../ast/UnaryOperationNode.hpp"
 #include "../ast/AssignNode.hpp"
 #include "../ast/StatementNode.hpp"
 
 using namespace llang;
 using namespace semantics;
+
 SemanticAnalyzer::ErrorList *SemanticAnalyzer::errors = nullptr;
 std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::ast = nullptr;
 SemanticAnalyzer::Scope SemanticAnalyzer::globalScope = nullptr;
@@ -50,6 +52,12 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::StatementNode> node, Scope
         return checkNode(CastNode<ast::VariableDefNode>(node), scope);
     case ast::AST_TYPE::AssignNode:
         return checkNode(CastNode<ast::AssignNode>(node), scope);
+    case ast::AST_TYPE::UnaryOperationNode:
+        return checkNode(CastNode<ast::UnaryOperationNode>(node), scope);
+    case ast::AST_TYPE::VariableRefNode:
+        return checkNode(CastNode<ast::VariableRefNode>(node), scope);
+    case ast::AST_TYPE::BinaryOperationNode:
+        return checkNode(CastNode<ast::BinaryOperationNode>(node), scope);
     default:
         return false;
     }
@@ -275,7 +283,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNod
         auto symbolVec = scope->findSymbol(name, true);
         if( symbolVec.empty() ) {
             // Variable NotFound error
-            error_handling::Error error(varRefNode->Line, name, "Variable not found");
+            error_handling::Error error(varRefNode->Line, ast->FileName, "Variable not found: " + name);
             errors->emplace_back(error);
             return false;
         }
@@ -285,7 +293,6 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNod
 
     return true;
 }
-
 
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode, Scope scope) {
     // TODO: Check if types match
@@ -302,9 +309,118 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode
         if( !checkNode(rightNode, scope) )
             return false;
     } break;
+    case ast::AST_TYPE::BinaryOperationNode:
+    {
+        auto rightNode = CastNode<ast::BinaryOperationNode>(assignmentNode->Right);
+        if (!checkNode(rightNode, scope))
+            return false;
+    } break;
     default:
         break;
     }
 
+    return true;
+}
+
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::UnaryOperationNode> unaryOpNode, Scope scope) {
+    switch (unaryOpNode->Op) {
+    case ast::UNARY_STATEMENT_TYPE::RETURN:
+        return checkNode(unaryOpNode->Right);
+    default:
+        return true;
+    }
+}
+
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binaryOpNode, Scope scope) {
+    auto left = binaryOpNode->Left;
+    auto right = binaryOpNode->Right;
+
+    if (left->StmntType == ast::STATEMENT_TYPE::CONSTANT && right->StmntType == ast::STATEMENT_TYPE::CONSTANT) {
+        auto constL = CastNode<ast::ConstantNode>(left);
+        auto constR = CastNode<ast::ConstantNode>(right);
+
+        return true;
+    }
+
+    if (left->StmntType == ast::STATEMENT_TYPE::VAR_REF && right->StmntType == ast::STATEMENT_TYPE::VAR_REF) {
+        auto varRef = CastNode<ast::VariableRefNode>(left);
+        auto constant = CastNode<ast::VariableRefNode>(right);
+        
+        return true;
+    }
+
+    if (left->StmntType == ast::STATEMENT_TYPE::VAR_REF && right->StmntType == ast::STATEMENT_TYPE::CONSTANT) {
+        auto varRef = CastNode<ast::VariableRefNode>(left);
+        auto constant = CastNode<ast::ConstantNode>(right);
+       
+        return checkVarAndConst(varRef, constant);
+    }
+
+    if (right->StmntType == ast::STATEMENT_TYPE::VAR_REF && left->StmntType == ast::STATEMENT_TYPE::CONSTANT) {
+        auto varRef = CastNode<ast::VariableRefNode>(right);
+        auto constant = CastNode<ast::ConstantNode>(left);
+
+        return checkVarAndConst(varRef, constant);
+    }
+    
+    if (left->StmntType == ast::STATEMENT_TYPE::BINARY_OP && right->StmntType == ast::STATEMENT_TYPE::CONSTANT) {
+        auto binOp = CastNode<ast::BinaryOperationNode>(left);
+        auto constant = CastNode<ast::ConstantNode>(right);
+        
+        return checkBinOpAndConst(binOp, constant, scope);
+    }
+
+    if (right->StmntType == ast::STATEMENT_TYPE::BINARY_OP && left->StmntType == ast::STATEMENT_TYPE::CONSTANT) {
+        auto binOp = CastNode<ast::BinaryOperationNode>(right);
+        auto constant = CastNode<ast::ConstantNode>(left);
+
+        return checkBinOpAndConst(binOp, constant, scope);
+    }
+
+    return true;
+}
+
+bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr< ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant)
+{
+    if (Primitives::Exists(varRef->Var->VarType)) {
+        auto varType = ast::GetConstantType(Primitives::Get(varRef->Var->VarType));
+        if (varType >= ast::CONSTANT_TYPE::FLOAT && constant->ConstType < ast::CONSTANT_TYPE::FLOAT ||
+            varType < ast::CONSTANT_TYPE::FLOAT && constant->ConstType >= ast::CONSTANT_TYPE::FLOAT) {
+            // FLOATING POINT AND INTEGER MIX
+            error_handling::Error error(varRef->Line, ast->FileName, "Operands not supported: Float and Integer mix in binary operation.");
+            errors->emplace_back(error);
+            return false;
+        }
+
+        if (varType > constant->ConstType) {
+            constant->ConstType = varType;
+            return true;
+        }
+    }
+
+    return true;
+}
+
+bool SemanticAnalyzer::checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant, Scope scope)
+{
+    if (!checkNode(binOp, scope))
+        return false;
+
+    if (Primitives::Exists(binOp->ResultType)) {
+        auto varType = ast::GetConstantType(Primitives::Get(binOp->ResultType));
+        if (varType >= ast::CONSTANT_TYPE::FLOAT && constant->ConstType < ast::CONSTANT_TYPE::FLOAT ||
+            varType < ast::CONSTANT_TYPE::FLOAT && constant->ConstType >= ast::CONSTANT_TYPE::FLOAT) {
+            // FLOATING POINT AND INTEGER MIX
+            error_handling::Error error(binOp->Line, ast->FileName, "Operands not supported: Float and Integer mix in binary operation.");
+            errors->emplace_back(error);
+            return false;
+        }
+
+        if (varType > constant->ConstType) {
+            constant->ConstType = varType;
+            return true;
+        }
+    }
+    
     return true;
 }
