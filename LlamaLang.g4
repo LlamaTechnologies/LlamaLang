@@ -15,11 +15,11 @@ expressionList
 
 // Function declarations
 functionDef
-    : FUNC IDENTIFIER signature ARROW type_ block
+    : FUNC IDENTIFIER signature type_ block
     ;
 
 varDef
-    : IDENTIFIER ':' type_ ('=' expressionList)?
+    : IDENTIFIER type_ ('=' expressionList)?
     ;
 
 block
@@ -60,7 +60,7 @@ emptyStmt
     ;
 
 returnStmt
-    : 'return' expression?
+    : 'ret' expression?
     ;
 
 type_
@@ -95,7 +95,7 @@ parameters
     ;
 
 parameterDecl
-    : IDENTIFIER COLON type_
+    : IDENTIFIER type_
     ;
 
 expression
@@ -104,24 +104,18 @@ expression
     | left=expression ('*' | '/' | '%' | '<<' | '>>' | '&' | '&^') right=expression
     | left=expression ('+' | '-' | '|' | '^') right=expression
     | left=expression ('==' | '!=' | '<' | '<=' | '>' | '>=') right=expression
-    | left=expression '&&' right=expression
-    | left=expression '||' right=expression
+    | left=expression LOGICAL_AND right=expression
+    | left=expression LOGICAL_OR right=expression
     ;
 
 primaryExpr
     : operand
-    | conversion
-    | primaryExpr ( DOT IDENTIFIER
-                  | arguments)
+    | primaryExpr ( '.' IDENTIFIER | arguments)
     ;
 
 unaryExpr
     : primaryExpr
     | unaryOp expression
-    ;
-
-conversion
-    : type_ '(' expression ','? ')'
     ;
 
 operand
@@ -198,7 +192,7 @@ eos
 
 // Keywords
 FUNC                   : 'func';
-RETURN                 : 'return';
+RETURN                 : 'ret';
 IDENTIFIER             : LETTER (LETTER | UNICODE_DIGIT)*;
 
 // Punctuation
@@ -219,8 +213,8 @@ DECLARE_ASSIGN         : ':=';
 ELLIPSIS               : '...';
 
 // Logical
-LOGICAL_OR             : '||';
-LOGICAL_AND            : '&&';
+LOGICAL_OR             : '||' | 'or';
+LOGICAL_AND            : '&&' | 'and';
 
 // Relation operators
 EQUALS                 : '==';
@@ -247,7 +241,6 @@ MINUS                  : '-';
 CARET                  : '^';
 STAR                   : '*';
 AMPERSAND              : '&';
-ARROW                  : '->';
 
 // Number literals
 DECIMAL_LIT            : [1-9] [0-9]*;

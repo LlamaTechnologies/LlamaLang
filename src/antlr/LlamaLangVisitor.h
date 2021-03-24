@@ -70,8 +70,6 @@ public:
 
     virtual antlrcpp::Any visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) = 0;
 
-    virtual antlrcpp::Any visitConversion(LlamaLangParser::ConversionContext *context) = 0;
-
     virtual antlrcpp::Any visitOperand(LlamaLangParser::OperandContext *context) = 0;
 
     virtual antlrcpp::Any visitUnaryOp(LlamaLangParser::UnaryOpContext *context) = 0;

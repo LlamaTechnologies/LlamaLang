@@ -20,9 +20,9 @@ public:
     LESS = 23, LESS_OR_EQUALS = 24, GREATER = 25, GREATER_OR_EQUALS = 26, 
     OR = 27, DIV = 28, MOD = 29, LSHIFT = 30, RSHIFT = 31, BIT_CLEAR = 32, 
     EXCLAMATION = 33, PLUS = 34, MINUS = 35, CARET = 36, STAR = 37, AMPERSAND = 38, 
-    ARROW = 39, DECIMAL_LIT = 40, OCTAL_LIT = 41, HEX_LIT = 42, FLOAT_LIT = 43, 
-    DOUBLE_LIT = 44, RUNE_LIT = 45, INTERPRETED_STRING_LIT = 46, WS = 47, 
-    COMMENT = 48, TERMINATOR = 49, LINE_COMMENT = 50
+    DECIMAL_LIT = 39, OCTAL_LIT = 40, HEX_LIT = 41, FLOAT_LIT = 42, DOUBLE_LIT = 43, 
+    RUNE_LIT = 44, INTERPRETED_STRING_LIT = 45, WS = 46, COMMENT = 47, TERMINATOR = 48, 
+    LINE_COMMENT = 49
   };
 
   enum {
@@ -32,11 +32,11 @@ public:
     RuleAssign_op = 11, RuleEmptyStmt = 12, RuleReturnStmt = 13, RuleType_ = 14, 
     RulePointer = 15, RuleArray = 16, RuleTypeName = 17, RuleSignature = 18, 
     RuleResult = 19, RuleParameters = 20, RuleParameterDecl = 21, RuleExpression = 22, 
-    RulePrimaryExpr = 23, RuleUnaryExpr = 24, RuleConversion = 25, RuleOperand = 26, 
-    RuleUnaryOp = 27, RuleLiteral = 28, RuleBasicLit = 29, RuleInteger = 30, 
-    RuleFloatingPoint = 31, RuleOperandName = 32, RuleQualifiedIdent = 33, 
-    RuleLiteralType = 34, RuleFieldDecl = 35, RuleString_ = 36, RuleArguments = 37, 
-    RuleMethodExpr = 38, RuleReceiverType = 39, RuleEos = 40
+    RulePrimaryExpr = 23, RuleUnaryExpr = 24, RuleOperand = 25, RuleUnaryOp = 26, 
+    RuleLiteral = 27, RuleBasicLit = 28, RuleInteger = 29, RuleFloatingPoint = 30, 
+    RuleOperandName = 31, RuleQualifiedIdent = 32, RuleLiteralType = 33, 
+    RuleFieldDecl = 34, RuleString_ = 35, RuleArguments = 36, RuleMethodExpr = 37, 
+    RuleReceiverType = 38, RuleEos = 39
   };
 
   explicit LlamaLangParser(antlr4::TokenStream *input);
@@ -74,7 +74,6 @@ public:
   class ExpressionContext;
   class PrimaryExprContext;
   class UnaryExprContext;
-  class ConversionContext;
   class OperandContext;
   class UnaryOpContext;
   class LiteralContext;
@@ -148,7 +147,6 @@ public:
     antlr4::tree::TerminalNode *FUNC();
     antlr4::tree::TerminalNode *IDENTIFIER();
     SignatureContext *signature();
-    antlr4::tree::TerminalNode *ARROW();
     Type_Context *type_();
     BlockContext *block();
 
@@ -164,7 +162,6 @@ public:
     VarDefContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *IDENTIFIER();
-    antlr4::tree::TerminalNode *COLON();
     Type_Context *type_();
     antlr4::tree::TerminalNode *ASSIGN();
     ExpressionListContext *expressionList();
@@ -425,7 +422,6 @@ public:
     ParameterDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *IDENTIFIER();
-    antlr4::tree::TerminalNode *COLON();
     Type_Context *type_();
 
 
@@ -477,7 +473,6 @@ public:
     PrimaryExprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     OperandContext *operand();
-    ConversionContext *conversion();
     PrimaryExprContext *primaryExpr();
     antlr4::tree::TerminalNode *DOT();
     antlr4::tree::TerminalNode *IDENTIFIER();
@@ -504,23 +499,6 @@ public:
   };
 
   UnaryExprContext* unaryExpr();
-
-  class  ConversionContext : public LlamaLangParseContext {
-  public:
-    ConversionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    Type_Context *type_();
-    antlr4::tree::TerminalNode *L_PAREN();
-    ExpressionContext *expression();
-    antlr4::tree::TerminalNode *R_PAREN();
-    antlr4::tree::TerminalNode *COMMA();
-
-
-    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  ConversionContext* conversion();
 
   class  OperandContext : public LlamaLangParseContext {
   public:

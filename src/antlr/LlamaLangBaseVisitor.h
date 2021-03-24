@@ -117,10 +117,6 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual antlrcpp::Any visitConversion(LlamaLangParser::ConversionContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
   virtual antlrcpp::Any visitOperand(LlamaLangParser::OperandContext *ctx) override {
     return visitChildren(ctx);
   }
