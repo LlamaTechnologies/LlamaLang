@@ -14,9 +14,15 @@ namespace llang::ast
         DIV,
         MOD,
         BIT_AND,
-        BIT_OR
+        BIT_OR,
+
+
+
+
+        _COUNT
     };
 
+    std::string GetBinaryOperationName(BINARY_OPERATION op);
 
     enum BINARY_OPERANDS_TYPES {
         INT_INT,
@@ -41,6 +47,7 @@ namespace llang::ast
         BINARY_OPERATION Op;
         std::shared_ptr<StatementNode> Left;
         std::shared_ptr<StatementNode> Right;
+        std::string                    ResultType;
 
         BinaryOperationNode(BINARY_OPERATION binOp)
             : StatementNode(STATEMENT_TYPE::BINARY_OP), Op(binOp) {}
@@ -49,11 +56,6 @@ namespace llang::ast
             return GET_AST_TYPE(BinaryOperationNode);
         }
 
-        void ToString(std::string &str, const int tabLevel) const override {
-            /*
-            var tabs = new string('\t', tabLevel);
-            return tabs + GetType().Name;
-            */
-        }
+        void ToString(std::string& str, const int tabLevel) const override;
     };
 }

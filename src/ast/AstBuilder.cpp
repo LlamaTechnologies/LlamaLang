@@ -135,92 +135,6 @@ antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *co
         if( rightNodeAny.isNull() || leftNodeAny.isNull() )
             return nullptr;
 
-        if( rightNodeAny.is<std::shared_ptr<ConstantNode>>() && leftNodeAny.is<std::shared_ptr<ConstantNode>>() ) {
-            auto rightNode = rightNodeAny.as<std::shared_ptr<ConstantNode>>();
-            auto leftNode = leftNodeAny.as<std::shared_ptr<ConstantNode>>();
-            
-            if( rightNode->ConstType == CONSTANT_TYPE::STRING || leftNode->ConstType == CONSTANT_TYPE::STRING )
-                goto runtime_expr;
-            
-            // Initialize it in I64
-            auto resultNode = std::make_shared<ConstantNode>(CONSTANT_TYPE::I64);
-            // TODO: check for overflow and handle it
-            bool checkOverflow;
-
-            if( context->PLUS() ) {
-                // ADDITION EXPRESSION
-                resultNode->ConstType = GetResultType(BINARY_OPERATION::ADD, rightNode, leftNode, checkOverflow);
-                if( resultNode->ConstType <= CONSTANT_TYPE::I64 ) {
-                    int64_t rightVal = std::stoll(rightNode->Value);
-                    int64_t leftVal = std::stoll(leftNode->Value);
-                    auto resultVal = rightVal + leftVal;
-                    resultNode->Value = std::to_string(resultVal);
-                } else {
-                    double rightVal = std::stod(rightNode->Value);
-                    double leftVal = std::stod(leftNode->Value);
-                    auto resultVal = rightVal + leftVal;
-                    resultNode->Value = std::to_string(resultVal);
-                }
-            } else if( context->MINUS() ) {
-                // SUBSTRACTION EXPRESSION
-                resultNode->ConstType = GetResultType(BINARY_OPERATION::SUB, rightNode, leftNode, checkOverflow);
-                if( resultNode->ConstType <= CONSTANT_TYPE::I64 ) {
-                    int64_t rightVal = std::stoll(rightNode->Value);
-                    int64_t leftVal = std::stoll(leftNode->Value);
-                    auto resultVal = leftVal - rightVal;
-                    resultNode->Value = std::to_string(resultVal);
-                } else {
-                    double rightVal = std::stod(rightNode->Value);
-                    double leftVal = std::stod(leftNode->Value);
-                    auto resultVal = leftVal - rightVal;
-                    resultNode->Value = std::to_string(resultVal);
-                }
-
-            } else if( context->STAR() ) {
-                // MULTIPLICATION EXPRESSION
-                resultNode->ConstType = GetResultType(BINARY_OPERATION::MUL, rightNode, leftNode, checkOverflow);
-                if( resultNode->ConstType <= CONSTANT_TYPE::I64 ) {
-                    int64_t rightVal = std::stoll(rightNode->Value);
-                    int64_t leftVal = std::stoll(leftNode->Value);
-                    auto resultVal = rightVal * leftVal;
-                    resultNode->Value = std::to_string(resultVal);
-                } else {
-                    double rightVal = std::stod(rightNode->Value);
-                    double leftVal = std::stod(leftNode->Value);
-                    auto resultVal = rightVal * leftVal;
-                    resultNode->Value = std::to_string(resultVal);
-                }
-            } else if( context->DIV() ) {
-                // DIVITION EXPRESSION
-                resultNode->ConstType = GetResultType(BINARY_OPERATION::DIV, rightNode, leftNode, checkOverflow);
-                if( resultNode->ConstType <= CONSTANT_TYPE::I64 ) {
-                    int64_t rightVal = std::stoll(rightNode->Value);
-                    int64_t leftVal = std::stoll(leftNode->Value);
-                    auto resultVal = leftVal / rightVal;
-                    resultNode->Value = std::to_string(resultVal);
-                } else {
-                    double rightVal = std::stod(rightNode->Value);
-                    double leftVal = std::stod(leftNode->Value);
-                    auto resultVal = leftVal / rightVal;
-                    resultNode->Value = std::to_string(resultVal);
-                }
-            } else if( context->MOD() ) {
-                // MODULOUS EXPRESSION
-                resultNode->ConstType = GetResultType(BINARY_OPERATION::MOD, rightNode, leftNode, checkOverflow);
-                if( resultNode->ConstType <= CONSTANT_TYPE::I64 ) {
-                    int64_t rightVal = std::stoll(rightNode->Value);
-                    int64_t leftVal = std::stoll(leftNode->Value);
-                    auto resultVal = leftVal % rightVal;
-                    resultNode->Value = std::to_string(resultVal);
-                } else {
-                    // MOD not suported with floating point operands
-                    // send the nodes as binaryOp and let the SemanticAnalizer report the error
-                    goto runtime_expr;
-                }
-            }
-            return CastNode<StatementNode>(resultNode);
-        } else {
-runtime_expr:
             auto rightNode = rightNodeAny.as<std::shared_ptr<StatementNode>>();
             auto leftNode = leftNodeAny.as<std::shared_ptr<StatementNode>>();
             std::shared_ptr<BinaryOperationNode> binOpNode;
@@ -248,7 +162,6 @@ runtime_expr:
             }
 
             return CastNode<StatementNode>(binOpNode);
-        }
     } else {
         // Unary || Primary expression
         // returns ConstantNode, UnaryOperationNode

@@ -67,6 +67,7 @@ src/ast/AssignNode.hpp
 src/ast/AST_Types.hpp
 src/ast/AST_Types.cpp
 src/ast/BinaryOperationNode.hpp
+src/ast/BinaryOperationNode.cpp
 src/ast/ConstantNode.hpp
 src/ast/ConstantNode.cpp
 src/ast/FunctionCallNode.hpp
