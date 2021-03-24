@@ -305,8 +305,8 @@ namespace llang::IR
             irInfo = new IR_INFO();
         }
 
-        auto type = TranslateType(varDef->VarType, nullptr);
         auto name = varDef->Name;
+        auto type = TranslateType(varDef->VarType, nullptr);
 
         if (varDef->isGlobal) {
             TheModule->getOrInsertGlobal(name, type);

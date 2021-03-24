@@ -48,6 +48,7 @@ namespace llang::semantics
         // UTILS
     private:
         static bool checkVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant);
+        static bool checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::VariableRefNode> varRef, Scope scope);
         static bool checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::ConstantNode> constant, Scope scope);
     };
 } // namespace llang::semantics

@@ -2,6 +2,11 @@
 #include <string>
 
 namespace llang {
+    
+    namespace ast {
+        enum class CONSTANT_TYPE;
+    }
+
     /**
     * This enum contains all prmitives names
     **/
@@ -44,5 +49,6 @@ namespace llang {
         bool Exists(const std::string &name);
         
         PRIMITIVE_TYPE Get(const std::string &name);
+        std::string GetName(ast::CONSTANT_TYPE constType);
     };
 }
