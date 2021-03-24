@@ -1,22 +1,28 @@
 # LlamaLang
-This is a language for game development heavily inspired by Jonathan Blows language, Jai.
+This language is defined with game development in mind.  
+Also tries to standardize some implementation details so many other implementations are compatible between them in contrast to c++.  
+I heavily inspired by Jonathan Blows language, Jai.
+
+Features:
 - Annotations like Java.
-- Sintax Go/TypeScript inspired.
-- Reflection and function compile time excecution.
-- Memory is completly managed by the programmer.
+- Syntax Go/TypeScript inspired.
+- Reflection
+- compile time functions execution.
+- Memory management fully up to the programmer.
 - Strongly typed.
 - Compiled.
 
-See the [wiki](https://github.com/Pablo96/LlamaLang/wiki) for language definition  
+See the [wiki](https://github.com/Pablo96/LlamaLangGo/wiki) for language definition
 
 ## Implementation details
-The compiler is made using ANTLR v4 with C# target and it targets LLVM IR so it can be compiled for every hardware supported by LLVM and have debuging capabilities.
+The compiler is made using ANTLR v4 with C++ target.  
+It targets LLVM IR, so it can be compiled for every hardware supported by LLVM and have debugging capabilities.
 
 ## Example
-An example of the gramar can be found at the files test.def and test.decl.
+An example of the grammar can be found in ´examples´ folder.
 
-## Suported IDE's
-As to date none is supported but these are the future targets in order of priority:
+## Supported IDE's
+As to date none is supported, but these are the future targets in order of priority:
 - Visual Studio Code
 - Visual Studio
 
