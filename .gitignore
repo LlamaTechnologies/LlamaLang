@@ -122,4 +122,4 @@ ipch/
 
 #Except
 !/scripts/windows/*.exe
-
+!/bin/antlr_test/LlamaLangParserBase.java
