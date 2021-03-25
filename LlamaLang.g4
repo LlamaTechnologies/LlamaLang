@@ -1,5 +1,9 @@
 grammar LlamaLang;
 
+options {
+    superClass=LlamaLangParserBase;
+}
+
 sourceFile
     : (functionDef | varDef eos)* eos
     ;
@@ -188,6 +192,8 @@ receiverType
 eos
     : ';'
     | EOF
+    | {lineTerminatorAhead()}?
+    | {checkPreviousTokenText("}")}?
     ;
 
 // Keywords
@@ -262,11 +268,10 @@ INTERPRETED_STRING_LIT : '"' (~["\\] | ESCAPED_VALUE)*  '"';
 // Hidden tokens
 WS                     : [ \t]+             -> channel(HIDDEN);
 COMMENT                : '/*' .*? '*/'      -> channel(HIDDEN);
-TERMINATOR             : [\r\n]+            -> channel(HIDDEN);
-LINE_COMMENT           : '//' ~[\r\n]*      -> channel(HIDDEN);
+TERMINATOR             : [\r?\n]+         -> channel(HIDDEN);
+LINE_COMMENT           : '//' ~[\r?\n]*   -> channel(HIDDEN);
 
 // Fragments
-
 fragment ESCAPED_VALUE
     : '\\' ('u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
            | 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT

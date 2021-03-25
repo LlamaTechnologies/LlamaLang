@@ -5,12 +5,13 @@
 
 
 #include "antlr4-runtime.h"
+#include "LlamaLangParserBase.hpp"
 #include "LlamaLangParseContext.hpp"
 
 namespace llang {
 
 
-class  LlamaLangParser : public antlr4::Parser {
+class  LlamaLangParser : public LlamaLangParserBase {
 public:
   enum {
     FUNC = 1, RETURN = 2, IDENTIFIER = 3, L_PAREN = 4, R_PAREN = 5, L_CURLY = 6, 
@@ -734,6 +735,7 @@ public:
   virtual bool sempred(antlr4::RuleContext *_localctx, size_t ruleIndex, size_t predicateIndex) override;
   bool expressionSempred(ExpressionContext *_localctx, size_t predicateIndex);
   bool primaryExprSempred(PrimaryExprContext *_localctx, size_t predicateIndex);
+  bool eosSempred(EosContext *_localctx, size_t predicateIndex);
 
 private:
   static std::vector<antlr4::dfa::DFA> _decisionToDFA;

@@ -1,15 +1,15 @@
 /* My Program */
 
-f int32 = 55;
+f int32 = 55
 
 func main(argc int32, argv char) int32 {
     x int32;
-    y int32 = 8;
-    c int32 = 100;
+    y int32 = 8
+    c int32 = 100
     
-    x = y;
-    y = f;
-    f = c * (x + y) % 62;
+    x = y
+    y = f
+    f = c * (x + y) % 62
 
-    ret f;
+    ret f
 }

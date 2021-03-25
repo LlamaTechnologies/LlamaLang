@@ -58,6 +58,7 @@ src/antlr/LlamaLangLexer.cpp
 src/antlr/LlamaLangLexer.h
 src/antlr/LlamaLangParser.cpp
 src/antlr/LlamaLangParser.h
+src/antlr/LlamaLangParserBase.hpp
 src/antlr/LlamaLangVisitor.cpp
 src/antlr/LlamaLangVisitor.h
 src/antlr/LlamaLangParseContext.hpp
