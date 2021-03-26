@@ -19,5 +19,5 @@ func myFunction(f int32) int32 {
 func main(argc int32, argv char) int32 {
     f = myFunction(f + 5)
     // should return 42
-    return f
+    ret f
 }
