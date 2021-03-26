@@ -10,6 +10,7 @@
 #include "ConstantNode.hpp"
 #include <sstream>
 #include <memory>
+#include "../Console.hpp"
 
 using namespace llang;
 using namespace ast;
@@ -17,7 +18,7 @@ using namespace ast;
 antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *context) {
     context->AstNode = ASTree;
 
-    // add program source to the program tree
+    // Visit global scope first
     for( auto child : context->children ) {
         auto result = visit(child);
         if( result.isNotNull() ) {
@@ -26,30 +27,51 @@ antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *co
         }
     }
 
+    std::string programNodesString = CastNode<Node>(ASTree)->ToString();
+
+    Console::WriteLine();
+    Console::WriteLine("======== Abstract Syntax Tree first iter ========");
+    Console::WriteLine();
+    Console::WriteLine(programNodesString);
+    Console::WriteLine();
+
+    // Visit innerScopes
+    visitChildren(context);
+
     return ASTree;
 }
 
 antlrcpp::Any AstBuilder::visitFunctionDef(LlamaLangParser::FunctionDefContext *context) {
-    auto funcNode = std::make_shared<FunctionDefNode>(); 
-    context->AstNode = funcNode;
+    auto funcNode = CastNode<FunctionDefNode>(context->AstNode);
 
-    funcNode->FileName = FileName;
-    funcNode->Line = context->start->getLine();
-    funcNode->Name = context->IDENTIFIER()->getText();
-    funcNode->ReturnType = context->type_()->getText();
+    // second visit to retrieve more info
+    if (funcNode) {
+        // before visit children set the function scope
+        currentScope = funcNode->InnerScope;
+        
+        auto blockAny = visit(context->block());
 
-    // Add function scope to parent scope and make it current
-    currentScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode).back();
+        if (blockAny.is<FunctionDefNode::BlockType*>()) {
+            funcNode->Block = *blockAny.as<FunctionDefNode::BlockType*>();
+        }
 
-
-    /* Get the result of the last child visited (block) */
-    auto blockAny = visitChildren(context);
-
-    if( blockAny.is<FunctionDefNode::BlockType *>() ) {
-        funcNode->Block = *blockAny.as<FunctionDefNode::BlockType *>();
+        // We are now exiting the function
+        // return the scope to the parent scope
+        currentScope = currentScope->Parent;
     }
-
-    currentScope = currentScope->Parent;
+    // First visit from parent
+    else {
+        funcNode = std::make_shared<FunctionDefNode>();
+        funcNode->FileName = FileName;
+        funcNode->Line = context->start->getLine();
+        funcNode->Name = context->IDENTIFIER()->getText();
+        funcNode->ReturnType = context->type_()->getText();
+        // Add function scope to parent scope
+        funcNode->InnerScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode).back();
+        
+        context->AstNode = funcNode;
+        visit(context->signature());
+    }
 
     return CastNode<Node>(funcNode);
 }

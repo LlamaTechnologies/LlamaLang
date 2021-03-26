@@ -6,6 +6,7 @@
 #include "VariableDefNode.hpp"
 #include "StatementNode.hpp"
 #include "AST_Types.hpp"
+#include "../symbol_table/SymbolTableScope.hpp"
 
 namespace llang::ast {
     /**
@@ -19,7 +20,8 @@ namespace llang::ast {
         std::string ReturnType;
         std::vector<std::shared_ptr<VariableDefNode>> Parameters;
         BlockType Block;
-        
+        std::shared_ptr<symbol_table::SymbolTableScope> InnerScope;
+
         AST_TYPE GetType() const override { 
             return GET_AST_TYPE(FunctionDefNode);
         }
