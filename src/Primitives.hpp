@@ -49,6 +49,7 @@ namespace llang {
         bool Exists(const std::string &name);
         
         PRIMITIVE_TYPE Get(const std::string &name);
+        std::string GetName(PRIMITIVE_TYPE primitive);
         std::string GetName(ast::CONSTANT_TYPE constType);
     };
 }

@@ -98,12 +98,11 @@ antlrcpp::Any AstBuilder::visitParameters(LlamaLangParser::ParametersContext *co
         if( paramContext->isEmpty() || paramContext->exception != nullptr )
             continue;
 
-        auto param = std::make_shared<VariableDefNode>();
-        param->FileName = FileName;
-        param->Line = context->start->getLine();
-        param->Name = paramContext->IDENTIFIER()->getText();
-        param->VarType = paramContext->type_()->getText();
-        funcNode->Parameters.push_back(param);
+        auto paramAny = visit(paramContext);
+        if (paramAny.is<std::shared_ptr<VariableDefNode>>()) {
+            auto param = paramAny.as<std::shared_ptr<VariableDefNode>>();
+            funcNode->Parameters.push_back(param);
+        }
     }
 
     // It is not necesary to visit children after this visit
@@ -224,6 +223,8 @@ antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
     varDefNode->Name = context->IDENTIFIER()->getText();
     varDefNode->VarType = context->type_()->getText();
     varDefNode->isGlobal = currentScope == globalScope;
+    // Add symbol
+    currentScope->addSymbol(varDefNode->Name, varDefNode);
 
     if( context->ASSIGN() ) {
         auto assignmentStmnt = std::make_shared<AssignNode>();
@@ -234,8 +235,7 @@ antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
         varDefNode->assignmentStmnt = assignmentStmnt;
     }
 
-    // Add symbol
-    currentScope->addSymbol(varDefNode->Name, varDefNode);
+ 
 
     return CastNode<StatementNode>(varDefNode);
 }

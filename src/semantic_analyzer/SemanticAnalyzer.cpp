@@ -1,12 +1,15 @@
 ﻿#include "SemanticAnalyzer.hpp"
+
 #include "../ast/UnaryOperationNode.hpp"
 #include "../ast/FunctionDefNode.hpp"
+#include "../ast/FunctionCallNode.hpp"
 #include "../ast/ConstantNode.hpp"
 #include "../ast/VariableDefNode.hpp"
 #include "../ast/VariableRefNode.hpp"
 #include "../ast/UnaryOperationNode.hpp"
 #include "../ast/AssignNode.hpp"
 #include "../ast/StatementNode.hpp"
+#include "../Console.hpp"
 
 #include <exception>
 
@@ -56,6 +59,8 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::StatementNode> node, Scope
         return checkNode(CastNode<ast::AssignNode>(node), scope);
     case ast::AST_TYPE::UnaryOperationNode:
         return checkNode(CastNode<ast::UnaryOperationNode>(node), scope);
+    case ast::AST_TYPE::FunctionCallNode:
+        return checkNode(CastNode<ast::FunctionCallNode>(node), scope);
     case ast::AST_TYPE::VariableRefNode:
         return checkNode(CastNode<ast::VariableRefNode>(node), scope);
     case ast::AST_TYPE::BinaryOperationNode:
@@ -261,8 +266,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionDefNode> funcNode,
 
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableDefNode> varDefNode, Scope scope) {
     auto name = varDefNode->Name;
-    auto symbolVec = scope->findSymbol(name, false);
-    if( symbolVec.size() > 1 ) {
+    if( scope->getSymbolCount(name, false) > 1) {
         // Redefinition error
         error_handling::Error error(varDefNode->Line, name, "Variable redefinition");
         errors->emplace_back(error);
@@ -279,17 +283,95 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableDefNode> varDefNod
     return true;
 }
 
+bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionCallNode> funcNode, Scope scope) {
+    if (funcNode->functionFound == nullptr)
+        return true;
+
+    auto name = funcNode->Name;
+    auto symbol = scope->findSymbol(name, true);
+    if (symbol) {
+        // function NotFound error
+        error_handling::Error error(funcNode->Line, funcNode->FileName, "Function not found: " + name);
+        errors->emplace_back(error);
+        return false;
+    }
+
+    funcNode->functionFound = CastNode<ast::FunctionDefNode>(symbol);
+
+    // Check call
+    auto expectedArgsCount = funcNode->functionFound->Parameters.size();
+    auto argsCount = funcNode->Arguments.size();
+    if (argsCount != expectedArgsCount) {
+        // wrong amount of args error
+        error_handling::Error error(funcNode->Line, funcNode->FileName,
+            "Function " + name +" expect " + std::to_string(expectedArgsCount) + " args, passed " + std::to_string(argsCount) + " args.");
+        errors->emplace_back(error);
+        return false;
+    }
+
+    // check arguments types
+    bool noErrorFound = true;
+    for (auto i = 0; i < expectedArgsCount; ++i) {
+        auto param = funcNode->functionFound->Parameters.at(i);
+        auto argNode = funcNode->Arguments.at(i);
+        std::string argType;
+
+        switch (argNode->GetType()) {
+        case ast::AST_TYPE::BinaryOperationNode: {
+            auto binOp = CastNode<ast::BinaryOperationNode>(argNode);
+            if (!checkNode(binOp, scope))
+                break;
+            argType = binOp->ResultType;
+        } break;
+        case ast::AST_TYPE::ConstantNode: {
+            auto constNode = CastNode<ast::ConstantNode>(argNode);
+            argType = Primitives::GetName(constNode->ConstType);
+        }
+        case ast::AST_TYPE::VariableRefNode: {
+            auto varRefNode = CastNode<ast::VariableRefNode>(argNode);
+            if (!checkNode(varRefNode, scope))
+                break;
+            argType = varRefNode->Var->VarType;
+        } break;
+        case ast::AST_TYPE::FunctionCallNode: {
+            auto funcCallNodeArg = CastNode<ast::FunctionCallNode>(argNode);
+            if (!checkNode(funcCallNodeArg, scope))
+                break;
+            argType = funcCallNodeArg->functionFound->ReturnType;
+        } break;
+        case ast::AST_TYPE::UnaryOperationNode:
+            Console::WriteLine("UnaryOperation statement as argument is unsupported : line<" + std::to_string(funcNode->Line) + ">");
+            break;
+        default:
+            Console::WriteLine("Illegal statement in argument <" + std::to_string(i) +
+                "> in function <" + name + 
+                "> in file <" + funcNode->FileName + 
+                "> at line <" + std::to_string(funcNode->Line) + ">");
+            break;
+        }
+
+        if (param->VarType != argType) {
+            // wrong type error
+            error_handling::Error error(funcNode->Line, funcNode->FileName,
+                "Function " + name + " expect arg [" + std::to_string(i) + "] type to be <" + param->VarType + ">. Arg of type <" + argType + "> passed.");
+            errors->emplace_back(error);
+        }
+    }
+
+    return noErrorFound;
+}
+
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNode, Scope scope) {
     if(!varRefNode->WasFound) {
         auto name = varRefNode->Var->Name;
-        auto symbolVec = scope->findSymbol(name, true);
-        if( symbolVec.empty() ) {
+        auto symbol = scope->findSymbol(name, true);
+        if( symbol ) {
             // Variable NotFound error
-            error_handling::Error error(varRefNode->Line, ast->FileName, "Variable not found: " + name);
+            error_handling::Error error(varRefNode->Line, varRefNode->FileName, "Variable not found: " + name);
             errors->emplace_back(error);
             return false;
         }
-        varRefNode->Var = CastNode<ast::VariableDefNode>(symbolVec.front());
+        varRefNode->Var = CastNode<ast::VariableDefNode>(symbol);
         varRefNode->WasFound = true;
     }
 
@@ -343,32 +425,32 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
         auto right = CastNode<ast::ConstantNode>(rightOp);
         
         if (left->ConstType == right->ConstType) {
-            binaryOpNode->ResultType = ast::GetConstantTypeName(right->ConstType);
+            binaryOpNode->ResultType = Primitives::GetName(right->ConstType);
             return true;
         }
 
         // fp & int
         if (left->ConstType >= ast::CONSTANT_TYPE::FLOAT && right->ConstType < ast::CONSTANT_TYPE::FLOAT) {
-            binaryOpNode->ResultType = ast::GetConstantTypeName(left->ConstType);
+            binaryOpNode->ResultType = Primitives::GetName(left->ConstType);
             return false;
         }
 
         // int & fp
         if (left->ConstType >= ast::CONSTANT_TYPE::FLOAT && right->ConstType < ast::CONSTANT_TYPE::FLOAT) {
-            binaryOpNode->ResultType = ast::GetConstantTypeName(right->ConstType);
+            binaryOpNode->ResultType = Primitives::GetName(right->ConstType);
             return false;
         }
 
         auto resultType = left->ConstType > right->ConstType ? left->ConstType : right->ConstType;
         left->ConstType = right->ConstType = resultType;
-        binaryOpNode->ResultType = ast::GetConstantTypeName(resultType);
+        binaryOpNode->ResultType = Primitives::GetName(resultType);
         return true;
     }
 
     // var & var
     if (leftOp->StmntType == ast::STATEMENT_TYPE::VAR_REF && rightOp->StmntType == ast::STATEMENT_TYPE::VAR_REF) {
-        ast::CONSTANT_TYPE left;
-        ast::CONSTANT_TYPE right;
+        PRIMITIVE_TYPE left;
+        PRIMITIVE_TYPE right;
         auto varL = CastNode<ast::VariableRefNode>(leftOp);
         auto varR = CastNode<ast::VariableRefNode>(rightOp);
         
@@ -387,28 +469,28 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
             binaryOpNode->ResultType = "";
             return false;
         }
-        left = ast::GetConstantType(Primitives::Get(varTypeL));
-        right = ast::GetConstantType(Primitives::Get(varTypeR));
+        left  = Primitives::Get(varTypeL);
+        right = Primitives::Get(varTypeR);
 
 
         if (left == right) {
-            binaryOpNode->ResultType = ast::GetConstantTypeName(left);
+            binaryOpNode->ResultType = Primitives::GetName(left);
             return true;
         }
 
         // fp & int
-        if (left >= ast::CONSTANT_TYPE::FLOAT && right < ast::CONSTANT_TYPE::FLOAT) {
-            binaryOpNode->ResultType = ast::GetConstantTypeName(left);
+        if (left >= PRIMITIVE_TYPE::FLOAT64 && right < PRIMITIVE_TYPE::FLOAT32) {
+            binaryOpNode->ResultType = Primitives::GetName(left);
             return false;
         }
 
         // int & fp
-        if (left >= ast::CONSTANT_TYPE::FLOAT && right < ast::CONSTANT_TYPE::FLOAT) {
-            binaryOpNode->ResultType = ast::GetConstantTypeName(right);
+        if (left >= PRIMITIVE_TYPE::FLOAT32 && right < PRIMITIVE_TYPE::FLOAT32) {
+            binaryOpNode->ResultType = Primitives::GetName(right);
             return false;
         }
 
-        ast::CONSTANT_TYPE resultType;
+        PRIMITIVE_TYPE resultType;
         if (left > right) {
             resultType = left;
             varTypeR = std::string(varTypeL);
@@ -418,7 +500,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
             varTypeL = std::string(varTypeR);
         }
 
-        binaryOpNode->ResultType = ast::GetConstantTypeName(resultType);
+        binaryOpNode->ResultType = Primitives::GetName(resultType);
         return true;
     }
     
@@ -519,9 +601,11 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
 bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr< ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant)
 {
     if (Primitives::Exists(varRef->Var->VarType)) {
-        auto varType = ast::GetConstantType(Primitives::Get(varRef->Var->VarType));
-        if (varType >= ast::CONSTANT_TYPE::FLOAT && constant->ConstType < ast::CONSTANT_TYPE::FLOAT ||
-            varType < ast::CONSTANT_TYPE::FLOAT && constant->ConstType >= ast::CONSTANT_TYPE::FLOAT) {
+        auto varType = Primitives::Get(varRef->Var->VarType);
+        auto constType = Primitives::Get(Primitives::GetName(constant->ConstType));
+
+        if (varType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32 ||
+            varType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32) {
             // FLOATING POINT AND INTEGER MIX
             error_handling::Error error(
                 varRef->Line,
@@ -531,8 +615,8 @@ bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr< ast::VariableRefNode> v
             return false;
         }
 
-        if (varType >= constant->ConstType) {
-            constant->ConstType = varType;
+        if (varType >= constType) {
+            constant->ConstType = ast::GetConstantType(varType);
             return true;
         }
     }
@@ -549,13 +633,13 @@ bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr< ast::VariableRefNode> v
 bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, Scope scope)
 {
     if (Primitives::Exists(varRef->Var->VarType)) {
-        auto resultType = ast::GetConstantType(binOp->ResultType);
-        auto varType = ast::GetConstantType(Primitives::Get(varRef->Var->VarType));
+        auto resultType = Primitives::Get(binOp->ResultType);
+        auto varType = Primitives::Get(varRef->Var->VarType);
 
-        if (resultType >= ast::CONSTANT_TYPE::FLOAT && varType < ast::CONSTANT_TYPE::FLOAT ||
-            resultType < ast::CONSTANT_TYPE::FLOAT && varType >= ast::CONSTANT_TYPE::FLOAT) {
+        if (resultType >= PRIMITIVE_TYPE::FLOAT32 && varType < PRIMITIVE_TYPE::FLOAT32 ||
+            resultType < PRIMITIVE_TYPE::FLOAT32 && varType >= PRIMITIVE_TYPE::FLOAT32) {
             // FLOATING POINT AND INTEGER MIX
-            error_handling::Error error(binOp->Line, ast->FileName, "Operands not supported: Float and Integer mix in binary operation.");
+            error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
             errors->emplace_back(error);
             return false;
         }
@@ -578,17 +662,18 @@ bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode
 bool SemanticAnalyzer::checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant, Scope scope)
 {
     if (binOp->ResultType.size()) {
-        auto resultType = ast::GetConstantType(binOp->ResultType);
-        if (resultType >= ast::CONSTANT_TYPE::FLOAT && constant->ConstType < ast::CONSTANT_TYPE::FLOAT ||
-            resultType < ast::CONSTANT_TYPE::FLOAT && constant->ConstType >= ast::CONSTANT_TYPE::FLOAT) {
+        auto resultType = Primitives::Get(binOp->ResultType);
+        auto constType = Primitives::Get(Primitives::GetName(constant->ConstType));
+        if (resultType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32 ||
+            resultType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32) {
             // FLOATING POINT AND INTEGER MIX
-            error_handling::Error error(binOp->Line, ast->FileName, "Operands not supported: Float and Integer mix in binary operation.");
+            error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
             errors->emplace_back(error);
             return false;
         }
 
-        if (resultType >= constant->ConstType) {
-            constant->ConstType = resultType;
+        if (resultType >= constType) {
+            constant->ConstType = ast::GetConstantType(resultType);
             return true;
         }
     }
