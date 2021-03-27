@@ -71,7 +71,13 @@ antlrcpp::Any AstBuilder::visitFunctionDef(LlamaLangParser::FunctionDefContext *
         funcNode->InnerScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode).back();
         
         context->AstNode = funcNode;
+
+        // before visit children set the function scope
+        currentScope = funcNode->InnerScope;
         visit(context->signature());
+        // We are now exiting the function
+        // return the scope to the parent scope
+        currentScope = currentScope->Parent;
     }
 
     return CastNode<Node>(funcNode);
@@ -98,11 +104,17 @@ antlrcpp::Any AstBuilder::visitParameters(LlamaLangParser::ParametersContext *co
         if( paramContext->isEmpty() || paramContext->exception != nullptr )
             continue;
 
-        auto paramAny = visit(paramContext);
-        if (paramAny.is<std::shared_ptr<VariableDefNode>>()) {
-            auto param = paramAny.as<std::shared_ptr<VariableDefNode>>();
-            funcNode->Parameters.push_back(param);
-        }
+        // variable definition
+        auto param = std::make_shared<VariableDefNode>();
+        param->FileName = FileName;
+        param->Line = paramContext->start->getLine();
+        param->Name = paramContext->IDENTIFIER()->getText();
+        param->VarType = paramContext->type_()->getText();
+        param->isGlobal = currentScope == globalScope;
+        // Add symbol
+        currentScope->addSymbol(param->Name, param);
+
+        funcNode->Parameters.push_back(param);
     }
 
     // It is not necesary to visit children after this visit
@@ -216,6 +228,9 @@ antlrcpp::Any AstBuilder::visitPrimaryExpr(LlamaLangParser::PrimaryExprContext* 
 }
 
 antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
+    if (context->AstNode)
+        return context->AstNode;
+
     // variable definition
     auto varDefNode = std::make_shared<VariableDefNode>();
     varDefNode->FileName = FileName;
@@ -223,6 +238,7 @@ antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
     varDefNode->Name = context->IDENTIFIER()->getText();
     varDefNode->VarType = context->type_()->getText();
     varDefNode->isGlobal = currentScope == globalScope;
+    context->AstNode = varDefNode;
     // Add symbol
     currentScope->addSymbol(varDefNode->Name, varDefNode);
 

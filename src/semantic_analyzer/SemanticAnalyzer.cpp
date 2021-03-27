@@ -289,7 +289,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionCallNode> funcNode
 
     auto name = funcNode->Name;
     auto symbol = scope->findSymbol(name, true);
-    if (symbol) {
+    if (symbol == nullptr) {
         // function NotFound error
         error_handling::Error error(funcNode->Line, funcNode->FileName, "Function not found: " + name);
         errors->emplace_back(error);
@@ -365,7 +365,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNod
     if(!varRefNode->WasFound) {
         auto name = varRefNode->Var->Name;
         auto symbol = scope->findSymbol(name, true);
-        if( symbol ) {
+        if( symbol == nullptr) {
             // Variable NotFound error
             error_handling::Error error(varRefNode->Line, varRefNode->FileName, "Variable not found: " + name);
             errors->emplace_back(error);
