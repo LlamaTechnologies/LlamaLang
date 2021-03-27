@@ -35,7 +35,10 @@ namespace llang::ast
         antlrcpp::Any visitStatementList(LlamaLangParser::StatementListContext *context) override;
         antlrcpp::Any visitReturnStmt(LlamaLangParser::ReturnStmtContext *context) override;
         antlrcpp::Any visitUnaryExpr(LlamaLangParser::UnaryExprContext *context) override;
+        antlrcpp::Any visitArguments(LlamaLangParser::ArgumentsContext* context) override;
+        antlrcpp::Any visitExpressionList(LlamaLangParser::ExpressionListContext* context) override;
         antlrcpp::Any visitExpression(LlamaLangParser::ExpressionContext *context) override;
+        antlrcpp::Any visitPrimaryExpr(LlamaLangParser::PrimaryExprContext *context) override;
         antlrcpp::Any visitVarDef(LlamaLangParser::VarDefContext *context) override;
         antlrcpp::Any visitAssignment(LlamaLangParser::AssignmentContext *context) override;
         antlrcpp::Any visitOperandName(LlamaLangParser::OperandNameContext *context) override;

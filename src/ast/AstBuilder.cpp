@@ -5,6 +5,7 @@
 #include "VariableDefNode.hpp"
 #include "VariableRefNode.hpp"
 #include "FunctionDefNode.hpp"
+#include "FunctionCallNode.hpp"
 #include "UnaryOperationNode.hpp"
 #include "BinaryOperationNode.hpp"
 #include "ConstantNode.hpp"
@@ -191,6 +192,30 @@ antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *co
     }
 }
 
+antlrcpp::Any AstBuilder::visitPrimaryExpr(LlamaLangParser::PrimaryExprContext* context) {
+    auto funcCallNode = std::make_shared<FunctionCallNode>();
+    // Function call
+    if (context->primaryExpr() != nullptr && context->arguments() != nullptr) {
+        // wrongly assigned to a variable reference as antlr4::any
+        auto varRefAny = visitChildren(context->primaryExpr());
+        if (varRefAny.isNull())
+            return nullptr;
+        // get the name and delete the ptr
+        auto varRefNode = varRefAny.as<std::shared_ptr<VariableRefNode>>();
+        funcCallNode->Name = varRefNode->Var->Name;
+
+        // Set funcCallNode as the astNode 
+        // to then get the Arguments
+        context->AstNode = funcCallNode;
+        visit(context->arguments());
+
+        return CastNode<StatementNode>(funcCallNode);
+    }
+    
+    // else keep going down the tree
+    return visitChildren(context);
+}
+
 antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
     // variable definition
     auto varDefNode = std::make_shared<VariableDefNode>();
@@ -266,6 +291,37 @@ antlrcpp::Any AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *cont
 
     unaryStmnt->Right = childAny.as<std::shared_ptr<StatementNode>>();
     return unaryStmnt;
+}
+
+antlrcpp::Any AstBuilder::visitArguments(LlamaLangParser::ArgumentsContext* context) {
+    // set parent astNode as the ctx ast node
+    auto parent = (LlamaLangParseContext*) context->parent;
+    context->AstNode = parent->AstNode;
+
+    visitChildren(context);
+    return nullptr;
+}
+
+antlrcpp::Any AstBuilder::visitExpressionList(LlamaLangParser::ExpressionListContext* context) {
+    auto parentContext = (LlamaLangParseContext*)context->parent;
+    if (parentContext->AstNode && parentContext->AstNode->GetType() == AST_TYPE::FunctionCallNode) {
+        auto funcCallNode = CastNode<FunctionCallNode>(parentContext->AstNode);
+
+        auto args = context->expression();
+
+        for (auto argCtx : args) {
+            if (argCtx->isEmpty() || argCtx->exception != nullptr)
+                continue;
+
+            auto argAny = visit(argCtx);
+            if (argAny.isNotNull()) {
+                auto argNode = argAny.as<std::shared_ptr<StatementNode>>();
+                funcCallNode->Arguments.push_back(argNode);
+            }
+        }
+    }
+
+    return visitChildren(context);
 }
 
 antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {

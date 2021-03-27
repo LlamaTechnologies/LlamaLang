@@ -8,7 +8,7 @@ namespace llang::ast
     */
     struct FunctionCallNode : public StatementNode {
         std::string Name;
-        std::vector<std::shared_ptr<StatementNode>> Parameters;
+        std::vector<std::shared_ptr<StatementNode>> Arguments;
         std::shared_ptr<FunctionDefNode> functionFound;
 
         FunctionCallNode() :
@@ -24,9 +24,9 @@ namespace llang::ast
 
             // print parameters
             size_t i = 0;
-            for (auto param : Parameters) {
-                param->ToString(str, 0);
-                if (++i != Parameters.size())
+            for (auto arg : Arguments) {
+                arg->ToString(str, 0);
+                if (++i != Arguments.size())
                     str += ", ";
             }
 
