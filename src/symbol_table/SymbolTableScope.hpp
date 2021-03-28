@@ -28,6 +28,7 @@ namespace llang::symbol_table
         using ScopesVector = std::vector<std::shared_ptr<SymbolTableScope>>;
         
         SCOPE_TYPE ScopeType;
+        std::string Name;
         std::shared_ptr<ast::Node> Data;
         std::shared_ptr<SymbolTableScope> Parent;
         std::unordered_map<std::string, Symbol> Symbols;
@@ -35,7 +36,10 @@ namespace llang::symbol_table
         std::unordered_map<std::string, ScopesVector> children;
         
         SymbolTableScope(SCOPE_TYPE scopeType)
-            : ScopeType(scopeType) {}
+            : ScopeType(scopeType) {
+            if (scopeType == SCOPE_TYPE::GLOBAL)
+                Name = "";
+        }
 
 
         void addSymbol(const std::string &name, std::shared_ptr<ast::Node> data);

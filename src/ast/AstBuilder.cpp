@@ -18,6 +18,7 @@ using namespace ast;
 
 antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *context) {
     context->AstNode = ASTree;
+    ASTree->GlobalScope = globalScope;
 
     // Visit global scope first
     for( auto child : context->children ) {

@@ -36,6 +36,7 @@ namespace llang {
 
     private:
         static llvm::Function* TranslateNode(std::shared_ptr<ast::FunctionDefNode> function);
+        static llvm::CallInst* TranslateNode(std::shared_ptr<ast::FunctionCallNode> functionCall, IR_INFO* irInfo);
         static llvm::Constant* TranslateNode(std::shared_ptr<ast::ConstantNode> constant, IR_INFO* irInfo);
         /**
          * @brief Translate a binary operation

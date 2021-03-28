@@ -57,6 +57,7 @@ SymbolTableScope::ScopesVector SymbolTableScope::addChild(SCOPE_TYPE childType, 
     auto child = std::make_shared<SymbolTableScope>(childType);
     child->Data = data;
     child->Parent = std::shared_ptr<SymbolTableScope>(this);
+    child->Name = name;
 
     if( children.find(name) == children.end() ) {
         ScopesVector vec;
