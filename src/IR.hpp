@@ -1,5 +1,10 @@
 #pragma once
 #include <memory>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
 
 namespace llang {
     namespace ast {
@@ -13,6 +18,8 @@ namespace llang {
         struct UnaryOperationNode;
         struct VariableDefNode;
         struct VariableRefNode;
+        enum BINARY_OPERANDS_TYPES;
+        enum class CONSTANT_TYPE;
     }
 
     class IR {
@@ -25,8 +32,8 @@ namespace llang {
         };
 
     public:
-        void Translate(std::shared_ptr<ast::ProgramNode> program, const std::string& outputFileName);
-    
+        static void Translate(std::shared_ptr<ast::ProgramNode> program, const std::string& outputFileName);
+
     private:
         static llvm::Function* TranslateNode(std::shared_ptr<ast::FunctionDefNode> function);
         static llvm::Constant* TranslateNode(std::shared_ptr<ast::ConstantNode> constant, IR_INFO* irInfo);
@@ -63,5 +70,5 @@ namespace llang {
         static llvm::Value* TranslateDiv(llvm::Value* L, llvm::Value* R, ast::BINARY_OPERANDS_TYPES types);
         static llvm::Value* TranslateMod(llvm::Value* L, llvm::Value* R, ast::BINARY_OPERANDS_TYPES types);
         static llvm::Value* TranslateOperand(std::shared_ptr<ast::StatementNode> operand, IR_INFO* irInfo);
-    }
+    };
 }
