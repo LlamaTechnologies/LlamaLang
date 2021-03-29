@@ -16,7 +16,8 @@ func myFunction(f int32) int32 {
     ret f
 }
 
-func main() int32 {
+#main
+func myProgramInit() int32 {
     f = myFunction(f + 5)
     // should return 42
     ret f

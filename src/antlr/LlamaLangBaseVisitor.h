@@ -29,6 +29,26 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitModuleDirective(LlamaLangParser::ModuleDirectiveContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitIncludeDirective(LlamaLangParser::IncludeDirectiveContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitExternDirective(LlamaLangParser::ExternDirectiveContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitRunDirective(LlamaLangParser::RunDirectiveContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual antlrcpp::Any visitBasicDirective(LlamaLangParser::BasicDirectiveContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitFunctionDef(LlamaLangParser::FunctionDefContext *ctx) override {
     return visitChildren(ctx);
   }

@@ -3,29 +3,26 @@
 #include "../CppReflection.hpp"
 #include "Node.hpp"
 
-#define PUSH_VAL(enum_type, value)\
-astTypes[size_t(value)] = GetEnumClassValueName<enum_type, value>()
+#define GET_VAL(enum_type, value)\
+GetEnumClassValueName<enum_type, value>()
 
 namespace llang::ast
 {
     static bool init = false;
-    static auto astTypes = std::vector<std::string>(size_t(AST_TYPE::COUNT));
+    static std::vector<std::string> astTypes = {
+        GET_VAL(AST_TYPE, GET_AST_TYPE(AssignNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(BinaryOperationNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(ConstantNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(FunctionCallNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(FunctionDefNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(StatementNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(ProgramNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(UnaryOperationNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(VariableDefNode)),
+        GET_VAL(AST_TYPE, GET_AST_TYPE(VariableRefNode))
+    };
 
     std::string GetAstTypeName(AST_TYPE type) {
-        if( !init ) {
-            init = true;
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(AssignNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(BinaryOperationNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(ConstantNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(FunctionCallNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(FunctionDefNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(StatementNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(ProgramNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(UnaryOperationNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(VariableDefNode));
-            PUSH_VAL(AST_TYPE, GET_AST_TYPE(VariableRefNode));
-        }
         return astTypes.at(size_t(type));
-
     }
 }

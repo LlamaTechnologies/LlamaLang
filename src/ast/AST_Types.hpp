@@ -7,6 +7,7 @@ namespace llang::ast {
     struct AssignNode;
     struct BinaryOperationNode;
     struct ConstantNode;
+    struct DirectiveNode;
     struct FunctionCallNode;
     struct FunctionDefNode;
     struct ProgramNode;
@@ -15,10 +16,12 @@ namespace llang::ast {
     struct VariableDefNode;
     struct VariableRefNode;
 
+
     enum class AST_TYPE {
         SET_VALUE(AssignNode),
         SET_VALUE(BinaryOperationNode),
         SET_VALUE(ConstantNode),
+        SET_VALUE(DirectiveNode),
         SET_VALUE(FunctionCallNode),
         SET_VALUE(FunctionDefNode),
         SET_VALUE(StatementNode),

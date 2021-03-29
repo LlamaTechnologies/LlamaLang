@@ -5,7 +5,7 @@ options {
 }
 
 sourceFile
-    : (functionDef | varDef eos)* eos
+    : moduleDirective? includeDirective* (functionDef | varDef eos)* eos
     ;
 
 identifierList
@@ -16,10 +16,29 @@ expressionList
     : expression (',' expression)*
     ;
 
+moduleDirective
+    : '#' 'module' IDENTIFIER
+    ;
+
+includeDirective
+    : '#' 'include' string_
+    ;
+
+externDirective
+    : '#' 'extern' IDENTIFIER
+    ;
+
+runDirective
+    : '#' 'run' primaryExpr
+    ;
+
+basicDirective
+    : '#' IDENTIFIER
+    ;
 
 // Function declarations
 functionDef
-    : FUNC IDENTIFIER signature type_ block
+    : basicDirective? FUNC IDENTIFIER signature type_ block
     ;
 
 varDef
@@ -197,6 +216,7 @@ eos
     ;
 
 // Keywords
+DIR_BEGIN              : '#';
 FUNC                   : 'func';
 RETURN                 : 'ret';
 IDENTIFIER             : LETTER (LETTER | UNICODE_DIGIT)*;
