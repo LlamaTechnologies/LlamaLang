@@ -3,17 +3,36 @@
 using namespace llang;
 using namespace symbol_table;
 
-void SymbolTableScope::addSymbol(const std::string &name, std::shared_ptr<ast::Node> data) {
+void SymbolTableScope::addSymbol(const std::string &name, Symbol data) {
     if( Symbols.find(name) == Symbols.end() ) {
-        SymbolsVector vec;
-        vec.push_back(data);
-        Symbols.insert({ name, vec});
+        Symbols.insert({ name, data});
+        SymbolsCounter.insert({ name, 1 });
     }
-    else
-        Symbols.at(name).push_back(data);
+    else {
+        SymbolsCounter.at(name)++;
+    }
 }
 
-SymbolTableScope::SymbolsVector SymbolTableScope::findSymbol(const std::string &name, bool searchParentScopes) {
+size_t SymbolTableScope::getSymbolCount(const std::string& name, bool searchParentScopes) {
+    if (SymbolsCounter.find(name) != SymbolsCounter.end()) {
+        return SymbolsCounter.at(name);
+    }
+
+    auto current = Parent;
+    while (current) {
+        if (current->SymbolsCounter.find(name) != current->SymbolsCounter.end()) {
+            return SymbolsCounter.at(name);
+        }
+
+        if (searchParentScopes)
+            current = current->Parent;
+        else
+            current = nullptr;
+    }
+    return 0;
+}
+
+SymbolTableScope::Symbol SymbolTableScope::findSymbol(const std::string &name, bool searchParentScopes) {
     if( Symbols.find(name) != Symbols.end() ) {
         return Symbols.at(name);
     }
@@ -28,16 +47,17 @@ SymbolTableScope::SymbolsVector SymbolTableScope::findSymbol(const std::string &
         else
             current = nullptr;
     }
-    return SymbolTableScope::SymbolsVector();
+    return nullptr;
 }
 
 
-SymbolTableScope::ScopesVector SymbolTableScope::addChild(SCOPE_TYPE childType, const std::string &name, std::shared_ptr<ast::Node> data) {
+SymbolTableScope::ScopesVector SymbolTableScope::addChild(SCOPE_TYPE childType, const std::string &name, Symbol data) {
     addSymbol(name, data);
     
     auto child = std::make_shared<SymbolTableScope>(childType);
     child->Data = data;
     child->Parent = std::shared_ptr<SymbolTableScope>(this);
+    child->Name = name;
 
     if( children.find(name) == children.end() ) {
         ScopesVector vec;

@@ -1,12 +1,23 @@
-f : int32 = 55;
+/* My Program */
 
-func main(argc: int32, argv: char) -> int32 {
-    x : int32;
-    y : int32 = 8;
-    x = y;
-    y = f;
-    c : int32 = 100;
-    f = c * (x + y) % 62;
+f int32 = 55
 
-    return f;
+// The parameter of this function shadows the global variable
+func myFunction(f int32) int32 {
+    x int32;
+    y int32 = 8
+    c int32 = 100
+    
+    x = y
+    y = f
+    f = c * (x + y) % 62
+
+    // Returns the modified parameter value
+    ret f
+}
+
+func main() int32 {
+    f = myFunction(f + 5)
+    // should return 42
+    ret f
 }

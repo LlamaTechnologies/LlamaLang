@@ -37,6 +37,8 @@ namespace llang::semantics
 
         static bool checkNode(std::shared_ptr<ast::VariableDefNode> varDefNode, Scope scope);
 
+        static bool checkNode(std::shared_ptr<ast::FunctionCallNode> funcNode, Scope scope);
+
         static bool checkNode(std::shared_ptr<ast::VariableRefNode> varRefNode, Scope scope);
 
         static bool checkNode(std::shared_ptr<ast::UnaryOperationNode> unaryOpNode, Scope scope);
@@ -44,9 +46,8 @@ namespace llang::semantics
         static bool checkNode(std::shared_ptr<ast::BinaryOperationNode> binaryOpNode, Scope scope);
 
         static bool checkNode(std::shared_ptr<ast::AssignNode> assignmentNode, Scope scope);
-
-        // UTILS
-    private:
+        
+    private: // UTILS
         static bool checkVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant);
         static bool checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::VariableRefNode> varRef, Scope scope);
         static bool checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::ConstantNode> constant, Scope scope);

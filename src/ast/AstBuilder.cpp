@@ -5,19 +5,22 @@
 #include "VariableDefNode.hpp"
 #include "VariableRefNode.hpp"
 #include "FunctionDefNode.hpp"
+#include "FunctionCallNode.hpp"
 #include "UnaryOperationNode.hpp"
 #include "BinaryOperationNode.hpp"
 #include "ConstantNode.hpp"
 #include <sstream>
 #include <memory>
+#include "../Console.hpp"
 
 using namespace llang;
 using namespace ast;
 
 antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *context) {
     context->AstNode = ASTree;
+    ASTree->GlobalScope = globalScope;
 
-    // add program source to the program tree
+    // Visit global scope first
     for( auto child : context->children ) {
         auto result = visit(child);
         if( result.isNotNull() ) {
@@ -26,30 +29,57 @@ antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *co
         }
     }
 
+    std::string programNodesString = CastNode<Node>(ASTree)->ToString();
+
+    Console::WriteLine();
+    Console::WriteLine("======== Abstract Syntax Tree first iter ========");
+    Console::WriteLine();
+    Console::WriteLine(programNodesString);
+    Console::WriteLine();
+
+    // Visit innerScopes
+    visitChildren(context);
+
     return ASTree;
 }
 
 antlrcpp::Any AstBuilder::visitFunctionDef(LlamaLangParser::FunctionDefContext *context) {
-    auto funcNode = std::make_shared<FunctionDefNode>(); 
-    context->AstNode = funcNode;
+    auto funcNode = CastNode<FunctionDefNode>(context->AstNode);
 
-    funcNode->FileName = FileName;
-    funcNode->Line = context->start->getLine();
-    funcNode->Name = context->IDENTIFIER()->getText();
-    funcNode->ReturnType = context->type_()->getText();
+    // second visit to retrieve more info
+    if (funcNode) {
+        // before visit children set the function scope
+        currentScope = funcNode->InnerScope;
+        
+        auto blockAny = visit(context->block());
 
-    // Add function scope to parent scope and make it current
-    currentScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode).back();
+        if (blockAny.is<FunctionDefNode::BlockType*>()) {
+            funcNode->Block = *blockAny.as<FunctionDefNode::BlockType*>();
+        }
 
-
-    /* Get the result of the last child visited (block) */
-    auto blockAny = visitChildren(context);
-
-    if( blockAny.is<FunctionDefNode::BlockType *>() ) {
-        funcNode->Block = *blockAny.as<FunctionDefNode::BlockType *>();
+        // We are now exiting the function
+        // return the scope to the parent scope
+        currentScope = currentScope->Parent;
     }
+    // First visit from parent
+    else {
+        funcNode = std::make_shared<FunctionDefNode>();
+        funcNode->FileName = FileName;
+        funcNode->Line = context->start->getLine();
+        funcNode->Name = context->IDENTIFIER()->getText();
+        funcNode->ReturnType = context->type_()->getText();
+        // Add function scope to parent scope
+        funcNode->InnerScope = currentScope->addChild(symbol_table::SCOPE_TYPE::FUNC, funcNode->Name, funcNode).back();
+        
+        context->AstNode = funcNode;
 
-    currentScope = currentScope->Parent;
+        // before visit children set the function scope
+        currentScope = funcNode->InnerScope;
+        visit(context->signature());
+        // We are now exiting the function
+        // return the scope to the parent scope
+        currentScope = currentScope->Parent;
+    }
 
     return CastNode<Node>(funcNode);
 }
@@ -75,11 +105,16 @@ antlrcpp::Any AstBuilder::visitParameters(LlamaLangParser::ParametersContext *co
         if( paramContext->isEmpty() || paramContext->exception != nullptr )
             continue;
 
+        // variable definition
         auto param = std::make_shared<VariableDefNode>();
         param->FileName = FileName;
-        param->Line = context->start->getLine();
+        param->Line = paramContext->start->getLine();
         param->Name = paramContext->IDENTIFIER()->getText();
         param->VarType = paramContext->type_()->getText();
+        param->isGlobal = currentScope == globalScope;
+        // Add symbol
+        currentScope->addSymbol(param->Name, param);
+
         funcNode->Parameters.push_back(param);
     }
 
@@ -169,7 +204,34 @@ antlrcpp::Any AstBuilder::visitExpression(LlamaLangParser::ExpressionContext *co
     }
 }
 
+antlrcpp::Any AstBuilder::visitPrimaryExpr(LlamaLangParser::PrimaryExprContext* context) {
+    auto funcCallNode = std::make_shared<FunctionCallNode>();
+    // Function call
+    if (context->primaryExpr() != nullptr && context->arguments() != nullptr) {
+        // wrongly assigned to a variable reference as antlr4::any
+        auto varRefAny = visitChildren(context->primaryExpr());
+        if (varRefAny.isNull())
+            return nullptr;
+        // get the name and delete the ptr
+        auto varRefNode = varRefAny.as<std::shared_ptr<VariableRefNode>>();
+        funcCallNode->Name = varRefNode->Var->Name;
+
+        // Set funcCallNode as the astNode 
+        // to then get the Arguments
+        context->AstNode = funcCallNode;
+        visit(context->arguments());
+
+        return CastNode<StatementNode>(funcCallNode);
+    }
+    
+    // else keep going down the tree
+    return visitChildren(context);
+}
+
 antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
+    if (context->AstNode)
+        return context->AstNode;
+
     // variable definition
     auto varDefNode = std::make_shared<VariableDefNode>();
     varDefNode->FileName = FileName;
@@ -177,6 +239,9 @@ antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
     varDefNode->Name = context->IDENTIFIER()->getText();
     varDefNode->VarType = context->type_()->getText();
     varDefNode->isGlobal = currentScope == globalScope;
+    context->AstNode = varDefNode;
+    // Add symbol
+    currentScope->addSymbol(varDefNode->Name, varDefNode);
 
     if( context->ASSIGN() ) {
         auto assignmentStmnt = std::make_shared<AssignNode>();
@@ -187,8 +252,7 @@ antlrcpp::Any AstBuilder::visitVarDef(LlamaLangParser::VarDefContext *context) {
         varDefNode->assignmentStmnt = assignmentStmnt;
     }
 
-    // Add symbol
-    currentScope->addSymbol(varDefNode->Name, varDefNode);
+ 
 
     return CastNode<StatementNode>(varDefNode);
 }
@@ -244,6 +308,37 @@ antlrcpp::Any AstBuilder::visitUnaryExpr(LlamaLangParser::UnaryExprContext *cont
 
     unaryStmnt->Right = childAny.as<std::shared_ptr<StatementNode>>();
     return unaryStmnt;
+}
+
+antlrcpp::Any AstBuilder::visitArguments(LlamaLangParser::ArgumentsContext* context) {
+    // set parent astNode as the ctx ast node
+    auto parent = (LlamaLangParseContext*) context->parent;
+    context->AstNode = parent->AstNode;
+
+    visitChildren(context);
+    return nullptr;
+}
+
+antlrcpp::Any AstBuilder::visitExpressionList(LlamaLangParser::ExpressionListContext* context) {
+    auto parentContext = (LlamaLangParseContext*)context->parent;
+    if (parentContext->AstNode && parentContext->AstNode->GetType() == AST_TYPE::FunctionCallNode) {
+        auto funcCallNode = CastNode<FunctionCallNode>(parentContext->AstNode);
+
+        auto args = context->expression();
+
+        for (auto argCtx : args) {
+            if (argCtx->isEmpty() || argCtx->exception != nullptr)
+                continue;
+
+            auto argAny = visit(argCtx);
+            if (argAny.isNotNull()) {
+                auto argNode = argAny.as<std::shared_ptr<StatementNode>>();
+                funcCallNode->Arguments.push_back(argNode);
+            }
+        }
+    }
+
+    return visitChildren(context);
 }
 
 antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *context) {

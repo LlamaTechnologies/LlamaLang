@@ -32,7 +32,8 @@
 *.app
 
 # Folders
-/bin
+/bin/Debug
+/bin/Release
 /project
 /cmake-build-debug
 /.antlr4
@@ -120,6 +121,10 @@ ipch/
 # assembly files
 *.s
 
+# antlr tool test
+/bin/antlr_test/*.java
+/bin/antlr_test/*.class
+
 #Except
 !/scripts/windows/*.exe
-
+!/bin/antlr_test/LlamaLangParserBase.java

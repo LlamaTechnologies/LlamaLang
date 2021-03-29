@@ -16,9 +16,6 @@ namespace llang::ast
         BIT_AND,
         BIT_OR,
 
-
-
-
         _COUNT
     };
 
