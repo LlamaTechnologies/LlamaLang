@@ -28,7 +28,8 @@ namespace llang::ast
 
         inline void ToString(std::string &str, const int tabLevel) const override {
             auto tabs = GetTabs(tabLevel);
-            str += tabs + Var->Name;
+            std::string isG = Var->isGlobal ? "G" : "L";
+            str += tabs + isG + " " + Var->Name;
         }
     };
 }

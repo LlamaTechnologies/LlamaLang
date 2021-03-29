@@ -22,10 +22,39 @@ static std::unique_ptr<llvm::Module> TheModule;
 static std::unordered_map<std::string, llvm::Value*> symbols;
 static std::shared_ptr<symbol_table::SymbolTableScope> currentScope;
 
+static std::string MangleName(std::shared_ptr<symbol_table::SymbolTableScope> scope, const std::string &argName) {
+    if (scope->Name != "") {
+        return scope->Name + "_" + argName;
+    }
+    return argName;
+}
+
 void IR::Translate(std::shared_ptr<ast::ProgramNode> program, const std::string& outputFileName) {
     // Make the module, which holds all the code.
     TheModule = std::make_unique<llvm::Module>(program->FileName, TheContext);
     currentScope = program->GlobalScope;
+
+    for (auto node : program->children) {
+        auto nodeType = node->GetType();
+
+        switch (nodeType) {
+        case ast::AST_TYPE::FunctionDefNode:
+        {
+            auto funcNode = CastNode<ast::FunctionDefNode>(node);
+            TranslateNode(funcNode);
+            break;
+        }
+        case ast::AST_TYPE::VariableDefNode:
+        {
+            auto varDefNode = CastNode<ast::VariableDefNode>(node);
+            TranslateNode(varDefNode, nullptr);
+            break;
+        }
+        default:
+            Console::WriteLine(ast::GetAstTypeName(nodeType) + " Not implemented");
+            break;
+        }
+    }
 
     for (auto node : program->children) {
         auto nodeType = node->GetType();
@@ -61,74 +90,94 @@ void IR::Translate(std::shared_ptr<ast::ProgramNode> program, const std::string&
 
 llvm::Function* IR::TranslateNode(std::shared_ptr<ast::FunctionDefNode> functionNode) {
     bool isMain = functionNode->Name == "main";
+    ast::CONSTANT_TYPE retType = ast::GetConstantType(Primitives::Get(functionNode->ReturnType));
 
-    // Function return type
-    ast::CONSTANT_TYPE retType;
-    llvm::Type* returnType = TranslateType(functionNode->ReturnType, &retType);
+    if (symbols.find(functionNode->Name) == symbols.end()) {
+        // Function return type
+        llvm::Type* returnType = TranslateType(functionNode->ReturnType);
 
-    // Function parameters
-    auto nodeParams = functionNode->Parameters;
-    std::vector<llvm::Type*> parameters = TranslateParameters(nodeParams);
+        // Function parameters
+        auto nodeParams = functionNode->Parameters;
+        std::vector<llvm::Type*> parameters = TranslateParameters(nodeParams);
 
-    // Function type
-    llvm::FunctionType* functionType = parameters.size()
-        ? llvm::FunctionType::get(returnType, parameters, false)
-        : llvm::FunctionType::get(returnType, false);
-    
-    // Function linkage type
-    llvm::Function::LinkageTypes linkageType = isMain
-        ? linkageType = llvm::Function::LinkageTypes::ExternalLinkage
-        : llvm::Function::LinkageTypes::LinkOnceODRLinkage;
+        // Function type
+        llvm::FunctionType* functionType = parameters.size()
+            ? llvm::FunctionType::get(returnType, parameters, false)
+            : llvm::FunctionType::get(returnType, false);
 
-    // Create the function
-    llvm::Function* function =
-        llvm::Function::Create(functionType, linkageType, functionNode->Name, TheModule.get());
+        // Function linkage type
+        llvm::Function::LinkageTypes linkageType = isMain
+            ? linkageType = llvm::Function::LinkageTypes::ExternalLinkage
+            : llvm::Function::LinkageTypes::LinkOnceODRLinkage;
 
-    function->setCallingConv(llvm::CallingConv::C);
+        // Create the function
+        llvm::Function* function =
+            llvm::Function::Create(functionType, linkageType, functionNode->Name, TheModule.get());
 
-    // Add to symbols
-    symbols.insert({ functionNode->Name , function });
-
-    // Set arguments names in IR to better IR reading
-    unsigned int i = 0;
-    for (auto& arg : function->args()) {
-        auto argName = nodeParams.at(i++)->Name;
-        arg.setName(argName);
-        symbols.insert({ currentScope->Name + argName, &arg});
+        function->setCallingConv(llvm::CallingConv::C);
+        // Add to symbols
+        symbols.insert({ functionNode->Name , function });
+        return function;
     }
+    else {
+        currentScope = functionNode->InnerScope;
 
-    // Create a new basic block to start insertion into.
-    llvm::BasicBlock* BB = llvm::BasicBlock::Create(TheContext, "entry", function);
-    Builder.SetInsertPoint(BB);
+        auto function = llvm::cast<llvm::Function>(symbols.at(functionNode->Name));
+        auto nodeParams = functionNode->Parameters;
 
-    currentScope = functionNode->InnerScope;
+        // Create a new basic block to start insertion into.
+        llvm::BasicBlock* BB = llvm::BasicBlock::Create(TheContext, "entry", function);
+        Builder.SetInsertPoint(BB);
 
-    // Genereate body and finish the function with the return value
-    llvm::Value* retVal = TranslateFunctionBlock(*BB, functionNode->Block, retType);
-    if (retVal)
-        Builder.CreateRet(retVal);
-    else
-        Builder.CreateRetVoid();
+        // Set arguments names in IR to better IR reading
+        for (auto i = 0; i < nodeParams.size(); ++i) {
+            auto arg = function->getArg(i);
+            auto param = nodeParams.at(i++);
 
-    // Validate the generated code, checking for consistency.
-    if (llvm::verifyFunction(*function)) {
+            auto mangledName = MangleName(currentScope, param->Name);
+
+            if (!arg->getType()->isPointerTy()) {
+                arg->setName(mangledName + ".val");
+
+                auto alloc = Builder.CreateAlloca(arg->getType(), nullptr, mangledName);
+                Builder.CreateStore(arg, alloc);
+
+                symbols.insert({ mangledName, alloc });
+            }
+            else {
+                arg->setName(mangledName);
+                symbols.insert({ mangledName, arg });
+            }
+        }
+
+        // Genereate body and finish the function with the return value
+        llvm::Value* retVal = TranslateFunctionBlock(*BB, functionNode->Block, retType);
+        if (retVal)
+            Builder.CreateRet(retVal);
+        else
+            Builder.CreateRetVoid();
+
+        // Validate the generated code, checking for consistency.
+        if (llvm::verifyFunction(*function)) {
+            currentScope = functionNode->InnerScope->Parent;
+
+            Console::WriteLine();
+            Console::WriteLine("Error in generated function");
+            Console::WriteLine();
+
+            function->dump();
+
+            Console::WriteLine();
+
+            // Error reading body, remove function.
+            function->eraseFromParent();
+            return nullptr;
+        }
+
+        // set teh current scrope back to parent
         currentScope = functionNode->InnerScope->Parent;
-
-        Console::WriteLine();
-        Console::WriteLine("Error in generated function");
-        Console::WriteLine();
-
-        function->dump();
-
-        Console::WriteLine();
-
-        // Error reading body, remove function.
-        function->eraseFromParent();
-        return nullptr;
+        return function;
     }
-
-    currentScope = functionNode->InnerScope->Parent;
-    return function;
 }
 
 llvm::CallInst* IR::TranslateNode(std::shared_ptr<ast::FunctionCallNode> functionCall, IR_INFO* irInfo) {
@@ -332,8 +381,8 @@ llvm::Value* IR::TranslateNode(std::shared_ptr<ast::VariableDefNode> varDef, IR_
     }
 
     // mangled name, if global currentScope.Name is empty string
-    auto name = currentScope->Name + varDef->Name;
-    auto type = TranslateType(varDef->VarType, nullptr);
+    auto name = MangleName(currentScope, varDef->Name);
+    auto type = TranslateType(varDef->VarType);
 
     if (varDef->isGlobal) {
         TheModule->getOrInsertGlobal(name, type);
@@ -383,12 +432,12 @@ llvm::Value* IR::TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_
     if (varRef->Var->isGlobal)
         varInst = TheModule->getNamedGlobal(varName);
     else {
-        auto mangledName = currentScope->Name + varName;
+        auto mangledName = MangleName(currentScope, varName);
         if (symbols.find(mangledName) != symbols.end())
             varInst = symbols.at(mangledName);
     }
-
-    if (!irInfo->isReturnStmnt) {
+    
+    if (!irInfo->isReturnStmnt || varInst == nullptr) {
         return varInst;
     }
 
@@ -416,14 +465,22 @@ llvm::Value* IR::TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, 
     }
     else if (assignmentNode->Right->GetType() == ast::AST_TYPE::VariableRefNode) {
         auto variableRef = CastNode<ast::VariableRefNode>(assignmentNode->Right);
+        auto mangledName = MangleName(currentScope, variableRef->Var->Name);
         auto rightPtr = TranslateNode(variableRef, irInfo);
-        right = Builder.CreateLoad(rightPtr->getType()->getPointerElementType(), rightPtr, "tmp" + variableRef->Var->Name);
+        if (rightPtr->getType()->isPointerTy())
+            right = Builder.CreateLoad(rightPtr->getType()->getPointerElementType(), rightPtr, "tmp" + mangledName);
+        else
+            right = rightPtr;
     }
     else if (assignmentNode->Right->GetType() == ast::AST_TYPE::BinaryOperationNode) {
         auto binOp = CastNode<ast::BinaryOperationNode>(assignmentNode->Right);
         right = TranslateNode(binOp, irInfo);
     }
-
+    else if (assignmentNode->Right->GetType() == ast::AST_TYPE::FunctionCallNode) {
+        auto callOp = CastNode<ast::FunctionCallNode>(assignmentNode->Right);
+        right = TranslateNode(callOp, irInfo);
+    }
+    
     if (right)
         return Builder.CreateStore(right, left);
     return nullptr;
@@ -464,59 +521,35 @@ llvm::Value* IR::TranslateOperand(std::shared_ptr<ast::StatementNode> operand, I
     }
 }
 
-llvm::Type* IR::TranslateType(std::string& type, ast::CONSTANT_TYPE* retType) {
+llvm::Type* IR::TranslateType(std::string& type) {
     if (Primitives::Exists(type)) {
         auto primitiveType = Primitives::Get(type);
         switch (primitiveType) {
         case llang::PRIMITIVE_TYPE::VOID:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::_COUNT;
-            }
             return llvm::Type::getVoidTy(TheContext);
         case llang::PRIMITIVE_TYPE::BOOL:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::I8;
-            }
             return llvm::Type::getInt1Ty(TheContext);
         case llang::PRIMITIVE_TYPE::SCHAR:
         case llang::PRIMITIVE_TYPE::CHAR:
         case llang::PRIMITIVE_TYPE::BYTE:
         case llang::PRIMITIVE_TYPE::INT8:
         case llang::PRIMITIVE_TYPE::UINT8:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::I8;
-            }
             return llvm::Type::getInt8Ty(TheContext);
         case llang::PRIMITIVE_TYPE::WCHAR:
         case llang::PRIMITIVE_TYPE::INT16:
         case llang::PRIMITIVE_TYPE::UINT16:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::I16;
-            }
             return llvm::Type::getInt16Ty(TheContext);
         case llang::PRIMITIVE_TYPE::UCHAR:
         case llang::PRIMITIVE_TYPE::INT32:
         case llang::PRIMITIVE_TYPE::UINT32:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::I32;
-            }
             return llvm::Type::getInt32Ty(TheContext);
         case llang::PRIMITIVE_TYPE::INT64:
         case llang::PRIMITIVE_TYPE::UINT64:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::I64;
-            }
             return llvm::Type::getInt64Ty(TheContext);
         case llang::PRIMITIVE_TYPE::FLOAT32:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::FLOAT;
-            }
             return llvm::Type::getFloatTy(TheContext);
         case llang::PRIMITIVE_TYPE::FLOAT64:
         default:
-            if (retType) {
-                *retType = ast::CONSTANT_TYPE::DOUBLE;
-            }
             return llvm::Type::getDoubleTy(TheContext);
         }
     }
@@ -529,9 +562,8 @@ llvm::Type* IR::TranslateType(std::string& type, ast::CONSTANT_TYPE* retType) {
 std::vector<llvm::Type*> IR::TranslateParameters(std::vector<std::shared_ptr<ast::VariableDefNode>>& params) {
     std::vector<llvm::Type*> types;
     for (auto param : params) {
-        auto type = TranslateType(param->VarType, nullptr);
+        auto type = TranslateType(param->VarType);
         types.push_back(type);
-        symbols.insert({, })
     }
     return types;
 }

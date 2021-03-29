@@ -29,7 +29,15 @@ SemanticAnalyzer::SemanticAnalyzer(std::shared_ptr<ast::ProgramNode> ast,
 }
 
 std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::check() {
-    ast->ForEachDeep([](ast::Node::ChildType child) { checkNode(child); });
+    for (auto child : ast->children) {
+        auto nodeType = child->GetType();
+        switch (nodeType) {
+        case ast::AST_TYPE::FunctionDefNode:
+            checkNode(child);
+        default:
+            break;
+        }
+    }
 
     return ast;
 }
@@ -284,7 +292,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableDefNode> varDefNod
 }
 
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionCallNode> funcNode, Scope scope) {
-    if (funcNode->functionFound == nullptr)
+    if (funcNode->functionFound != nullptr)
         return true;
 
     auto name = funcNode->Name;
@@ -326,7 +334,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionCallNode> funcNode
         case ast::AST_TYPE::ConstantNode: {
             auto constNode = CastNode<ast::ConstantNode>(argNode);
             argType = Primitives::GetName(constNode->ConstType);
-        }
+        } break;
         case ast::AST_TYPE::VariableRefNode: {
             auto varRefNode = CastNode<ast::VariableRefNode>(argNode);
             if (!checkNode(varRefNode, scope))
@@ -399,6 +407,12 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode
         if (!checkNode(rightNode, scope))
             return false;
     } break;
+    case ast::AST_TYPE::FunctionCallNode:
+    {
+        auto rightNode = CastNode<ast::FunctionCallNode>(assignmentNode->Right);
+        if (!checkNode(rightNode, scope))
+            return false;
+    } break;
     default:
         break;
     }
@@ -409,7 +423,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::UnaryOperationNode> unaryOpNode, Scope scope) {
     switch (unaryOpNode->Op) {
     case ast::UNARY_STATEMENT_TYPE::RETURN:
-        return checkNode(unaryOpNode->Right);
+        return checkNode(unaryOpNode->Right, scope);
     default:
         return true;
     }
@@ -509,6 +523,9 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
         auto varRef = CastNode<ast::VariableRefNode>(leftOp);
         auto constant = CastNode<ast::ConstantNode>(rightOp);
        
+        if (!checkNode(varRef, scope))
+            return false;
+
         if (!checkVarAndConst(varRef, constant))
             return false;
 
@@ -520,6 +537,9 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (rightOp->StmntType == ast::STATEMENT_TYPE::VAR_REF && leftOp->StmntType == ast::STATEMENT_TYPE::CONSTANT) {
         auto varRef = CastNode<ast::VariableRefNode>(rightOp);
         auto constant = CastNode<ast::ConstantNode>(leftOp);
+
+        if (!checkNode(varRef, scope))
+            return false;
 
         if (!checkVarAndConst(varRef, constant))
             return false;

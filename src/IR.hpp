@@ -57,7 +57,7 @@ namespace llang {
         static llvm::Value* TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, IR_INFO* irInfo);
 
         // Helpers
-        static llvm::Type* TranslateType(std::string& type, ast::CONSTANT_TYPE* retType);
+        static llvm::Type* TranslateType(std::string& type);
         static std::vector<llvm::Type*> TranslateParameters(std::vector<std::shared_ptr<ast::VariableDefNode>>& params);
         /**
          * @brief Translate a function block/body
