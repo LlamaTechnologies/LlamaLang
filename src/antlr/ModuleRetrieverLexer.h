@@ -1,5 +1,5 @@
 
-// Generated from ../../LlamaLang.g4 by ANTLR 4.9.1
+// Generated from ../../ModuleRetriever.g4 by ANTLR 4.9.1
 
 #pragma once
 
@@ -10,25 +10,15 @@
 namespace llang {
 
 
-class  LlamaLangLexer : public antlr4::Lexer {
+class  ModuleRetrieverLexer : public antlr4::Lexer {
 public:
   enum {
-    T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, DIR_BEGIN = 5, FUNC = 6, RETURN = 7, 
-    IDENTIFIER = 8, L_PAREN = 9, R_PAREN = 10, L_CURLY = 11, R_CURLY = 12, 
-    L_BRACKET = 13, R_BRACKET = 14, ASSIGN = 15, COMMA = 16, SEMI = 17, 
-    COLON = 18, DOT = 19, PLUS_PLUS = 20, MINUS_MINUS = 21, DECLARE_ASSIGN = 22, 
-    ELLIPSIS = 23, LOGICAL_OR = 24, LOGICAL_AND = 25, EQUALS = 26, NOT_EQUALS = 27, 
-    LESS = 28, LESS_OR_EQUALS = 29, GREATER = 30, GREATER_OR_EQUALS = 31, 
-    OR = 32, DIV = 33, MOD = 34, LSHIFT = 35, RSHIFT = 36, BIT_CLEAR = 37, 
-    EXCLAMATION = 38, PLUS = 39, MINUS = 40, CARET = 41, STAR = 42, AMPERSAND = 43, 
-    DECIMAL_LIT = 44, OCTAL_LIT = 45, HEX_LIT = 46, FLOAT_LIT = 47, DOUBLE_LIT = 48, 
-    RUNE_LIT = 49, INTERPRETED_STRING_LIT = 50, WS = 51, COMMENT = 52, TERMINATOR = 53, 
-    LINE_COMMENT = 54
+    HASH = 1, MODULE = 2, INCLUDE = 3, IDENTIFIER = 4, WS = 5, UNICODE_WS = 6, 
+    COMMENT = 7, LINE_COMMENT = 8
   };
 
-  LlamaLangLexer() : Lexer() {}
-  explicit LlamaLangLexer(antlr4::CharStream *input);
-  ~LlamaLangLexer();
+  explicit ModuleRetrieverLexer(antlr4::CharStream *input);
+  ~ModuleRetrieverLexer();
 
   virtual std::string getGrammarFileName() const override;
   virtual const std::vector<std::string>& getRuleNames() const override;

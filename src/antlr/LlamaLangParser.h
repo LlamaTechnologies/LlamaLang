@@ -102,9 +102,9 @@ public:
   public:
     SourceFileContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    ModuleDirectiveContext *moduleDirective();
     std::vector<EosContext *> eos();
     EosContext* eos(size_t i);
-    ModuleDirectiveContext *moduleDirective();
     std::vector<IncludeDirectiveContext *> includeDirective();
     IncludeDirectiveContext* includeDirective(size_t i);
     std::vector<FunctionDefContext *> functionDef();

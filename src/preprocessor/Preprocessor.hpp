@@ -1,6 +1,9 @@
 #pragma once
 #include "../ast/ProgramNode.hpp"
+#include "../antlr/ModuleRetrieverLexer.h"
+#include "../antlr/ModuleRetrieverParser.h"
 #include "../Console.hpp"
+#include "PreprocessorListener.hpp"
 #include <string>
 #include <vector>
 #include <fstream>
@@ -10,40 +13,23 @@
 namespace llang {
     
     struct ModuleInfo {
-        const std::string ModuleName;
-        std::vector<std::ifstream> Files;
-        std::shared_ptr<ast::ProgramNode> ImportedLibrariesTree;
+        std::string ModuleName;
+        std::string FullProgram;
     };
 
-    struct ModuleRetriever {
+    struct Preprocessor {
         int Error = 0;
         std::string ModuleFolder;
 
-        ModuleRetriever(const std::string& moduleFolder)
-            : ModuleFolder(moduleFolder) {
-            namespace fs = std::filesystem;
-
-
-            auto path = fs::path(moduleFolder);
-            if (!fs::exists(path)) {
-                Console::WriteLine("Directory not found: " + ModuleFolder);
-                Error = -1;
-                return;
-            }
-
-            auto directory = fs::directory_entry(path);
-            for (auto entry : directory)
-
-        }
+        explicit Preprocessor(const std::string& moduleFolder);
 
         /*
         * Process de folder given search for the requested module 
         * Returns ModuleInfo
         */
-        ModuleInfo process(const std::string &moduleName);
+        ModuleInfo process(const std::string& moduleName);
 
     private:
-
-
+        std::string readWholeFile(std::ifstream& file, const std::string& moduleName);
     };
 }

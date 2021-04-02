@@ -1,6 +1,4 @@
-/* My Program */
-
-f int32 = 55
+#module MyProgram
 
 // The parameter of this function shadows the global variable
 func myFunction(f int32) int32 {
@@ -13,12 +11,5 @@ func myFunction(f int32) int32 {
     f = c * (x + y) % 62
 
     // Returns the modified parameter value
-    ret f
-}
-
-#main
-func myProgramInit() int32 {
-    f = myFunction(f + 5)
-    // should return 42
     ret f
 }
