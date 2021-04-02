@@ -1,312 +1,46 @@
-grammar LlamaLang;
+grammar ModuleRetriever;
 
-options {
-    superClass=LlamaLangParserBase;
-}
-
-sourceFile
-    : includeDirective* (functionDef | varDef eos)* eos
+validSource
+    : moduleDirective anyToken (mainDirective anyToken)? EOF
     ;
 
-identifierList
-    : IDENTIFIER (',' IDENTIFIER)*
+moduleDirective
+    : '#' 'module' IDENTIFIER
     ;
 
-expressionList
-    : expression (',' expression)*
+mainDirective
+    : '#' 'main' 'func' IDENTIFIER '(' parameterList? ')'
     ;
 
-includeDirective
-    : '#' 'include' string_
-    ;
-
-externDirective
-    : '#' 'extern' IDENTIFIER
-    ;
-
-runDirective
-    : '#' 'run' primaryExpr
-    ;
-
-basicDirective
-    : '#' IDENTIFIER
-    ;
-
-// Function declarations
-functionDef
-    : basicDirective? FUNC IDENTIFIER signature type_ block
-    ;
-
-varDef
-    : IDENTIFIER type_ ('=' expressionList)?
-    ;
-
-block
-    : '{' statementList? '}'
-    ;
-
-statementList
-    : (statement eos)+
-    ;
-
-statement
-    : varDef
-    | simpleStmt
-    | returnStmt
-    | block
-    ;
-
-simpleStmt
-    : expressionStmt
-    | assignment
-    | emptyStmt
-    ;
-
-expressionStmt
-    : expression
-    ;
-
-assignment
-    : IDENTIFIER assign_op expressionList
-    ;
-
-assign_op
-    : ('+' | '-' | '|' | '^' | '*' | '/' | '%' | '<<' | '>>' | '&' | '&^')? '='
-    ;
-
-emptyStmt
-    : ';'
-    ;
-
-returnStmt
-    : 'ret' expression?
-    ;
-
-type_
-    : typeName
-    | pointer
-    | array
-    ;
-
-pointer
-    : STAR type_
-    ;
-
-array
-    : '['']' typeName
-    ;
-typeName
-    : IDENTIFIER
-    | qualifiedIdent
-    ;
-
-signature
-    : parameters
-    ;
-
-result
-    : parameters
-    | type_
-    ;
-
-parameters
-    : '(' (parameterDecl (COMMA parameterDecl)*)? ')'
+parameterList
+    : (parameterDecl (',' parameterDecl)*)
     ;
 
 parameterDecl
-    : IDENTIFIER type_
+    : IDENTIFIER (('[' ']') | '*')? IDENTIFIER
     ;
 
-expression
-    : primaryExpr
-    | unaryExpr
-    | left=expression ('*' | '/' | '%' | '<<' | '>>' | '&' | '&^') right=expression
-    | left=expression ('+' | '-' | '|' | '^') right=expression
-    | left=expression ('==' | '!=' | '<' | '<=' | '>' | '>=') right=expression
-    | left=expression LOGICAL_AND right=expression
-    | left=expression LOGICAL_OR right=expression
-    ;
+anyToken : .*? ;
 
-primaryExpr
-    : operand
-    | primaryExpr ( '.' IDENTIFIER | arguments)
-    ;
-
-unaryExpr
-    : primaryExpr
-    | unaryOp expression
-    ;
-
-operand
-    : literal
-    | operandName
-    | methodExpr
-    | '(' expression ')'
-    ;
-
-unaryOp
-    : ('+' | '-' | '!' | '*' | '&' | '--' | '++')
-    ;
-    
-literal
-    : basicLit
-    ;
-
-basicLit
-    : integer
-    | string_
-    | floatingPoint
-    | RUNE_LIT
-    ;
-
-integer
-    : DECIMAL_LIT
-    | OCTAL_LIT
-    | HEX_LIT
-    ;
-
-floatingPoint
-    : FLOAT_LIT
-    | DOUBLE_LIT
-    ;
-
-operandName
-    : IDENTIFIER
-    | qualifiedIdent
-    ;
-
-qualifiedIdent
-    : IDENTIFIER '.' IDENTIFIER
-    ;
-
-literalType
-    : typeName
-    ;
-
-fieldDecl
-    : identifierList type_ string_?
-    ;
-
-string_
-    : INTERPRETED_STRING_LIT
-    ;
-
-arguments
-    : '(' ((expressionList | type_ (',' expressionList)?) '...'? ','?)? ')'
-    ;
-
-methodExpr
-    : receiverType DOT IDENTIFIER
-    ;
-
-receiverType
-    : typeName
-    | '(' ('*' typeName | receiverType) ')'
-    ;
-
-eos
-    : ';'
-    | EOF
-    | {lineTerminatorAhead()}?
-    | {checkPreviousTokenText("}")}?
-    ;
-
-// Keywords
-DIR_BEGIN              : '#';
-FUNC                   : 'func';
-RETURN                 : 'ret';
-IDENTIFIER             : LETTER (LETTER | UNICODE_DIGIT)*;
-
-// Punctuation
-L_PAREN                : '(';
-R_PAREN                : ')';
-L_CURLY                : '{';
-R_CURLY                : '}';
-L_BRACKET              : '[';
-R_BRACKET              : ']';
-ASSIGN                 : '=';
-COMMA                  : ',';
-SEMI                   : ';';
-COLON                  : ':';
-DOT                    : '.';
-PLUS_PLUS              : '++';
-MINUS_MINUS            : '--';
-DECLARE_ASSIGN         : ':=';
-ELLIPSIS               : '...';
-
-// Logical
-LOGICAL_OR             : '||' | 'or';
-LOGICAL_AND            : '&&' | 'and';
-
-// Relation operators
-EQUALS                 : '==';
-NOT_EQUALS             : '!=';
-LESS                   : '<';
-LESS_OR_EQUALS         : '<=';
-GREATER                : '>';
-GREATER_OR_EQUALS      : '>=';
-
-// Arithmetic operators
-OR                     : '|';
-DIV                    : '/';
-MOD                    : '%';
-LSHIFT                 : '<<';
-RSHIFT                 : '>>';
-BIT_CLEAR              : '&^';
-
-// Unary operators
-EXCLAMATION            : '!';
-
-// Mixed operators
-PLUS                   : '+';
-MINUS                  : '-';
-CARET                  : '^';
-STAR                   : '*';
-AMPERSAND              : '&';
-
-// Number literals
-DECIMAL_LIT            : [1-9] [0-9]*;
-OCTAL_LIT              : '0' OCTAL_DIGIT*;
-HEX_LIT                : '0' [xX] HEX_DIGIT+;
-FLOAT_LIT              : DOUBLE_LIT [Ff];
-DOUBLE_LIT             : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT)
-                       | '.' DECIMALS EXPONENT?
-                       ;
+HASH        : '#';
+MODULE      : 'module';
+INCLUDE     : 'include';
+MAIN        : 'main';
+FUNC        : 'func';
+LPAREN      : '(';
+RPAREN      : ')';
+LBRACKET    : '[';
+RBRACKET    : ']';
+COMMA       : ',';
+IDENTIFIER  : LETTER (LETTER | UNICODE_DIGIT)*;
 
 
+WS                      : [\n\r\t]          -> skip; // same as [ \n\r]
+UNICODE_WS              : [\p{White_Space}] -> skip; 
+COMMENT                 : '/*' .*? '*/'     -> skip;
+LINE_COMMENT            : '//' ~[\r?\n]*    -> skip;
+OTHER                   : .                 -> skip;
 
-// Rune literals
-RUNE_LIT               : '\'' (~[\n\\] | ESCAPED_VALUE) '\'';
-
-// String literals
-INTERPRETED_STRING_LIT : '"' (~["\\] | ESCAPED_VALUE)*  '"';
-
-// Hidden tokens
-WS                     : [ \t]+             -> channel(HIDDEN);
-COMMENT                : '/*' .*? '*/'      -> channel(HIDDEN);
-TERMINATOR             : [\r?\n]+           -> channel(HIDDEN);
-LINE_COMMENT           : '//' ~[\r?\n]*     -> channel(HIDDEN);
-
-// Fragments
-fragment ESCAPED_VALUE
-    : '\\' ('u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-           | 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-           | [abfnrtv\\'"]
-           | OCTAL_DIGIT OCTAL_DIGIT OCTAL_DIGIT
-           | 'x' HEX_DIGIT HEX_DIGIT)
-    ;
-fragment DECIMALS
-    : [0-9]+
-    ;
-fragment OCTAL_DIGIT
-    : [0-7]
-    ;
-fragment HEX_DIGIT
-    : [0-9a-fA-F]
-    ;
-fragment EXPONENT
-    : [eE] [+-]? DECIMALS
-    ;
 fragment LETTER
     : UNICODE_LETTER
     | '_'

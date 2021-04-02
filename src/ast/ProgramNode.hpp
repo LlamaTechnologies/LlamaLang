@@ -16,8 +16,9 @@ namespace llang {
          **/
         struct ProgramNode : public Node {
             std::shared_ptr<symbol_table::SymbolTableScope> GlobalScope;
+            const std::string ModuleName;
 
-            ProgramNode(const std::string& fileName) {
+            ProgramNode(const std::string& fileName, const std::string& moduleName) : ModuleName(moduleName) {
                 FileName = fileName;
             }
 

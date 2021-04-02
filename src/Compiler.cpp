@@ -9,6 +9,7 @@
 #include "error_handling/SyntaxErrorListener.hpp"
 #include "semantic_analyzer/SemanticAnalyzer.hpp"
 #include "ast/AstBuilder.hpp"
+#include "preprocessor/Preprocessor.hpp"
 #include "IR.hpp"
 
 #ifdef _WIN32
@@ -27,6 +28,8 @@ static void AwaitUserInput();
 static std::string logFileName = "../tests/log_antlr4.txt";
 static std::string ouputFileName = "../tests/output_bitcode.ll";
 static std::string inputFileName = "../tests/test.llang";
+static std::string moduleName = "MyProgram";
+static std::string inputFolder = "../tests/";
 // static std::string inputFileName = "../tests/test_semantic_errors.llang";
 
 int main(int argc, const char *argv[]) {
@@ -42,23 +45,20 @@ int main(int argc, const char *argv[]) {
     // Read arguments
 
     // Prepare files
-
-    std::fstream sourceFile(inputFileName, std::ios::in);
-    if( sourceFile.fail() ) {
-        Console::WriteLine("File does not exists!");
+    Preprocessor preprocessor(inputFolder);
+    auto moduleInfo = preprocessor.process(moduleName);
+    
+    if (preprocessor.Error) {
         return 1;
     }
 
-    auto sourceStream = antlr4::ANTLRInputStream(sourceFile);
+    auto sourceStream = antlr4::ANTLRInputStream(moduleInfo.FullProgram);
 
 #ifdef _DEBUG
     Console::WriteLine("======== Source File ========");
     Console::WriteLine();
 
-    if( !Console::WriteLine(sourceFile) ) {
-        return 1;
-    }
-
+    Console::WriteLine(moduleInfo.FullProgram);
     Console::WriteLine();
 #endif
 
@@ -74,9 +74,8 @@ int main(int argc, const char *argv[]) {
 
     auto tree = parser.sourceFile();
     auto errors = syntaxErrorListener.Errors;
-    sourceFile.close();
 
-    auto astBuilder = ast::AstBuilder(fileName);
+    auto astBuilder = ast::AstBuilder(fileName, moduleInfo.ModuleName);
     auto ast = astBuilder.visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
     auto analisedAST = semantics::SemanticAnalyzer(ast, astBuilder.globalScope, errors).check();
 

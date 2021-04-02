@@ -2,48 +2,40 @@
 #include "../CppReflection.hpp"
 #include <unordered_map>
 
-#define PUSH_NAME(enum_type, value)\
-contantTypesNames[size_t(value)] = GetEnumClassValueName<enum_type, value>()
+#define GET_NAME(enum_type, value)\
+GetEnumClassValueName<enum_type, value>()
 
-#define PUSH_VAL(enum_type, value)\
-contantTypes.insert({GetEnumClassValueName<enum_type, value>(), value})
+#define SET_VAL(enum_type, value)\
+{GetEnumClassValueName<enum_type, value>(), value}
 
 namespace llang::ast
 {
     static bool initNames = false;
     static bool init = false;
-    static auto contantTypesNames = std::vector<std::string>(size_t(CONSTANT_TYPE::_COUNT));
-    static auto contantTypes = std::unordered_map<std::string, CONSTANT_TYPE>(size_t(CONSTANT_TYPE::_COUNT));
-
-    static void FillConstantsTypes() {
-        PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I8);
-        PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I16);
-        PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I32);
-        PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I64);
-        PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::FLOAT);
-        PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::DOUBLE);
-        PUSH_VAL(CONSTANT_TYPE, CONSTANT_TYPE::STRING);
-    }
+    static std::vector<std::string> contantTypesNames = {
+        GET_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I8),
+        GET_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I16),
+        GET_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I32),
+        GET_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I64),
+        GET_NAME(CONSTANT_TYPE, CONSTANT_TYPE::FLOAT),
+        GET_NAME(CONSTANT_TYPE, CONSTANT_TYPE::DOUBLE),
+        GET_NAME(CONSTANT_TYPE, CONSTANT_TYPE::STRING)
+    };
+    static std::unordered_map<std::string, CONSTANT_TYPE> contantTypes = {
+        SET_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I8),
+        SET_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I16),
+        SET_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I32),
+        SET_VAL(CONSTANT_TYPE, CONSTANT_TYPE::I64),
+        SET_VAL(CONSTANT_TYPE, CONSTANT_TYPE::FLOAT),
+        SET_VAL(CONSTANT_TYPE, CONSTANT_TYPE::DOUBLE),
+        SET_VAL(CONSTANT_TYPE, CONSTANT_TYPE::STRING)
+    };
 
     std::string GetConstantTypeName(CONSTANT_TYPE type) {
-        if( !initNames ) {
-            initNames = true;
-            PUSH_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I8);
-            PUSH_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I16);
-            PUSH_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I32);
-            PUSH_NAME(CONSTANT_TYPE, CONSTANT_TYPE::I64);
-            PUSH_NAME(CONSTANT_TYPE, CONSTANT_TYPE::FLOAT);
-            PUSH_NAME(CONSTANT_TYPE, CONSTANT_TYPE::DOUBLE);
-            PUSH_NAME(CONSTANT_TYPE, CONSTANT_TYPE::STRING);
-        }
         return contantTypesNames.at(size_t(type));
     }
 
     CONSTANT_TYPE GetConstantType(std::string name) {
-        if( !init ) {
-            init = true;
-            FillConstantsTypes();
-        }
         return contantTypes.at(name);
     }
 

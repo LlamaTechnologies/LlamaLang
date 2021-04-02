@@ -31,7 +31,7 @@ static std::string MangleName(std::shared_ptr<symbol_table::SymbolTableScope> sc
 
 void IR::Translate(std::shared_ptr<ast::ProgramNode> program, const std::string& outputFileName) {
     // Make the module, which holds all the code.
-    TheModule = std::make_unique<llvm::Module>(program->FileName, TheContext);
+    TheModule = std::make_unique<llvm::Module>(program->ModuleName, TheContext);
     currentScope = program->GlobalScope;
 
     for (auto node : program->children) {
@@ -91,7 +91,8 @@ void IR::Translate(std::shared_ptr<ast::ProgramNode> program, const std::string&
 llvm::Function* IR::TranslateNode(std::shared_ptr<ast::FunctionDefNode> functionNode) {
     bool isMain = functionNode->Name == "main";
     ast::CONSTANT_TYPE retType = ast::GetConstantType(Primitives::Get(functionNode->ReturnType));
-
+    
+    // 1st iteration
     if (symbols.find(functionNode->Name) == symbols.end()) {
         // Function return type
         llvm::Type* returnType = TranslateType(functionNode->ReturnType);
@@ -106,19 +107,18 @@ llvm::Function* IR::TranslateNode(std::shared_ptr<ast::FunctionDefNode> function
             : llvm::FunctionType::get(returnType, false);
 
         // Function linkage type
-        llvm::Function::LinkageTypes linkageType = isMain
-            ? linkageType = llvm::Function::LinkageTypes::ExternalLinkage
-            : llvm::Function::LinkageTypes::LinkOnceODRLinkage;
+        llvm::Function::LinkageTypes linkageType = llvm::Function::LinkageTypes::LinkOnceODRLinkage;
 
         // Create the function
         llvm::Function* function =
             llvm::Function::Create(functionType, linkageType, functionNode->Name, TheModule.get());
-
         function->setCallingConv(llvm::CallingConv::C);
+
         // Add to symbols
         symbols.insert({ functionNode->Name , function });
         return function;
     }
+    // 2nd iteration
     else {
         currentScope = functionNode->InnerScope;
 
@@ -364,6 +364,14 @@ llvm::Value* IR::TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, IR_INF
 
         auto unaryStmnt = CastNode<ast::UnaryOperationNode>(stmnt);
         return TranslateNode(unaryStmnt, irInfo);
+    }
+    case llang::ast::AST_TYPE::FunctionCallNode:
+    {
+        if (!irInfo)
+            return nullptr;
+
+        auto callStmnt = CastNode<ast::FunctionCallNode>(stmnt);
+        return TranslateNode(callStmnt, irInfo);
     }
     default:
         // Not a statement
