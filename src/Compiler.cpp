@@ -75,7 +75,7 @@ int main(int argc, const char *argv[]) {
     auto tree = parser.sourceFile();
     auto errors = syntaxErrorListener.Errors;
 
-    auto astBuilder = ast::AstBuilder(fileName);
+    auto astBuilder = ast::AstBuilder(fileName, moduleInfo.ModuleName);
     auto ast = astBuilder.visitSourceFile(tree).as<std::shared_ptr<ast::ProgramNode>>();
     auto analisedAST = semantics::SemanticAnalyzer(ast, astBuilder.globalScope, errors).check();
 

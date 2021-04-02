@@ -22,8 +22,8 @@ namespace llang::ast
         std::shared_ptr<symbol_table::SymbolTableScope> currentScope;
         bool processChildren;
 
-        AstBuilder(const std::string &fileName)
-            : FileName(fileName), ASTree(std::make_shared<ProgramNode>(fileName)),
+        AstBuilder(const std::string &fileName, const std::string& moduleName)
+            : FileName(fileName), ASTree(std::make_shared<ProgramNode>(fileName, moduleName)),
             globalScope(std::make_shared<symbol_table::SymbolTableScope>(symbol_table::SCOPE_TYPE::GLOBAL)),
             currentScope(globalScope) {}
 

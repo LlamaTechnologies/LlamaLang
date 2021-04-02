@@ -31,7 +31,7 @@ static std::string MangleName(std::shared_ptr<symbol_table::SymbolTableScope> sc
 
 void IR::Translate(std::shared_ptr<ast::ProgramNode> program, const std::string& outputFileName) {
     // Make the module, which holds all the code.
-    TheModule = std::make_unique<llvm::Module>(program->FileName, TheContext);
+    TheModule = std::make_unique<llvm::Module>(program->ModuleName, TheContext);
     currentScope = program->GlobalScope;
 
     for (auto node : program->children) {
