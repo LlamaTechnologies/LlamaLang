@@ -30,6 +30,7 @@ namespace llang {
         ModuleInfo process(const std::string& moduleName);
 
     private:
-        std::string readWholeFile(std::ifstream& file, const std::string& moduleName);
+        std::string readWholeFile(std::ifstream& file, const std::string& moduleName, const bool hasMain, const std::string& mainFunc);
+
     };
 }

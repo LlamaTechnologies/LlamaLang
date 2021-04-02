@@ -29,15 +29,16 @@ ModuleInfo Preprocessor::process(const std::string& moduleName) {
     if (Error)
         return moduleInfo;
 
+    bool hadMain = false;
+    std::string fileMainName = "";
     auto directory = fs::recursive_directory_iterator(ModuleFolder);
 
     for (auto entry : directory) {
         auto filePath = entry.path();
         auto ext = filePath.extension().string();
         auto fileName = filePath.filename().string();
-        Console::WriteLine(fileName + " with ext: " + ext);
+
         if (entry.is_regular_file() && ext == ".llang") {
-            Console::WriteLine("Processing " + fileName);
             auto file = std::ifstream(entry);
             auto inputStream = antlr4::ANTLRInputStream(file);
             auto lexer = ModuleRetrieverLexer(&inputStream);
@@ -46,8 +47,27 @@ ModuleInfo Preprocessor::process(const std::string& moduleName) {
             auto listener = ModuleRetriever(moduleName);
             auto tree = parser.validSource();
             antlr4::tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
-            if (listener.IsValid)
-                moduleInfo.FullProgram += readWholeFile(file, moduleName);
+            
+            if (listener.BelongToModule) {
+                if (listener.HasValidMain == false) {
+                    Console::WriteLine(listener.ErrorDescr + " in file: " + fileName);
+                    file.close();
+                    Error = -2;
+                    break;
+                }
+
+                if (hadMain && listener.HasMain) {
+                    Console::WriteLine("Module redefined main in files: " + fileName + ", " + fileMainName);
+                    file.close();
+                    Error = -2;
+                    break;
+                }
+
+                if (listener.HasMain)
+                    fileMainName = fileName;
+
+                moduleInfo.FullProgram += readWholeFile(file, moduleName, listener.HasMain, listener.MainFunc);
+            }
             file.close();
         }
     }
@@ -57,8 +77,7 @@ ModuleInfo Preprocessor::process(const std::string& moduleName) {
     return moduleInfo;
 }
 
-std::string Preprocessor::readWholeFile(std::ifstream& file, const std::string &moduleName)
-{
+std::string Preprocessor::readWholeFile(std::ifstream& file, const std::string &moduleName, const bool hasMain, const std::string &mainFunc) {
     std::string str;
 
     file.seekg(0, std::ios::end);
@@ -68,9 +87,35 @@ std::string Preprocessor::readWholeFile(std::ifstream& file, const std::string &
     str.assign((std::istreambuf_iterator<char>(file)),
         std::istreambuf_iterator<char>());
 
+    // erase module directive
     auto start = str.find_first_of("#");
     auto erase = "#module " + moduleName;
+    str = str.erase(start, erase.size());
+
     
-    str.erase(start, erase.size());
+    if (hasMain) {
+        // search main directive
+        erase = "#main";
+        auto found = false;
+
+        
+        start = 0;
+        while (!found) {
+            start = str.find_first_of("#", start);
+            auto subStr = str.substr(start, erase.size());
+
+            if (subStr == "#main") {
+                // erase main directive
+                str = str.erase(start, erase.size());
+                found = true;
+            }
+            else {
+                start += subStr.size();
+            }
+        }
+        // add main function
+        str += "\n" + mainFunc;
+    }
+
     return str;
 }

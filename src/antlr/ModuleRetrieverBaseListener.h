@@ -24,8 +24,14 @@ public:
   virtual void enterModuleDirective(ModuleRetrieverParser::ModuleDirectiveContext * /*ctx*/) override { }
   virtual void exitModuleDirective(ModuleRetrieverParser::ModuleDirectiveContext * /*ctx*/) override { }
 
-  virtual void enterIncludeDirective(ModuleRetrieverParser::IncludeDirectiveContext * /*ctx*/) override { }
-  virtual void exitIncludeDirective(ModuleRetrieverParser::IncludeDirectiveContext * /*ctx*/) override { }
+  virtual void enterMainDirective(ModuleRetrieverParser::MainDirectiveContext * /*ctx*/) override { }
+  virtual void exitMainDirective(ModuleRetrieverParser::MainDirectiveContext * /*ctx*/) override { }
+
+  virtual void enterParameterList(ModuleRetrieverParser::ParameterListContext * /*ctx*/) override { }
+  virtual void exitParameterList(ModuleRetrieverParser::ParameterListContext * /*ctx*/) override { }
+
+  virtual void enterParameterDecl(ModuleRetrieverParser::ParameterDeclContext * /*ctx*/) override { }
+  virtual void exitParameterDecl(ModuleRetrieverParser::ParameterDeclContext * /*ctx*/) override { }
 
   virtual void enterAnyToken(ModuleRetrieverParser::AnyTokenContext * /*ctx*/) override { }
   virtual void exitAnyToken(ModuleRetrieverParser::AnyTokenContext * /*ctx*/) override { }

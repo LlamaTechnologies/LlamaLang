@@ -13,13 +13,14 @@ namespace llang {
 class  ModuleRetrieverParser : public antlr4::Parser {
 public:
   enum {
-    HASH = 1, MODULE = 2, INCLUDE = 3, IDENTIFIER = 4, WS = 5, UNICODE_WS = 6, 
-    COMMENT = 7, LINE_COMMENT = 8
+    T__0 = 1, HASH = 2, MODULE = 3, INCLUDE = 4, MAIN = 5, FUNC = 6, LPAREN = 7, 
+    RPAREN = 8, LBRACKET = 9, RBRACKET = 10, COMMA = 11, IDENTIFIER = 12, 
+    WS = 13, UNICODE_WS = 14, COMMENT = 15, LINE_COMMENT = 16, OTHER = 17
   };
 
   enum {
-    RuleValidSource = 0, RuleModuleDirective = 1, RuleIncludeDirective = 2, 
-    RuleAnyToken = 3
+    RuleValidSource = 0, RuleModuleDirective = 1, RuleMainDirective = 2, 
+    RuleParameterList = 3, RuleParameterDecl = 4, RuleAnyToken = 5
   };
 
   explicit ModuleRetrieverParser(antlr4::TokenStream *input);
@@ -34,7 +35,9 @@ public:
 
   class ValidSourceContext;
   class ModuleDirectiveContext;
-  class IncludeDirectiveContext;
+  class MainDirectiveContext;
+  class ParameterListContext;
+  class ParameterDeclContext;
   class AnyTokenContext; 
 
   class  ValidSourceContext : public antlr4::ParserRuleContext {
@@ -42,10 +45,10 @@ public:
     ValidSourceContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     ModuleDirectiveContext *moduleDirective();
-    AnyTokenContext *anyToken();
+    std::vector<AnyTokenContext *> anyToken();
+    AnyTokenContext* anyToken(size_t i);
     antlr4::tree::TerminalNode *EOF();
-    std::vector<IncludeDirectiveContext *> includeDirective();
-    IncludeDirectiveContext* includeDirective(size_t i);
+    MainDirectiveContext *mainDirective();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -69,20 +72,56 @@ public:
 
   ModuleDirectiveContext* moduleDirective();
 
-  class  IncludeDirectiveContext : public antlr4::ParserRuleContext {
+  class  MainDirectiveContext : public antlr4::ParserRuleContext {
   public:
-    IncludeDirectiveContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    MainDirectiveContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *HASH();
-    antlr4::tree::TerminalNode *INCLUDE();
+    antlr4::tree::TerminalNode *MAIN();
+    antlr4::tree::TerminalNode *FUNC();
     antlr4::tree::TerminalNode *IDENTIFIER();
+    antlr4::tree::TerminalNode *LPAREN();
+    antlr4::tree::TerminalNode *RPAREN();
+    ParameterListContext *parameterList();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
    
   };
 
-  IncludeDirectiveContext* includeDirective();
+  MainDirectiveContext* mainDirective();
+
+  class  ParameterListContext : public antlr4::ParserRuleContext {
+  public:
+    ParameterListContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<ParameterDeclContext *> parameterDecl();
+    ParameterDeclContext* parameterDecl(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  ParameterListContext* parameterList();
+
+  class  ParameterDeclContext : public antlr4::ParserRuleContext {
+  public:
+    ParameterDeclContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<antlr4::tree::TerminalNode *> IDENTIFIER();
+    antlr4::tree::TerminalNode* IDENTIFIER(size_t i);
+    antlr4::tree::TerminalNode *LBRACKET();
+    antlr4::tree::TerminalNode *RBRACKET();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  ParameterDeclContext* parameterDecl();
 
   class  AnyTokenContext : public antlr4::ParserRuleContext {
   public:

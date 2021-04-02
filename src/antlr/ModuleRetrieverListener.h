@@ -22,8 +22,14 @@ public:
   virtual void enterModuleDirective(ModuleRetrieverParser::ModuleDirectiveContext *ctx) = 0;
   virtual void exitModuleDirective(ModuleRetrieverParser::ModuleDirectiveContext *ctx) = 0;
 
-  virtual void enterIncludeDirective(ModuleRetrieverParser::IncludeDirectiveContext *ctx) = 0;
-  virtual void exitIncludeDirective(ModuleRetrieverParser::IncludeDirectiveContext *ctx) = 0;
+  virtual void enterMainDirective(ModuleRetrieverParser::MainDirectiveContext *ctx) = 0;
+  virtual void exitMainDirective(ModuleRetrieverParser::MainDirectiveContext *ctx) = 0;
+
+  virtual void enterParameterList(ModuleRetrieverParser::ParameterListContext *ctx) = 0;
+  virtual void exitParameterList(ModuleRetrieverParser::ParameterListContext *ctx) = 0;
+
+  virtual void enterParameterDecl(ModuleRetrieverParser::ParameterDeclContext *ctx) = 0;
+  virtual void exitParameterDecl(ModuleRetrieverParser::ParameterDeclContext *ctx) = 0;
 
   virtual void enterAnyToken(ModuleRetrieverParser::AnyTokenContext *ctx) = 0;
   virtual void exitAnyToken(ModuleRetrieverParser::AnyTokenContext *ctx) = 0;

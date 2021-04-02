@@ -13,8 +13,9 @@ namespace llang {
 class  ModuleRetrieverLexer : public antlr4::Lexer {
 public:
   enum {
-    HASH = 1, MODULE = 2, INCLUDE = 3, IDENTIFIER = 4, WS = 5, UNICODE_WS = 6, 
-    COMMENT = 7, LINE_COMMENT = 8
+    T__0 = 1, HASH = 2, MODULE = 3, INCLUDE = 4, MAIN = 5, FUNC = 6, LPAREN = 7, 
+    RPAREN = 8, LBRACKET = 9, RBRACKET = 10, COMMA = 11, IDENTIFIER = 12, 
+    WS = 13, UNICODE_WS = 14, COMMENT = 15, LINE_COMMENT = 16, OTHER = 17
   };
 
   explicit ModuleRetrieverLexer(antlr4::CharStream *input);

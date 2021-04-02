@@ -26,8 +26,6 @@ public:
 
     virtual antlrcpp::Any visitExpressionList(LlamaLangParser::ExpressionListContext *context) = 0;
 
-    virtual antlrcpp::Any visitModuleDirective(LlamaLangParser::ModuleDirectiveContext *context) = 0;
-
     virtual antlrcpp::Any visitIncludeDirective(LlamaLangParser::IncludeDirectiveContext *context) = 0;
 
     virtual antlrcpp::Any visitExternDirective(LlamaLangParser::ExternDirectiveContext *context) = 0;

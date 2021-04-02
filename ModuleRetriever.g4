@@ -1,29 +1,45 @@
 grammar ModuleRetriever;
 
 validSource
-    : moduleDirective includeDirective* anyToken EOF
+    : moduleDirective anyToken (mainDirective anyToken)? EOF
     ;
 
 moduleDirective
     : '#' 'module' IDENTIFIER
     ;
-includeDirective
-    : '#' 'include' IDENTIFIER
-    ;
-anyToken
-    : .*
+
+mainDirective
+    : '#' 'main' 'func' IDENTIFIER '(' parameterList? ')'
     ;
 
+parameterList
+    : (parameterDecl (',' parameterDecl)*)
+    ;
+
+parameterDecl
+    : IDENTIFIER (('[' ']') | '*')? IDENTIFIER
+    ;
+
+anyToken : .*? ;
 
 HASH        : '#';
 MODULE      : 'module';
 INCLUDE     : 'include';
+MAIN        : 'main';
+FUNC        : 'func';
+LPAREN      : '(';
+RPAREN      : ')';
+LBRACKET    : '[';
+RBRACKET    : ']';
+COMMA       : ',';
 IDENTIFIER  : LETTER (LETTER | UNICODE_DIGIT)*;
 
-WS                      : [\n\r\t]          -> skip ; // same as [ \n\r]
+
+WS                      : [\n\r\t]          -> skip; // same as [ \n\r]
 UNICODE_WS              : [\p{White_Space}] -> skip; 
 COMMENT                 : '/*' .*? '*/'     -> skip;
 LINE_COMMENT            : '//' ~[\r?\n]*    -> skip;
+OTHER                   : .                 -> skip;
 
 fragment LETTER
     : UNICODE_LETTER
