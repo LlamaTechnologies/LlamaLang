@@ -93,7 +93,7 @@ std::string Preprocessor::readWholeFile(std::ifstream& file, const std::string &
     str = str.erase(start, erase.size());
 
     
-    if (hasMain) {
+    if (hasMain && !mainFunc.empty()) {
         // search main directive
         erase = "#main";
         auto found = false;

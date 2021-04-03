@@ -1,7 +1,7 @@
 grammar ModuleRetriever;
 
 validSource
-    : moduleDirective anyToken (mainDirective anyToken)? EOF
+    : moduleDirective anyToken (mainDirective anyToken?)* EOF
     ;
 
 moduleDirective
@@ -9,7 +9,7 @@ moduleDirective
     ;
 
 mainDirective
-    : '#' 'main' 'func' IDENTIFIER '(' parameterList? ')'
+    : (('#' 'main' 'func' IDENTIFIER) | ('func' 'main')) '(' parameterList? ')'
     ;
 
 parameterList
