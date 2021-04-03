@@ -102,6 +102,7 @@ void parseModuleFile(std::ifstream &moduleFile, llang::ModuleConfig &moduleConfi
         }
     }
 }
+
 std::string get_current_dir() {
     char buff[FILENAME_MAX]; //create string buffer to hold path
     GetCurrentDir(buff, FILENAME_MAX);

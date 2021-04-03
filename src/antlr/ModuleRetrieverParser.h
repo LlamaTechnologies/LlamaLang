@@ -48,7 +48,8 @@ public:
     std::vector<AnyTokenContext *> anyToken();
     AnyTokenContext* anyToken(size_t i);
     antlr4::tree::TerminalNode *EOF();
-    MainDirectiveContext *mainDirective();
+    std::vector<MainDirectiveContext *> mainDirective();
+    MainDirectiveContext* mainDirective(size_t i);
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -76,13 +77,13 @@ public:
   public:
     MainDirectiveContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *LPAREN();
+    antlr4::tree::TerminalNode *RPAREN();
+    ParameterListContext *parameterList();
     antlr4::tree::TerminalNode *HASH();
     antlr4::tree::TerminalNode *MAIN();
     antlr4::tree::TerminalNode *FUNC();
     antlr4::tree::TerminalNode *IDENTIFIER();
-    antlr4::tree::TerminalNode *LPAREN();
-    antlr4::tree::TerminalNode *RPAREN();
-    ParameterListContext *parameterList();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
