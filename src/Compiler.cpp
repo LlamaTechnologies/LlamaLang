@@ -1,3 +1,4 @@
+#include "Compiler.hpp"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -12,43 +13,31 @@
 #include "preprocessor/Preprocessor.hpp"
 #include "IR.hpp"
 
-#ifdef _WIN32
-#include <direct.h>
-#define GetCurrentDir _getcwd
-#else
-#include <unistd.h>
-#define GetCurrentDir getcwd
-#endif
+using namespace llang;
 
-static std::string get_current_dir();
-static void PrintAST(std::shared_ptr<llang::ast::Node> programNode);
+static std::string fileName = ">UNKNOWN FILE>";
 static void PrintErrors(std::vector<llang::error_handling::Error> errors);
-static void AwaitUserInput();
+static void PrintAST(std::shared_ptr<llang::ast::Node> programNode);
+static int compileModule(ModuleConfig &moduleConfig);
 
-static std::string logFileName = "../tests/log_antlr4.txt";
-static std::string ouputFileName = "../tests/output_bitcode.ll";
-static std::string inputFileName = "../tests/test.llang";
-static std::string moduleName = "MyProgram";
-static std::string inputFolder = "../tests/";
-// static std::string inputFileName = "../tests/test_semantic_errors.llang";
+int Compiler::compile(SolutionConfig &solutionConfig)
+{
+    //TODO. implement this function
+    return 0;
+}
 
-int main(int argc, const char *argv[]) {
-    using namespace llang;
+int Compiler::compile(ModuleConfig &moduleConfig)
+{
+    return compileModule(moduleConfig);
+}
 
-    std::string execution_path = get_current_dir();
-    Console::WriteLine("Running in: " + execution_path);
-
-
-    // Log file
-    std::fstream logFile(logFileName, std::ios::out);
-
-    // Read arguments
-
+int compileModule(ModuleConfig &moduleConfig)
+{
     // Prepare files
-    Preprocessor preprocessor(inputFolder);
-    auto moduleInfo = preprocessor.process(moduleName);
-    
+    Preprocessor preprocessor(moduleConfig.srcFolder);
+    auto moduleInfo = preprocessor.process(moduleConfig.moduleName);
     if (preprocessor.Error) {
+        Console::WriteLine("Preprocessor error");
         return 1;
     }
 
@@ -68,7 +57,6 @@ int main(int argc, const char *argv[]) {
     auto parser = LlamaLangParser(&tokens);
     parser.setBuildParseTree(true);
 
-    auto fileName = std::filesystem::path(inputFileName).filename().string();
     auto syntaxErrorListener = error_handling::SyntaxErrorListener(fileName);
     parser.addErrorListener(&syntaxErrorListener);
 
@@ -82,31 +70,18 @@ int main(int argc, const char *argv[]) {
     PrintErrors(errors);
     PrintAST(analisedAST);
 
-    // Close logFile
-    logFile.close();
-
-    AwaitUserInput();
-
     // If errors do not create executable
-    if( !errors.empty() )
+    if (!errors.empty())
         return 1;
 
     // Create IR
     Console::WriteLine("======== Intermediate Representation ========");
-    IR::Translate(analisedAST, ouputFileName);
-
-    AwaitUserInput();
+    IR::Translate(analisedAST, moduleConfig.moduleName + ".ll");
 
     // Create executable
 
     // Done!
     return 0;
-}
-
-void AwaitUserInput() {
-    Console::WriteLine();
-    Console::WriteLine(">> Press any key to continue << ");
-    Console::ReadKey();
 }
 
 void PrintAST(std::shared_ptr<llang::ast::Node> programNode) {
@@ -121,21 +96,15 @@ void PrintAST(std::shared_ptr<llang::ast::Node> programNode) {
 
 void PrintErrors(std::vector<llang::error_handling::Error> errors) {
     // Print Errors
-    if( !errors.empty() ) {
+    if (!errors.empty()) {
         Console::WriteLine();
         Console::WriteLine("======== Errors ========");
         Console::WriteLine("count: " + std::to_string(errors.size()));
         Console::WriteLine();
 
-        for( auto error : errors ) {
+        for (auto error : errors) {
             Console::WriteLine(error.ToString());
         }
     }
 }
 
-std::string get_current_dir() {
-    char buff[FILENAME_MAX]; //create string buffer to hold path
-    GetCurrentDir(buff, FILENAME_MAX);
-    std::string current_working_dir(buff);
-    return current_working_dir;
-}
