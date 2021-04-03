@@ -29,14 +29,6 @@ antlrcpp::Any AstBuilder::visitSourceFile(LlamaLangParser::SourceFileContext *co
         }
     }
 
-    std::string programNodesString = CastNode<Node>(ASTree)->ToString();
-
-    Console::WriteLine();
-    Console::WriteLine("======== Abstract Syntax Tree first iter ========");
-    Console::WriteLine();
-    Console::WriteLine(programNodesString);
-    Console::WriteLine();
-
     // Visit innerScopes
     visitChildren(context);
 
