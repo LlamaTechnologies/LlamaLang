@@ -32,6 +32,10 @@ static std::string MangleName(std::shared_ptr<symbol_table::SymbolTableScope> sc
 void IR::Translate(std::shared_ptr<ast::ProgramNode> program, const std::string& outputFileName) {
     // Make the module, which holds all the code.
     TheModule = std::make_unique<llvm::Module>(program->ModuleName, TheContext);
+    auto dl = llvm::DataLayout("e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
+    TheModule->setDataLayout(dl);
+    TheModule->setTargetTriple("x86_64-pc-windows-msvc19.28.29913");
+
     currentScope = program->GlobalScope;
 
     for (auto node : program->children) {
@@ -84,7 +88,7 @@ void IR::Translate(std::shared_ptr<ast::ProgramNode> program, const std::string&
 #endif
 
     std::error_code errorCode(1, std::iostream_category());
-    auto llvmOutputFile = llvm::raw_fd_ostream(outputFileName, errorCode);
+    auto llvmOutputFile = llvm::raw_fd_ostream(outputFileName + ".bc", errorCode);
     llvm::WriteBitcodeToFile(*TheModule, llvmOutputFile);
 }
 
