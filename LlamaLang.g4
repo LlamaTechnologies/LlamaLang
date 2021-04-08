@@ -29,7 +29,11 @@ runDirective
     ;
 
 basicDirective
-    : '#' IDENTIFIER
+    : '#' IDENTIFIER (IDENTIFIER | string_)?
+    ;
+
+typeSpecifier
+    : 'b'|'B'|'l'|'L'|'w'|'W'
     ;
 
 // Function declarations
@@ -163,6 +167,7 @@ integer
     : DECIMAL_LIT
     | OCTAL_LIT
     | HEX_LIT
+    | BIN_LIT+
     ;
 
 floatingPoint
@@ -265,9 +270,11 @@ STAR                   : '*';
 AMPERSAND              : '&';
 
 // Number literals
-DECIMAL_LIT            : [1-9] [0-9]*;
-OCTAL_LIT              : '0' OCTAL_DIGIT*;
-HEX_LIT                : '0' [xX] HEX_DIGIT+;
+TYPE_SPEC              : [uU]? [bBwWlL];
+DECIMAL_LIT            : [1-9] [0-9]* TYPE_SPEC?;
+OCTAL_LIT              : '0' OCTAL_DIGIT* TYPE_SPEC?;
+HEX_LIT                : '0' [xX] HEX_DIGIT+ TYPE_SPEC?;
+BIN_LIT                : '0' [bB] BIN_DIGIT+ TYPE_SPEC?;
 FLOAT_LIT              : DOUBLE_LIT [Ff];
 DOUBLE_LIT             : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT)
                        | '.' DECIMALS EXPONENT?
@@ -301,8 +308,11 @@ fragment DECIMALS
 fragment OCTAL_DIGIT
     : [0-7]
     ;
+fragment BIN_DIGIT
+    : [0-1]
+    ;
 fragment HEX_DIGIT
-    : [0-9a-fA-F]
+    : [0-9A-F]
     ;
 fragment EXPONENT
     : [eE] [+-]? DECIMALS

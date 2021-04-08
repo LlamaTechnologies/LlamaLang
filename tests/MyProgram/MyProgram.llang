@@ -3,9 +3,11 @@
 // The parameter of this function shadows the global variable
 func myFunction(f int32) int32 {
     x int32;
-    y int32 = 8
-    c int32 = 100
+    y int32 = 8L
+    c int32 = 100L
     
+    unsigned_byte uint8 = 0x8AEFub
+
     x = y
     y = f
     f = c * (x + y) % 62
