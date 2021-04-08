@@ -125,8 +125,8 @@ ipch/
 
 # antlr tool test
 /bin/antlr_test/*.java
-#/bin/antlr_test/*.interp
-#/bin/antlr_test/*.tokens
+/bin/antlr_test/*.interp
+/bin/antlr_test/*.tokens
 /bin/antlr_test/*.class
 
 #Except
