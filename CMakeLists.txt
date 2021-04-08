@@ -63,10 +63,21 @@ src/antlr/LlamaLangVisitor.cpp
 src/antlr/LlamaLangVisitor.h
 src/antlr/LlamaLangParseContext.hpp
 
+src/antlr/ModuleRetrieverParser.h
+src/antlr/ModuleRetrieverParser.cpp
+src/antlr/ModuleRetrieverLexer.h
+src/antlr/ModuleRetrieverLexer.cpp
+src/antlr/ModuleRetrieverListener.h
+src/antlr/ModuleRetrieverListener.cpp
+src/antlr/ModuleRetrieverBaseListener.h
+src/antlr/ModuleRetrieverBaseListener.cpp
+
 src/ast/AssignNode.cpp
 src/ast/AssignNode.hpp
 src/ast/AST_Types.hpp
 src/ast/AST_Types.cpp
+src/ast/AstBuilder.cpp
+src/ast/AstBuilder.hpp
 src/ast/BinaryOperationNode.hpp
 src/ast/BinaryOperationNode.cpp
 src/ast/ConstantNode.hpp
@@ -86,6 +97,11 @@ src/built-in/Built-inTypes.hpp
 src/error_handling/ErrorDescription.hpp
 src/error_handling/SyntaxErrorListener.hpp
 
+src/preprocessor/Preprocessor.cpp
+src/preprocessor/Preprocessor.hpp
+src/preprocessor/PreprocessorListener.cpp
+src/preprocessor/PreprocessorListener.hpp
+
 src/semantic_analyzer/SemanticAnalyzer.cpp
 src/semantic_analyzer/SemanticAnalyzer.hpp
 
@@ -93,14 +109,15 @@ src/symbol_table/SymbolTableScope.hpp
 src/symbol_table/SymbolTableScope.cpp
 
 src/Compiler.cpp
+src/Compiler.hpp
+src/Config.hpp
 src/Console.hpp
-src/Primitives.cpp
-src/Primitives.hpp
-        src/ast/AstBuilder.cpp
-        src/ast/AstBuilder.hpp
+src/CppReflection.hpp
 src/IR.cpp
 src/IR.hpp
-src/CppReflection.hpp
+src/main.cpp
+src/Primitives.cpp
+src/Primitives.hpp
 src/SupportedCompilers.hpp
 )
 
@@ -150,4 +167,5 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 if (MSVC)
         set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Release>>")
         set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/tests/MyProgram")
 endif()
