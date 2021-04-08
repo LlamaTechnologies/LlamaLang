@@ -52,16 +52,8 @@ Started 23/12/2020
     ```
     cmake --build . --target install
     ```
-- On the LlamaLang repo folder run:
-    ```
-    mkdir project
-    ```
-    ```
-    cd project
-    ```
-    ```
-    cmake -DLLVM_DIR='llvm/installation/folder' ..
-    ```
+- Go to the `scripts` folder and run the `cmake_project.bat`.  
+  `NOTE`: if it cant find llvm make sure the llvm install dir is ok in the script file.
 - Now you can open the sln file in the project folder and build the solution from vs
 ## Antlr tree viewer
 just run these commands
