@@ -14,32 +14,33 @@ namespace llang {
 class  LlamaLangParser : public LlamaLangParserBase {
 public:
   enum {
-    T__0 = 1, T__1 = 2, T__2 = 3, DIR_BEGIN = 4, FUNC = 5, RETURN = 6, IDENTIFIER = 7, 
-    L_PAREN = 8, R_PAREN = 9, L_CURLY = 10, R_CURLY = 11, L_BRACKET = 12, 
-    R_BRACKET = 13, ASSIGN = 14, COMMA = 15, SEMI = 16, COLON = 17, DOT = 18, 
-    PLUS_PLUS = 19, MINUS_MINUS = 20, DECLARE_ASSIGN = 21, ELLIPSIS = 22, 
-    LOGICAL_OR = 23, LOGICAL_AND = 24, EQUALS = 25, NOT_EQUALS = 26, LESS = 27, 
-    LESS_OR_EQUALS = 28, GREATER = 29, GREATER_OR_EQUALS = 30, OR = 31, 
-    DIV = 32, MOD = 33, LSHIFT = 34, RSHIFT = 35, BIT_CLEAR = 36, EXCLAMATION = 37, 
-    PLUS = 38, MINUS = 39, CARET = 40, STAR = 41, AMPERSAND = 42, DECIMAL_LIT = 43, 
-    OCTAL_LIT = 44, HEX_LIT = 45, FLOAT_LIT = 46, DOUBLE_LIT = 47, RUNE_LIT = 48, 
-    INTERPRETED_STRING_LIT = 49, WS = 50, COMMENT = 51, TERMINATOR = 52, 
-    LINE_COMMENT = 53
+    T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
+    T__7 = 8, T__8 = 9, DIR_BEGIN = 10, FUNC = 11, RETURN = 12, IDENTIFIER = 13, 
+    L_PAREN = 14, R_PAREN = 15, L_CURLY = 16, R_CURLY = 17, L_BRACKET = 18, 
+    R_BRACKET = 19, ASSIGN = 20, COMMA = 21, SEMI = 22, COLON = 23, DOT = 24, 
+    PLUS_PLUS = 25, MINUS_MINUS = 26, DECLARE_ASSIGN = 27, ELLIPSIS = 28, 
+    LOGICAL_OR = 29, LOGICAL_AND = 30, EQUALS = 31, NOT_EQUALS = 32, LESS = 33, 
+    LESS_OR_EQUALS = 34, GREATER = 35, GREATER_OR_EQUALS = 36, OR = 37, 
+    DIV = 38, MOD = 39, LSHIFT = 40, RSHIFT = 41, BIT_CLEAR = 42, EXCLAMATION = 43, 
+    PLUS = 44, MINUS = 45, CARET = 46, STAR = 47, AMPERSAND = 48, TYPE_SPEC = 49, 
+    DECIMAL_LIT = 50, OCTAL_LIT = 51, HEX_LIT = 52, BIN_LIT = 53, FLOAT_LIT = 54, 
+    DOUBLE_LIT = 55, RUNE_LIT = 56, INTERPRETED_STRING_LIT = 57, WS = 58, 
+    COMMENT = 59, TERMINATOR = 60, LINE_COMMENT = 61
   };
 
   enum {
     RuleSourceFile = 0, RuleIdentifierList = 1, RuleExpressionList = 2, 
     RuleIncludeDirective = 3, RuleExternDirective = 4, RuleRunDirective = 5, 
-    RuleBasicDirective = 6, RuleFunctionDef = 7, RuleVarDef = 8, RuleBlock = 9, 
-    RuleStatementList = 10, RuleStatement = 11, RuleSimpleStmt = 12, RuleExpressionStmt = 13, 
-    RuleAssignment = 14, RuleAssign_op = 15, RuleEmptyStmt = 16, RuleReturnStmt = 17, 
-    RuleType_ = 18, RulePointer = 19, RuleArray = 20, RuleTypeName = 21, 
-    RuleSignature = 22, RuleResult = 23, RuleParameters = 24, RuleParameterDecl = 25, 
-    RuleExpression = 26, RulePrimaryExpr = 27, RuleUnaryExpr = 28, RuleOperand = 29, 
-    RuleUnaryOp = 30, RuleLiteral = 31, RuleBasicLit = 32, RuleInteger = 33, 
-    RuleFloatingPoint = 34, RuleOperandName = 35, RuleQualifiedIdent = 36, 
-    RuleLiteralType = 37, RuleFieldDecl = 38, RuleString_ = 39, RuleArguments = 40, 
-    RuleMethodExpr = 41, RuleReceiverType = 42, RuleEos = 43
+    RuleBasicDirective = 6, RuleTypeSpecifier = 7, RuleFunctionDef = 8, 
+    RuleVarDef = 9, RuleBlock = 10, RuleStatementList = 11, RuleStatement = 12, 
+    RuleSimpleStmt = 13, RuleExpressionStmt = 14, RuleAssignment = 15, RuleAssign_op = 16, 
+    RuleEmptyStmt = 17, RuleReturnStmt = 18, RuleType_ = 19, RulePointer = 20, 
+    RuleArray = 21, RuleTypeName = 22, RuleSignature = 23, RuleResult = 24, 
+    RuleParameters = 25, RuleParameterDecl = 26, RuleExpression = 27, RulePrimaryExpr = 28, 
+    RuleUnaryExpr = 29, RuleOperand = 30, RuleUnaryOp = 31, RuleLiteral = 32, 
+    RuleBasicLit = 33, RuleInteger = 34, RuleFloatingPoint = 35, RuleOperandName = 36, 
+    RuleQualifiedIdent = 37, RuleLiteralType = 38, RuleFieldDecl = 39, RuleString_ = 40, 
+    RuleArguments = 41, RuleMethodExpr = 42, RuleReceiverType = 43, RuleEos = 44
   };
 
   explicit LlamaLangParser(antlr4::TokenStream *input);
@@ -59,6 +60,7 @@ public:
   class ExternDirectiveContext;
   class RunDirectiveContext;
   class BasicDirectiveContext;
+  class TypeSpecifierContext;
   class FunctionDefContext;
   class VarDefContext;
   class BlockContext;
@@ -196,7 +198,9 @@ public:
     BasicDirectiveContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *DIR_BEGIN();
-    antlr4::tree::TerminalNode *IDENTIFIER();
+    std::vector<antlr4::tree::TerminalNode *> IDENTIFIER();
+    antlr4::tree::TerminalNode* IDENTIFIER(size_t i);
+    String_Context *string_();
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -204,6 +208,18 @@ public:
   };
 
   BasicDirectiveContext* basicDirective();
+
+  class  TypeSpecifierContext : public LlamaLangParseContext {
+  public:
+    TypeSpecifierContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+
+
+    virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  TypeSpecifierContext* typeSpecifier();
 
   class  FunctionDefContext : public LlamaLangParseContext {
   public:
@@ -639,6 +655,8 @@ public:
     antlr4::tree::TerminalNode *DECIMAL_LIT();
     antlr4::tree::TerminalNode *OCTAL_LIT();
     antlr4::tree::TerminalNode *HEX_LIT();
+    std::vector<antlr4::tree::TerminalNode *> BIN_LIT();
+    antlr4::tree::TerminalNode* BIN_LIT(size_t i);
 
 
     virtual antlrcpp::Any accept(antlr4::tree::ParseTreeVisitor *visitor) override;

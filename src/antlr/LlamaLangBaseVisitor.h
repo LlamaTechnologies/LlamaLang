@@ -45,6 +45,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual antlrcpp::Any visitTypeSpecifier(LlamaLangParser::TypeSpecifierContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual antlrcpp::Any visitFunctionDef(LlamaLangParser::FunctionDefContext *ctx) override {
     return visitChildren(ctx);
   }
