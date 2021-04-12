@@ -4,6 +4,7 @@
 #include "../ast/FunctionDefNode.hpp"
 #include "../ast/FunctionCallNode.hpp"
 #include "../ast/ConstantNode.hpp"
+#include "../ast/CastOperationNode.hpp"
 #include "../ast/VariableDefNode.hpp"
 #include "../ast/VariableRefNode.hpp"
 #include "../ast/UnaryOperationNode.hpp"
@@ -443,10 +444,11 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNod
 
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode, Scope scope)
 {
-  // TODO: Check if types match
+  auto left = assignmentNode->Left;
+  auto lType = left->Var->VarType;
 
   // Check left node
-  if (!checkNode(assignmentNode->Left, scope))
+  if (!checkNode(left, scope))
     return false;
 
   // Check right node
@@ -457,23 +459,44 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode
   switch( right->GetType() ) {
   case ast::AST_TYPE::VariableRefNode: {
     auto rightNode = CastNode<ast::VariableRefNode>(assignmentNode->Right);
+    
+    if (!checkNode(rightNode, scope))
+        return false;
+    
+    PRIMITIVE_TYPE type;
+    std::shared_ptr<ast::VariableRefNode> nodeToMod = nullptr;
 
-    if( !checkNode(rightNode, scope) )
-      return false;
+    if (!checkCastVarAndVar(rightNode, left, type, nodeToMod))
+        return false;
+
+    // modify ast and add cast
+    if (nodeToMod) {
+        modAstWithCast(assignmentNode, nodeToMod, type);
+    }
   }
   break;
 
   case ast::AST_TYPE::BinaryOperationNode: {
     auto rightNode = CastNode<ast::BinaryOperationNode>(assignmentNode->Right);
-
+ 
     if (!checkNode(rightNode, scope))
-      return false;
+        return false;
+
+    PRIMITIVE_TYPE type;
+    std::shared_ptr<ast::StatementNode> nodeToMod = nullptr;
+
+    if (!checkCastBinOpAndVar(rightNode, left, type, nodeToMod))
+        return false;
+    
+    // modify ast and add cast
+    if (nodeToMod) {
+        modAstWithCast(assignmentNode, nodeToMod, type);
+    }
   }
   break;
 
   case ast::AST_TYPE::FunctionCallNode: {
     auto rightNode = CastNode<ast::FunctionCallNode>(assignmentNode->Right);
-
     if (!checkNode(rightNode, scope))
       return false;
   }
@@ -628,7 +651,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndConst(binOp, constant, scope))
+    if (!checkBinOpAndConst(binOp, constant))
       return false;
 
     binaryOpNode->ResultType = binOp->ResultType;
@@ -643,7 +666,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndConst(binOp, constant, scope))
+    if (!checkBinOpAndConst(binOp, constant))
       return false;
 
     binaryOpNode->ResultType = binOp->ResultType;
@@ -658,7 +681,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope) || !checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndVar(binOp, varRef, scope))
+    if (!checkBinOpAndVar(binOp, varRef))
       return false;
 
     binaryOpNode->ResultType = binOp->ResultType;
@@ -673,7 +696,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope) || !checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndVar(binOp, varRef, scope))
+    if (!checkBinOpAndVar(binOp, varRef))
       return false;
 
     binaryOpNode->ResultType = binOp->ResultType;
@@ -689,7 +712,65 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
   return false;
 }
 
-bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr< ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant)
+bool SemanticAnalyzer::checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> varRefL, std::shared_ptr<ast::VariableRefNode> varRefR, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::VariableRefNode> nodeToMod) {
+    auto& varTypeL = varRefL->Var->VarType;
+    auto& varTypeR = varRefR->Var->VarType;
+
+    // returns false
+    if (Primitives::Exists(varTypeL) && Primitives::Exists(varTypeR)) {
+        PRIMITIVE_TYPE left = Primitives::Get(varTypeL);
+        PRIMITIVE_TYPE right = Primitives::Get(varTypeR);
+
+        PRIMITIVE_TYPE resultType;
+
+        if (left > right) {
+            resultType = left;
+            nodeToMod = varRefR;
+        } else if (right > left) {
+            resultType = right;
+            nodeToMod = varRefL;
+        }
+
+        // returns true and node to modify
+        return true;
+    }
+    error_handling::Error error(
+        varRefL->Line,
+        varRefL->FileName,
+        "Custom types need to be cast explicitly."
+    );
+    errors->push_back(error);
+    return false;
+}
+
+bool SemanticAnalyzer::checkCastBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode> nodeToMod) {
+    // var is primitive type
+    if (Primitives::Exists(varRef->Var->VarType)) {
+        auto binOpType = Primitives::Get(binOp->ResultType);
+        auto varType = Primitives::Get(varRef->Var->VarType);
+
+        if (binOpType > varType) {
+            resultType = binOpType;
+            nodeToMod = varRef;
+        } else if (varType > binOpType) {
+            resultType = varType;
+            nodeToMod = binOp;
+        }
+
+        return true;
+    }
+
+    // returns false on custom types
+    error_handling::Error error(
+        varRef->Line,
+        varRef->FileName,
+        "Custom types need to be cast explicitly."
+    );
+    errors->push_back(error);
+    return false;
+}
+
+bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr<ast::ConstantNode> constant)
 {
   if (Primitives::Exists(varRef->Var->VarType)) {
     auto varType = Primitives::Get(varRef->Var->VarType);
@@ -721,7 +802,35 @@ bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr< ast::VariableRefNode> v
   return false;
 }
 
-bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, Scope scope)
+void SemanticAnalyzer::modAstWithCast(std::shared_ptr<ast::AssignNode> assignNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType)
+{
+    PRIMITIVE_TYPE typeFrom;
+
+    auto nodeType = nodeToMod->GetType();
+    switch (nodeType) {
+    case ast::AST_TYPE::VariableRefNode: {
+        auto varRefNode = CastNode<ast::VariableRefNode>(nodeToMod);
+        typeFrom = Primitives::Get(varRefNode->Var->VarType);
+        break;
+    }
+    case ast::AST_TYPE::BinaryOperationNode: {
+        auto varRefNode = CastNode<ast::BinaryOperationNode>(nodeToMod);
+        typeFrom = Primitives::Get(varRefNode->ResultType);
+        break;
+    }
+    default:
+        Console::WriteLine("Unsupported cast for node type: " + ast::GetAstTypeName(nodeType));
+        return;
+    }
+
+    auto castOpNode = std::make_shared<ast::CastOperationNode>();
+    castOpNode->Value = nodeToMod;
+    castOpNode->TypeTo = resultType;
+    castOpNode->TypeFrom = typeFrom;
+    assignNode->Right = castOpNode;
+}
+
+bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef)
 {
   if (Primitives::Exists(varRef->Var->VarType)) {
     auto resultType = Primitives::Get(binOp->ResultType);
@@ -750,7 +859,7 @@ bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode
   return false;
 }
 
-bool SemanticAnalyzer::checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant, Scope scope)
+bool SemanticAnalyzer::checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant)
 {
   if (binOp->ResultType.size()) {
     auto resultType = Primitives::Get(binOp->ResultType);

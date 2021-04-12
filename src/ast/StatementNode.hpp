@@ -13,6 +13,7 @@ namespace llang::ast {
         UNARY_OP,
         VAR_REF,
         ASSIGN,
+        CAST,
         CALL,
     };
 

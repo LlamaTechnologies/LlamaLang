@@ -4,9 +4,17 @@
 func myFunction(f int32) int32 {
     x int32;
     y int32 = 8l
-    c int32 = 100l
+    c int32 = 100l;
 
-    overflows64u uint64 = 0x1FFFFFFFFFFFFFFFFu
+    // truncate c to int8
+    bin int8 = c
+    
+    // zero extend b to int32
+    c = bin;
+
+    // should truncate this value!
+    overflows64u uint64 = 0x1FFFFFFFFFFFFFFFF
+    // should truncate this value!
     unsigned_byte uint8 = 0x8AEFub
 
     x = y

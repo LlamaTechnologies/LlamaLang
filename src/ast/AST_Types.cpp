@@ -13,6 +13,7 @@ static std::vector<std::string> astTypes = {
   GET_VAL(AST_TYPE, GET_AST_TYPE(AssignNode)),
   GET_VAL(AST_TYPE, GET_AST_TYPE(BinaryOperationNode)),
   GET_VAL(AST_TYPE, GET_AST_TYPE(ConstantNode)),
+  GET_VAL(AST_TYPE, GET_AST_TYPE(CastOperationNode)),
   GET_VAL(AST_TYPE, GET_AST_TYPE(FunctionCallNode)),
   GET_VAL(AST_TYPE, GET_AST_TYPE(FunctionDefNode)),
   GET_VAL(AST_TYPE, GET_AST_TYPE(StatementNode)),
