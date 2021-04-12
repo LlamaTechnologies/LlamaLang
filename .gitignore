@@ -128,6 +128,10 @@ ipch/
 /bin/antlr_test/*.interp
 /bin/antlr_test/*.tokens
 /bin/antlr_test/*.class
+/bin/antlr/*.java
+/bin/antlr/*.interp
+/bin/antlr/*.tokens
+/bin/antlr/*.class
 
 #Except
 !/scripts/windows/*.exe

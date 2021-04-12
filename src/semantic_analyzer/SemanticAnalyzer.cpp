@@ -446,11 +446,15 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode
   // TODO: Check if types match
 
   // Check left node
-  if( !checkNode(assignmentNode->Left, scope) )
+  if (!checkNode(assignmentNode->Left, scope))
     return false;
 
   // Check right node
-  switch( assignmentNode->Right->GetType() ) {
+  auto right = assignmentNode->Right;
+  if (!right)
+    return false;
+
+  switch( right->GetType() ) {
   case ast::AST_TYPE::VariableRefNode: {
     auto rightNode = CastNode<ast::VariableRefNode>(assignmentNode->Right);
 

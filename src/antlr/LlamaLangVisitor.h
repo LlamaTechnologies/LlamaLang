@@ -34,6 +34,8 @@ public:
 
     virtual antlrcpp::Any visitBasicDirective(LlamaLangParser::BasicDirectiveContext *context) = 0;
 
+    virtual antlrcpp::Any visitTypeSpecifier(LlamaLangParser::TypeSpecifierContext *context) = 0;
+
     virtual antlrcpp::Any visitFunctionDef(LlamaLangParser::FunctionDefContext *context) = 0;
 
     virtual antlrcpp::Any visitVarDef(LlamaLangParser::VarDefContext *context) = 0;

@@ -3,9 +3,10 @@
 // The parameter of this function shadows the global variable
 func myFunction(f int32) int32 {
     x int32;
-    y int32 = 8L
-    c int32 = 100L
-    
+    y int32 = 8l
+    c int32 = 100l
+
+    overflows64u uint64 = 0x1FFFFFFFFFFFFFFFFu
     unsigned_byte uint8 = 0x8AEFub
 
     x = y

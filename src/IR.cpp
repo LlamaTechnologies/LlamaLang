@@ -268,18 +268,22 @@ llvm::Constant *IR::TranslateNode(std::shared_ptr<ast::ConstantNode> constant, I
   llvm::Constant *constantLLVM = nullptr;
 
   switch (constType) {
+  case ast::CONSTANT_TYPE::U8:
   case ast::CONSTANT_TYPE::I8:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
     break;
 
+  case ast::CONSTANT_TYPE::U16:
   case ast::CONSTANT_TYPE::I16:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(16, std::stol(constant->Value), true));
     break;
 
+  case ast::CONSTANT_TYPE::U32:
   case ast::CONSTANT_TYPE::I32:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(32, std::stol(constant->Value), true));
     break;
 
+  case ast::CONSTANT_TYPE::U64:
   case ast::CONSTANT_TYPE::I64:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(64, std::stol(constant->Value), true));
     break;
@@ -501,6 +505,9 @@ llvm::Value *IR::TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_
 
 llvm::Value *IR::TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, IR_INFO *irInfo)
 {
+  if (!assignmentNode->Left || !assignmentNode->Right)
+    return nullptr;
+
   llvm::Value *left = TranslateNode(assignmentNode->Left, irInfo);
   llvm::Value *right = nullptr;
 
