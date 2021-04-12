@@ -270,12 +270,12 @@ STAR                   : '*';
 AMPERSAND              : '&';
 
 // Number literals
-TYPE_SPEC              : [uU]? [bBwWlL];
-DECIMAL_LIT            : [1-9] [0-9]* TYPE_SPEC?;
-OCTAL_LIT              : '0' OCTAL_DIGIT* TYPE_SPEC?;
-HEX_LIT                : '0' [xX] HEX_DIGIT+ TYPE_SPEC?;
-BIN_LIT                : '0' [bB] BIN_DIGIT+ TYPE_SPEC?;
-FLOAT_LIT              : DOUBLE_LIT [Ff];
+TYPE_SPEC              : [u]? [bwl]?;
+DECIMAL_LIT            : [1-9] [0-9]* TYPE_SPEC;
+OCTAL_LIT              : '0' OCTAL_DIGIT* TYPE_SPEC;
+HEX_LIT                : '0' [xX] HEX_DIGIT+ TYPE_SPEC;
+BIN_LIT                : '0' [bB] BIN_DIGIT+ TYPE_SPEC;
+FLOAT_LIT              : DOUBLE_LIT [f];
 DOUBLE_LIT             : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT)
                        | '.' DECIMALS EXPONENT?
                        ;

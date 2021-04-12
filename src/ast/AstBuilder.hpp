@@ -43,6 +43,8 @@ namespace llang::ast
         antlrcpp::Any visitAssignment(LlamaLangParser::AssignmentContext *context) override;
         antlrcpp::Any visitOperandName(LlamaLangParser::OperandNameContext *context) override;
         antlrcpp::Any visitBasicLit(LlamaLangParser::BasicLitContext *context) override;
+        antlrcpp::Any visitInteger(LlamaLangParser::IntegerContext* context) override;
+        antlrcpp::Any visitFloatingPoint(LlamaLangParser::FloatingPointContext* context) override;
 
         antlrcpp::Any visitChildren(antlr4::tree::ParseTree *node) override;
         bool shouldVisitNextChild(antlr4::tree::ParseTree *node, const antlrcpp::Any &currentResult);

@@ -9,5 +9,8 @@ void ast::AssignNode::ToString(std::string &str, const int tabLevel) const
   str += tabs;
   Left->ToString(str, 0);
   str += " = ";
-  Right->ToString(str, 0);
+  if (Right)
+    Right->ToString(str, 0);
+  else
+      str += "NONE";
 }
