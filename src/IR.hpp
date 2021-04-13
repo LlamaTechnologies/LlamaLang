@@ -7,10 +7,13 @@
 #include <llvm/Bitcode/BitcodeWriter.h>
 
 namespace llang {
+    enum class PRIMITIVE_TYPE;
+
     namespace ast {
         struct AssignNode;
         struct BinaryOperationNode;
         struct ConstantNode;
+        struct CastOperationNode;
         struct FunctionCallNode;
         struct FunctionDefNode;
         struct ProgramNode;
@@ -55,8 +58,9 @@ namespace llang {
         static llvm::Value* TranslateNode(std::shared_ptr<ast::VariableDefNode> varDef, IR_INFO* irInfo);
         static llvm::Value* TranslateNode(std::shared_ptr<ast::VariableRefNode> varRef, IR_INFO* irInfo);
         static llvm::Value* TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, IR_INFO* irInfo);
-
+        static llvm::Value* TranslateNode(std::shared_ptr<ast::CastOperationNode> castOpNode, IR_INFO* irInfo);
         // Helpers
+        static llvm::Type* TranslateType(PRIMITIVE_TYPE primitiveType);
         static llvm::Type* TranslateType(std::string& type);
         static std::vector<llvm::Type*> TranslateParameters(std::vector<std::shared_ptr<ast::VariableDefNode>>& params);
         /**
