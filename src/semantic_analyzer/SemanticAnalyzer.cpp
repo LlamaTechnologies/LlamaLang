@@ -565,49 +565,14 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varL, scope) || !checkNode(varR, scope))
       return false;
 
-    auto &varTypeL = varL->Var->VarType;
-    auto &varTypeR = varR->Var->VarType;
-
-    if (!Primitives::Exists(varTypeL) || !Primitives::Exists(varTypeR)) {
-      error_handling::Error error(
-        binaryOpNode->Line,
-        binaryOpNode->FileName,
-        "Custom types not supported."
-      );
-      errors->push_back(error);
-      binaryOpNode->ResultType = "";
-      return false;
-    }
-
-    left  = Primitives::Get(varTypeL);
-    right = Primitives::Get(varTypeR);
-
-
-    if (left == right) {
-      binaryOpNode->ResultType = Primitives::GetName(left);
-      return true;
-    }
-
-    // fp & int
-    if (left >= PRIMITIVE_TYPE::FLOAT64 && right < PRIMITIVE_TYPE::FLOAT32) {
-      binaryOpNode->ResultType = Primitives::GetName(left);
-      return false;
-    }
-
-    // int & fp
-    if (left >= PRIMITIVE_TYPE::FLOAT32 && right < PRIMITIVE_TYPE::FLOAT32) {
-      binaryOpNode->ResultType = Primitives::GetName(right);
-      return false;
-    }
-
     PRIMITIVE_TYPE resultType;
+    std::shared_ptr<ast::VariableRefNode> nodeToMod;
+    if (!checkCastVarAndVar(varL, varR, resultType, nodeToMod))
+        return false;
 
-    if (left > right) {
-      resultType = left;
-      varTypeR = std::string(varTypeL);
-    } else {
-      resultType = right;
-      varTypeL = std::string(varTypeR);
+
+    if (nodeToMod) {
+        modAstWithCast(binaryOpNode, nodeToMod, resultType);
     }
 
     binaryOpNode->ResultType = Primitives::GetName(resultType);
@@ -622,7 +587,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope))
       return false;
 
-    if (!checkVarAndConst(varRef, constant))
+    if (!checkCastVarAndConst(varRef, constant))
       return false;
 
     binaryOpNode->ResultType = varRef->Var->VarType;
@@ -637,7 +602,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope))
       return false;
 
-    if (!checkVarAndConst(varRef, constant))
+    if (!checkCastVarAndConst(varRef, constant))
       return false;
 
     binaryOpNode->ResultType = varRef->Var->VarType;
@@ -708,7 +673,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
   error_handling::Error error(
     binaryOpNode->Line,
     binaryOpNode->FileName,
-    "UNsuported combination in binary operator."
+    "Unsuported combination in binary operator."
   );
   errors->push_back(error);
   return false;
@@ -729,6 +694,9 @@ bool SemanticAnalyzer::checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> 
         } else if (right > left) {
             resultType = right;
             nodeToMod = varRefL;
+        }
+        else {
+            resultType = right;
         }
 
         bool isLeftSigned = (left >= PRIMITIVE_TYPE::INT8 && left <= PRIMITIVE_TYPE::INT64) || (left >= PRIMITIVE_TYPE::FLOAT32 && left <= PRIMITIVE_TYPE::FLOAT64);
@@ -751,6 +719,9 @@ bool SemanticAnalyzer::checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> 
                 resultType = right;
                 nodeToMod = varRefL;
             }
+            else {
+                resultType = right;
+            }
         }
         else {
             if (!isRightSigned) {
@@ -770,6 +741,9 @@ bool SemanticAnalyzer::checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> 
                 resultType = right;
                 nodeToMod = varRefL;
             }
+            else {
+                resultType = right;
+            }
         }
 
         // returns true and node to modify
@@ -785,7 +759,7 @@ bool SemanticAnalyzer::checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> 
     return false;
 }
 
-bool SemanticAnalyzer::checkCastBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode> nodeToMod) {
+bool SemanticAnalyzer::checkCastBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode>& nodeToMod) {
     // var is primitive type
     if (Primitives::Exists(varRef->Var->VarType)) {
         auto binOpType = Primitives::Get(binOp->ResultType);
@@ -822,7 +796,7 @@ bool SemanticAnalyzer::checkCastVarAndConst(std::shared_ptr<ast::VariableRefNode
         bool isConstSigned = (constType <= PRIMITIVE_TYPE::SCHAR && constType >= PRIMITIVE_TYPE::INT8) || (constType >= PRIMITIVE_TYPE::FLOAT32 && constType <= PRIMITIVE_TYPE::FLOAT64);
         if (isVarSigned) {
             if (!isConstSigned) {
-                Console::WriteLine("Constant does not match signed type for variable " + varRef->Var->Name);
+                Console::WriteLine("WARN: Constant does not match signed type for variable " + varRef->Var->Name);
             } else if (constType <= PRIMITIVE_TYPE::BOOL) {
                 Console::WriteLine("Constant is not a valid type for variable " + varRef->Var->Name + " of type " + Primitives::GetName(varType));
                 return false;
@@ -835,7 +809,7 @@ bool SemanticAnalyzer::checkCastVarAndConst(std::shared_ptr<ast::VariableRefNode
         }
         else {
             if (!isConstSigned) {
-                Console::WriteLine("Constant does not match unsigned type for variable " + varRef->Var->Name);
+                Console::WriteLine("WARN: Constant does not match unsigned type for variable " + varRef->Var->Name);
             }
             else if (constType <= PRIMITIVE_TYPE::BOOL) {
                 Console::WriteLine("Constant is not a valid type for variable " + varRef->Var->Name + " of type " + Primitives::GetName(varType));
@@ -892,6 +866,66 @@ bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr<ast::VariableRefNode> va
   return false;
 }
 
+bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef)
+{
+  if (Primitives::Exists(varRef->Var->VarType)) {
+    auto resultType = Primitives::Get(binOp->ResultType);
+    auto varType = Primitives::Get(varRef->Var->VarType);
+
+    if (resultType >= PRIMITIVE_TYPE::FLOAT32 && varType < PRIMITIVE_TYPE::FLOAT32 ||
+        resultType < PRIMITIVE_TYPE::FLOAT32 && varType >= PRIMITIVE_TYPE::FLOAT32) {
+      // FLOATING POINT AND INTEGER MIX
+      error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
+      errors->emplace_back(error);
+      return false;
+    }
+
+    if (resultType >= varType) {
+      varRef->Var->VarType = Primitives::GetName(resultType);
+    }
+
+    return true;
+  }
+
+  error_handling::Error error(
+    binOp->Line,
+    binOp->FileName,
+    "Custom types not supported."
+  );
+  errors->push_back(error);
+  return false;
+}
+
+bool SemanticAnalyzer::checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant)
+{
+  if (binOp->ResultType.size()) {
+    auto resultType = Primitives::Get(binOp->ResultType);
+    auto constType = Primitives::Get(Primitives::GetName(constant->ConstType));
+
+    if (resultType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32 ||
+        resultType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32) {
+      // FLOATING POINT AND INTEGER MIX
+      error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
+      errors->emplace_back(error);
+      return false;
+    }
+
+    if (resultType >= constType) {
+      constant->ConstType = ast::GetConstantType(resultType);
+    }
+    
+    return true;
+  }
+
+  error_handling::Error error(
+    binOp->Line,
+    binOp->FileName,
+    "Custom types not supported."
+  );
+  errors->push_back(error);
+  return false;
+}
+
 void SemanticAnalyzer::modAstWithCast(std::shared_ptr<ast::AssignNode> assignNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType)
 {
     PRIMITIVE_TYPE typeFrom;
@@ -920,60 +954,29 @@ void SemanticAnalyzer::modAstWithCast(std::shared_ptr<ast::AssignNode> assignNod
     assignNode->Right = castOpNode;
 }
 
-bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef)
-{
-  if (Primitives::Exists(varRef->Var->VarType)) {
-    auto resultType = Primitives::Get(binOp->ResultType);
-    auto varType = Primitives::Get(varRef->Var->VarType);
+void SemanticAnalyzer::modAstWithCast(std::shared_ptr<ast::BinaryOperationNode> binOpNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType) {
+    PRIMITIVE_TYPE typeFrom;
 
-    if (resultType >= PRIMITIVE_TYPE::FLOAT32 && varType < PRIMITIVE_TYPE::FLOAT32 ||
-        resultType < PRIMITIVE_TYPE::FLOAT32 && varType >= PRIMITIVE_TYPE::FLOAT32) {
-      // FLOATING POINT AND INTEGER MIX
-      error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
-      errors->emplace_back(error);
-      return false;
+    auto nodeType = nodeToMod->GetType();
+    switch (nodeType) {
+    case ast::AST_TYPE::VariableRefNode: {
+        auto varRefNode = CastNode<ast::VariableRefNode>(nodeToMod);
+        typeFrom = Primitives::Get(varRefNode->Var->VarType);
+        break;
+    }
+    case ast::AST_TYPE::BinaryOperationNode: {
+        auto varRefNode = CastNode<ast::BinaryOperationNode>(nodeToMod);
+        typeFrom = Primitives::Get(varRefNode->ResultType);
+        break;
+    }
+    default:
+        Console::WriteLine("Unsupported cast for node type: " + ast::GetAstTypeName(nodeType));
+        return;
     }
 
-    if (resultType >= varType) {
-      varRef->Var->VarType = Primitives::GetName(resultType);
-      return true;
-    }
-  }
-
-  error_handling::Error error(
-    binOp->Line,
-    binOp->FileName,
-    "Custom types not supported."
-  );
-  errors->push_back(error);
-  return false;
-}
-
-bool SemanticAnalyzer::checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant)
-{
-  if (binOp->ResultType.size()) {
-    auto resultType = Primitives::Get(binOp->ResultType);
-    auto constType = Primitives::Get(Primitives::GetName(constant->ConstType));
-
-    if (resultType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32 ||
-        resultType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32) {
-      // FLOATING POINT AND INTEGER MIX
-      error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
-      errors->emplace_back(error);
-      return false;
-    }
-
-    if (resultType >= constType) {
-      constant->ConstType = ast::GetConstantType(resultType);
-      return true;
-    }
-  }
-
-  error_handling::Error error(
-    binOp->Line,
-    binOp->FileName,
-    "Custom types not supported."
-  );
-  errors->push_back(error);
-  return false;
+    auto castOpNode = std::make_shared<ast::CastOperationNode>();
+    castOpNode->Value = nodeToMod;
+    castOpNode->TypeTo = resultType;
+    castOpNode->TypeFrom = typeFrom;
+    binOpNode->Right == nodeToMod ? binOpNode->Right : binOpNode->Left = castOpNode;
 }

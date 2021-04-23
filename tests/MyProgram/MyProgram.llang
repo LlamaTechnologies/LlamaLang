@@ -3,7 +3,7 @@
 // The parameter of this function shadows the global variable
 func myFunction(f int32) int32 {
     x int32;
-    y int32 = 8l
+    y int32 = 8l + 10b
     c int32 = 100l;
 
     // truncate c to int8
