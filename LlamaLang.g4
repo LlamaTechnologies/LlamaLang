@@ -32,10 +32,6 @@ basicDirective
     : '#' IDENTIFIER (IDENTIFIER | string_)?
     ;
 
-typeSpecifier
-    : 'b'|'B'|'l'|'L'|'w'|'W'
-    ;
-
 // Function declarations
 functionDef
     : basicDirective? FUNC IDENTIFIER signature type_ block
@@ -270,17 +266,14 @@ STAR                   : '*';
 AMPERSAND              : '&';
 
 // Number literals
-TYPE_SPEC              : [u]? [bwl]?;
-DECIMAL_LIT            : [1-9] [0-9]* TYPE_SPEC;
-OCTAL_LIT              : '0' OCTAL_DIGIT* TYPE_SPEC;
-HEX_LIT                : '0' [xX] HEX_DIGIT+ TYPE_SPEC;
-BIN_LIT                : '0' [bB] BIN_DIGIT+ TYPE_SPEC;
+DECIMAL_LIT            : [1-9] [0-9]* SIGNED_SPEC? TYPE_SPEC?;
+OCTAL_LIT              : '0' OCTAL_DIGIT* SIGNED_SPEC? TYPE_SPEC?;
+HEX_LIT                : '0' [xX] HEX_DIGIT+ SIGNED_SPEC? TYPE_SPEC?;
+BIN_LIT                : '0' [bB] BIN_DIGIT+ SIGNED_SPEC? TYPE_SPEC?;
 FLOAT_LIT              : DOUBLE_LIT [f];
 DOUBLE_LIT             : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT)
                        | '.' DECIMALS EXPONENT?
                        ;
-
-
 
 // Rune literals
 RUNE_LIT               : '\'' (~[\n\\] | ESCAPED_VALUE) '\'';
@@ -295,6 +288,14 @@ TERMINATOR             : [\r?\n]+           -> channel(HIDDEN);
 LINE_COMMENT           : '//' ~[\r?\n]*     -> channel(HIDDEN);
 
 // Fragments
+fragment TYPE_SPEC
+    : [bwl]
+    ;
+
+fragment SIGNED_SPEC
+    : [u]
+    ;
+
 fragment ESCAPED_VALUE
     : '\\' ('u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
            | 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT

@@ -7,15 +7,15 @@ func myFunction(f int32) int32 {
     c int32 = 100l;
 
     // truncate c to int8
-    bin int8 = c
+    b int8 = c
     
     // zero extend b to int32
-    c = bin;
+    c = byte;
 
     // should truncate this value!
-    overflows64u uint64 = 0x1FFFFFFFFFFFFFFFF
+    u uint64 = 0x1FFFFFFFFFFFFFFFF
     // should truncate this value!
-    unsigned_byte uint8 = 0x8AEFub
+    ub uint8 = 0x8AEFub
 
     x = y
     y = f
