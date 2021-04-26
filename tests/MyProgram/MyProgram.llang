@@ -10,16 +10,17 @@ func myFunction(f int32) int32 {
     b int8 = c
     
     // zero extend b to int32
-    c = byte;
+    c = b;
 
     // should truncate this value!
     u uint64 = 0x1FFFFFFFFFFFFFFFF
+
     // should truncate this value!
     ub uint8 = 0x8AEFub
 
     x = y
     y = f
-    f = c * (x + y) % 62
+    f = c * (x + y) % 62.0f
 
     // Returns the modified parameter value
     ret f

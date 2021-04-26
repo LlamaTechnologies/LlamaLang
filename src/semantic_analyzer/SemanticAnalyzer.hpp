@@ -50,12 +50,13 @@ namespace llang::semantics
     private: // UTILS
         static void modAstWithCast(std::shared_ptr<ast::AssignNode> assignNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType);
         static void modAstWithCast(std::shared_ptr<ast::BinaryOperationNode> binOpNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType);
+        static void modAstWithCast(std::shared_ptr<ast::UnaryOperationNode> retNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType);
         static bool checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> varRefL, std::shared_ptr<ast::VariableRefNode> varRefR, PRIMITIVE_TYPE &type, std::shared_ptr<ast::VariableRefNode> &nodeToMod);
         static bool checkCastVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr<ast::ConstantNode> constant);
         static bool checkCastBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode> &nodeToMod);
-        static bool checkVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant);
-        static bool checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::VariableRefNode> varRef);
-        static bool checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::ConstantNode> constant);
+        static bool checkCastCallAndVar(std::shared_ptr<ast::FunctionCallNode> callOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode>& nodeToMod);
+        static bool checkCastRet(std::shared_ptr<ast::StatementNode> retValue, const std::string& returnType, bool &shouldCast);
+        static bool checkCastBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr< ast::ConstantNode> constant);
     };
 } // namespace llang::semantics
 
