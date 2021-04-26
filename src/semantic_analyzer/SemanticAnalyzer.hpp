@@ -51,6 +51,7 @@ namespace llang::semantics
         static void modAstWithCast(std::shared_ptr<ast::AssignNode> assignNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType);
         static void modAstWithCast(std::shared_ptr<ast::BinaryOperationNode> binOpNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType);
         static void modAstWithCast(std::shared_ptr<ast::UnaryOperationNode> retNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType);
+        static bool checkCastTypes(const PRIMITIVE_TYPE type0, const PRIMITIVE_TYPE type1, PRIMITIVE_TYPE& resultType, bool& shouldCast);
         static bool checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> varRefL, std::shared_ptr<ast::VariableRefNode> varRefR, PRIMITIVE_TYPE &type, std::shared_ptr<ast::VariableRefNode> &nodeToMod);
         static bool checkCastVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr<ast::ConstantNode> constant);
         static bool checkCastBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode> &nodeToMod);

@@ -408,7 +408,13 @@ llvm::Value *IR::TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, IR_INF
     auto callStmnt = CastNode<ast::FunctionCallNode>(stmnt);
     return TranslateNode(callStmnt, irInfo);
   }
+  case llang::ast::AST_TYPE::CastOperationNode: {
+      if (!irInfo)
+          return nullptr;
 
+      auto castStmnt = CastNode<ast::CastOperationNode>(stmnt);
+      return TranslateNode(castStmnt, irInfo);
+  }
   default:
     // Not a statement
     return nullptr;
