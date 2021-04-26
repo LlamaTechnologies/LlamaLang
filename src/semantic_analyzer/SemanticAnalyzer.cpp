@@ -4,6 +4,7 @@
 #include "../ast/FunctionDefNode.hpp"
 #include "../ast/FunctionCallNode.hpp"
 #include "../ast/ConstantNode.hpp"
+#include "../ast/CastOperationNode.hpp"
 #include "../ast/VariableDefNode.hpp"
 #include "../ast/VariableRefNode.hpp"
 #include "../ast/UnaryOperationNode.hpp"
@@ -136,12 +137,8 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionDefNode> funcNode,
         auto constStmnt = std::static_pointer_cast<ast::ConstantNode, ast::StatementNode>( returnStmnt->Right );
 
         switch( retType ) {
-        case PRIMITIVE_TYPE::CHAR:
-        case PRIMITIVE_TYPE::BYTE:
         case PRIMITIVE_TYPE::UINT8:
-        case PRIMITIVE_TYPE::WCHAR:
         case PRIMITIVE_TYPE::UINT16:
-        case PRIMITIVE_TYPE::UCHAR:
         case PRIMITIVE_TYPE::UINT32:
         case PRIMITIVE_TYPE::UINT64:
           if( constStmnt->Value[0] == '-' ) {
@@ -155,7 +152,6 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::FunctionDefNode> funcNode,
 
           break;
 
-        case PRIMITIVE_TYPE::SCHAR:
         case PRIMITIVE_TYPE::INT8: {
           auto constantName = ast::GetConstantTypeName(ast::CONSTANT_TYPE::I8);
           auto actualConstName = ast::GetConstantTypeName(constStmnt->ConstType);
@@ -443,55 +439,121 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::VariableRefNode> varRefNod
 
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::AssignNode> assignmentNode, Scope scope)
 {
-  // TODO: Check if types match
+    auto left = assignmentNode->Left;
+    auto lType = left->Var->VarType;
 
-  // Check left node
-  if (!checkNode(assignmentNode->Left, scope))
-    return false;
+    // Check left node
+    if (!checkNode(left, scope))
+        return false;
 
-  // Check right node
-  auto right = assignmentNode->Right;
-  if (!right)
-    return false;
+    // Check right node
+    auto right = assignmentNode->Right;
+    if (!right)
+        return false;
 
-  switch( right->GetType() ) {
-  case ast::AST_TYPE::VariableRefNode: {
-    auto rightNode = CastNode<ast::VariableRefNode>(assignmentNode->Right);
+    switch (right->GetType()) {
+    case ast::AST_TYPE::ConstantNode: {
+        auto rightNode = CastNode<ast::ConstantNode>(assignmentNode->Right);
 
-    if( !checkNode(rightNode, scope) )
-      return false;
-  }
-  break;
+        // This is a constant so we just upcast the constant
+        if (!checkCastVarAndConst(left, rightNode))
+            return false;
+    } break;
+    case ast::AST_TYPE::VariableRefNode: {
+        auto rightNode = CastNode<ast::VariableRefNode>(assignmentNode->Right);
 
-  case ast::AST_TYPE::BinaryOperationNode: {
-    auto rightNode = CastNode<ast::BinaryOperationNode>(assignmentNode->Right);
+        if (!checkNode(rightNode, scope))
+            return false;
 
-    if (!checkNode(rightNode, scope))
-      return false;
-  }
-  break;
+        PRIMITIVE_TYPE type = PRIMITIVE_TYPE::VOID;
+        std::shared_ptr<ast::VariableRefNode> nodeToMod = nullptr;
 
-  case ast::AST_TYPE::FunctionCallNode: {
-    auto rightNode = CastNode<ast::FunctionCallNode>(assignmentNode->Right);
+        if (!checkCastVarAndVar(left, rightNode, type, nodeToMod))
+            return false;
 
-    if (!checkNode(rightNode, scope))
-      return false;
-  }
-  break;
+        // modify ast and add cast
+        if (nodeToMod) {
+            // since this is an assignment override values to cast to the store type
+            nodeToMod = rightNode;
+            type = Primitives::Get(left->Var->VarType);
+            modAstWithCast(assignmentNode, nodeToMod, type);
+        }
+    } break;
+    case ast::AST_TYPE::BinaryOperationNode: {
+        auto rightNode = CastNode<ast::BinaryOperationNode>(assignmentNode->Right);
 
-  default:
-    break;
-  }
+        if (!checkNode(rightNode, scope))
+            return false;
 
-  return true;
+        PRIMITIVE_TYPE type;
+        std::shared_ptr<ast::StatementNode> nodeToMod = nullptr;
+
+        if (!checkCastBinOpAndVar(rightNode, left, type, nodeToMod))
+            return false;
+
+        // modify ast and add cast
+        if (nodeToMod) {
+            // since this is an assignment override values to cast to the store type
+            nodeToMod = rightNode;
+            type = Primitives::Get(left->Var->VarType);
+            modAstWithCast(assignmentNode, nodeToMod, type);
+        }
+    }  break;
+    case ast::AST_TYPE::FunctionCallNode: {
+        auto rightNode = CastNode<ast::FunctionCallNode>(assignmentNode->Right);
+        if (!checkNode(rightNode, scope))
+            return false;
+
+        PRIMITIVE_TYPE type;
+        std::shared_ptr<ast::StatementNode> nodeToMod = nullptr;
+
+        if (!checkCastCallAndVar(rightNode, left, type, nodeToMod))
+            return false;
+
+        // modify ast and add cast
+        if (nodeToMod) {
+            // since this is an assignment override values to cast to the store type
+            nodeToMod = rightNode;
+            type = Primitives::Get(left->Var->VarType);
+            modAstWithCast(assignmentNode, nodeToMod, type);
+        }
+
+    } break;
+    default:
+        break;
+    }
+
+    return true;
 }
 
 bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::UnaryOperationNode> unaryOpNode, Scope scope)
 {
-  switch (unaryOpNode->Op) {
-  case ast::UNARY_STATEMENT_TYPE::RETURN:
-    return checkNode(unaryOpNode->Right, scope);
+    switch (unaryOpNode->Op) {
+    case ast::UNARY_STATEMENT_TYPE::RETURN: {
+      if (unaryOpNode->Right->StmntType == ast::STATEMENT_TYPE::UNARY_OP &&
+            CastNode<ast::UnaryOperationNode>(unaryOpNode->Right)->Op == ast::UNARY_STATEMENT_TYPE::RETURN) {
+          error_handling::Error error(
+            unaryOpNode->Line,
+            unaryOpNode->FileName,
+            "Nested return staements are not allowed!"
+          );
+          errors->push_back(error);
+          return false;
+      }
 
+      if (!checkNode(unaryOpNode->Right, scope))
+        return false;
+
+      auto func = CastNode<ast::FunctionDefNode>(scope->Data);
+      bool shouldCast = false;
+      if (!checkCastRet(unaryOpNode->Right, func->ReturnType, shouldCast))
+        return false;
+
+      if (shouldCast) {
+        modAstWithCast(unaryOpNode, unaryOpNode->Right, Primitives::Get(func->ReturnType));
+      }
+      return true;
+  } break;
   default:
     return true;
   }
@@ -540,49 +602,14 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varL, scope) || !checkNode(varR, scope))
       return false;
 
-    auto &varTypeL = varL->Var->VarType;
-    auto &varTypeR = varR->Var->VarType;
-
-    if (!Primitives::Exists(varTypeL) || !Primitives::Exists(varTypeR)) {
-      error_handling::Error error(
-        binaryOpNode->Line,
-        binaryOpNode->FileName,
-        "Custom types not supported."
-      );
-      errors->push_back(error);
-      binaryOpNode->ResultType = "";
-      return false;
-    }
-
-    left  = Primitives::Get(varTypeL);
-    right = Primitives::Get(varTypeR);
-
-
-    if (left == right) {
-      binaryOpNode->ResultType = Primitives::GetName(left);
-      return true;
-    }
-
-    // fp & int
-    if (left >= PRIMITIVE_TYPE::FLOAT64 && right < PRIMITIVE_TYPE::FLOAT32) {
-      binaryOpNode->ResultType = Primitives::GetName(left);
-      return false;
-    }
-
-    // int & fp
-    if (left >= PRIMITIVE_TYPE::FLOAT32 && right < PRIMITIVE_TYPE::FLOAT32) {
-      binaryOpNode->ResultType = Primitives::GetName(right);
-      return false;
-    }
-
     PRIMITIVE_TYPE resultType;
+    std::shared_ptr<ast::VariableRefNode> nodeToMod;
+    if (!checkCastVarAndVar(varL, varR, resultType, nodeToMod))
+        return false;
 
-    if (left > right) {
-      resultType = left;
-      varTypeR = std::string(varTypeL);
-    } else {
-      resultType = right;
-      varTypeL = std::string(varTypeR);
+
+    if (nodeToMod) {
+        modAstWithCast(binaryOpNode, nodeToMod, resultType);
     }
 
     binaryOpNode->ResultType = Primitives::GetName(resultType);
@@ -597,7 +624,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope))
       return false;
 
-    if (!checkVarAndConst(varRef, constant))
+    if (!checkCastVarAndConst(varRef, constant))
       return false;
 
     binaryOpNode->ResultType = varRef->Var->VarType;
@@ -612,13 +639,12 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope))
       return false;
 
-    if (!checkVarAndConst(varRef, constant))
+    if (!checkCastVarAndConst(varRef, constant))
       return false;
 
     binaryOpNode->ResultType = varRef->Var->VarType;
     return true;
   }
-
 
   // bin & const
   if (leftOp->StmntType == ast::STATEMENT_TYPE::BINARY_OP && rightOp->StmntType == ast::STATEMENT_TYPE::CONSTANT) {
@@ -628,7 +654,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndConst(binOp, constant, scope))
+    if (!checkCastBinOpAndConst(binOp, constant))
       return false;
 
     binaryOpNode->ResultType = binOp->ResultType;
@@ -643,7 +669,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndConst(binOp, constant, scope))
+    if (!checkCastBinOpAndConst(binOp, constant))
       return false;
 
     binaryOpNode->ResultType = binOp->ResultType;
@@ -658,10 +684,17 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope) || !checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndVar(binOp, varRef, scope))
+
+    PRIMITIVE_TYPE resultType;
+    std::shared_ptr<ast::StatementNode> nodeToMod;
+    if (!checkCastBinOpAndVar(binOp, varRef, resultType, nodeToMod))
       return false;
 
-    binaryOpNode->ResultType = binOp->ResultType;
+    if (nodeToMod) {
+        modAstWithCast(binaryOpNode, nodeToMod, resultType);
+    }
+
+    binaryOpNode->ResultType = Primitives::GetName(resultType);
     return true;
   }
 
@@ -673,74 +706,272 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
     if (!checkNode(varRef, scope) || !checkNode(binOp, scope))
       return false;
 
-    if (!checkBinOpAndVar(binOp, varRef, scope))
-      return false;
 
-    binaryOpNode->ResultType = binOp->ResultType;
+    PRIMITIVE_TYPE resultType;
+    std::shared_ptr<ast::StatementNode> nodeToMod;
+    if (!checkCastBinOpAndVar(binOp, varRef, resultType, nodeToMod))
+        return false;
+
+    if (nodeToMod) {
+        modAstWithCast(binaryOpNode, nodeToMod, resultType);
+    }
+
+    binaryOpNode->ResultType = Primitives::GetName(resultType);
     return true;
   }
+
+  // TODO: add function call combination
 
   error_handling::Error error(
     binaryOpNode->Line,
     binaryOpNode->FileName,
-    "UNsuported combination in binary operator."
+    "Unsuported combination in binary operator."
   );
   errors->push_back(error);
   return false;
 }
 
-bool SemanticAnalyzer::checkVarAndConst(std::shared_ptr< ast::VariableRefNode> varRef, std::shared_ptr< ast::ConstantNode> constant)
-{
-  if (Primitives::Exists(varRef->Var->VarType)) {
-    auto varType = Primitives::Get(varRef->Var->VarType);
-    auto constType = Primitives::Get(Primitives::GetName(constant->ConstType));
+bool SemanticAnalyzer::checkCastRet(std::shared_ptr<ast::StatementNode> retValue, const std::string &returnType, bool& shouldCast) 
+{   
+    if (Primitives::Exists(returnType)) {
+        PRIMITIVE_TYPE resultType;
 
-    if (varType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32 ||
-        varType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32) {
-      // FLOATING POINT AND INTEGER MIX
-      error_handling::Error error(
+        auto retType = Primitives::Get(returnType);
+        switch (retValue->StmntType) {
+        case ast::STATEMENT_TYPE::CONSTANT: {
+            // Cast constant to ret type
+            auto constNode = CastNode<ast::ConstantNode>(retValue);
+            auto constType = Primitives::Get(Primitives::GetName(constNode->ConstType));
+            if (!checkCastTypes(constType, retType, resultType, shouldCast))
+                return false;
+        } break;
+        case ast::STATEMENT_TYPE::VAR_REF: {
+            auto varRefNode = CastNode<ast::VariableRefNode>(retValue);
+            auto varType = Primitives::Get(varRefNode->Var->VarType);
+            if (!checkCastTypes(varType, retType, resultType, shouldCast))
+                return false;
+        } break;
+        case ast::STATEMENT_TYPE::UNARY_OP:
+            // INC DEC
+
+        case ast::STATEMENT_TYPE::BINARY_OP: {
+            auto binOpNode = CastNode<ast::BinaryOperationNode>(retValue);
+            auto binResType = Primitives::Get(binOpNode->ResultType);
+            if (!checkCastTypes(binResType, retType, resultType, shouldCast))
+                return false;
+        } break;
+        case ast::STATEMENT_TYPE::CALL: {
+            auto funcCallNode = CastNode<ast::FunctionCallNode>(retValue);
+            auto funcRetType = Primitives::Get(funcCallNode->functionFound->ReturnType);
+            if (!checkCastTypes(funcRetType, retType, resultType, shouldCast))
+                return false;
+        } break;
+        default:
+            return false;
+        }
+
+        return true;
+    }
+
+
+    // Custom return types are not supported
+    // returns false on custom types
+    error_handling::Error error(
+        retValue->Line,
+        retValue->FileName,
+        "Custom types not supported."
+    );
+    errors->push_back(error);
+    return false;
+}
+
+bool SemanticAnalyzer::checkCastVarAndConst(std::shared_ptr<ast::VariableRefNode> varRef, std::shared_ptr<ast::ConstantNode> constant)
+{
+    // Var type is primitive
+    if (Primitives::Exists(varRef->Var->VarType)) {
+        auto varType = Primitives::Get(varRef->Var->VarType);
+        auto constType = Primitives::Get(Primitives::GetName(constant->ConstType));
+
+        // if equals then return true
+        if (varType == constType) {
+            return true;
+        }
+
+        // NOTE: DOES NOT SUPPORT BOOL TO OTHER TYPES IMPLICIT CASTING
+
+        // fp|int check
+        if ((varType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32) ||
+            (varType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32)) {
+            Console::WriteLine("WARNING: Float and Integer mix in binary operation.");
+        }
+        
+        // sign flags
+        bool isVarSigned = (varType <= PRIMITIVE_TYPE::SCHAR && varType >= PRIMITIVE_TYPE::INT8) || (varType >= PRIMITIVE_TYPE::FLOAT32 && varType <= PRIMITIVE_TYPE::FLOAT64);
+        bool isConstSigned = (constType <= PRIMITIVE_TYPE::SCHAR && constType >= PRIMITIVE_TYPE::INT8) || (constType >= PRIMITIVE_TYPE::FLOAT32 && constType <= PRIMITIVE_TYPE::FLOAT64);
+
+        // sign mix check
+        if (isVarSigned) {
+            if (!isConstSigned) {
+                Console::WriteLine("WARN: Constant does not match signed type for variable " + varRef->Var->Name);
+            }
+            else if (constType <= PRIMITIVE_TYPE::BOOL) {
+                Console::WriteLine("Constant is not a valid type for variable " + varRef->Var->Name + " of type " + Primitives::GetName(varType));
+                return false;
+            }
+        }
+        else {
+            if (!isConstSigned) {
+                Console::WriteLine("WARN: Constant does not match unsigned type for variable " + varRef->Var->Name);
+            }
+            else if (constType <= PRIMITIVE_TYPE::BOOL || constType > PRIMITIVE_TYPE::FLOAT64) {
+                Console::WriteLine("Constant is not a valid type for variable " + varRef->Var->Name + " of type " + Primitives::GetName(varType));
+                return false;
+            }
+        }
+
+        // cast constant to variable type
+        if (varType > constType) {
+            constant->ConstType = ast::GetConstantType(varType);
+        }
+
+        return true;
+    }
+
+    // returns false on custom types
+    error_handling::Error error(
         varRef->Line,
         varRef->FileName,
-        "Operands not supported: Float and Integer mix in binary operation.");
-      errors->emplace_back(error);
-      return false;
-    }
-
-    if (varType >= constType) {
-      constant->ConstType = ast::GetConstantType(varType);
-      return true;
-    }
-  }
-
-  error_handling::Error error(
-    varRef->Line,
-    varRef->FileName,
-    "Custom types not supported."
-  );
-  errors->push_back(error);
-  return false;
+        "Custom types not supported."
+    );
+    errors->push_back(error);
+    return false;
 }
 
-bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, Scope scope)
+bool SemanticAnalyzer::checkCastVarAndVar(std::shared_ptr<ast::VariableRefNode> varRefL, std::shared_ptr<ast::VariableRefNode> varRefR, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::VariableRefNode> &nodeToMod) {
+    auto& varTypeL = varRefL->Var->VarType;
+    auto& varTypeR = varRefR->Var->VarType;
+
+    // Var types are primitives
+    if (Primitives::Exists(varTypeL) && Primitives::Exists(varTypeR)) {
+        PRIMITIVE_TYPE left = Primitives::Get(varTypeL);
+        PRIMITIVE_TYPE right = Primitives::Get(varTypeR);
+
+        // NOTE: DOES NOT SUPPORT BOOL TO OTHER TYPES IMPLICIT CASTING
+
+        // if equals then return true
+        if (left == right) {
+            resultType = right;
+            return true;
+        }
+
+        // fp|int check
+        if ((left >= PRIMITIVE_TYPE::FLOAT32 && right < PRIMITIVE_TYPE::FLOAT32) ||
+            (left < PRIMITIVE_TYPE::FLOAT32 && right >= PRIMITIVE_TYPE::FLOAT32)) {
+            Console::WriteLine("WARNING: Float and Integer mix in binary operation.");
+        }
+
+        // sign flags
+        bool isLeftSigned = (left >= PRIMITIVE_TYPE::INT8 && left <= PRIMITIVE_TYPE::INT64) || (left >= PRIMITIVE_TYPE::FLOAT32 && left <= PRIMITIVE_TYPE::FLOAT64);
+        bool isRightSigned = (right >= PRIMITIVE_TYPE::INT8 && right <= PRIMITIVE_TYPE::INT64) || (right >= PRIMITIVE_TYPE::FLOAT32 && right <= PRIMITIVE_TYPE::FLOAT64);
+
+        if (isLeftSigned) {
+            if (!isRightSigned) {
+                Console::WriteLine("Variable " + varRefR->Var->Name + " does not match signed type for variable " + varRefL->Var->Name);
+            }
+            else if (right == PRIMITIVE_TYPE::VOID || right > PRIMITIVE_TYPE::FLOAT64) {
+                Console::WriteLine("Variable " + varRefR->Var->Name + " is not a valid type for variable " + varRefL->Var->Name + " of type " + Primitives::GetName(left));
+                return false;
+            }
+        }
+        else {
+            if (!isLeftSigned) {
+                Console::WriteLine("Variable " + varRefL->Var->Name + " does not match unsigned type for variable " + varRefR->Var->Name);
+            }
+            else if (left == PRIMITIVE_TYPE::VOID || left > PRIMITIVE_TYPE::FLOAT64) {
+                Console::WriteLine("Variable " + varRefL->Var->Name + " is not a valid type for variable " + varRefR->Var->Name + " of type " + Primitives::GetName(left));
+                return false;
+            }
+        }
+
+        // cast types
+        if (left > right) {
+            resultType = left;
+            nodeToMod = varRefR;
+        }
+        else if (right > left) {
+            resultType = right;
+            nodeToMod = varRefL;
+        }
+
+        // returns true and node to modify
+        return true;
+    }
+
+    // returns false on custom types
+    error_handling::Error error(
+        varRefL->Line,
+        varRefL->FileName,
+        "Custom types need to be cast explicitly."
+    );
+    errors->push_back(error);
+    return false;
+}
+
+bool SemanticAnalyzer::checkCastBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant)
 {
-  if (Primitives::Exists(varRef->Var->VarType)) {
+  // Binary op result type is primitive
+  if (binOp->ResultType.size() && Primitives::Exists(binOp->ResultType)) {
     auto resultType = Primitives::Get(binOp->ResultType);
-    auto varType = Primitives::Get(varRef->Var->VarType);
 
-    if (resultType >= PRIMITIVE_TYPE::FLOAT32 && varType < PRIMITIVE_TYPE::FLOAT32 ||
-        resultType < PRIMITIVE_TYPE::FLOAT32 && varType >= PRIMITIVE_TYPE::FLOAT32) {
-      // FLOATING POINT AND INTEGER MIX
-      error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
-      errors->emplace_back(error);
-      return false;
+    // names
+    const auto resultTypeName = Primitives::GetName(resultType);
+    const auto constTypeName = Primitives::GetName(constant->ConstType);
+    const auto opName = GetBinaryOperationName(binOp->Op);
+
+    auto constType = Primitives::Get(constTypeName);
+
+    // if equals then return true
+    if (resultType == constType) {
+        return true;
     }
 
-    if (resultType >= varType) {
-      varRef->Var->VarType = Primitives::GetName(resultType);
-      return true;
+    
+    // fp|int check
+    if ((resultType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32) ||
+        (resultType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32)) {
+        Console::WriteLine("WARNING: Float and Integer mix in binary operation.");
     }
+
+    // sign falgs
+    bool isBinSigned = (resultType >= PRIMITIVE_TYPE::INT8 && resultType <= PRIMITIVE_TYPE::INT64) || (resultType >= PRIMITIVE_TYPE::FLOAT32 && resultType <= PRIMITIVE_TYPE::FLOAT64);
+    bool isConstSigned = (constType >= PRIMITIVE_TYPE::INT8 && constType <= PRIMITIVE_TYPE::INT64) || (constType >= PRIMITIVE_TYPE::FLOAT32 && constType <= PRIMITIVE_TYPE::FLOAT64);
+
+    // signs check
+    if (isBinSigned) {
+        if (!isConstSigned) {
+            Console::WriteLine("Const " + constant->Value + " does not match unsigned type for operation" + opName);
+        }
+        else if (constType <= PRIMITIVE_TYPE::BOOL || constType > PRIMITIVE_TYPE::FLOAT64) {
+            Console::WriteLine("Const " + constant->Value + " is not a valid type for op " + opName + " of type " + resultTypeName);
+            return false;
+        }
+    }
+    else {
+        if (!isBinSigned) {
+            Console::WriteLine("Const " + constant->Value + " does not match unsigned type for operation" + opName);
+        }
+        else if (resultType <= PRIMITIVE_TYPE::BOOL || constType > PRIMITIVE_TYPE::FLOAT64) {
+            Console::WriteLine("Const " + constant->Value + " is not a valid type for op " + opName + " of type " + resultTypeName);
+            return false;
+        }
+    }
+
+    // set bin op result type as the new constant type
+    constant->ConstType = ast::GetConstantType(resultType);
+    return true;
   }
 
+  // returns false on custom types
   error_handling::Error error(
     binOp->Line,
     binOp->FileName,
@@ -750,31 +981,272 @@ bool SemanticAnalyzer::checkBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode
   return false;
 }
 
-bool SemanticAnalyzer::checkBinOpAndConst(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::ConstantNode> constant, Scope scope)
+bool SemanticAnalyzer::checkCastBinOpAndVar(std::shared_ptr<ast::BinaryOperationNode> binOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode>& nodeToMod) {
+    // var type and bin op result type are primitives
+    if (Primitives::Exists(varRef->Var->VarType) && Primitives::Exists(binOp->ResultType)) {
+        auto binOpType = Primitives::Get(binOp->ResultType);
+        auto varType = Primitives::Get(varRef->Var->VarType);
+        const auto binTypeName = Primitives::GetName(binOpType);
+        const auto opName = GetBinaryOperationName(binOp->Op);
+
+        // if equals then return true
+        if (binOpType == varType) {
+            resultType = varType;
+            return true;
+        }
+
+        // fp|int check
+        if ((binOpType >= PRIMITIVE_TYPE::FLOAT32 && varType < PRIMITIVE_TYPE::FLOAT32) ||
+            (binOpType < PRIMITIVE_TYPE::FLOAT32 && varType >= PRIMITIVE_TYPE::FLOAT32)) {
+            Console::WriteLine("WARNING: Float and Integer mix in binary operation.");
+        }
+
+        // sign flags
+        bool isBinSigned = (binOpType >= PRIMITIVE_TYPE::INT8 && binOpType <= PRIMITIVE_TYPE::INT64) || (binOpType >= PRIMITIVE_TYPE::FLOAT32 && binOpType <= PRIMITIVE_TYPE::FLOAT64);
+        bool isVarSigned = (varType >= PRIMITIVE_TYPE::INT8 && varType <= PRIMITIVE_TYPE::INT64) || (varType >= PRIMITIVE_TYPE::FLOAT32 && varType <= PRIMITIVE_TYPE::FLOAT64);
+
+        if (isBinSigned) {
+            if (!isVarSigned) {
+                Console::WriteLine("Variable " + varRef->Var->Name + " does not match signed type for op " + opName);
+            }
+            else if (varType == PRIMITIVE_TYPE::VOID || varType > PRIMITIVE_TYPE::FLOAT64) {
+                Console::WriteLine("Variable " + varRef->Var->Name + " is not a valid type for op " + opName + " of type " + binTypeName);
+                return false;
+            }
+        }
+        else {
+            if (!isBinSigned) {
+                Console::WriteLine("Variable " + varRef->Var->Name + " does not match signed type for op " + opName);
+            }
+            else if (binOpType == PRIMITIVE_TYPE::VOID || binOpType > PRIMITIVE_TYPE::FLOAT64) {
+                Console::WriteLine("Variable " + varRef->Var->Name + " is not a valid type for op " + opName + " of type " + binTypeName);
+                return false;
+            }
+        }
+
+        if (binOpType > varType) {
+            resultType = binOpType;
+            nodeToMod = varRef;
+        }
+        else if (varType > binOpType) {
+            resultType = varType;
+            nodeToMod = binOp;
+        }
+
+        return true;
+    }
+
+    // returns false on custom types
+    error_handling::Error error(
+        varRef->Line,
+        varRef->FileName,
+        "Custom types need to be cast explicitly."
+    );
+    errors->push_back(error);
+    return false;
+}
+
+bool SemanticAnalyzer::checkCastCallAndVar(std::shared_ptr<ast::FunctionCallNode> callOp, std::shared_ptr<ast::VariableRefNode> varRef, PRIMITIVE_TYPE& resultType, std::shared_ptr<ast::StatementNode>& nodeToMod) {
+    // var type and bin op result type are primitives
+    if (Primitives::Exists(varRef->Var->VarType) && Primitives::Exists(callOp->functionFound->ReturnType)) {
+        auto callOpType = Primitives::Get(callOp->functionFound->ReturnType);
+        auto varType = Primitives::Get(varRef->Var->VarType);
+        const auto callTypeName = Primitives::GetName(callOpType);
+        const auto varTypeName = Primitives::GetName(varType);
+
+        // if equals then return true
+        if (callOpType == varType) {
+            resultType = varType;
+            return true;
+        }
+
+        // fp|int check
+        if ((callOpType >= PRIMITIVE_TYPE::FLOAT32 && varType < PRIMITIVE_TYPE::FLOAT32) ||
+            (callOpType < PRIMITIVE_TYPE::FLOAT32 && varType >= PRIMITIVE_TYPE::FLOAT32)) {
+            Console::WriteLine("WARNING: Float and Integer mix in binary operation.");
+        }
+
+        // sign flags
+        bool isCallRetSigned = (callOpType >= PRIMITIVE_TYPE::INT8 && callOpType <= PRIMITIVE_TYPE::INT64) || (callOpType >= PRIMITIVE_TYPE::FLOAT32 && callOpType <= PRIMITIVE_TYPE::FLOAT64);
+        bool isVarSigned = (varType >= PRIMITIVE_TYPE::INT8 && varType <= PRIMITIVE_TYPE::INT64) || (varType >= PRIMITIVE_TYPE::FLOAT32 && varType <= PRIMITIVE_TYPE::FLOAT64);
+
+        if (isCallRetSigned) {
+            if (!isVarSigned) {
+                Console::WriteLine("Function " + callTypeName + " return type does not match signed type for variable" + varRef->Var->Name);
+            }
+            else if (varType == PRIMITIVE_TYPE::VOID || varType > PRIMITIVE_TYPE::FLOAT64) {
+                Console::WriteLine("Function " + callTypeName + " return type is not valid for variable " + varRef->Var->Name + " of type " + varTypeName);
+                return false;
+            }
+        }
+        else {
+            if (!isCallRetSigned) {
+                Console::WriteLine("Function " + callTypeName + " return type does not match signed type for variable" + varRef->Var->Name);
+            }
+            else if (callOpType == PRIMITIVE_TYPE::VOID || callOpType > PRIMITIVE_TYPE::FLOAT64) {
+                Console::WriteLine("Function " + callTypeName + " return type is not valid for variable " + varRef->Var->Name + " of type " + varTypeName);
+                return false;
+            }
+        }
+
+        if (callOpType > varType) {
+            resultType = callOpType;
+            nodeToMod = varRef;
+        }
+        else if (varType > callOpType) {
+            resultType = varType;
+            nodeToMod = callOp;
+        }
+
+        return true;
+    }
+
+    // returns false on custom types
+    error_handling::Error error(
+        varRef->Line,
+        varRef->FileName,
+        "Custom types need to be cast explicitly."
+    );
+    errors->push_back(error);
+    return false;
+}
+
+bool SemanticAnalyzer::checkCastTypes(const PRIMITIVE_TYPE type0, const PRIMITIVE_TYPE type1, PRIMITIVE_TYPE &resultType, bool& shouldCast) {
+    const auto type0Name= Primitives::GetName(type0);
+    const auto type1Name = Primitives::GetName(type1);
+
+    shouldCast = false;
+
+    // if equals then return true
+    if (type0 == type1) {
+        resultType = type0;
+        return true;
+    }
+
+    // fp|int check
+    if ((type0 >= PRIMITIVE_TYPE::FLOAT32 && type1 < PRIMITIVE_TYPE::FLOAT32) ||
+        (type0 < PRIMITIVE_TYPE::FLOAT32 && type1 >= PRIMITIVE_TYPE::FLOAT32)) {
+        Console::WriteLine("WARNING: Float and Integer mix in binary operation.");
+    }
+
+    // sign flags
+    bool isType0Signed = (type0 >= PRIMITIVE_TYPE::INT8 && type0 <= PRIMITIVE_TYPE::INT64) || (type0 >= PRIMITIVE_TYPE::FLOAT32 && type0 <= PRIMITIVE_TYPE::FLOAT64);
+    bool isType1Signed = (type1 >= PRIMITIVE_TYPE::INT8 && type1 <= PRIMITIVE_TYPE::INT64) || (type1 >= PRIMITIVE_TYPE::FLOAT32 && type1 <= PRIMITIVE_TYPE::FLOAT64);
+
+    if (isType0Signed) {
+        if (!isType1Signed) {
+            Console::WriteLine(type0Name + " does not match sign of type " + type1Name);
+        }
+        else if (type1 <= PRIMITIVE_TYPE::BOOL || type1 > PRIMITIVE_TYPE::FLOAT64) {
+            Console::WriteLine(type1Name + " is not a valid type for type " + type0Name);
+            return false;
+        }
+    }
+    else {
+        if (!isType0Signed) {
+            Console::WriteLine(type0Name + " does not match sign of type " + type1Name);
+        }
+        else if (type0 <= PRIMITIVE_TYPE::BOOL || type0 > PRIMITIVE_TYPE::FLOAT64) {
+            Console::WriteLine(type0Name + " is not a valid type for type " + type1Name);
+            return false;
+        }
+    }
+
+    resultType = type0 > type1 ? type0 : type1;
+    shouldCast = true;
+    return true;
+}
+
+void SemanticAnalyzer::modAstWithCast(std::shared_ptr<ast::AssignNode> assignNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType)
 {
-  if (binOp->ResultType.size()) {
-    auto resultType = Primitives::Get(binOp->ResultType);
-    auto constType = Primitives::Get(Primitives::GetName(constant->ConstType));
+    PRIMITIVE_TYPE typeFrom;
 
-    if (resultType >= PRIMITIVE_TYPE::FLOAT32 && constType < PRIMITIVE_TYPE::FLOAT32 ||
-        resultType < PRIMITIVE_TYPE::FLOAT32 && constType >= PRIMITIVE_TYPE::FLOAT32) {
-      // FLOATING POINT AND INTEGER MIX
-      error_handling::Error error(binOp->Line, binOp->FileName, "Operands not supported: Float and Integer mix in binary operation.");
-      errors->emplace_back(error);
-      return false;
+    auto nodeType = nodeToMod->GetType();
+    switch (nodeType) {
+    case ast::AST_TYPE::VariableRefNode: {
+        typeFrom = Primitives::Get(CastNode<ast::VariableRefNode>(nodeToMod)->Var->VarType);
+        break;
+    }
+    case ast::AST_TYPE::BinaryOperationNode: {
+        typeFrom = Primitives::Get(CastNode<ast::BinaryOperationNode>(nodeToMod)->ResultType);
+        break;
+    }
+    case ast::AST_TYPE::ConstantNode: {
+        // It was already casted.
+        return;
+    }
+    case ast::AST_TYPE::FunctionCallNode: {
+        typeFrom = Primitives::Get(CastNode<ast::FunctionCallNode>(nodeToMod)->functionFound->ReturnType);
+        break;
+    }
+    default:
+        Console::WriteLine("Unsupported cast for node type: " + ast::GetAstTypeName(nodeType));
+        return;
     }
 
-    if (resultType >= constType) {
-      constant->ConstType = ast::GetConstantType(resultType);
-      return true;
-    }
-  }
+    auto castOpNode = std::make_shared<ast::CastOperationNode>();
+    castOpNode->Value = nodeToMod;
+    castOpNode->TypeTo = resultType;
+    castOpNode->TypeFrom = typeFrom;
+    assignNode->Right = castOpNode;
+}
 
-  error_handling::Error error(
-    binOp->Line,
-    binOp->FileName,
-    "Custom types not supported."
-  );
-  errors->push_back(error);
-  return false;
+void SemanticAnalyzer::modAstWithCast(std::shared_ptr<ast::BinaryOperationNode> binOpNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType) {
+    PRIMITIVE_TYPE typeFrom;
+
+    auto nodeType = nodeToMod->GetType();
+    switch (nodeType) {
+    case ast::AST_TYPE::VariableRefNode: {
+        auto varRefNode = CastNode<ast::VariableRefNode>(nodeToMod);
+        typeFrom = Primitives::Get(varRefNode->Var->VarType);
+        break;
+    }
+    case ast::AST_TYPE::BinaryOperationNode: {
+        auto varRefNode = CastNode<ast::BinaryOperationNode>(nodeToMod);
+        typeFrom = Primitives::Get(varRefNode->ResultType);
+        break;
+    }
+    default:
+        Console::WriteLine("Unsupported cast for node type: " + ast::GetAstTypeName(nodeType));
+        return;
+    }
+
+    auto castOpNode = std::make_shared<ast::CastOperationNode>();
+    castOpNode->Value = nodeToMod;
+    castOpNode->TypeTo = resultType;
+    castOpNode->TypeFrom = typeFrom;
+    (binOpNode->Right == nodeToMod ? binOpNode->Right : binOpNode->Left) = castOpNode;
+}
+
+void SemanticAnalyzer::modAstWithCast(std::shared_ptr<ast::UnaryOperationNode> retNode, std::shared_ptr<ast::StatementNode> nodeToMod, PRIMITIVE_TYPE resultType) {
+    PRIMITIVE_TYPE typeFrom;
+
+    auto nodeType = nodeToMod->GetType();
+    switch (nodeType) {
+    case ast::AST_TYPE::VariableRefNode: {
+        typeFrom = Primitives::Get(CastNode<ast::VariableRefNode>(nodeToMod)->Var->VarType);
+        break;
+    }
+    case ast::AST_TYPE::BinaryOperationNode: {
+        typeFrom = Primitives::Get(CastNode<ast::BinaryOperationNode>(nodeToMod)->ResultType);
+        break;
+    }
+    case ast::AST_TYPE::ConstantNode: {
+        // It was already casted.
+        return;
+    }
+    case ast::AST_TYPE::FunctionCallNode: {
+        typeFrom = Primitives::Get(CastNode<ast::FunctionCallNode>(nodeToMod)->functionFound->ReturnType);
+        break;
+    }
+    default:
+        Console::WriteLine("Unsupported cast for node type: " + ast::GetAstTypeName(nodeType));
+        return;
+    }
+
+    auto castOpNode = std::make_shared<ast::CastOperationNode>();
+    castOpNode->Value = nodeToMod;
+    castOpNode->TypeTo = resultType;
+    castOpNode->TypeFrom = typeFrom;
+    retNode->Right = castOpNode;
 }

@@ -6,6 +6,7 @@
 namespace llang::ast {
     struct AssignNode;
     struct BinaryOperationNode;
+    struct CastOperationNode;
     struct ConstantNode;
     struct DirectiveNode;
     struct FunctionCallNode;
@@ -21,6 +22,7 @@ namespace llang::ast {
         SET_VALUE(AssignNode),
         SET_VALUE(BinaryOperationNode),
         SET_VALUE(ConstantNode),
+        SET_VALUE(CastOperationNode),
         SET_VALUE(DirectiveNode),
         SET_VALUE(FunctionCallNode),
         SET_VALUE(FunctionDefNode),

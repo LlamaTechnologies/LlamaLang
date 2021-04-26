@@ -5,6 +5,7 @@
 #include "ast/FunctionDefNode.hpp"
 #include "ast/FunctionCallNode.hpp"
 #include "ast/ConstantNode.hpp"
+#include "ast/CastOperationNode.hpp"
 #include "ast/AssignNode.hpp"
 #include "ast/BinaryOperationNode.hpp"
 #include "ast/UnaryOperationNode.hpp"
@@ -268,22 +269,18 @@ llvm::Constant *IR::TranslateNode(std::shared_ptr<ast::ConstantNode> constant, I
   llvm::Constant *constantLLVM = nullptr;
 
   switch (constType) {
-  case ast::CONSTANT_TYPE::U8:
   case ast::CONSTANT_TYPE::I8:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(8, std::stol(constant->Value), false));
     break;
 
-  case ast::CONSTANT_TYPE::U16:
   case ast::CONSTANT_TYPE::I16:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(16, std::stol(constant->Value), true));
     break;
 
-  case ast::CONSTANT_TYPE::U32:
   case ast::CONSTANT_TYPE::I32:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(32, std::stol(constant->Value), true));
     break;
 
-  case ast::CONSTANT_TYPE::U64:
   case ast::CONSTANT_TYPE::I64:
     constantLLVM = llvm::ConstantInt::get(TheContext, llvm::APInt(64, std::stol(constant->Value), true));
     break;
@@ -411,7 +408,13 @@ llvm::Value *IR::TranslateNode(std::shared_ptr<ast::StatementNode> stmnt, IR_INF
     auto callStmnt = CastNode<ast::FunctionCallNode>(stmnt);
     return TranslateNode(callStmnt, irInfo);
   }
+  case llang::ast::AST_TYPE::CastOperationNode: {
+      if (!irInfo)
+          return nullptr;
 
+      auto castStmnt = CastNode<ast::CastOperationNode>(stmnt);
+      return TranslateNode(castStmnt, irInfo);
+  }
   default:
     // Not a statement
     return nullptr;
@@ -508,7 +511,7 @@ llvm::Value *IR::TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, 
   if (!assignmentNode->Left || !assignmentNode->Right)
     return nullptr;
 
-  llvm::Value *left = TranslateNode(assignmentNode->Left, irInfo);
+  llvm::Value *left = TranslateNode(assignmentNode->Left, irInfo);  
   llvm::Value *right = nullptr;
 
   if (assignmentNode->Right->GetType() == ast::AST_TYPE::ConstantNode) {
@@ -537,12 +540,75 @@ llvm::Value *IR::TranslateNode(std::shared_ptr<ast::AssignNode> assignmentNode, 
   } else if (assignmentNode->Right->GetType() == ast::AST_TYPE::FunctionCallNode) {
     auto callOp = CastNode<ast::FunctionCallNode>(assignmentNode->Right);
     right = TranslateNode(callOp, irInfo);
+  } else if (assignmentNode->Right->GetType() == ast::AST_TYPE::CastOperationNode) {
+      auto callOp = CastNode<ast::CastOperationNode>(assignmentNode->Right);
+      right = TranslateNode(callOp, irInfo);
   }
 
   if (right)
     return Builder.CreateStore(right, left);
 
   return nullptr;
+}
+
+llvm::Value *IR::TranslateNode(std::shared_ptr<ast::CastOperationNode> castOpNode, IR_INFO* irInfo) {
+    auto opTyTo = castOpNode->TypeTo;
+    auto opTyFrom = castOpNode->TypeFrom;
+    
+    auto value = TranslateNode(castOpNode->Value, irInfo);
+    if (value == nullptr)
+        return nullptr;
+
+    if (value->getType()->isPointerTy()) {
+
+        value = Builder.CreateLoad(value);
+    }
+    
+    auto tyTo = TranslateType(opTyTo);
+
+    bool intTo = opTyTo >= PRIMITIVE_TYPE::INT8 && opTyTo <= PRIMITIVE_TYPE::INT64;
+    bool fpTo = opTyTo >= PRIMITIVE_TYPE::FLOAT32 && opTyTo <= PRIMITIVE_TYPE::FLOAT64;
+    bool uintTo = opTyTo >= PRIMITIVE_TYPE::UINT8 && opTyTo <= PRIMITIVE_TYPE::UINT64;
+    bool intFrom = opTyFrom >= PRIMITIVE_TYPE::INT8 && opTyFrom <= PRIMITIVE_TYPE::INT64;
+    bool fpFrom = opTyFrom >= PRIMITIVE_TYPE::FLOAT32 && opTyFrom <= PRIMITIVE_TYPE::FLOAT64;
+    bool uintFrom = opTyFrom >= PRIMITIVE_TYPE::UINT8 && opTyFrom <= PRIMITIVE_TYPE::UINT64;
+
+    if (intTo && intFrom) {
+        if (opTyTo < opTyFrom)
+            return Builder.CreateTrunc(value, tyTo);
+        else
+            return Builder.CreateZExt(value, tyTo);
+    } else if (intTo && fpFrom) {
+        return Builder.CreateSIToFP(value, tyTo);
+    } else if (intTo && uintFrom) {
+        if (opTyTo < PRIMITIVE_TYPE(int(opTyFrom) - 4))
+            return Builder.CreateTrunc(value, tyTo);
+        else
+            return Builder.CreateZExt(value, tyTo);
+    } else if (fpTo && fpFrom) {
+        if (opTyTo < opTyFrom)
+            return Builder.CreateFPTrunc(value, tyTo);
+        else
+            return Builder.CreateFPExt(value, tyTo);
+    } else if (fpTo && intFrom) {
+        return Builder.CreateFPToSI(value, tyTo);
+    } else if (fpTo && uintFrom) {
+        return Builder.CreateFPToUI(value, tyTo);
+    } else if (uintTo && fpFrom) {
+        return Builder.CreateUIToFP(value, tyTo);
+    } else if (uintTo && intFrom) {
+        if (PRIMITIVE_TYPE(int(opTyTo) - 4) < opTyFrom)
+            return Builder.CreateTrunc(value, tyTo);
+        else
+            return Builder.CreateZExt(value, tyTo);
+    } else if (uintTo && uintFrom) {
+        if (opTyTo < opTyFrom)
+            return Builder.CreateTrunc(value, tyTo);
+        else
+            return Builder.CreateZExt(value, tyTo);
+    }
+
+    return nullptr;
 }
 
 llvm::Value *IR::TranslateOperand(std::shared_ptr<ast::StatementNode> operand, IR_INFO *irInfo)
@@ -583,46 +649,45 @@ llvm::Value *IR::TranslateOperand(std::shared_ptr<ast::StatementNode> operand, I
   }
 }
 
+llvm::Type* IR::TranslateType(PRIMITIVE_TYPE primitiveType) {
+    switch (primitiveType) {
+    case llang::PRIMITIVE_TYPE::VOID:
+        return llvm::Type::getVoidTy(TheContext);
+
+    case llang::PRIMITIVE_TYPE::BOOL:
+        return llvm::Type::getInt1Ty(TheContext);
+
+    case llang::PRIMITIVE_TYPE::INT8:
+    case llang::PRIMITIVE_TYPE::UINT8:
+        return llvm::Type::getInt8Ty(TheContext);
+
+    case llang::PRIMITIVE_TYPE::INT16:
+    case llang::PRIMITIVE_TYPE::UINT16:
+        return llvm::Type::getInt16Ty(TheContext);
+
+    case llang::PRIMITIVE_TYPE::INT32:
+    case llang::PRIMITIVE_TYPE::UINT32:
+        return llvm::Type::getInt32Ty(TheContext);
+
+    case llang::PRIMITIVE_TYPE::INT64:
+    case llang::PRIMITIVE_TYPE::UINT64:
+        return llvm::Type::getInt64Ty(TheContext);
+
+    case llang::PRIMITIVE_TYPE::FLOAT32:
+        return llvm::Type::getFloatTy(TheContext);
+
+    case llang::PRIMITIVE_TYPE::FLOAT64:
+    default:
+        return llvm::Type::getDoubleTy(TheContext);
+    }
+}
+
 llvm::Type *IR::TranslateType(std::string &type)
 {
   if (Primitives::Exists(type)) {
     auto primitiveType = Primitives::Get(type);
 
-    switch (primitiveType) {
-    case llang::PRIMITIVE_TYPE::VOID:
-      return llvm::Type::getVoidTy(TheContext);
-
-    case llang::PRIMITIVE_TYPE::BOOL:
-      return llvm::Type::getInt1Ty(TheContext);
-
-    case llang::PRIMITIVE_TYPE::SCHAR:
-    case llang::PRIMITIVE_TYPE::CHAR:
-    case llang::PRIMITIVE_TYPE::BYTE:
-    case llang::PRIMITIVE_TYPE::INT8:
-    case llang::PRIMITIVE_TYPE::UINT8:
-      return llvm::Type::getInt8Ty(TheContext);
-
-    case llang::PRIMITIVE_TYPE::WCHAR:
-    case llang::PRIMITIVE_TYPE::INT16:
-    case llang::PRIMITIVE_TYPE::UINT16:
-      return llvm::Type::getInt16Ty(TheContext);
-
-    case llang::PRIMITIVE_TYPE::UCHAR:
-    case llang::PRIMITIVE_TYPE::INT32:
-    case llang::PRIMITIVE_TYPE::UINT32:
-      return llvm::Type::getInt32Ty(TheContext);
-
-    case llang::PRIMITIVE_TYPE::INT64:
-    case llang::PRIMITIVE_TYPE::UINT64:
-      return llvm::Type::getInt64Ty(TheContext);
-
-    case llang::PRIMITIVE_TYPE::FLOAT32:
-      return llvm::Type::getFloatTy(TheContext);
-
-    case llang::PRIMITIVE_TYPE::FLOAT64:
-    default:
-      return llvm::Type::getDoubleTy(TheContext);
-    }
+    return TranslateType(primitiveType);
   } else {
     /// user defined type
     return nullptr;

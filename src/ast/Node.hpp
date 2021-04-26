@@ -19,7 +19,6 @@ namespace llang
         struct Node {
             using ChildType = std::shared_ptr<Node>;
             using Action = void ( * )( ChildType );
-
             std::vector<ChildType> children;
             std::string FileName;
             size_t Line = 0L;

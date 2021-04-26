@@ -384,6 +384,8 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
 
 antlrcpp::Any llang::ast::AstBuilder::visitInteger(LlamaLangParser::IntegerContext* context)
 {
+    static const size_t str_size = 21;
+    static char str[str_size];
     std::shared_ptr<ConstantNode> constantNode = nullptr;
 
     auto text_value = context->getText();
@@ -425,34 +427,34 @@ antlrcpp::Any llang::ast::AstBuilder::visitInteger(LlamaLangParser::IntegerConte
         catch (std::out_of_range&) {
             // overflow
             Console::WriteLine("Constant can not be stored in any known data type (overflow uint64): " + text_value);
-            number = std::numeric_limits<uint64_t>::max();
+            number = strtoull(text_value.c_str(), nullptr, 10);
         }
 
-        if (isByte) {
-            if (number > std::numeric_limits<uint8_t>::max()) {
-                Console::WriteLine("Byte overflow: " + text_value);
-                number = std::numeric_limits<uint8_t>::max();
-            }
+        if (number <= std::numeric_limits<uint8_t>::max()) {
             intType = CONSTANT_TYPE::U8;
-        }
-        else if (isWord) {
-            if (number > std::numeric_limits<uint16_t>::max()) {
-                Console::WriteLine("Word overflow: " + text_value);
-                number = std::numeric_limits<uint16_t>::max();
-            }
+        } else if (isByte) {
+            Console::WriteLine("Byte overflow: " + text_value);
+            intType = CONSTANT_TYPE::U8;
+            number = (uint8_t)number;
+        } else if (number <= std::numeric_limits<uint16_t>::max()) {
             intType = CONSTANT_TYPE::U16;
-        }
-        else if (isLong) {
-            if (number > std::numeric_limits<uint32_t>::max()) {
-                Console::WriteLine("Long overflow: " + text_value);
-                number = std::numeric_limits<uint32_t>::max();
-            }
+        } else if (isWord) {
+            Console::WriteLine("Word overflow: " + text_value);
+            number = (uint16_t)number;
+            intType = CONSTANT_TYPE::U16;
+        } else if (number <= std::numeric_limits<uint32_t>::max()) {
             intType = CONSTANT_TYPE::U32;
-        }
-        else {
+        } else if (isLong) {
+            Console::WriteLine("Long overflow: " + text_value);
+            intType = CONSTANT_TYPE::U32;
+            number = (uint32_t)number;
+        } else {
             intType = CONSTANT_TYPE::U64;
         }
-    } else{
+
+        snprintf(str, str_size, "%llu", number);
+        text_value = str;
+    } else {
         int64_t number = 0;
         try {
             if (isBin) 
@@ -467,28 +469,35 @@ antlrcpp::Any llang::ast::AstBuilder::visitInteger(LlamaLangParser::IntegerConte
         catch (std::out_of_range&) {
             // overflow
             Console::WriteLine("Constant can not be stored in any known data type (overflow int64): " + text_value);
-            return std::shared_ptr<ast::StatementNode>(nullptr);
+            number = strtoll(text_value.c_str(), nullptr, 10);
         }
 
+        
         if (number <= std::numeric_limits<int8_t>::max() && number >= std::numeric_limits<int8_t>::min()) {
-            intType = CONSTANT_TYPE::I8;
+           intType = CONSTANT_TYPE::I8;
         } else if (isByte) {
             Console::WriteLine("Byte overflow: " + text_value);
-            return std::shared_ptr<ast::StatementNode>(nullptr);
+            intType = CONSTANT_TYPE::I8;
+            number = (uint8_t)number; // here unsigned cast is necessary to zero extend the number value.
         } else if (number <= std::numeric_limits<int16_t>::max() && number >= std::numeric_limits<int16_t>::min()) {
             intType = CONSTANT_TYPE::I16;
         } else if (isWord) {
             Console::WriteLine("Word overflow: " + text_value);
-            return std::shared_ptr<ast::StatementNode>(nullptr);
+            intType = CONSTANT_TYPE::I16;
+            number = (uint16_t)number;
         } else if (number <= std::numeric_limits<int32_t>::max() && number >= std::numeric_limits<int32_t>::min()) {
             intType = CONSTANT_TYPE::I32;
         } else if (isLong) {
             Console::WriteLine("Long overflow: " + text_value);
-            return std::shared_ptr<ast::StatementNode>(nullptr);
-        }
+            intType = CONSTANT_TYPE::I32;
+            number = (uint32_t)number;
+        } 
         else {
             intType = CONSTANT_TYPE::I64;
         }
+
+        snprintf(str, str_size, "%lld", number);
+        text_value = str;
     }
     
     constantNode = std::make_shared<ConstantNode>(intType);

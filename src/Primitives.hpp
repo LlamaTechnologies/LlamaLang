@@ -23,16 +23,16 @@ namespace llang {
         INT64,
         
         /* CHARACTERS */
-        SCHAR,  // ASCII
-        CHAR,   // UTF-8
+        SCHAR = INT8,  // ASCII
+        CHAR = INT64 + 1,   // UTF-8
         WCHAR,  // UTF-16
         UCHAR,  // UNICODE
 
         /* UNSIGNED */
-        BYTE,   // Alias for uint8
-        UINT8,
-        UINT16,
-        UINT32,
+        BYTE = CHAR,   // Alias for uint8
+        UINT8 = BYTE,
+        UINT16 = WCHAR,
+        UINT32 = UCHAR,
         UINT64,
         
         /* FLOATING POINT */

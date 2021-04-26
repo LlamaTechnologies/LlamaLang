@@ -16,7 +16,7 @@ namespace llang::ast
         I16,
         I32,
         I64,
-        U8,
+        U8 = I8,
         U16,
         U32,
         U64,

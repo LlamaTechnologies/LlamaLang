@@ -1,13 +1,16 @@
+; ModuleID = 'test.llang'
+source_filename = "test.llang"
+
 @f = global i32 55
 
 define linkonce_odr i32 @myFunction(i32 %myFunction_f.val) {
 entry:
   %myFunction_f = alloca i32, align 4
+  store i32 %myFunction_f.val, i32* %myFunction_f, align 4
   %myFunction_x = alloca i32, align 4
   %myFunction_y = alloca i32, align 4
-  %myFunction_c = alloca i32, align 4
-  store i32 %myFunction_f.val, i32* %myFunction_f, align 4
   store i32 8, i32* %myFunction_y, align 4
+  %myFunction_c = alloca i32, align 4
   store i32 100, i32* %myFunction_c, align 4
   %tmpmyFunction_y = load i32, i32* %myFunction_y, align 4
   store i32 %tmpmyFunction_y, i32* %myFunction_x, align 4
@@ -15,19 +18,27 @@ entry:
   store i32 %tmpmyFunction_f, i32* %myFunction_y, align 4
   %left = load i32, i32* %myFunction_x, align 4
   %right = load i32, i32* %myFunction_y, align 4
-  %left1 = load i32, i32* %myFunction_c, align 4
   %addtmp = add i32 %left, %right
+  %left1 = load i32, i32* %myFunction_c, align 4
   %multmp = mul i32 %left1, %addtmp
   %modtmp = srem i32 %multmp, 62
   store i32 %modtmp, i32* %myFunction_f, align 4
+  %tmpf = load i32, i32* %myFunction_f, align 4
+  ret i32 %tmpf
+}
+
+define linkonce_odr i32 @myProgramInit() {
+entry:
+  %left = load i32, i32* @f, align 4
+  %addtmp = add i32 %left, 5
+  %0 = call i32 @myFunction(i32 %addtmp)
+  store i32 %0, i32* @f, align 4
   %tmpf = load i32, i32* @f, align 4
   ret i32 %tmpf
 }
 
-define i32 @main() {
+define linkonce_odr i32 @main() {
 entry:
-  %tmpf = load i32, i32* @f, align 4
-  
-  
-  ret i32 %tmpf
+  %0 = call i32 @myProgramInit()
+  ret i32 %0
 }
