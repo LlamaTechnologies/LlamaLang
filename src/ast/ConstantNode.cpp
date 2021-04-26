@@ -58,24 +58,27 @@ CONSTANT_TYPE GetConstantType(PRIMITIVE_TYPE primitive)
   case llang::PRIMITIVE_TYPE::BOOL:
   case llang::PRIMITIVE_TYPE::UINT8:
     return CONSTANT_TYPE::U8;
+
   case llang::PRIMITIVE_TYPE::INT8:
     return CONSTANT_TYPE::I8;
 
   case llang::PRIMITIVE_TYPE::UINT16:
-      return CONSTANT_TYPE::U16;
+    return CONSTANT_TYPE::U16;
+
   case llang::PRIMITIVE_TYPE::INT16:
     return CONSTANT_TYPE::I16;
 
   case llang::PRIMITIVE_TYPE::INT32:
     return CONSTANT_TYPE::I32;
+
   case llang::PRIMITIVE_TYPE::UINT32:
     return CONSTANT_TYPE::U32;
-  
+
   case llang::PRIMITIVE_TYPE::INT64:
     return CONSTANT_TYPE::I64;
-  
+
   case llang::PRIMITIVE_TYPE::UINT64:
-      return CONSTANT_TYPE::U64;
+    return CONSTANT_TYPE::U64;
 
   case llang::PRIMITIVE_TYPE::FLOAT32:
     return CONSTANT_TYPE::FLOAT;

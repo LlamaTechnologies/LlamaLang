@@ -368,9 +368,8 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
   } else if( context->string_() != nullptr) {
     constantNode = std::make_shared<ConstantNode>(CONSTANT_TYPE::STRING);
     constantNode->Value = context->string_()->getText();
-  }
-  else {
-      return visitChildren(context);
+  } else {
+    return visitChildren(context);
   }
 
   if( constantNode != nullptr ) {
@@ -382,162 +381,162 @@ antlrcpp::Any AstBuilder::visitBasicLit(LlamaLangParser::BasicLitContext *contex
   return nullptr;
 }
 
-antlrcpp::Any llang::ast::AstBuilder::visitInteger(LlamaLangParser::IntegerContext* context)
+antlrcpp::Any llang::ast::AstBuilder::visitInteger(LlamaLangParser::IntegerContext *context)
 {
-    static const size_t str_size = 21;
-    static char str[str_size];
-    std::shared_ptr<ConstantNode> constantNode = nullptr;
+  static const size_t str_size = 21;
+  static char str[str_size];
+  std::shared_ptr<ConstantNode> constantNode = nullptr;
 
-    auto text_value = context->getText();
+  auto text_value = context->getText();
 
-    bool isByte = text_value.back() == 'b';
-    bool isWord = text_value.back() == 'w';
-    bool isLong = text_value.back() == 'l';
+  bool isByte = text_value.back() == 'b';
+  bool isWord = text_value.back() == 'w';
+  bool isLong = text_value.back() == 'l';
 
-    if (isByte || isWord || isLong)
-        text_value.pop_back();
+  if (isByte || isWord || isLong)
+    text_value.pop_back();
 
-    bool isUnsigned = text_value.back() == 'u';
-    if (isUnsigned)
-        text_value.pop_back();
+  bool isUnsigned = text_value.back() == 'u';
 
-    bool isBin = text_value[1] == 'b' || text_value[1] == 'B';
-    bool isOct = text_value.front() == '0';
-    bool isHex = text_value[1] == 'x' || text_value[1] == 'X';
+  if (isUnsigned)
+    text_value.pop_back();
 
-    if (isHex || isBin)
-        text_value = text_value.substr(2);
-    else if (isOct)
-        text_value = text_value.substr(1);
+  bool isBin = text_value[1] == 'b' || text_value[1] == 'B';
+  bool isOct = text_value.front() == '0';
+  bool isHex = text_value[1] == 'x' || text_value[1] == 'X';
 
-    CONSTANT_TYPE intType;
+  if (isHex || isBin)
+    text_value = text_value.substr(2);
+  else if (isOct)
+    text_value = text_value.substr(1);
 
-    if (isUnsigned) {
-        uint64_t number = 0;
-        try {
-            if (isBin)
-                number = std::stoull(text_value, 0, 2);
-            else if (isHex)
-                number = std::stoull(text_value, 0, 16);
-            else if (isOct)
-                number = std::stoull(text_value, 0, 8);
-            else
-                number = std::stoull(text_value, 0, 10);
-        }
-        catch (std::out_of_range&) {
-            // overflow
-            Console::WriteLine("Constant can not be stored in any known data type (overflow uint64): " + text_value);
-            number = strtoull(text_value.c_str(), nullptr, 10);
-        }
+  CONSTANT_TYPE intType;
 
-        if (number <= std::numeric_limits<uint8_t>::max()) {
-            intType = CONSTANT_TYPE::U8;
-        } else if (isByte) {
-            Console::WriteLine("Byte overflow: " + text_value);
-            intType = CONSTANT_TYPE::U8;
-            number = (uint8_t)number;
-        } else if (number <= std::numeric_limits<uint16_t>::max()) {
-            intType = CONSTANT_TYPE::U16;
-        } else if (isWord) {
-            Console::WriteLine("Word overflow: " + text_value);
-            number = (uint16_t)number;
-            intType = CONSTANT_TYPE::U16;
-        } else if (number <= std::numeric_limits<uint32_t>::max()) {
-            intType = CONSTANT_TYPE::U32;
-        } else if (isLong) {
-            Console::WriteLine("Long overflow: " + text_value);
-            intType = CONSTANT_TYPE::U32;
-            number = (uint32_t)number;
-        } else {
-            intType = CONSTANT_TYPE::U64;
-        }
+  if (isUnsigned) {
+    uint64_t number = 0;
 
-        snprintf(str, str_size, "%llu", number);
-        text_value = str;
-    } else {
-        int64_t number = 0;
-        try {
-            if (isBin) 
-                number = std::stoll(text_value, 0, 2);
-            else if (isHex)
-                number = std::stoll(text_value, 0, 16);
-            else  if (isOct)
-                number = std::stoll(text_value, 0, 8);
-            else
-                number = std::stoll(text_value, 0, 10);
-        }
-        catch (std::out_of_range&) {
-            // overflow
-            Console::WriteLine("Constant can not be stored in any known data type (overflow int64): " + text_value);
-            number = strtoll(text_value.c_str(), nullptr, 10);
-        }
-
-        
-        if (number <= std::numeric_limits<int8_t>::max() && number >= std::numeric_limits<int8_t>::min()) {
-           intType = CONSTANT_TYPE::I8;
-        } else if (isByte) {
-            Console::WriteLine("Byte overflow: " + text_value);
-            intType = CONSTANT_TYPE::I8;
-            number = (uint8_t)number; // here unsigned cast is necessary to zero extend the number value.
-        } else if (number <= std::numeric_limits<int16_t>::max() && number >= std::numeric_limits<int16_t>::min()) {
-            intType = CONSTANT_TYPE::I16;
-        } else if (isWord) {
-            Console::WriteLine("Word overflow: " + text_value);
-            intType = CONSTANT_TYPE::I16;
-            number = (uint16_t)number;
-        } else if (number <= std::numeric_limits<int32_t>::max() && number >= std::numeric_limits<int32_t>::min()) {
-            intType = CONSTANT_TYPE::I32;
-        } else if (isLong) {
-            Console::WriteLine("Long overflow: " + text_value);
-            intType = CONSTANT_TYPE::I32;
-            number = (uint32_t)number;
-        } 
-        else {
-            intType = CONSTANT_TYPE::I64;
-        }
-
-        snprintf(str, str_size, "%lld", number);
-        text_value = str;
+    try {
+      if (isBin)
+        number = std::stoull(text_value, 0, 2);
+      else if (isHex)
+        number = std::stoull(text_value, 0, 16);
+      else if (isOct)
+        number = std::stoull(text_value, 0, 8);
+      else
+        number = std::stoull(text_value, 0, 10);
+    } catch (std::out_of_range &) {
+      // overflow
+      Console::WriteLine("Constant can not be stored in any known data type (overflow uint64): " + text_value);
+      number = strtoull(text_value.c_str(), nullptr, 10);
     }
-    
-    constantNode = std::make_shared<ConstantNode>(intType);
-    constantNode->Value = text_value;
-    return constantNode;
+
+    if (number <= std::numeric_limits<uint8_t>::max()) {
+      intType = CONSTANT_TYPE::U8;
+    } else if (isByte) {
+      Console::WriteLine("Byte overflow: " + text_value);
+      intType = CONSTANT_TYPE::U8;
+      number = (uint8_t)number;
+    } else if (number <= std::numeric_limits<uint16_t>::max()) {
+      intType = CONSTANT_TYPE::U16;
+    } else if (isWord) {
+      Console::WriteLine("Word overflow: " + text_value);
+      number = (uint16_t)number;
+      intType = CONSTANT_TYPE::U16;
+    } else if (number <= std::numeric_limits<uint32_t>::max()) {
+      intType = CONSTANT_TYPE::U32;
+    } else if (isLong) {
+      Console::WriteLine("Long overflow: " + text_value);
+      intType = CONSTANT_TYPE::U32;
+      number = (uint32_t)number;
+    } else {
+      intType = CONSTANT_TYPE::U64;
+    }
+
+    snprintf(str, str_size, "%llu", number);
+    text_value = str;
+  } else {
+    int64_t number = 0;
+
+    try {
+      if (isBin)
+        number = std::stoll(text_value, 0, 2);
+      else if (isHex)
+        number = std::stoll(text_value, 0, 16);
+      else  if (isOct)
+        number = std::stoll(text_value, 0, 8);
+      else
+        number = std::stoll(text_value, 0, 10);
+    } catch (std::out_of_range &) {
+      // overflow
+      Console::WriteLine("Constant can not be stored in any known data type (overflow int64): " + text_value);
+      number = strtoll(text_value.c_str(), nullptr, 10);
+    }
+
+
+    if (number <= std::numeric_limits<int8_t>::max() && number >= std::numeric_limits<int8_t>::min()) {
+      intType = CONSTANT_TYPE::I8;
+    } else if (isByte) {
+      Console::WriteLine("Byte overflow: " + text_value);
+      intType = CONSTANT_TYPE::I8;
+      number = (uint8_t)number; // here unsigned cast is necessary to zero extend the number value.
+    } else if (number <= std::numeric_limits<int16_t>::max() && number >= std::numeric_limits<int16_t>::min()) {
+      intType = CONSTANT_TYPE::I16;
+    } else if (isWord) {
+      Console::WriteLine("Word overflow: " + text_value);
+      intType = CONSTANT_TYPE::I16;
+      number = (uint16_t)number;
+    } else if (number <= std::numeric_limits<int32_t>::max() && number >= std::numeric_limits<int32_t>::min()) {
+      intType = CONSTANT_TYPE::I32;
+    } else if (isLong) {
+      Console::WriteLine("Long overflow: " + text_value);
+      intType = CONSTANT_TYPE::I32;
+      number = (uint32_t)number;
+    } else {
+      intType = CONSTANT_TYPE::I64;
+    }
+
+    snprintf(str, str_size, "%lld", number);
+    text_value = str;
+  }
+
+  constantNode = std::make_shared<ConstantNode>(intType);
+  constantNode->Value = text_value;
+  return constantNode;
 }
 
-antlrcpp::Any llang::ast::AstBuilder::visitFloatingPoint(LlamaLangParser::FloatingPointContext* context)
+antlrcpp::Any llang::ast::AstBuilder::visitFloatingPoint(LlamaLangParser::FloatingPointContext *context)
 {
-    auto text = context->getText();
-    CONSTANT_TYPE floatingPointType;
+  auto text = context->getText();
+  CONSTANT_TYPE floatingPointType;
 
-    if (text.back() == 'f') {
-        text.pop_back();
-        try {
-            std::stof(text);
-            floatingPointType = CONSTANT_TYPE::FLOAT;
-        } catch (std::out_of_range&) {
-            //overflows float
-            Console::WriteLine("Float overflow: " + text);
-            return nullptr;
-        }
-    }
-    else {
-        try {
-            double number = std::stod(text);
-            if (number <= std::numeric_limits<float>::max() && number >= std::numeric_limits<float>::min())
-                floatingPointType = CONSTANT_TYPE::FLOAT;
-            else 
-                floatingPointType = CONSTANT_TYPE::DOUBLE;
-        }
-        catch (std::out_of_range&) {
-            Console::WriteLine("Constant can not be stored in any known data type (overflow float64): " + text);
-            return nullptr;
-        }
-    }
+  if (text.back() == 'f') {
+    text.pop_back();
 
-    auto constantNode = std::make_shared<ConstantNode>(floatingPointType);
-    constantNode->Value = text;
-    return constantNode;
+    try {
+      std::stof(text);
+      floatingPointType = CONSTANT_TYPE::FLOAT;
+    } catch (std::out_of_range &) {
+      //overflows float
+      Console::WriteLine("Float overflow: " + text);
+      return nullptr;
+    }
+  } else {
+    try {
+      double number = std::stod(text);
+
+      if (number <= std::numeric_limits<float>::max() && number >= std::numeric_limits<float>::min())
+        floatingPointType = CONSTANT_TYPE::FLOAT;
+      else
+        floatingPointType = CONSTANT_TYPE::DOUBLE;
+    } catch (std::out_of_range &) {
+      Console::WriteLine("Constant can not be stored in any known data type (overflow float64): " + text);
+      return nullptr;
+    }
+  }
+
+  auto constantNode = std::make_shared<ConstantNode>(floatingPointType);
+  constantNode->Value = text;
+  return constantNode;
 }
 
 
