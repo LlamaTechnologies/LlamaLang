@@ -37,8 +37,11 @@ std::shared_ptr<ast::ProgramNode> SemanticAnalyzer::check()
 
     switch (nodeType) {
     case ast::AST_TYPE::FunctionDefNode:
+    case ast::AST_TYPE::VariableDefNode:
       checkNode(child);
-
+      // TODO: support struct|union
+      // TODO: support type definitions
+      // TODO: support namespaces
     default:
       break;
     }
@@ -88,6 +91,7 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::StatementNode> node, Scope
   case ast::AST_TYPE::BinaryOperationNode:
     return checkNode(CastNode<ast::BinaryOperationNode>(node), scope);
 
+  // TODO: Add unary suppoort
   default:
     return false;
   }
@@ -738,6 +742,15 @@ bool SemanticAnalyzer::checkNode(std::shared_ptr<ast::BinaryOperationNode> binar
   }
 
   // TODO: add function call combination
+  // func/const
+  // const/func
+  // func/var
+  // var/func
+  // func/bin
+  // bin/func
+
+
+  // TODO: add unary op combination
 
   error_handling::Error error(
     binaryOpNode->Line,
