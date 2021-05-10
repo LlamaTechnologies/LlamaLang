@@ -4,7 +4,9 @@
 #include <string>
 #include <fstream>
 
-namespace Console
+struct Token;
+
+namespace console
 {
     inline void WriteLine() {
         std::cout << std::endl;
@@ -37,4 +39,7 @@ namespace Console
     inline char ReadKey() {
         return std::cin.get();
     }
+
+    
+
 } // namespace Console

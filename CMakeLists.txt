@@ -52,73 +52,25 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/")
 
 # set llang sources
 set(LLAMALANG_SRC
-src/antlr/LlamaLangBaseVisitor.cpp
-src/antlr/LlamaLangBaseVisitor.h
-src/antlr/LlamaLangLexer.cpp
-src/antlr/LlamaLangLexer.h
-src/antlr/LlamaLangParser.cpp
-src/antlr/LlamaLangParser.h
-src/antlr/LlamaLangParserBase.hpp
-src/antlr/LlamaLangVisitor.cpp
-src/antlr/LlamaLangVisitor.h
-src/antlr/LlamaLangParseContext.hpp
+src/bigint.hpp
+src/bigint.cpp
 
-src/antlr/ModuleRetrieverParser.h
-src/antlr/ModuleRetrieverParser.cpp
-src/antlr/ModuleRetrieverLexer.h
-src/antlr/ModuleRetrieverLexer.cpp
-src/antlr/ModuleRetrieverListener.h
-src/antlr/ModuleRetrieverListener.cpp
-src/antlr/ModuleRetrieverBaseListener.h
-src/antlr/ModuleRetrieverBaseListener.cpp
+src/common_defs.h
+src/common_defs.cpp
 
-src/ast/AssignNode.cpp
-src/ast/AssignNode.hpp
-src/ast/AST_Types.hpp
-src/ast/AST_Types.cpp
-src/ast/AstBuilder.cpp
-src/ast/AstBuilder.hpp
-src/ast/BinaryOperationNode.hpp
-src/ast/BinaryOperationNode.cpp
-src/ast/ConstantNode.hpp
-src/ast/ConstantNode.cpp
-src/ast/FunctionCallNode.hpp
-src/ast/FunctionDefNode.hpp
-src/ast/Node.hpp
-src/ast/ProgramNode.hpp
-src/ast/StatementNode.hpp
-src/ast/UnaryOperationNode.hpp
-src/ast/VariableDefNode.cpp
-src/ast/VariableDefNode.hpp
-src/ast/VariableRefNode.hpp
+src/config.hpp
+src/console.hpp
 
-src/built-in/Built-inTypes.hpp
 
-src/error_handling/ErrorDescription.hpp
-src/error_handling/SyntaxErrorListener.hpp
+src/error.hpp
+src/error.cpp
 
-src/preprocessor/Preprocessor.cpp
-src/preprocessor/Preprocessor.hpp
-src/preprocessor/PreprocessorListener.cpp
-src/preprocessor/PreprocessorListener.hpp
-
-src/semantic_analyzer/SemanticAnalyzer.cpp
-src/semantic_analyzer/SemanticAnalyzer.hpp
-
-src/symbol_table/SymbolTableScope.hpp
-src/symbol_table/SymbolTableScope.cpp
-
-src/Compiler.cpp
-src/Compiler.hpp
-src/Config.hpp
-src/Console.hpp
-src/CppReflection.hpp
-src/IR.cpp
-src/IR.hpp
 src/main.cpp
-src/Primitives.cpp
-src/Primitives.hpp
-src/SupportedCompilers.hpp
+
+src/tokenize.hpp
+src/tokenize.cpp
+
+src/supportedcompilers.hpp
 )
 
 link_directories("${CMAKE_SOURCE_DIR}/lib" "${LLVM_DIR}/lib")
