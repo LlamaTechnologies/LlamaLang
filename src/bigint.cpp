@@ -396,7 +396,7 @@ void bigint_shl(BigInt *dest, const BigInt *op1, const BigInt *op2) {
     uint64_t digit_shift_count = shift_amt / 64;
     uint64_t leftover_shift_count = shift_amt % 64;
 
-    //dest->data.digits = heap::c_allocator.allocate<uint64_t>(op1->digit_count + digit_shift_count + 1);
+    dest->data.digits = (uint64_t*)malloc(sizeof(uint64_t) + op1->digit_count + digit_shift_count + 1);
     dest->digit_count = digit_shift_count;
     uint64_t carry = 0;
     for (size_t i = 0; i < op1->digit_count; i += 1) {

@@ -1,5 +1,10 @@
 #module MyProgram
 
+/*****
+ * Multiline comment
+***
+*/
+
 // The parameter of this function shadows the global variable
 func myFunction(f int32) int64 {
     x int32;

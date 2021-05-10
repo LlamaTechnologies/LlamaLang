@@ -346,7 +346,6 @@ std::vector<Token> Lexer::tokenize() noexcept
                 break;
             }
             break;
-
             // Saw a 0
         case TokenizerState::Zero:
             switch (c) {
@@ -561,9 +560,97 @@ std::vector<Token> Lexer::tokenize() noexcept
             // need to get to the end of the token
         }
         break;
+        case TokenizerState::SawEq:
+            switch (c) {
+            case '=':
+                set_token_id(TokenId::EQUALS);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            default:
+                // assign
+                cursor_pos--;
+                end_token();
+                state = TokenizerState::Start;
+                continue;
+            }
+            break;
+        case TokenizerState::SawPlus:
+            switch (c) {
+            case '=':
+                set_token_id(TokenId::PLUS_ASSIGN);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            case '+':
+                set_token_id(TokenId::PLUS_PLUS);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            default:
+                // just a +
+                cursor_pos--;
+                end_token();
+                state = TokenizerState::Start;
+                continue;
+            }
+            break;
+        case TokenizerState::SawDash:
+            switch (c) {
+            case '=':
+                set_token_id(TokenId::MINUS_ASSIGN);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            case '-':
+                set_token_id(TokenId::MINUS_MINUS);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            default:
+                // just a -
+                cursor_pos--;
+                end_token();
+                state = TokenizerState::Start;
+                continue;
+            }
+            break;
+        case TokenizerState::SawStar:
+            switch (c) {
+            case '=':
+                set_token_id(TokenId::MUL_ASSIGN);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            default:
+                // just a *
+                cursor_pos--;
+                end_token();
+                state = TokenizerState::Start;
+                continue;
+            }
+            break;
+        case TokenizerState::SawPercent:
+            switch (c) {
+            case '=':
+                set_token_id(TokenId::MOD_ASSIGN);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            default:
+                // just a %
+                cursor_pos--;
+                end_token();
+                state = TokenizerState::Start;
+                continue;
+            }
+            break;
+        // If error just get to the next token
         case TokenizerState::Error:
             break;
+
         default:
+            UNREACHEABLE;
             break;
         }
 
