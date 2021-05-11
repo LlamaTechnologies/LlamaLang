@@ -150,6 +150,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             case '0':
                 state = TokenizerState::Zero;
                 begin_token(TokenId::INT_LIT);
+                append_char(c);
                 is_trailing_underscore = false;
                 radix = 10;
                 bigint_init_unsigned(&curr_token.int_lit, 0);
@@ -157,6 +158,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             case DIGIT_NON_ZERO:
                 state = TokenizerState::Number;
                 begin_token(TokenId::INT_LIT);
+                append_char(c);
                 is_trailing_underscore = false;
                 radix = 10;
                 bigint_init_unsigned(&curr_token.int_lit, get_digit_value(c));
@@ -290,16 +292,19 @@ std::vector<Token> Lexer::tokenize() noexcept
                 // line comment //
             case '/':
                 set_token_id(TokenId::LINE_COMMENT);
+                append_char(c);
                 state = TokenizerState::LineComment;
                 break;
                 // doc comment /* */
             case '*':
                 set_token_id(TokenId::DOC_COMMENT);
+                append_char(c);
                 state = TokenizerState::DocComment;
                 break;
                 // DIV_ASSIGN /=
             case '=':
                 set_token_id(TokenId::DIV_ASSIGN);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -316,9 +321,10 @@ std::vector<Token> Lexer::tokenize() noexcept
             switch (c) {
             case '*':
                 state = TokenizerState::SawStarDocComment;
+                append_char(c);
                 break;
             default:
-                // do nothing
+                append_char(c);
                 break;
             }
             break;
@@ -326,11 +332,13 @@ std::vector<Token> Lexer::tokenize() noexcept
             switch (c)
             {
             case '/':
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             default:
                 state = TokenizerState::DocComment;
+                append_char(c);
                 break;
             }
             break;
@@ -342,7 +350,7 @@ std::vector<Token> Lexer::tokenize() noexcept
                 state = TokenizerState::Start;
                 break;
             default:
-                // do nothing
+                append_char(c);
                 break;
             }
             break;
@@ -388,6 +396,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             if (c == '_') {
                 is_trailing_underscore = true;
                 state = TokenizerState::NumberNoUnderscore;
+                append_char(c);
                 break;
             }
             // dot in number
@@ -398,6 +407,7 @@ std::vector<Token> Lexer::tokenize() noexcept
                     break;
                 }
                 state = TokenizerState::NumberDot;
+                append_char(c);
                 break;
             }
             // is eE or pP
@@ -415,6 +425,7 @@ std::vector<Token> Lexer::tokenize() noexcept
                 radix = 10; // exponent is always base 10
                 assert(curr_token.id == TokenId::INT_LIT);
                 set_token_id(TokenId::FLOAT_LIT);
+                append_char(c);
                 break;
             }
             uint32_t digit_value = get_digit_value(c);
@@ -444,6 +455,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             bigint_mul(&multiplied, &curr_token.int_lit, &radix_bi);
 
             bigint_add(&curr_token.int_lit, &multiplied, &digit_value_bi);
+            append_char(c);
             break;
         }
         case TokenizerState::NumberDot:
@@ -478,6 +490,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             if (c == '_') {
                 is_trailing_underscore = true;
                 state = TokenizerState::FloatFractionNoUnderscore;
+                append_char(c);
                 break;
             }
             if (is_exponent_signifier(c, radix)) {
@@ -487,6 +500,7 @@ std::vector<Token> Lexer::tokenize() noexcept
                 }
                 state = TokenizerState::FloatExponentUnsigned;
                 radix = 10; // exponent is always base 10
+                append_char(c);
                 break;
             }
             uint32_t digit_value = get_digit_value(c);
@@ -504,18 +518,20 @@ std::vector<Token> Lexer::tokenize() noexcept
                 state = TokenizerState::Start;
                 continue;
             }
-
             // we use parse_f128 to generate the float literal, so just
             // need to get to the end of the token
+            append_char(c);
         }
         break;
         case TokenizerState::FloatExponentUnsigned:
             switch (c) {
             case '+':
                 state = TokenizerState::FloatExponentNumberNoUnderscore;
+                append_char(c);
                 break;
             case '-':
                 state = TokenizerState::FloatExponentNumberNoUnderscore;
+                append_char(c);
                 break;
             default:
                 // reinterpret as normal exponent number
@@ -538,6 +554,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             if (c == '_') {
                 is_trailing_underscore = true;
                 state = TokenizerState::FloatExponentNumberNoUnderscore;
+                append_char(c);
                 break;
             }
             uint32_t digit_value = get_digit_value(c);
@@ -558,12 +575,14 @@ std::vector<Token> Lexer::tokenize() noexcept
 
             // we use parse_f128 to generate the float literal, so just
             // need to get to the end of the token
+            append_char(c);
         }
         break;
         case TokenizerState::SawEq:
             switch (c) {
             case '=':
                 set_token_id(TokenId::EQUALS);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -579,11 +598,13 @@ std::vector<Token> Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::PLUS_ASSIGN);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             case '+':
                 set_token_id(TokenId::PLUS_PLUS);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -599,11 +620,13 @@ std::vector<Token> Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::MINUS_ASSIGN);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             case '-':
                 set_token_id(TokenId::MINUS_MINUS);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -619,6 +642,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::MUL_ASSIGN);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -634,6 +658,7 @@ std::vector<Token> Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::MOD_ASSIGN);
+                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -721,6 +746,7 @@ void Lexer::begin_token(const TokenId id) noexcept
 
 void Lexer::set_token_id(const TokenId id) noexcept
 {
+    curr_token.id = id;
 }
 
 void Lexer::end_token() noexcept {
@@ -922,7 +948,45 @@ std::string create_values_line(const size_t start, const size_t end, const std::
         auto spaces_count = is_value * token_spaces(token_info.value_size, token_info.token_name_size);
         auto spaces = std::string(spaces_count, ' ');
 
-        line.append(tokens.at(j).value + spaces);
+        std::string value;
+        auto& token = tokens.at(j);
+
+        if (token.id == TokenId::DOC_COMMENT) {
+            for (auto c : token.value) {
+                switch (c)
+                {
+                case '\a':
+                    value.append("\\a");
+                    break;
+                case '\b':
+                    value.append("\\b");
+                    break;
+                case '\f':
+                    value.append("\\f");
+                    break;
+                case '\n':
+                    value.append("\\n");
+                    break;
+                case '\r':
+                    value.append("\\r");
+                    break;
+                case '\t':
+                    value.append("\\t");
+                    break;
+                case '\v':
+                    value.append("\\v");
+                    break;
+                default:    
+                    value += c;
+                    break;
+                }
+            }
+        }
+        else {
+            value = token.value;
+        }
+
+        line.append(value + spaces);
 
         // if not final token add space
         if (j < end - 1)
