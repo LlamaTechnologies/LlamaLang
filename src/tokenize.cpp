@@ -679,12 +679,8 @@ std::vector<Token> Lexer::tokenize() noexcept
         }
 
         // Handle end of line
-        if (c == '\n') {
-            begin_token(TokenId::EOL);
-            append_char(c);
-            end_token();
+        if (c == '\n')
             reset_line();
-        }
         // else we just move a column
         else
             curr_column++;
@@ -759,9 +755,6 @@ void Lexer::end_token() noexcept {
     switch (curr_token.id) {
     case TokenId::DOC_COMMENT:
         comments_vec.push_back(curr_token);
-        break;
-    case TokenId::EOL:
-        eol_vec.push_back(curr_token);
         break;
     default:
         tokens_vec.push_back(curr_token);
@@ -948,7 +941,6 @@ static std::string token_id_names[] = {
     "WS",
     "DOC_COMMENT",
     "LINE_COMMENT",
-    "EOL",
     "EOF"
 };
 

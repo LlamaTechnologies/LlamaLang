@@ -66,10 +66,9 @@ enum class TokenId {
     STRING,             // " (~["\\] | ESCAPED_VALUE)* "
     UNICODE_CHAR,       // " (~["\\] | ESCAPED_VALUE)* "
 
-    WS,                 // [\t \r ' ']
+    WS,                 // [\t \r \n ' ']
     DOC_COMMENT,        // '/*' . '*/'
     LINE_COMMENT,       // // .
-    EOL,                // [\n]
     _EOF                 // enf of file
 };
 
@@ -159,7 +158,6 @@ class Lexer {
     std::string source;
 
     std::vector<Token>  tokens_vec;
-    std::vector<Token>  eol_vec;
     std::vector<Token>  comments_vec;
     std::vector<Error>& errors;
 public:
