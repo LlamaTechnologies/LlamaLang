@@ -5,7 +5,7 @@
 
 enum class TokenId {
     HASH,               // #
-    FUNC,               // fn
+    FN,                 // fn
     RET,                // ret
     L_PAREN,            // (
     R_PAREN,            // )
@@ -66,10 +66,10 @@ enum class TokenId {
     STRING,             // " (~["\\] | ESCAPED_VALUE)* "
     UNICODE_CHAR,       // " (~["\\] | ESCAPED_VALUE)* "
 
-    WS,                 // [\t]
+    WS,                 // [\t \r ' ']
     DOC_COMMENT,        // '/*' . '*/'
     LINE_COMMENT,       // // .
-    EOL,                // [\r ? \n]
+    EOL,                // [\n]
     _EOF                 // enf of file
 };
 
@@ -85,9 +85,10 @@ struct BigFloat {
 
 struct Token {
     TokenId       id;
-    size_t        line;
-    size_t        column_start;
-    size_t        column_end;
+    size_t        start_pos;
+    size_t        end_pos;
+    size_t        start_line;
+    size_t        start_column;
     std::string   file_name;
 
     union {
@@ -103,23 +104,19 @@ struct Token {
 
     Token()
         : id(TokenId::_EOF),
-        line(0), column_start(0), column_end(0),
+        start_pos(0L), end_pos(0L),
+        start_line(0), start_column(0),
         file_name(""),
         value(""), int_lit({ 0 }) {}
-
-    Token(const TokenId _id, const long _line, const long _column_start, const long _column_end, const std::string &_file_name, const std::string &_value)
-        : id(_id),
-        line(_line), column_start(_column_start), column_end(_column_end),
-        file_name(_file_name),
-        value(_value), int_lit({ 0 }) {}
 
     ~Token() {}
 
     Token(const Token& other)
         : id(other.id), 
-        line(other.line),
-        column_start(other.column_start),
-        column_end(other.column_end),
+        start_pos(other.start_pos),
+        end_pos(other.end_pos),
+        start_line(other.start_line),
+        start_column(other.start_column),
         file_name(other.file_name),
         value(other.value),
         int_lit(other.int_lit) {}
@@ -130,9 +127,10 @@ struct Token {
             return *this;
 
         id = other.id;
-        line = other.line;
-        column_start = other.column_start;
-        column_end = other.column_end;
+        start_line = other.start_line;
+        start_column = other.start_column;
+        start_pos = other.start_pos;
+        end_pos = other.end_pos;
         file_name = other.file_name;
         value = other.value; 
         int_lit = other.int_lit;
@@ -161,6 +159,8 @@ class Lexer {
     std::string source;
 
     std::vector<Token>  tokens_vec;
+    std::vector<Token>  eol_vec;
+    std::vector<Token>  comments_vec;
     std::vector<Error>& errors;
 public:
     Lexer(const std::string& _file_name, std::vector<Error>& errors);
@@ -174,7 +174,7 @@ private:
     void end_token() noexcept;
     void append_char(const char c) noexcept;
     void reset_line() noexcept;
-
+    void is_keyword() noexcept;
     void invalid_char_error(uint8_t c) noexcept;
     void tokenize_error(const char* format, ...) noexcept;
 

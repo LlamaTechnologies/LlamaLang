@@ -6,7 +6,7 @@
 */
 
 // The parameter of this function shadows the global variable
-func myFunction(f int32) int64 {
+fn myFunction(f int32) int64 {
     x int32;
     y int32 = 8l + 10b
     c int32 = 100l;

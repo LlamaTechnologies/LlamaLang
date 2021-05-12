@@ -2,12 +2,14 @@
 #include <fstream>
 #include <cassert>
 #include <cstdarg>
+#include <unordered_map>
 
-#define WHITESPACE \
-         ' ': \
-    case '\r': \
-    case '\t': \
+#define WHITESPACE\
+        ' ':\
+    case '\r':\
+    case '\t':\
     case '\n'
+
 
 // [1-9]
 #define DIGIT_NON_ZERO \
@@ -281,6 +283,7 @@ std::vector<Token> Lexer::tokenize() noexcept
                 break;
             default:
                 cursor_pos--;
+                is_keyword();
                 end_token();
                 state = TokenizerState::Start;
                 continue;
@@ -291,8 +294,6 @@ std::vector<Token> Lexer::tokenize() noexcept
             switch (c) {
                 // line comment //
             case '/':
-                set_token_id(TokenId::LINE_COMMENT);
-                append_char(c);
                 state = TokenizerState::LineComment;
                 break;
                 // doc comment /* */
@@ -346,11 +347,9 @@ std::vector<Token> Lexer::tokenize() noexcept
         case TokenizerState::LineComment:
             switch (c) {
             case '\n':
-                end_token();
                 state = TokenizerState::Start;
                 break;
             default:
-                append_char(c);
                 break;
             }
             break;
@@ -680,8 +679,12 @@ std::vector<Token> Lexer::tokenize() noexcept
         }
 
         // Handle end of line
-        if (c == '\n')
+        if (c == '\n') {
+            begin_token(TokenId::EOL);
+            append_char(c);
+            end_token();
             reset_line();
+        }
         // else we just move a column
         else
             curr_column++;
@@ -739,8 +742,9 @@ void Lexer::begin_token(const TokenId id) noexcept
 {
     curr_token = Token();
     curr_token.id = id;
-    curr_token.line = curr_line;
-    curr_token.column_start = curr_column;
+    curr_token.start_line = curr_line;
+    curr_token.start_column = curr_column;
+    curr_token.start_pos = cursor_pos;
     curr_token.file_name = file_name;
 }
 
@@ -750,8 +754,19 @@ void Lexer::set_token_id(const TokenId id) noexcept
 }
 
 void Lexer::end_token() noexcept {
-    curr_token.column_end = curr_column;
-    tokens_vec.push_back(curr_token);
+    curr_token.end_pos = cursor_pos;
+
+    switch (curr_token.id) {
+    case TokenId::DOC_COMMENT:
+        comments_vec.push_back(curr_token);
+        break;
+    case TokenId::EOL:
+        eol_vec.push_back(curr_token);
+        break;
+    default:
+        tokens_vec.push_back(curr_token);
+        break;
+    }
 }
 
 void Lexer::append_char(const char c) noexcept {
@@ -809,6 +824,23 @@ void Lexer::tokenize_error(const char* format, ...) noexcept {
         file_name, msg);
 
     errors.push_back(error);
+}
+
+
+
+static std::unordered_map<std::string, TokenId> keywords = {
+    {"fn", TokenId::FN},
+    {"ret", TokenId::RET},
+    {"and", TokenId::AND},
+    {"or", TokenId::OR}
+};
+
+
+void Lexer::is_keyword() noexcept
+{
+    if (keywords.find(curr_token.value) != keywords.end()) {
+        set_token_id(keywords.at(curr_token.value));
+    }
 }
 
 uint32_t get_digit_value(uint8_t c) {

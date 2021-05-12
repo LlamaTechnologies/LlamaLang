@@ -3,7 +3,7 @@
 f int32 = 55
 
 #main
-func myProgramInit() int32 {
+fn myProgramInit() int32 {
     f = myFunction(f + 5)
     // should return 42
     ret f
