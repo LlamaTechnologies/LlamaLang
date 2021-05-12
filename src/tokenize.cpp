@@ -125,7 +125,7 @@ Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
 }
 
 // IMPORTANT!: should not be called more than once after the constructor.
-std::vector<Token> Lexer::tokenize() noexcept
+void Lexer::tokenize() noexcept
 {
     // reading file while no errors in it
     for (/*cursor_pos = 0*/; cursor_pos < source.size(); cursor_pos++) {
@@ -732,7 +732,22 @@ std::vector<Token> Lexer::tokenize() noexcept
         begin_token(TokenId::_EOF);
         end_token();
     }
-    return tokens_vec;
+}
+
+const bool Lexer::has_tokens() const noexcept
+{
+    return tokens_vec.size() != 0;
+}
+
+const Token& Lexer::get_first_token() const noexcept
+{
+    assert(tokens_vec.size() != 0);
+    return tokens_vec.front();
+}
+
+const Token& Lexer::get_next_token() const noexcept
+{
+    return tokens_vec.at(curr_index);
 }
 
 void Lexer::begin_token(const TokenId id) noexcept

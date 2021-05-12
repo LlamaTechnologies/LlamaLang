@@ -5,31 +5,16 @@ options {
 }
 
 sourceFile
-    : includeDirective* (functionDef | varDef eos)* eos
-    ;
-
-identifierList
-    : IDENTIFIER (',' IDENTIFIER)*
-    ;
-
-expressionList
-    : expression (',' expression)*
-    ;
-
-includeDirective
-    : '#' 'include' string_
-    ;
-
-externDirective
-    : '#' 'extern' IDENTIFIER
-    ;
-
-runDirective
-    : '#' 'run' primaryExpr
+    : (functionDef | varDef eos)* eos
     ;
 
 basicDirective
     : '#' IDENTIFIER (IDENTIFIER | string_)?
+    ;
+
+
+expressionList
+    : expression (',' expression)*
     ;
 
 // Function declarations
@@ -185,7 +170,7 @@ literalType
     ;
 
 fieldDecl
-    : identifierList type_ string_?
+    : IDENTIFIER type_
     ;
 
 string_

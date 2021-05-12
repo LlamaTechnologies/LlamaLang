@@ -147,8 +147,9 @@ class Lexer {
     size_t cursor_pos;
     size_t curr_line;
     size_t curr_column;
-    
-    int radix;  // used for getting number value.
+    size_t curr_index;              // used to consume tokens
+
+    int radix;                      // used for getting number value.
     bool is_trailing_underscore;    // used to interpret number_number
 
     TokenizerState state;
@@ -163,7 +164,14 @@ class Lexer {
 public:
     Lexer(const std::string& _file_name, std::vector<Error>& errors);
 
-    std::vector<Token> tokenize() noexcept;
+    void tokenize() noexcept;
+
+    const bool has_tokens() const noexcept;
+
+    const Token& get_first_token() const  noexcept;
+
+    // should not be called after EOF token
+    const Token& get_next_token() const noexcept;
 
     friend Console print_tokens(Lexer& lexer);
 private:
@@ -171,7 +179,7 @@ private:
     void set_token_id(const TokenId id) noexcept;
     void end_token() noexcept;
     void append_char(const char c) noexcept;
-    void reset_line() noexcept;
+    void reset_line() noexcept; 
     void is_keyword() noexcept;
     void invalid_char_error(uint8_t c) noexcept;
     void tokenize_error(const char* format, ...) noexcept;
