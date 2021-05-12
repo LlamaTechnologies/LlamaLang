@@ -101,10 +101,10 @@ static bool is_symbol_char(uint8_t c);
 static bool is_exponent_signifier(uint8_t c, int radix);
 
 Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
-    : file_name(_file_name), errors(_errors),
+    : file_name(_file_name), errors(_errors), cursor_pos(0L),
     curr_line(0L), curr_column(0L), state(TokenizerState::Start),
     radix(10), is_trailing_underscore(false),
-    curr_token(), tokens_vec()
+    curr_token(), tokens_vec(), comments_vec()
 {
     // open file
     auto file = std::ifstream(file_name);
@@ -124,10 +124,11 @@ Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
     file.close();
 }
 
+// IMPORTANT!: should not be called more than once after the constructor.
 std::vector<Token> Lexer::tokenize() noexcept
 {
     // reading file while no errors in it
-    for (cursor_pos = 0; cursor_pos < source.size(); cursor_pos++) {
+    for (/*cursor_pos = 0*/; cursor_pos < source.size(); cursor_pos++) {
         char c = source[cursor_pos];
 
         switch (state)
