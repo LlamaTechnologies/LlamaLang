@@ -670,6 +670,193 @@ void Lexer::tokenize() noexcept
                 continue;
             }
             break;
+        case TokenizerState::String:
+            switch (c) {
+            case '"':
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            case '\n':
+                tokenize_error("newline not allowed in string literal");
+                break;
+            case '\\':
+                state = TokenizerState::StringEscape;
+                break;
+            default:
+                append_char(c);
+                break;
+            }
+            break;
+        case TokenizerState::CharLiteral:
+            if (c == '\'') {
+                tokenize_error("expected character");
+            }
+            else if (c == '\\') {
+                state = TokenizerState::StringEscape;
+            }
+            else if ((c >= 0x80 && c <= 0xbf) || c >= 0xf8) {
+                // 10xxxxxx
+                // 11111xxx
+                invalid_char_error(c);
+            }
+            else if (c >= 0xc0 && c <= 0xdf) {
+                // 110xxxxx
+                curr_token.char_lit = c & 0x1f;
+                remaining_code_units = 1;
+                state = TokenizerState::CharLiteralUnicode;
+            }
+            else if (c >= 0xe0 && c <= 0xef) {
+                // 1110xxxx
+                curr_token.char_lit = c & 0x0f;
+                remaining_code_units = 2;
+                state = TokenizerState::CharLiteralUnicode;
+            }
+            else if (c >= 0xf0 && c <= 0xf7) {
+                // 11110xxx
+                curr_token.char_lit = c & 0x07;
+                remaining_code_units = 3;
+                state = TokenizerState::CharLiteralUnicode;
+            }
+            else {
+                curr_token.char_lit = c;
+                state = TokenizerState::CharLiteralEnd;
+            }
+            break;
+        case TokenizerState::CharLiteralUnicode:
+            if (c <= 0x7f || c >= 0xc0) {
+                invalid_char_error(c);
+            }
+            curr_token.char_lit <<= 6;
+            curr_token.char_lit += c & 0x3f;
+            remaining_code_units--;
+            if (remaining_code_units == 0) {
+                state = TokenizerState::CharLiteralEnd;
+            }
+            break;
+        case TokenizerState::CharLiteralEnd:
+            switch (c) {
+            case '\'':
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            default:
+                invalid_char_error(c);
+            }
+            break;
+        case TokenizerState::StringEscape:
+            switch (c) {
+            case 'x':
+                state = TokenizerState::CharCode;
+                radix = 16;
+                char_code = 0;
+                char_code_index = 0;
+                unicode = false;
+                break;
+            case 'u':
+                state = TokenizerState::StringEscapeUnicodeStart;
+                break;
+            case 'n':
+                handle_string_escape('\n');
+                break;
+            case 'r':
+                handle_string_escape('\r');
+                break;
+            case '\\':
+                handle_string_escape('\\');
+                break;
+            case 't':
+                handle_string_escape('\t');
+                break;
+            case '\'':
+                handle_string_escape('\'');
+                break;
+            case '"':
+                handle_string_escape('\"');
+                break;
+            default:
+                invalid_char_error(c);
+            }
+            break;
+        case TokenizerState::StringEscapeUnicodeStart:
+            switch (c) {
+            case '{':
+                state = TokenizerState::CharCode;
+                radix = 16;
+                char_code = 0;
+                char_code_index = 0;
+                unicode = true;
+                append_char(c);
+                break;
+            default:
+                invalid_char_error(c);
+            }
+            break;
+        case TokenizerState::CharCode:
+        {
+            if (unicode && c == '}') {
+                if (char_code_index == 0) {
+                    tokenize_error("empty unicode escape sequence");
+                    break;
+                }
+                if (char_code > 0x10ffff) {
+                    tokenize_error("unicode value out of range: %x", char_code);
+                    break;
+                }
+                if (curr_token.id == TokenId::UNICODE_CHAR) {
+                    curr_token.char_lit = char_code;
+                    state = TokenizerState::CharLiteralEnd;
+                }
+                else if (char_code <= 0x7f) {
+                    // 00000000 00000000 00000000 0xxxxxxx
+                    handle_string_escape((uint8_t)char_code);
+                }
+                else if (char_code <= 0x7ff) {
+                    // 00000000 00000000 00000xxx xx000000
+                    handle_string_escape((uint8_t)(0xc0 | (char_code >> 6)));
+                    // 00000000 00000000 00000000 00xxxxxx
+                    handle_string_escape((uint8_t)(0x80 | (char_code & 0x3f)));
+                }
+                else if (char_code <= 0xffff) {
+                    // 00000000 00000000 xxxx0000 00000000
+                    handle_string_escape((uint8_t)(0xe0 | (char_code >> 12)));
+                    // 00000000 00000000 0000xxxx xx000000
+                    handle_string_escape((uint8_t)(0x80 | ((char_code >> 6) & 0x3f)));
+                    // 00000000 00000000 00000000 00xxxxxx
+                    handle_string_escape((uint8_t)(0x80 | (char_code & 0x3f)));
+                }
+                else if (char_code <= 0x10ffff) {
+                    // 00000000 000xxx00 00000000 00000000
+                    handle_string_escape((uint8_t)(0xf0 | (char_code >> 18)));
+                    // 00000000 000000xx xxxx0000 00000000
+                    handle_string_escape((uint8_t)(0x80 | ((char_code >> 12) & 0x3f)));
+                    // 00000000 00000000 0000xxxx xx000000
+                    handle_string_escape((uint8_t)(0x80 | ((char_code >> 6) & 0x3f)));
+                    // 00000000 00000000 00000000 00xxxxxx
+                    handle_string_escape((uint8_t)(0x80 | (char_code & 0x3f)));
+                }
+                else {
+                    UNREACHEABLE;
+                }
+                break;
+            }
+
+            uint32_t digit_value = get_digit_value(c);
+            if (digit_value >= radix) {
+                tokenize_error("invalid digit: '%c'", c);
+                break;
+            }
+            char_code *= radix;
+            char_code += digit_value;
+            char_code_index += 1;
+
+            if (!unicode && char_code_index >= 2) {
+                assert(char_code <= 255);
+                handle_string_escape((uint8_t)char_code);
+            }
+        }
+            break;
         // If error just get to the next token
         case TokenizerState::Error:
             break;
@@ -787,7 +974,6 @@ void Lexer::reset_line() noexcept {
     curr_column = 0;
 }
 
-
 void Lexer::invalid_char_error(uint8_t c) noexcept {
     if (c == '\r') {
         tokenize_error("invalid carriage return, only '\\n' line endings are supported");
@@ -835,6 +1021,20 @@ void Lexer::tokenize_error(const char* format, ...) noexcept {
     errors.push_back(error);
 }
 
+void Lexer::handle_string_escape(uint8_t c) noexcept {
+    if (curr_token.id == TokenId::UNICODE_CHAR) {
+        curr_token.char_lit = c;
+        append_char(c);
+        state = TokenizerState::CharLiteralEnd;
+    }
+    else if (curr_token.id == TokenId::STRING) {
+        append_char(c);
+        state = TokenizerState::String;
+    }
+    else {
+        UNREACHEABLE;
+    }
+}
 
 
 static std::unordered_map<std::string, TokenId> keywords = {

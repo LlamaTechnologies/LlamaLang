@@ -56,10 +56,10 @@ enum class TokenId {
     // COMPLEX TOKENS
     IDENTIFIER,         // [a-zA-Z_] [a-zA-Z_0-9]*
     INT_LIT,
-    // [0]* [1-9] [0-9]*       [u]? [bwl]?
-    // [0]  [o]   [0-7]*       [u]? [bwl]?
-    // [0]  [x]   [0-9A-F]*    [u]? [bwl]?
-    // [0]  [b]   [0-1]*       [u]? [bwl]?
+    // [0-9]+               [u]? [bwl]?
+    // [0] [o] [0-7]*       [u]? [bwl]?
+    // [0] [x] [0-9A-F]*    [u]? [bwl]?
+    // [0] [b] [0-1]*       [u]? [bwl]?
     FLOAT_LIT,          // [0-9]* [.] [0-9]* [f]?
 
     ESCAPED_VALUE,      // \[value]
@@ -149,7 +149,11 @@ class Lexer {
     size_t curr_column;
     size_t curr_index;              // used to consume tokens
 
-    int radix;                      // used for getting number value.
+    size_t char_code_index;         // char_code char counter
+    size_t remaining_code_units;    // used to count bytes in unicode char
+    uint32_t radix;                 // used for getting number value.
+    uint32_t char_code;             // char_code used accros the char_code state
+    bool unicode;                   // is unicode char code
     bool is_trailing_underscore;    // used to interpret number_number
 
     TokenizerState state;
@@ -183,6 +187,7 @@ private:
     void is_keyword() noexcept;
     void invalid_char_error(uint8_t c) noexcept;
     void tokenize_error(const char* format, ...) noexcept;
+    void handle_string_escape(uint8_t c) noexcept;
 
     enum class TokenizerState {
         Start,
@@ -197,7 +202,12 @@ private:
         FloatExponentNumber,       // "123.456e7", "123.456e+7", "123.456e-7"
         FloatExponentNumberNoUnderscore, // "123.456e7_", "123.456e+7_", "123.456e-7_"
         String,                    //
+        StringEscape,              // saw \ inside a string
+        StringEscapeUnicodeStart,  // saw u inside string_escape
+        CharCode,                  // saw x in string_escape or began the unicode escape
         CharLiteral,               //
+        CharLiteralUnicode,        // unicode char
+        CharLiteralEnd,            //
         SawStar,                   //
         SawSlash,                  //
         SawPercent,                //
