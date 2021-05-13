@@ -20,39 +20,40 @@ AstNode* Parser::parse() noexcept {
 AstNode* Parser::parse_source_code() noexcept {
     AstNode* source_code = new AstNode(AstNodeType::AstSourceCode, 0L, 0L);
     
-next_sibling:
-    if (!lexer.has_tokens())
-        return source_code;
-    const auto& token = lexer.get_next_token();
-    const auto token_id = token.id;
-    
-    const char next_char = lexer.source[token.end_pos + 1];
+    while (!lexer.has_tokens()) {
 
-    switch (token_id) {
-    case TokenId::HASH:
-        if (!is_symbol_start_char(next_char))
-            return parse_error(token, ERROR_MULTILINE_DIRECTIVE);
+        const auto& token = lexer.get_next_token();
+        const auto token_id = token.id;
 
-        auto directive =  parse_basic_directive();
-        source_code->data.source_code->children.push_back(directive);
-        goto next_sibling;
-    case TokenId::FN:
-        auto func_def = parse_function_def();
-        source_code->data.source_code->children.push_back(func_def);
-        goto next_sibling;
-    case TokenId::IDENTIFIER:
-        auto var_def = parse_variable_def();
-        source_code->data.source_code->children.push_back(var_def);
-        goto next_sibling;
-    case TokenId::_EOF:
-        goto next_sibling;
-    default:
-        parse_error(token, ERROR_NO_MAIN_STMNT, token.value);
-        goto next_sibling;
+        const char next_char = lexer.source[token.end_pos + 1];
+
+        switch (token_id) {
+        case TokenId::HASH: {
+            if (!is_symbol_start_char(next_char))
+                return parse_error(token, ERROR_MULTILINE_DIRECTIVE);
+
+            auto directive = parse_basic_directive();
+            source_code->data.source_code->children.push_back(directive);
+        }
+            break;
+        case TokenId::FN: {
+            auto func_def = parse_function_def();
+            source_code->data.source_code->children.push_back(func_def);
+        }
+            break;
+        case TokenId::IDENTIFIER: {
+            auto var_def = parse_variable_def();
+            source_code->data.source_code->children.push_back(var_def);
+        }
+            break;
+        case TokenId::_EOF:
+            break;
+        default:
+            parse_error(token, ERROR_NO_MAIN_STMNT, token.value);
+            break;
+        }
     }
-
-    // ERROR
-    return nullptr;
+    return source_code;
 }
 
 /*
