@@ -20,8 +20,7 @@ AstNode* Parser::parse() noexcept {
 AstNode* Parser::parse_source_code() noexcept {
     AstNode* source_code = new AstNode(AstNodeType::AstSourceCode, 0L, 0L);
     
-    while (!lexer.has_tokens()) {
-
+    while (lexer.has_tokens()) {
         const auto& token = lexer.get_next_token();
         const auto token_id = token.id;
 
