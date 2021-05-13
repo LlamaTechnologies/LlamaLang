@@ -101,7 +101,7 @@ static bool is_symbol_char(uint8_t c);
 static bool is_exponent_signifier(uint8_t c, int radix);
 
 Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
-    : file_name(_file_name), errors(_errors), cursor_pos(0L),
+    : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(0L),
     curr_line(0L), curr_column(0L), state(TokenizerState::Start),
     radix(10), is_trailing_underscore(false),
     curr_token(), tokens_vec(), comments_vec()
@@ -926,15 +926,14 @@ const bool Lexer::has_tokens() const noexcept
     return tokens_vec.size() != 0;
 }
 
-const Token& Lexer::get_first_token() const noexcept
-{
-    assert(tokens_vec.size() != 0);
-    return tokens_vec.front();
-}
-
 const Token& Lexer::get_next_token() const noexcept
 {
-    return tokens_vec.at(curr_index);
+    return tokens_vec.at(curr_index++);
+}
+
+void Lexer::return_last_token() const noexcept
+{
+    curr_index--;
 }
 
 void Lexer::begin_token(const TokenId id) noexcept

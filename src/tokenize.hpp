@@ -147,7 +147,7 @@ class Lexer {
     size_t cursor_pos;
     size_t curr_line;
     size_t curr_column;
-    size_t curr_index;              // used to consume tokens
+    mutable size_t curr_index;              // used to consume tokens
 
     size_t char_code_index;         // char_code char counter
     size_t remaining_code_units;    // used to count bytes in unicode char
@@ -159,9 +159,11 @@ class Lexer {
     TokenizerState state;
     Token curr_token;
     
+public:
     std::string file_name;
     std::string source;
 
+private:
     std::vector<Token>  tokens_vec;
     std::vector<Token>  comments_vec;
     std::vector<Error>& errors;
@@ -172,10 +174,11 @@ public:
 
     const bool has_tokens() const noexcept;
 
-    const Token& get_first_token() const  noexcept;
-
     // should not be called after EOF token
     const Token& get_next_token() const noexcept;
+
+    // --curr_index
+    void return_last_token() const noexcept;
 
     friend Console print_tokens(Lexer& lexer);
 private:

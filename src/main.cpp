@@ -4,6 +4,7 @@
 #include "config.hpp"
 #include "console.hpp"
 #include "tokenize.hpp"
+#include "parser.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -72,9 +73,11 @@ int main(int argc, const char *argv[])
     Lexer lexer(file_name, errors);
     lexer.tokenize();
     auto print_lines = print_tokens(lexer);
-    for (auto line: print_lines)
-        console::WriteLine(line); 
+    for (auto line : print_lines)
+        console::WriteLine(line);
 
+    Parser parser(lexer, errors);
+    auto sourceCodeNode = parser.parse();
     return 0;
   }
 

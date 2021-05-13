@@ -1,8 +1,11 @@
 #pragma once
 #include <vector>
+#include <string>
 
 class Lexer;
+struct Token;
 struct Error;
+struct AstNode;
 
 class Parser {
     const Lexer& lexer;
@@ -10,12 +13,18 @@ class Parser {
 public:
     Parser(const Lexer& in_lexer, std::vector<Error>& in_error_vec);
 
-    void parse() noexcept;
+    AstNode* parse() noexcept;
 
 private:
 
-    void parse_source_code() noexcept;
+    _NODISCARD AstNode* parse_source_code() noexcept;
 
+    _NODISCARD AstNode* parse_basic_directive() noexcept;
 
+    _NODISCARD AstNode* parse_function_def() noexcept;
+
+    _NODISCARD AstNode* parse_variable_def() noexcept;
+
+    AstNode* parse_error(const Token& token, const char* format, ...) noexcept;
 };
 

@@ -1,4 +1,4 @@
-#module MyProgram
+#load MyProgram
 
 /*****
  * Multiline comment
