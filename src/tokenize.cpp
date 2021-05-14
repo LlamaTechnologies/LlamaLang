@@ -923,12 +923,18 @@ void Lexer::tokenize() noexcept
 
 const bool Lexer::has_tokens() const noexcept
 {
-    return tokens_vec.size() != 0;
+    return tokens_vec.size() - (curr_index + 1)  != 0;
+}
+
+const Token& Lexer::get_current_token() const noexcept
+{
+    // TODO: insert return statement here
+    return tokens_vec.at(curr_index);
 }
 
 const Token& Lexer::get_next_token() const noexcept
 {
-    return tokens_vec.at(curr_index++);
+    return tokens_vec.at(++curr_index);
 }
 
 void Lexer::return_last_token() const noexcept

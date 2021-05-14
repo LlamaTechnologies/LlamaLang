@@ -23,7 +23,13 @@ private:
 
     _NODISCARD AstNode* parse_function_def() noexcept;
 
+    _NODISCARD AstNode* parse_function_proto() noexcept;
+
+    _NODISCARD AstNode* parse_block() noexcept;
+
     _NODISCARD AstNode* parse_variable_def() noexcept;
+
+    _NODISCARD AstNode* parse_type() noexcept;
 
     AstNode* parse_error(const Token& token, const char* format, ...) noexcept;
 };

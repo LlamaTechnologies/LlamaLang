@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 
+[[noreturn]]
 void panic(const char* format, ...) {
     va_list ap;
     va_start(ap, format);

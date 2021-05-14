@@ -6,7 +6,7 @@
 // ast nodes
 struct AstNode;
 struct AstDirective;
-
+struct AstType;
 struct AstFuncDef;
 struct AstFuncProto;
 struct AstParamDecl;
@@ -95,6 +95,29 @@ struct AstUnaryExpr {
     AstNode* primary_expr;
 };
 
+
+
+struct AstSourceCode {
+    std::vector<AstNode*> children;
+};
+
+
+enum class AstTypeType {
+    Pointer,
+    Array,
+    DataType
+};
+
+struct AstType {
+    AstTypeType type;
+    AstNode* data_type;
+    std::string name;
+
+    AstType() : type(AstTypeType::DataType), data_type(nullptr), name("") {
+
+    }
+};
+
 // ast nodes enum
 enum class AstNodeType {
     AstSourceCode,
@@ -103,15 +126,12 @@ enum class AstNodeType {
     AstFuncProto,
     AstParamDecl,
     AstBlock,
+    AstType,
     AstVarDef,
     AstSymbol,
     AstFuncCallExpr,
     AstBinaryExpr,
     AstUnaryExpr
-};
-
-struct AstSourceCode {
-    std::vector<AstNode*> children;
 };
 
 // base ast node
@@ -132,7 +152,7 @@ struct AstNode
         AstParamDecl* param_decl;       // name type
         AstBlock* block;                // L_CURLY statements R_CURLY
         AstVarDef* var_def;             // name type
-
+        AstType* ast_type;              // type
         AstNode* grouped_expr;          // L_PAREN expr R_PAREN
         AstUnaryExpr* unary_expr;       // unary_op expr
         AstBinaryExpr* binary_expr;     // expr binary_op expr
@@ -178,6 +198,9 @@ struct AstNode
             break;
         case AstNodeType::AstUnaryExpr:
             data.unary_expr = new AstUnaryExpr();
+            break;
+        case AstNodeType::AstType:
+            data.ast_type = new AstType();
             break;
         default:
             UNREACHEABLE;

@@ -1,5 +1,6 @@
 #pragma once
 
+[[noreturn]]
 void panic(const char* format, ...);
 
 #ifdef _WIN32
