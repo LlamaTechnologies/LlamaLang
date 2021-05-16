@@ -12,3 +12,5 @@ const char* ERROR_SIGNATURE_END_EXPECTED                = "expected signature en
 const char* ERROR_PARAM_DECL_TYPE_EXPECTED              = "expected param type instead of %s";
 const char* ERROR_PARAM_NAME_SIGNATURE_END_EXPECTED     = "expected param name or signature end token \')\', found %s";
 const char* ERROR_INVALID_TYPE                          = "expected a valid type at %s";
+const char* ERROR_EXPECTED_R_CURLY                      = "expected a closing \'}\' at the end of the block";
+

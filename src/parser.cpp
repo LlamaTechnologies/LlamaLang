@@ -9,6 +9,14 @@ static bool is_type_start_token_id(TokenId token_id) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
 
+
+#define MAIN_OBJECTS \
+TokenId::HASH:\
+case TokenId::FN:\
+case TokenId::IDENTIFIER
+
+
+
 Parser::Parser(const Lexer& in_lexer, std::vector<Error>& in_error_vec)
     : lexer(in_lexer), error_vec(in_error_vec)
 {
@@ -156,12 +164,8 @@ AstNode* Parser::parse_function_def() noexcept {
     if (!fn_node->data.function_def->proto)
         return nullptr;
 
-    if (!lexer.has_tokens()) {
-        // fn proto
-        return fn_node->data.function_def->proto;
-    }
-
-    if (lexer.get_next_token().id == TokenId::L_CURLY) {
+    const Token* l_curly_token = nullptr;
+    if (lexer.has_tokens() && (l_curly_token = &lexer.get_next_token())->id == TokenId::L_CURLY) {
         fn_node->data.function_def->block = parse_block();
 
         // error in parse_block
@@ -170,9 +174,17 @@ AstNode* Parser::parse_function_def() noexcept {
             return nullptr;
         }
     }
+    // is just a fn proto
+    else {
+        if (l_curly_token) {
+            // return last token since it was not ours
+            lexer.return_last_token();
+        }
+        return fn_node->data.function_def->proto;
+    }
  
-    // return last token since it was not ours
-    lexer.return_last_token();
+  
+    fn_node->data.function_def->proto->data.function_proto->fn_def_node = fn_node;
     return fn_node;
 }
 
@@ -222,13 +234,13 @@ AstNode* Parser::parse_function_proto() noexcept {
         param_decl_end,
     } param_decl_state = ParamDeclState::param_decl_start;
 
-    bool no_end = true;
+    bool are_more_params = true;
     // identifier or R_PAREN
     Token current_token = lexer.get_next_token();
     AstNode* current_param;
     std::vector<AstNode*> params;
 
-    for (size_t i = 0; current_token.id != TokenId::R_PAREN && no_end; i++) {
+    for (size_t i = 0; are_more_params; i++) {
         switch (param_decl_state) {
         case ParamDeclState::param_decl_start:
             if (current_token.id == TokenId::IDENTIFIER) {
@@ -237,10 +249,10 @@ AstNode* Parser::parse_function_proto() noexcept {
                 current_param->data.param_decl->name = current_token.value;
             }
             else if (current_token.id == TokenId::R_PAREN) {
-                no_end = false;
+                are_more_params = false;
             }
             else {
-                no_end = false;
+                are_more_params = false;
                 lexer.return_last_token();
                 parse_error(current_token, ERROR_PARAM_NAME_SIGNATURE_END_EXPECTED, current_token.value);
             } 
@@ -270,7 +282,7 @@ AstNode* Parser::parse_function_proto() noexcept {
                 {
                     lexer.return_last_token();
                     parse_error(current_token, ERROR_PARAM_DECL_TYPE_EXPECTED, current_token.value);
-                    no_end = false;
+                    are_more_params = false;
                 }
             }
             break;
@@ -279,6 +291,10 @@ AstNode* Parser::parse_function_proto() noexcept {
                 case TokenId::COMMA: {
                     param_decl_state = ParamDeclState::param_decl_start;
                     params.push_back(current_param);
+                } break;
+                case TokenId::R_PAREN: {
+                    params.push_back(current_param);
+                    are_more_params = false;
                 } break;
                 default: {
                     delete current_param;
@@ -291,7 +307,7 @@ AstNode* Parser::parse_function_proto() noexcept {
                     {
                         lexer.return_last_token();
                         parse_error(current_token, ERROR_SIGNATURE_END_EXPECTED, current_token.value);
-                        no_end = false;
+                        are_more_params = false;
                     } 
                 } break;
             }
@@ -313,7 +329,7 @@ AstNode* Parser::parse_function_proto() noexcept {
     // RETURN TYPE
     //------------------------
 
-    auto type_start_token = lexer.get_next_token();
+    auto type_start_token = lexer.get_current_token();
     if (is_type_start_token_id(type_start_token.id)) {
         fn_proto_node->data.function_proto->return_type = parse_type();
         if (!fn_proto_node->data.function_proto->return_type) {
@@ -327,6 +343,7 @@ AstNode* Parser::parse_function_proto() noexcept {
         return parse_error(fn_name_token, ERROR_EXPECTED_FUNCTION_RET_TYPE, fn_name_token.value);
     }
 
+    fn_proto_node->data.function_proto->params = params;
     return fn_proto_node;
 }
 
@@ -336,21 +353,56 @@ AstNode* Parser::parse_function_proto() noexcept {
 * '{' statementList '}'
 */
 AstNode* Parser::parse_block() noexcept {
+    // '{'
     Token l_curly_token = lexer.get_current_token();
     if (!lexer.has_tokens()) {
         return parse_error(l_curly_token, ERROR_UNEXPECTED_EOF, l_curly_token.value);
     }
 
 
+    AstNode* block_node = new AstNode(AstNodeType::AstBlock, l_curly_token.start_line, l_curly_token.start_column);
+
     /*
      * Statement list
      * (statement eos)*
      */
     Token token;
-    while (token.id != TokenId::R_CURLY) {
-
+    bool break_while_loop = false;
+    while (!break_while_loop && token.id != TokenId::R_CURLY) {
+        switch (token.id) {
+        case TokenId::_EOF:
+        case MAIN_OBJECTS:
+            break_while_loop = true;
+            break;
+        default:
+            auto stmnt_node = parse_statement();
+            if (!stmnt_node) {
+                delete block_node;
+                break_while_loop = true;
+                return nullptr;
+            }
+            block_node->data.block->statements.push_back(stmnt_node);
+            break;
+        }
     }
 
+    if (!lexer.has_tokens()) {
+        delete block_node;
+        return parse_error(token, ERROR_UNEXPECTED_EOF, token.value);
+    }
+
+    // '}'
+    Token r_curly_token = lexer.get_next_token();
+    if (r_curly_token.id != TokenId::R_CURLY) {
+        delete block_node;
+        return parse_error(token, ERROR_EXPECTED_R_CURLY, token.value);
+    }
+
+    return block_node;
+}
+
+AstNode* Parser::parse_statement() noexcept
+{
     return nullptr;
 }
 
