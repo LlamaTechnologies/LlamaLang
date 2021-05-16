@@ -141,40 +141,39 @@ AstNode* Parser::parse_function_def() noexcept {
     Token fn_token = lexer.get_current_token();
 
     AstNode* fn_node = new AstNode(AstNodeType::AstFuncDef, fn_token.start_line, fn_token.start_column);
-
-    if (lexer.has_tokens()) {
-        // return fn token so it can be parsed by the proto
-        lexer.return_last_token();
-        fn_node->data.function_def->proto = parse_function_proto();
-
-        // error in parse_function_proto
-        if (!fn_node->data.function_def->proto)
-            return nullptr;
-    }
-    else {
+    
+    if (!lexer.has_tokens()) {
         // error fn eof
         delete fn_node;
         return parse_error(fn_token, ERROR_UNEXPECTED_EOF, fn_token.value);
     }
 
-    if (lexer.has_tokens()) {
-        if (lexer.get_next_token().id == TokenId::L_CURLY) {
-            fn_node->data.function_def->block = parse_block();
+    // return fn token so it can be parsed by the proto
+    lexer.return_last_token();
+    fn_node->data.function_def->proto = parse_function_proto();
 
-            // if no error
-            if (fn_node->data.function_def->block)
-                return fn_node;
+    // error in parse_function_proto
+    if (!fn_node->data.function_def->proto)
+        return nullptr;
 
-            // error in parse_block
+    if (!lexer.has_tokens()) {
+        // fn proto
+        return fn_node->data.function_def->proto;
+    }
+
+    if (lexer.get_next_token().id == TokenId::L_CURLY) {
+        fn_node->data.function_def->block = parse_block();
+
+        // error in parse_block
+        if (!fn_node->data.function_def->block) {
             delete fn_node;
             return nullptr;
         }
-        // return last token since it was not ours
-        lexer.return_last_token();
     }
-    
-    // fn proto
-    return fn_node->data.function_def->proto;
+ 
+    // return last token since it was not ours
+    lexer.return_last_token();
+    return fn_node;
 }
 
 /*
@@ -334,10 +333,24 @@ AstNode* Parser::parse_function_proto() noexcept {
 
 /*
 * Parses a block
-* '{' statements '}'
+* '{' statementList '}'
 */
-AstNode* Parser::parse_block() noexcept
-{
+AstNode* Parser::parse_block() noexcept {
+    Token l_curly_token = lexer.get_current_token();
+    if (!lexer.has_tokens()) {
+        return parse_error(l_curly_token, ERROR_UNEXPECTED_EOF, l_curly_token.value);
+    }
+
+
+    /*
+     * Statement list
+     * (statement eos)*
+     */
+    Token token;
+    while (token.id != TokenId::R_CURLY) {
+
+    }
+
     return nullptr;
 }
 
