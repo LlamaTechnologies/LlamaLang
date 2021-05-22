@@ -6,6 +6,7 @@
 #include <cassert>
 
 static bool is_type_start_token_id(TokenId token_id) noexcept;
+static bool is_statement_start_token_id(TokenId token_id) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
 
@@ -403,6 +404,84 @@ AstNode* Parser::parse_block() noexcept {
 
 AstNode* Parser::parse_statement() noexcept
 {
+    Token token = lexer.get_current_token();
+    if (is_statement_start_token_id(token.id)) {
+        switch (token.id) {
+            // variable def: IDENTIFIER type ('=' expr)?
+            // assignment : IDENTIFIER '=' expr
+            // expr: 
+        case TokenId::IDENTIFIER: {
+            token = lexer.get_current_token();
+            AstNode* stmnt = nullptr;
+            if (token.id == TokenId::ASSIGN) {
+                lexer.return_last_token();
+                stmnt = parse_assignment();
+            }
+            else if (is_type_start_token_id(token.id)) {
+                lexer.return_last_token();
+                stmnt = parse_variable_def();
+            }
+
+            // error parsing above statements
+            if (!stmnt) {
+                return nullptr;
+            }
+
+            return stmnt;
+        }
+            UNREACHEABLE;
+            break;
+        case TokenId::RET: {
+            parse_ret();
+        }
+        break;
+        case TokenId::L_CURLY: {
+            parse_block();
+        }
+        break;
+        // empty stmnt
+        case TokenId::SEMI:
+            break;
+        default:
+            UNREACHEABLE;
+        }
+    }
+
+    // Not a valid statement start
+    return parse_error(token, ERROR_INVALID_STATMENT_START, token.value);
+}
+
+/*
+* Parses an assignment statement
+* IDENTIFIER '=' expr
+*/
+AstNode* Parser::parse_assignment() noexcept {
+    Token symbol = lexer.get_current_token();
+    AstNode* assignment_node = new AstNode(AstNodeType::AstBinaryExpr, symbol.start_line, symbol.start_column);
+    assignment_node->data.binary_expr->bin_op = BinaryExprType::ASSIGN;
+    
+    // consume the '=' consumed already by parse_statement
+    lexer.get_next_token();
+    assignment_node->data.binary_expr->op1 = new AstNode(AstNodeType::AstSymbol, symbol.start_line, symbol.start_column);
+    assignment_node->data.binary_expr->op1->data.var_ref->symbol = symbol.value;
+
+    assignment_node->data.binary_expr->op2 = parse_expr();
+
+    if (!assignment_node->data.binary_expr->op2) {
+        delete assignment_node;
+        return nullptr;
+    }
+
+    return assignment_node;
+}
+
+AstNode* Parser::parse_ret() noexcept
+{
+    return nullptr;
+}
+
+AstNode* Parser::parse_expr() noexcept
+{
     return nullptr;
 }
 
@@ -472,6 +551,19 @@ AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexce
         token.start_column,
         lexer.file_name, msg);
     return nullptr;
+}
+
+bool is_statement_start_token_id(TokenId token_id) noexcept {
+    switch (token_id)
+    {
+    case TokenId::RET:
+    case TokenId::L_CURLY:
+    case TokenId::IDENTIFIER:
+    case TokenId::SEMI:
+        return true;
+    default:
+        return false;
+    }
 }
 
 bool is_type_start_token_id(TokenId token_id) noexcept {

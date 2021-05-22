@@ -1,5 +1,5 @@
 #pragma once
-#include "common_defs.h"
+#include "common_defs.hpp"
 #include <vector>
 #include <string>
 
@@ -204,6 +204,63 @@ struct AstNode
             break;
         default:
             UNREACHEABLE;
+        }
+    }
+
+    ~AstNode() {
+        switch (node_type)
+        {
+        case AstNodeType::AstSourceCode:
+            if (data.source_code)
+                delete data.source_code;
+            break;
+        case AstNodeType::AstDirective:
+            if (data.directive)
+                delete data.directive;
+            break;
+        case AstNodeType::AstFuncDef:
+            if (data.function_def)
+                delete data.function_def;
+            break;
+        case AstNodeType::AstFuncProto:
+            if (data.function_proto)
+                delete data.function_proto;
+            break;
+        case AstNodeType::AstParamDecl:
+            if (data.param_decl)
+                delete data.param_decl;
+            break;
+        case AstNodeType::AstBlock:
+            if (data.block)
+                delete data.block;
+            break;
+        case AstNodeType::AstType:
+            if (data.ast_type)
+                delete data.ast_type;
+            break;
+        case AstNodeType::AstVarDef:
+            if (data.var_def)
+                delete data.var_def;
+            break;
+        case AstNodeType::AstSymbol:
+            if (data.var_ref)
+                delete data.var_ref;
+            break;
+        case AstNodeType::AstFuncCallExpr:
+            if (data.func_call)
+                delete data.func_call;
+            break;
+        case AstNodeType::AstBinaryExpr:
+            if (data.binary_expr)
+                delete data.binary_expr;
+            break;
+        case AstNodeType::AstUnaryExpr:
+            if (data.unary_expr)
+                delete data.unary_expr;
+            break;
+        default:
+            UNREACHEABLE;
+            break;
         }
     }
 };

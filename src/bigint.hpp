@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "common_defs.h"
+#include "common_defs.hpp"
 #include <stdint.h>
 #include <stddef.h>
 

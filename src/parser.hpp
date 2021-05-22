@@ -29,6 +29,12 @@ private:
 
     _NODISCARD AstNode* parse_statement() noexcept;
 
+    _NODISCARD AstNode* parse_assignment() noexcept;
+
+    _NODISCARD AstNode* parse_ret() noexcept;
+
+    _NODISCARD AstNode* parse_expr() noexcept;
+
     _NODISCARD AstNode* parse_variable_def() noexcept;
 
     _NODISCARD AstNode* parse_type() noexcept;

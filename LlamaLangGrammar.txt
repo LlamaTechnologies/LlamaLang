@@ -52,13 +52,9 @@ varDef
 
 
 simpleStmt
-    : expressionStmt
+    : expression
     | assignmentStmnt
     | emptyStmt
-    ;
-
-expressionStmt
-    : expression
     ;
 
 
