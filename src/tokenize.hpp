@@ -156,7 +156,7 @@ class Lexer {
     uint32_t char_code;             // char_code used accros the char_code state
     bool unicode;                   // is unicode char code
     bool is_trailing_underscore;    // used to interpret number_number
-    bool is_invalid_symbol;         // used to finish tokenizing a invalid symbol
+    bool is_invalid_token;          // used to finish tokenizing a error tokens
 
     TokenizerState state;
     Token curr_token;

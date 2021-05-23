@@ -98,12 +98,13 @@
 static uint32_t get_digit_value(uint8_t c);
 static const char* get_escape_shorthand(uint8_t c);
 static bool is_symbol_char(uint8_t c);
+static bool is_sign_or_type_specifier(uint8_t c);
 static bool is_exponent_signifier(uint8_t c, int radix);
 
 Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
     : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(0L),
     curr_line(0L), curr_column(0L), state(TokenizerState::Start),
-    radix(10), is_trailing_underscore(false), is_invalid_symbol(false),
+    radix(10), is_trailing_underscore(false), is_invalid_token(false),
     curr_token(), tokens_vec(), comments_vec()
 {
     // open file
@@ -127,7 +128,7 @@ Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
 Lexer::Lexer(const std::string& _src_file, const std::string& _file_name, std::vector<Error>& _errors)
     : file_name(_file_name), source(_src_file), errors(_errors), cursor_pos(0L), curr_index(0L),
     curr_line(0L), curr_column(0L), state(TokenizerState::Start),
-    radix(10), is_trailing_underscore(false), is_invalid_symbol(false),
+    radix(10), is_trailing_underscore(false), is_invalid_token(false),
     curr_token(), tokens_vec(), comments_vec()
 {}
 
@@ -280,8 +281,8 @@ void Lexer::tokenize() noexcept
                 end_token();
                 break;
             default:
-                tokenize_error("Unidentified token %c", c);
-                is_invalid_symbol = true;
+                tokenize_error("Unidentified character in symbol %c", c);
+                is_invalid_token = true;
                 state = TokenizerState::Symbol;
                 break;
             }
@@ -295,8 +296,8 @@ void Lexer::tokenize() noexcept
             default:
                 cursor_pos--;
                 
-                if (is_invalid_symbol) {
-                    is_invalid_symbol = false;
+                if (is_invalid_token) {
+                    is_invalid_token = false;
                     set_token_id(TokenId::ERROR);
                 }
                 else {
@@ -399,6 +400,8 @@ void Lexer::tokenize() noexcept
             // cant have two undersocores in a number
             if (c == '_') {
                 invalid_char_error(c);
+                state = TokenizerState::NumberNoUnderscore;
+                is_invalid_token = true;
                 break;
             }
             // get the digit
@@ -448,14 +451,16 @@ void Lexer::tokenize() noexcept
             }
             uint32_t digit_value = get_digit_value(c);
             if (digit_value >= radix) {
-                if (is_trailing_underscore) {
+                if (is_sign_or_type_specifier(c)) {
+                    if (state == TokenizerState::NumberNoUnderscore)
+                        state = TokenizerState::Number;
+                    break;
+                } else if (is_trailing_underscore) {
                     invalid_char_error(c);
                     break;
-                }
-
-                if (is_symbol_char(c)) {
+                } else if (is_symbol_char(c) || !isxdigit(c)) {
                     invalid_char_error(c);
-                    is_invalid_symbol = true;
+                    is_invalid_token = true;
                     state = TokenizerState::Symbol;
                     break;
                 }
@@ -463,6 +468,12 @@ void Lexer::tokenize() noexcept
                     state = TokenizerState::Start;
                     // not my char
                     cursor_pos--;
+                    
+                    if (is_invalid_token) {
+                        is_invalid_token = false;
+                        set_token_id(TokenId::ERROR);
+                    }
+
                     end_token();
                     continue;
                 }
@@ -895,6 +906,7 @@ void Lexer::tokenize() noexcept
         else
             curr_column++;
     }
+    cursor_pos--;
 
     // EOF
     switch (state)
@@ -904,8 +916,8 @@ void Lexer::tokenize() noexcept
     case Lexer::TokenizerState::LineComment:
         break;
     case Lexer::TokenizerState::Symbol:
-        if (is_invalid_symbol) {
-            is_invalid_symbol = false;
+        if (is_invalid_token) {
+            is_invalid_token = false;
             set_token_id(TokenId::ERROR);
         }
         else {
@@ -916,6 +928,12 @@ void Lexer::tokenize() noexcept
         break;
     case Lexer::TokenizerState::Zero:
     case Lexer::TokenizerState::Number:
+        if (is_invalid_token) {
+            is_invalid_token = false;
+            set_token_id(TokenId::ERROR);
+        }
+        end_token();
+        break;
     case Lexer::TokenizerState::FloatFraction:
     case Lexer::TokenizerState::FloatExponentUnsigned:
     case Lexer::TokenizerState::FloatExponentNumber:
@@ -1071,14 +1089,12 @@ void Lexer::handle_string_escape(uint8_t c) noexcept {
     }
 }
 
-
 static std::unordered_map<std::string, TokenId> keywords = {
     {"fn", TokenId::FN},
     {"ret", TokenId::RET},
     {"and", TokenId::AND},
     {"or", TokenId::OR}
 };
-
 
 void Lexer::is_keyword() noexcept
 {
@@ -1103,6 +1119,18 @@ uint32_t get_digit_value(uint8_t c) {
 bool is_symbol_char(uint8_t c) {
     switch (c) {
     case SYMBOL_CHAR:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_sign_or_type_specifier(uint8_t c) {
+    switch (c) {
+    case 'u':
+    case 'b':
+    case 'w':
+    case 'l':
         return true;
     default:
         return false;

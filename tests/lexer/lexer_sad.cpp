@@ -31,7 +31,6 @@ TEST(LexerSadIdentifierTests, IdentifierInvalidCharPrefixTest) {
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-/*
 TEST(LexerHappyIntegerTests, IntegerContiguousUnderscoreSeparatorTest) {
     std::vector<Error> errors;
     Lexer lexer("54__15", "ContiguousUnderscoreSeparatorTest", errors);
@@ -42,6 +41,17 @@ TEST(LexerHappyIntegerTests, IntegerContiguousUnderscoreSeparatorTest) {
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+TEST(LexerHappyIntegerTests, IntegerUnexpectedCharTest) {
+    std::vector<Error> errors;
+    Lexer lexer("54$15", "UnexpectedCharTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::ERROR);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+/*
 TEST(LexerSadIntegerTests, IntegerFollowedByIdTest) {
     std::vector<Error> errors;
     Lexer lexer("5_415_identifier", "FollowedByIdTest", errors);
