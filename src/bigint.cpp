@@ -453,3 +453,6 @@ Cmp bigint_cmp(const BigInt *op1, const BigInt *op2) {
     }
 }
 
+bool operator==(const BigInt& val1, const BigInt& val2) {
+    return bigint_cmp(&val1, &val2) == CmpEQ;
+}

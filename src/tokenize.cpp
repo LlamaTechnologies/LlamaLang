@@ -103,7 +103,7 @@ static bool is_exponent_signifier(uint8_t c, int radix);
 Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
     : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(0L),
     curr_line(0L), curr_column(0L), state(TokenizerState::Start),
-    radix(10), is_trailing_underscore(false),
+    radix(10), is_trailing_underscore(false), is_invalid_symbol(false),
     curr_token(), tokens_vec(), comments_vec()
 {
     // open file
@@ -123,6 +123,13 @@ Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
     }
     file.close();
 }
+
+Lexer::Lexer(const std::string& _src_file, const std::string& _file_name, std::vector<Error>& _errors)
+    : file_name(_file_name), source(_src_file), errors(_errors), cursor_pos(0L), curr_index(0L),
+    curr_line(0L), curr_column(0L), state(TokenizerState::Start),
+    radix(10), is_trailing_underscore(false), is_invalid_symbol(false),
+    curr_token(), tokens_vec(), comments_vec()
+{}
 
 // IMPORTANT!: should not be called more than once after the constructor.
 void Lexer::tokenize() noexcept
@@ -273,6 +280,9 @@ void Lexer::tokenize() noexcept
                 end_token();
                 break;
             default:
+                tokenize_error("Unidentified token %c", c);
+                is_invalid_symbol = true;
+                state = TokenizerState::Symbol;
                 break;
             }
             break;
@@ -284,7 +294,15 @@ void Lexer::tokenize() noexcept
                 break;
             default:
                 cursor_pos--;
-                is_keyword();
+                
+                if (is_invalid_symbol) {
+                    is_invalid_symbol = false;
+                    set_token_id(TokenId::ERROR);
+                }
+                else {
+                    is_keyword();
+                }
+                
                 end_token();
                 state = TokenizerState::Start;
                 continue;
@@ -437,13 +455,17 @@ void Lexer::tokenize() noexcept
 
                 if (is_symbol_char(c)) {
                     invalid_char_error(c);
+                    is_invalid_symbol = true;
+                    state = TokenizerState::Symbol;
+                    break;
                 }
-
-                // not my char
-                cursor_pos--;
-                end_token();
-                state = TokenizerState::Start;
-                continue;
+                else {
+                    state = TokenizerState::Start;
+                    // not my char
+                    cursor_pos--;
+                    end_token();
+                    continue;
+                }
             }
             BigInt digit_value_bi;
             bigint_init_unsigned(&digit_value_bi, digit_value);
@@ -882,6 +904,16 @@ void Lexer::tokenize() noexcept
     case Lexer::TokenizerState::LineComment:
         break;
     case Lexer::TokenizerState::Symbol:
+        if (is_invalid_symbol) {
+            is_invalid_symbol = false;
+            set_token_id(TokenId::ERROR);
+        }
+        else {
+            is_keyword();
+        }
+
+        end_token();
+        break;
     case Lexer::TokenizerState::Zero:
     case Lexer::TokenizerState::Number:
     case Lexer::TokenizerState::FloatFraction:
@@ -915,10 +947,8 @@ void Lexer::tokenize() noexcept
         UNREACHEABLE;
     }
 
-    if (state != TokenizerState::Error) {
-        begin_token(TokenId::_EOF);
-        end_token();
-    }
+    begin_token(TokenId::_EOF);
+    end_token();
 }
 
 const bool Lexer::has_tokens() const noexcept

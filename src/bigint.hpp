@@ -22,12 +22,6 @@ struct BigInt {
 struct Buf;
 struct BigFloat;
 
-enum Cmp {
-    CmpLT,
-    CmpGT,
-    CmpEQ,
-};
-
 void bigint_init_unsigned(BigInt *dest, uint64_t x);
 void bigint_init_signed(BigInt *dest, int64_t x);
 void bigint_init_bigint(BigInt *dest, const BigInt *src);
@@ -48,5 +42,12 @@ void bigint_shl(BigInt *dest, const BigInt *op1, const BigInt *op2);
 
 void bigint_negate(BigInt *dest, const BigInt *op);
 
-Cmp bigint_cmp(const BigInt *op1, const BigInt *op2);
+enum Cmp {
+    CmpLT,
+    CmpGT,
+    CmpEQ,
+};
 
+Cmp bigint_cmp(const BigInt* op1, const BigInt* op2);
+
+bool operator==(const BigInt& val1, const BigInt& val2);

@@ -69,7 +69,8 @@ enum class TokenId {
     WS,                 // [\t \r \n ' ']
     DOC_COMMENT,        // '/*' . '*/'
     LINE_COMMENT,       // // .
-    _EOF                 // enf of file
+    ERROR,              // special token: describes an invalid token
+    _EOF                // end of file
 };
 
 std::string& token_id_name(TokenId id);
@@ -155,10 +156,10 @@ class Lexer {
     uint32_t char_code;             // char_code used accros the char_code state
     bool unicode;                   // is unicode char code
     bool is_trailing_underscore;    // used to interpret number_number
+    bool is_invalid_symbol;         // used to finish tokenizing a invalid symbol
 
     TokenizerState state;
     Token curr_token;
-    
 public:
     std::string file_name;
     std::string source;
@@ -168,8 +169,8 @@ private:
     std::vector<Token>  comments_vec;
     std::vector<Error>& errors;
 public:
-    Lexer(const std::string& _file_name, std::vector<Error>& errors);
-
+    Lexer(const std::string& _file_name, std::vector<Error>& _errors);
+    Lexer(const std::string& _src_file, const std::string& _file_name, std::vector<Error>& _errors);
     void tokenize() noexcept;
 
     const bool has_tokens() const noexcept;

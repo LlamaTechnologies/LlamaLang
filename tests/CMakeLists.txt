@@ -11,6 +11,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/test")
 
 # set llang sources
 set(LLAMATEST_SRC
+lexer/lexer_happy_paths.cpp
 "test.cpp"
 )
 
@@ -25,7 +26,7 @@ add_test(NAME ${TEST_NAME} COMMAND ${LLAMATEST_SRC})
 target_link_libraries(${TEST_NAME} PUBLIC ${CMAKE_PROJECT_NAME}_lib gtest)
 
 # set filters
-foreach(_source IN ITEMS ${LLAMALANG_SRC})
+foreach(_source IN ITEMS ${LLAMATEST_SRC})
 # Get the directory of the source file
 get_filename_component(_source_path "${_source}" PATH)
 
