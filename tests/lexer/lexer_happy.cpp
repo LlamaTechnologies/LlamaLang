@@ -533,3 +533,88 @@ TEST(LexerHappyFloatTests, FloatCompleteUnderscoresTest) {
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
+
+//==================================================================================
+//          STRING | CHARS
+//==================================================================================
+
+TEST(LexerHappyStringCharTests, EmptyStringTest) {
+    std::vector<Error> errors;
+    Lexer lexer("\"\"", "EmptyStringTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyStringCharTests, StringTest) {
+    std::vector<Error> errors;
+    Lexer lexer(" \"Hello world for 1st time!\" ", "StringTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
+    std::vector<Error> errors;
+    Lexer lexer(" \"Hello world for /*1st*/ time!\" ", "CommentInsideStringTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
+    std::vector<Error> errors;
+    Lexer lexer(" \"\'Hello world\\' \\n \\'for 1st time!\'\" ", "EscapedCharStringTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyStringCharTests, EscapedCharTest) {
+    std::vector<Error> errors;
+    Lexer lexer("\'\\r\'", "EscapedCharTest", errors);
+    lexer.tokenize();
+
+    auto char_token = lexer.get_current_token();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(char_token.id, TokenId::UNICODE_CHAR);
+    ASSERT_EQ(char_token.char_lit, '\r');
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
+    std::vector<Error> errors;
+    Lexer lexer("\'\\x42\'", "EscapedCharTest", errors);
+    lexer.tokenize();
+
+    auto char_token = lexer.get_current_token();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(char_token.id, TokenId::UNICODE_CHAR);
+    ASSERT_EQ(char_token.char_lit, '\x42');
+    ASSERT_EQ(char_token.char_lit, 'B');
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
+    std::vector<Error> errors;
+    Lexer lexer("\'\\u{00B6}\'", "EscapedCharUnicodeTest", errors);
+    lexer.tokenize();
+
+    auto char_token = lexer.get_current_token();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(char_token.id, TokenId::UNICODE_CHAR);
+    ASSERT_EQ(char_token.char_lit, L'\u00B6');
+    ASSERT_EQ(char_token.char_lit, L'¶');
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}

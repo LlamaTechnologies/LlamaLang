@@ -769,12 +769,18 @@ void Lexer::tokenize() noexcept
         case TokenizerState::String:
             switch (c) {
             case '"':
+                if (is_invalid_token) {
+                    is_invalid_token = false;
+                    set_token_id(TokenId::ERROR);
+                }
                 append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             case '\n':
                 tokenize_error("newline not allowed in string literal");
+                is_invalid_token = true;
+                state = TokenizerState::String;
                 break;
             case '\\':
                 state = TokenizerState::StringEscape;
@@ -787,6 +793,9 @@ void Lexer::tokenize() noexcept
         case TokenizerState::CharLiteral:
             if (c == '\'') {
                 tokenize_error("expected character");
+                set_token_id(TokenId::ERROR);
+                end_token();
+                state = TokenizerState::Start;
             }
             else if (c == '\\') {
                 state = TokenizerState::StringEscape;

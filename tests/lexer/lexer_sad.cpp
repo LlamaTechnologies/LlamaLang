@@ -175,4 +175,33 @@ TEST(LexerSadIntegerTests, IntegerFollowedByIdTest) {
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+//==================================================================================
+//          FLOAT LIT
+//==================================================================================
+
+// TODO: 
+
+//==================================================================================
+//          STRING | CHARS
+//==================================================================================
+
+TEST(LexerSadStringCharTests, EmptyCharTest) {
+    std::vector<Error> errors;
+    Lexer lexer("\'\'", "EmptyStringTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::ERROR);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerSadStringCharTests, MultilineStringTest) {
+    std::vector<Error> errors;
+    Lexer lexer(" \"Hello world for...\n1st time!\" ", "MultilineStringTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::ERROR);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
 
