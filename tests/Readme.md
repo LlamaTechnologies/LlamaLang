@@ -1,2 +1,3 @@
 # Tests
-In this folder are all the files needed for testing the compiler, such as example codes and parse trees. I also keep proof that the tests worked.
+In this folder are all unit test files grouped by compiling stage in folders.
+The resource folder has fully functional LlamaLang project. (Or should have someday).
