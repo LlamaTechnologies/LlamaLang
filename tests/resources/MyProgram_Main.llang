@@ -1,0 +1,10 @@
+#module MyProgram
+
+f int32 = 55
+
+#main
+fn myProgramInit() int32 {
+    f = myFunction(f + 5)
+    // should return 42
+    ret f
+}

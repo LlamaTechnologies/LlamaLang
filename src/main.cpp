@@ -1,9 +1,10 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include "Config.hpp"
-#include "Compiler.hpp"
-#include "Console.hpp"
+#include "config.hpp"
+#include "console.hpp"
+#include "tokenize.hpp"
+#include "parser.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -19,11 +20,11 @@
 #define MOD_KEY_TYPE "type"
 
 static std::string get_current_dir();
-static void parseModuleFile(std::ifstream &moduleFile, llang::ModuleConfig &moduleConfig);
+static void parseModuleFile(std::ifstream &moduleFile, ModuleConfig &moduleConfig);
+static std::string get_first_file_name(const ModuleConfig& module_config, int &error);
 
 int main(int argc, const char *argv[])
 {
-  using namespace llang;
   namespace fs = std::filesystem;
 
   fs::path currentDirPath(get_current_dir());
@@ -31,7 +32,6 @@ int main(int argc, const char *argv[])
 
   // read config file
   fs::directory_iterator currentDir(currentDirPath);
-
 
   bool compileModule = true;
 
@@ -61,19 +61,35 @@ int main(int argc, const char *argv[])
       parseModuleFile(moduleFile, moduleConfig);
     }
 
-    return Compiler::compile(moduleConfig);
+    std::vector<Error> errors;
+
+    int error;
+    std::string file_name = get_first_file_name(moduleConfig, error);
+    
+    if (error) {
+        return error;
+    }
+
+    Lexer lexer(file_name, errors);
+    lexer.tokenize();
+    auto print_lines = print_tokens(lexer);
+    for (auto line : print_lines)
+        console::WriteLine(line);
+
+    Parser parser(lexer, errors);
+    auto sourceCodeNode = parser.parse();
+    return 0;
   }
 
   // solution not supported yet
-  Console::WriteLine("Solution not supported yet");
+  console::WriteLine("Solution not supported yet");
   return -1;
 
   //return Compiler::compile(solutionConfig);
 }
 
-void parseModuleFile(std::ifstream &moduleFile, llang::ModuleConfig &moduleConfig)
+void parseModuleFile(std::ifstream &moduleFile, ModuleConfig &moduleConfig)
 {
-  using namespace llang;
   namespace fs = std::filesystem;
 
   while (moduleFile.good() && !moduleFile.eof()) {
@@ -100,9 +116,45 @@ void parseModuleFile(std::ifstream &moduleFile, llang::ModuleConfig &moduleConfi
       else if (value == "LIB")
         moduleConfig.moduleType = MODULE_TYPE::LIB;
       else
-        Console::WriteLine("Invalid module type: " + value);
+        console::WriteLine("Invalid module type: " + value);
     }
   }
+}
+
+std::string get_first_file_name(const ModuleConfig& module_config, int &error)
+{
+    namespace fs = std::filesystem;
+    auto folder_name = module_config.srcFolder;
+
+    auto path = fs::canonical(folder_name);
+    error = 0;
+
+    if (!fs::exists(path)) {
+        console::WriteLine("Directory not found: " + folder_name);
+        error = -1;
+        return "";
+    }
+
+    if (!fs::is_directory(path)) {
+        console::WriteLine("Path is not a directory: " + folder_name);
+        error = -1;
+        return "";
+    }
+
+    auto directory = fs::recursive_directory_iterator(folder_name);
+
+    for (auto entry : directory) {
+        auto filePath = entry.path();
+        auto ext = filePath.extension().string();
+        auto fileName = filePath.filename().string();
+
+        if (entry.is_regular_file() && ext == ".llang") {
+            return entry.path().string();
+        }
+    }
+
+    error = -1;
+    return "";
 }
 
 std::string get_current_dir()

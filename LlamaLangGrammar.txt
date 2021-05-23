@@ -1,0 +1,223 @@
+# LLAMA LANGUAGE GRAMMAR
+
+sourceFile
+    : (functionProto | functionDef | varDef eos)* eos
+    ;
+
+basicDirective
+    : '#' IDENTIFIER (IDENTIFIER | string_)?
+    ;
+
+// Function declarations
+functionDef
+    : functionProto block
+    ;
+
+functionProto
+    : 'fn' IDENTIFIER signature type_
+    ;
+
+signature
+    : '(' parameterList? ')'
+    ;
+
+
+parameterList
+    : parameterDecl (',' parameterDecl)*
+    ;
+
+
+parameterDecl
+    : IDENTIFIER type_
+    ;
+
+block
+    : '{' statementList? '}'
+    ;
+
+statementList
+    : (statement eos)+
+    ;
+
+statement
+    : varDef
+    | simpleStmt
+    | returnStmt
+    | block
+    ;
+
+varDef
+    : IDENTIFIER type_ ('=' expression)?
+    ;
+
+
+simpleStmt
+    : expression
+    | assignmentStmnt
+    | emptyStmt
+    ;
+
+
+assignmentStmnt
+    : IDENTIFIER assign_op expression
+    ;
+
+assign_op
+    : ('+' | '-' | '|' | '^' | '*' | '/' | '%' | '<<' | '>>' | '&' | '&^')? '='
+    ;
+
+emptyStmt
+    : ';'
+    ;
+
+returnStmt
+    : 'ret' expression?
+    ;
+
+expression
+    : primaryExpr
+    | unaryExpr
+    | expression ('*' | '/' | '%' | '<<' | '>>' | '&' | '&^') expression
+    | expression ('+' | '-' | '|' | '^') expression
+    | expression ('==' | '!=' | '<' | '<=' | '>' | '>=') expression
+    | expression LOGICAL_AND expression
+    | expression LOGICAL_OR expression
+    ;
+
+unaryExpr
+    : primaryExpr
+    | callExpr
+    | unaryOp unaryExpr
+    ;
+
+primaryExpr
+    : literal
+    | IDENTIFIER
+    | '(' expression ')'
+    ;
+
+callExpr
+    : IDENTIFIER '(' expressionList ')'
+    ;
+
+expressionList
+    :  expression (',' expression)*
+    ;
+
+unaryOp
+    : ('-' | '--' | '++')
+    ;
+
+type_
+    : typeName
+    | pointer
+    | array
+    ;
+
+pointer
+    : '*' type_
+    ;
+
+array
+    : '[' ']' typeName
+    ;
+    
+typeName
+    : IDENTIFIER
+    ;
+
+literal
+    : INT_LIT
+    | FLOAT_LIT
+    | string_
+    | RUNE_LIT
+    ;
+
+string_
+    : INTERPRETED_STRING_LIT
+    ;
+
+eos
+    : ';'
+    | '\n'
+    | EOF
+    ;
+
+// Keywords
+HASH                    : '#';
+FUNC                    : 'fn';
+RETURN                  : 'ret';
+IDENTIFIER              : [a-zA-Z_] ([a-zA-Z0-9_])*;
+
+L_PAREN                 : '(';
+R_PAREN                 : ')';
+L_CURLY                 : '{';
+R_CURLY                 : '}';
+L_BRACKET               : '[';
+R_BRACKET               : ']';
+ASSIGN                  : '=';
+COMMA                   : ',';
+SEMI                    : ';';
+COLON                   : ':';
+DOT                     : '.';
+
+PLUS_PLUS               : '++';
+MINUS_MINUS             : '--';
+
+NOT                     : '!';
+OR                      : '||' | 'or';
+AND                     : '&&' | 'and';
+EQUALS                  : '==';
+NOT_EQUALS              : '!=';
+LESS                    : '<';
+GREATER                 : '>';
+LESS_OR_EQUALS          : '<=';
+GREATER_OR_EQUALS       : '>=';
+
+PLUS                    : '+';
+MINUS                   : '-';
+CARET                   : '^';
+MUL                     : '*';
+DIV                     : '/';
+MOD                     : '%';
+
+BIT_OR                  : '|';
+BIT_AND                 : '&';
+LSHIFT                  : '<<';
+RSHIFT                  : '>>';
+
+
+// Number literals
+DECIMAL_LIT             : [0-9]+            [u]? [bwl]?
+                        | '0' [o] [0-7]*    [u]? [bwl]?
+                        | '0' [x] [0-9A-F]+ [u]? [bwl]?
+                        | '0' [b] [01]+     [u]? [bwl]?
+                        ;
+
+FLOAT_LIT               : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT) [f]?
+                        | '.' DECIMALS EXPONENT? [f]?
+                        ;
+
+RUNE_LIT                : '\'' (~[\n\\] | ESCAPED_VALUE) '\'';
+
+INTERPRETED_STRING_LIT  : '"' (~["\\] | ESCAPED_VALUE)*  '"';
+
+// Hidden tokens
+WS                      : [ \t \r \n ' ']+   -> skip;
+COMMENT                 : '/*' .*? '*/'      -> channel(COMMENTS);
+LINE_COMMENT            : '//' ~[\n]*        -> skip;
+
+// Fragments
+fragment ESCAPED_VALUE
+    : '\\' ('u' '{' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT '}'
+           | [abfnrtv\\'"]
+           | 'x' HEX_DIGIT HEX_DIGIT)
+    ;
+
+fragment DECIMALS
+    : [0-9]+
+    ;
+
+fragment EXPONENT
+    : [eE] [+-]? DECIMALS
+    ;
