@@ -98,6 +98,7 @@
 static uint32_t get_digit_value(uint8_t c);
 static const char* get_escape_shorthand(uint8_t c);
 static bool is_symbol_char(uint8_t c);
+static bool is_float_specifier(uint8_t c);
 static bool is_sign_or_type_specifier(uint8_t c);
 static bool is_exponent_signifier(uint8_t c, int radix);
 
@@ -280,6 +281,46 @@ void Lexer::tokenize() noexcept
                 append_char(c);
                 end_token();
                 break;
+            case '.':
+                begin_token(TokenId::FLOAT_LIT);
+                state = TokenizerState::NumberDot;
+                append_char(c);
+                break;
+            case '!':
+                begin_token(TokenId::NOT);
+                append_char(c);
+                state = TokenizerState::SawNot;
+                break;
+            case '|':
+                begin_token(TokenId::BIT_OR);
+                append_char(c);
+                state = TokenizerState::SawVerticalBar;
+                break;
+            case '&':
+                begin_token(TokenId::BIT_AND);
+                append_char(c);
+                state = TokenizerState::SawAmpersand;
+                break;
+            case '~':
+                begin_token(TokenId::BIT_NOT);
+                append_char(c);
+                end_token();
+                break;
+            case '^':
+                begin_token(TokenId::BIT_XOR);
+                append_char(c);
+                end_token();
+                break;
+            case '<':
+                begin_token(TokenId::LESS);
+                append_char(c);
+                state = TokenizerState::SawLess;
+                break;
+            case '>':
+                begin_token(TokenId::GREATER);
+                append_char(c);
+                state = TokenizerState::SawGreater;
+                break;
             default:
                 tokenize_error("Unidentified character in symbol %c", c);
                 is_invalid_token = true;
@@ -457,6 +498,8 @@ void Lexer::tokenize() noexcept
                     break;
                 } else if (is_trailing_underscore) {
                     invalid_char_error(c);
+                    is_invalid_token = true;
+                    state = TokenizerState::Symbol;
                     break;
                 } else if (is_symbol_char(c) || !isxdigit(c)) {
                     invalid_char_error(c);
@@ -503,9 +546,14 @@ void Lexer::tokenize() noexcept
             if (radix != 16 && radix != 10) {
                 invalid_char_error(c);
             }
+            else if (is_float_specifier(c)) {
+                set_token_id(TokenId::FLOAT_LIT);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
             cursor_pos--;
             state = TokenizerState::FloatFractionNoUnderscore;
-            assert(curr_token.id == TokenId::INT_LIT);
             set_token_id(TokenId::FLOAT_LIT);
             continue;
         }
@@ -541,10 +589,18 @@ void Lexer::tokenize() noexcept
                 if (is_trailing_underscore) {
                     invalid_char_error(c);
                     break;
+                } 
+                
+                if (is_float_specifier(c)) {
+                    end_token();
+                    state = TokenizerState::Start;
+                    break;
                 }
+                
                 if (is_symbol_char(c)) {
                     invalid_char_error(c);
                 }
+
                 // not my char
                 cursor_pos--;
                 end_token();
@@ -596,6 +652,13 @@ void Lexer::tokenize() noexcept
                     invalid_char_error(c);
                     break;
                 }
+
+                if (is_float_specifier(c)) {
+                    end_token();
+                    state = TokenizerState::Start;
+                    break;
+                }
+
                 if (is_symbol_char(c)) {
                     invalid_char_error(c);
                 }
@@ -890,6 +953,85 @@ void Lexer::tokenize() noexcept
             }
         }
             break;
+        case TokenizerState::SawNot:
+            if (c == '=') {
+                set_token_id(TokenId::NOT_EQUALS);
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            // just a !
+            cursor_pos--;
+            end_token();
+            state = TokenizerState::Start;
+            continue;
+        case TokenizerState::SawVerticalBar:
+            if (c == '|') {
+                set_token_id(TokenId::OR);
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            // just a |
+            cursor_pos--;
+            end_token();
+            state = TokenizerState::Start;
+            continue;
+        case TokenizerState::SawAmpersand:
+            if (c == '&') {
+                set_token_id(TokenId::AND);
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            // just a &
+            cursor_pos--;
+            end_token();
+            state = TokenizerState::Start;
+            continue;
+        case TokenizerState::SawLess:
+            if (c == '<') {
+                set_token_id(TokenId::LSHIFT);
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            if (c == '=') {
+                set_token_id(TokenId::LESS_OR_EQUALS);
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            // just a <
+            cursor_pos--;
+            end_token();
+            state = TokenizerState::Start;
+            continue;
+        case TokenizerState::SawGreater:
+            if (c == '>') {
+                set_token_id(TokenId::RSHIFT);
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            if (c == '=') {
+                set_token_id(TokenId::GREATER_OR_EQUALS);
+                append_char(c);
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            // just a >
+            cursor_pos--;
+            end_token();
+            state = TokenizerState::Start;
+            continue;
         // If error just get to the next token
         case TokenizerState::Error:
             break;
@@ -934,9 +1076,14 @@ void Lexer::tokenize() noexcept
         }
         end_token();
         break;
+    case Lexer::TokenizerState::NumberDot:
+        set_token_id(TokenId::FLOAT_LIT);
     case Lexer::TokenizerState::FloatFraction:
     case Lexer::TokenizerState::FloatExponentUnsigned:
     case Lexer::TokenizerState::FloatExponentNumber:
+    case Lexer::TokenizerState::NumberNoUnderscore:
+    case Lexer::TokenizerState::FloatFractionNoUnderscore:
+    case Lexer::TokenizerState::FloatExponentNumberNoUnderscore:
     case Lexer::TokenizerState::SawStar:
     case Lexer::TokenizerState::SawSlash:
     case Lexer::TokenizerState::SawPercent:
@@ -945,12 +1092,6 @@ void Lexer::tokenize() noexcept
     case Lexer::TokenizerState::SawEq:
     case Lexer::TokenizerState::DocComment:
         end_token();
-        break;
-    case Lexer::TokenizerState::NumberDot:
-    case Lexer::TokenizerState::NumberNoUnderscore:
-    case Lexer::TokenizerState::FloatFractionNoUnderscore:
-    case Lexer::TokenizerState::FloatExponentNumberNoUnderscore:
-        tokenize_error("unterminated number literal");
         break;
     case Lexer::TokenizerState::String:
         tokenize_error("unterminated string literal");
@@ -1123,6 +1264,11 @@ bool is_symbol_char(uint8_t c) {
     default:
         return false;
     }
+}
+
+bool is_float_specifier(uint8_t c)
+{
+    return c == 'f';
 }
 
 bool is_sign_or_type_specifier(uint8_t c) {

@@ -219,6 +219,11 @@ private:
         SawPercent,                //
         SawPlus,                   //
         SawDash,                   //
+        SawNot,
+        SawVerticalBar,
+        SawAmpersand,
+        SawLess,
+        SawGreater,
         DocComment,                //
         SawStarDocComment,         // * in multiline comment may lead to end comment
         LineComment,               //
