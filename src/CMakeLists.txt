@@ -33,7 +33,6 @@ common_defs.cpp
 config.hpp
 console.hpp
 
-
 error.hpp
 error.cpp
 
@@ -44,10 +43,10 @@ parse_error_msgs.hpp
 parser.hpp
 parser.cpp
 
+supportedcompilers.hpp
+
 tokenize.hpp
 tokenize.cpp
-
-supportedcompilers.hpp
 )
 
 link_directories("${CMAKE_SOURCE_DIR}/extern" "${LLVM_DIR}/lib")

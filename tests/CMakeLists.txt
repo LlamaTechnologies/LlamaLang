@@ -11,7 +11,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/test")
 
 # set llang sources
 set(LLAMATEST_SRC
-lexer/lexer_happy_paths.cpp
+lexer/lexer_happy.cpp
+lexer/lexer_sad.cpp
 "test.cpp"
 )
 

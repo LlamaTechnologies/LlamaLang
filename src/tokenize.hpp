@@ -92,11 +92,6 @@ struct Token {
     std::string   file_name;
 
     union {
-        std::string   value;
-        std::string   string_lit;
-    };
-    
-    union {
         BigInt    int_lit;
         BigFloat  float_lit;
         Char      char_lit;
@@ -107,7 +102,7 @@ struct Token {
         start_pos(0L), end_pos(0L),
         start_line(0), start_column(0),
         file_name(""),
-        value(""), int_lit({ 0 }) {}
+        int_lit({ 0 }) {}
 
     ~Token() {}
 
@@ -118,7 +113,6 @@ struct Token {
         start_line(other.start_line),
         start_column(other.start_column),
         file_name(other.file_name),
-        value(other.value),
         int_lit(other.int_lit) {}
 
     Token& operator=(const Token& other) {
@@ -132,10 +126,13 @@ struct Token {
         start_pos = other.start_pos;
         end_pos = other.end_pos;
         file_name = other.file_name;
-        value = other.value; 
         int_lit = other.int_lit;
 
         return *this;
+    }
+
+    size_t get_value_size() {
+        return end_pos - start_pos;
     }
 };
 
@@ -183,12 +180,13 @@ public:
     // --curr_index
     void return_last_token() const noexcept;
 
+    std::string_view get_token_value(const Token& token) const noexcept;
+
     friend Console print_tokens(Lexer& lexer);
 private:
     void begin_token(const TokenId id) noexcept;
     void set_token_id(const TokenId id) noexcept;
     void end_token() noexcept;
-    void append_char(const char c) noexcept;
     void reset_line() noexcept; 
     void is_keyword() noexcept;
     void invalid_char_error(uint8_t c) noexcept;

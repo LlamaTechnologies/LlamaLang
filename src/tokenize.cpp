@@ -152,7 +152,6 @@ void Lexer::tokenize() noexcept
             case SYMBOL_START:
                 state = TokenizerState::Symbol;
                 begin_token(TokenId::IDENTIFIER);
-                append_char(c);
                 break;
                 // we found a 0 so we have to tokenize a 
                 // octal: 0o[0-7]...
@@ -162,7 +161,6 @@ void Lexer::tokenize() noexcept
             case '0':
                 state = TokenizerState::Zero;
                 begin_token(TokenId::INT_LIT);
-                append_char(c);
                 is_trailing_underscore = false;
                 radix = 10;
                 bigint_init_unsigned(&curr_token.int_lit, 0);
@@ -170,7 +168,6 @@ void Lexer::tokenize() noexcept
             case DIGIT_NON_ZERO:
                 state = TokenizerState::Number;
                 begin_token(TokenId::INT_LIT);
-                append_char(c);
                 is_trailing_underscore = false;
                 radix = 10;
                 bigint_init_unsigned(&curr_token.int_lit, get_digit_value(c));
@@ -179,13 +176,11 @@ void Lexer::tokenize() noexcept
             case '"':
                 begin_token(TokenId::STRING);
                 state = TokenizerState::String;
-                append_char(c);
                 break;
                 // we found the beginning of a char literal
             case '\'':
                 begin_token(TokenId::UNICODE_CHAR);
                 state = TokenizerState::CharLiteral;
-                append_char(c);
                 break;
                 // we found
                 // ASSIGN =
@@ -193,7 +188,6 @@ void Lexer::tokenize() noexcept
             case '=':
                 begin_token(TokenId::ASSIGN);
                 state = TokenizerState::SawEq;
-                append_char(c);
                 break;
                 // we found 
                 // a DIV
@@ -203,7 +197,6 @@ void Lexer::tokenize() noexcept
             case '/':
                 begin_token(TokenId::DIV);
                 state = TokenizerState::SawSlash;
-                append_char(c);
                 break;
                 // we found
                 // MUL
@@ -211,7 +204,6 @@ void Lexer::tokenize() noexcept
             case '*':
                 begin_token(TokenId::MUL);
                 state = TokenizerState::SawStar;
-                append_char(c);
                 break;
                 // we found
                 // a PLUS
@@ -220,7 +212,6 @@ void Lexer::tokenize() noexcept
             case '+':
                 begin_token(TokenId::PLUS);
                 state = TokenizerState::SawPlus;
-                append_char(c);
                 break;
                 // we found
                 // a MINUS
@@ -229,7 +220,6 @@ void Lexer::tokenize() noexcept
             case '-':
                 begin_token(TokenId::MINUS);
                 state = TokenizerState::SawDash;
-                append_char(c);
                 break;
                 // we found
                 // MOD
@@ -237,88 +227,72 @@ void Lexer::tokenize() noexcept
             case '%':
                 begin_token(TokenId::MOD);
                 state = TokenizerState::SawPercent;
-                append_char(c);
                 break;
                 // we found a hash
             case '#':
                 begin_token(TokenId::HASH);
-                append_char(c);
                 end_token();
                 break;
                 // we found a semicolon
             case ';':
                 begin_token(TokenId::SEMI);
-                append_char(c);
+                
                 end_token();
                 break;
             case '(':
                 begin_token(TokenId::L_PAREN);
-                append_char(c);
                 end_token();
                 break;
             case ')':
                 begin_token(TokenId::R_PAREN);
-                append_char(c);
                 end_token();
                 break;
             case '{':
                 begin_token(TokenId::L_CURLY);
-                append_char(c);
                 end_token();
                 break;
             case '}':
                 begin_token(TokenId::R_CURLY);
-                append_char(c);
                 end_token();
                 break;
             case '[':
                 begin_token(TokenId::L_BRACKET);
-                append_char(c);
                 end_token();
                 break;
             case ']':
                 begin_token(TokenId::R_BRACKET);
-                append_char(c);
                 end_token();
                 break;
             case '.':
                 begin_token(TokenId::FLOAT_LIT);
                 state = TokenizerState::NumberDot;
-                append_char(c);
                 break;
             case '!':
                 begin_token(TokenId::NOT);
-                append_char(c);
                 state = TokenizerState::SawNot;
                 break;
             case '|':
                 begin_token(TokenId::BIT_OR);
-                append_char(c);
                 state = TokenizerState::SawVerticalBar;
                 break;
             case '&':
                 begin_token(TokenId::BIT_AND);
-                append_char(c);
                 state = TokenizerState::SawAmpersand;
                 break;
             case '~':
                 begin_token(TokenId::BIT_NOT);
-                append_char(c);
                 end_token();
                 break;
             case '^':
                 begin_token(TokenId::BIT_XOR);
-                append_char(c);
                 end_token();
                 break;
             case '<':
                 begin_token(TokenId::LESS);
-                append_char(c);
                 state = TokenizerState::SawLess;
                 break;
             case '>':
                 begin_token(TokenId::GREATER);
-                append_char(c);
                 state = TokenizerState::SawGreater;
                 break;
             default:
@@ -332,7 +306,6 @@ void Lexer::tokenize() noexcept
         case TokenizerState::Symbol:
             switch (c) {
             case SYMBOL_CHAR:
-                append_char(c);
                 break;
             default:
                 cursor_pos--;
@@ -360,13 +333,11 @@ void Lexer::tokenize() noexcept
                 // doc comment /* */
             case '*':
                 set_token_id(TokenId::DOC_COMMENT);
-                append_char(c);
                 state = TokenizerState::DocComment;
                 break;
                 // DIV_ASSIGN /=
             case '=':
                 set_token_id(TokenId::DIV_ASSIGN);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -383,10 +354,8 @@ void Lexer::tokenize() noexcept
             switch (c) {
             case '*':
                 state = TokenizerState::SawStarDocComment;
-                append_char(c);
                 break;
             default:
-                append_char(c);
                 break;
             }
             break;
@@ -394,13 +363,11 @@ void Lexer::tokenize() noexcept
             switch (c)
             {
             case '/':
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             default:
                 state = TokenizerState::DocComment;
-                append_char(c);
                 break;
             }
             break;
@@ -458,7 +425,6 @@ void Lexer::tokenize() noexcept
             if (c == '_') {
                 is_trailing_underscore = true;
                 state = TokenizerState::NumberNoUnderscore;
-                append_char(c);
                 break;
             }
             // dot in number
@@ -469,7 +435,6 @@ void Lexer::tokenize() noexcept
                     break;
                 }
                 state = TokenizerState::NumberDot;
-                append_char(c);
                 break;
             }
             // is eE or pP
@@ -487,7 +452,7 @@ void Lexer::tokenize() noexcept
                 radix = 10; // exponent is always base 10
                 assert(curr_token.id == TokenId::INT_LIT);
                 set_token_id(TokenId::FLOAT_LIT);
-                append_char(c);
+                
                 break;
             }
             uint32_t digit_value = get_digit_value(c);
@@ -531,7 +496,7 @@ void Lexer::tokenize() noexcept
             bigint_mul(&multiplied, &curr_token.int_lit, &radix_bi);
 
             bigint_add(&curr_token.int_lit, &multiplied, &digit_value_bi);
-            append_char(c);
+            
             break;
         }
         case TokenizerState::NumberDot:
@@ -571,7 +536,6 @@ void Lexer::tokenize() noexcept
             if (c == '_') {
                 is_trailing_underscore = true;
                 state = TokenizerState::FloatFractionNoUnderscore;
-                append_char(c);
                 break;
             }
             if (is_exponent_signifier(c, radix)) {
@@ -581,7 +545,6 @@ void Lexer::tokenize() noexcept
                 }
                 state = TokenizerState::FloatExponentUnsigned;
                 radix = 10; // exponent is always base 10
-                append_char(c);
                 break;
             }
             uint32_t digit_value = get_digit_value(c);
@@ -609,18 +572,16 @@ void Lexer::tokenize() noexcept
             }
             // we use parse_f128 to generate the float literal, so just
             // need to get to the end of the token
-            append_char(c);
+            
         }
         break;
         case TokenizerState::FloatExponentUnsigned:
             switch (c) {
             case '+':
                 state = TokenizerState::FloatExponentNumberNoUnderscore;
-                append_char(c);
                 break;
             case '-':
                 state = TokenizerState::FloatExponentNumberNoUnderscore;
-                append_char(c);
                 break;
             default:
                 // reinterpret as normal exponent number
@@ -643,7 +604,6 @@ void Lexer::tokenize() noexcept
             if (c == '_') {
                 is_trailing_underscore = true;
                 state = TokenizerState::FloatExponentNumberNoUnderscore;
-                append_char(c);
                 break;
             }
             uint32_t digit_value = get_digit_value(c);
@@ -671,14 +631,13 @@ void Lexer::tokenize() noexcept
 
             // we use parse_f128 to generate the float literal, so just
             // need to get to the end of the token
-            append_char(c);
+            
         }
         break;
         case TokenizerState::SawEq:
             switch (c) {
             case '=':
                 set_token_id(TokenId::EQUALS);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -694,13 +653,11 @@ void Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::PLUS_ASSIGN);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             case '+':
                 set_token_id(TokenId::PLUS_PLUS);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -716,13 +673,11 @@ void Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::MINUS_ASSIGN);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             case '-':
                 set_token_id(TokenId::MINUS_MINUS);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -738,7 +693,6 @@ void Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::MUL_ASSIGN);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -754,7 +708,6 @@ void Lexer::tokenize() noexcept
             switch (c) {
             case '=':
                 set_token_id(TokenId::MOD_ASSIGN);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -773,7 +726,6 @@ void Lexer::tokenize() noexcept
                     is_invalid_token = false;
                     set_token_id(TokenId::ERROR);
                 }
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -786,7 +738,6 @@ void Lexer::tokenize() noexcept
                 state = TokenizerState::StringEscape;
                 break;
             default:
-                append_char(c);
                 break;
             }
             break;
@@ -842,7 +793,6 @@ void Lexer::tokenize() noexcept
         case TokenizerState::CharLiteralEnd:
             switch (c) {
             case '\'':
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -892,7 +842,6 @@ void Lexer::tokenize() noexcept
                 char_code = 0;
                 char_code_index = 0;
                 unicode = true;
-                append_char(c);
                 break;
             default:
                 invalid_char_error(c);
@@ -965,7 +914,6 @@ void Lexer::tokenize() noexcept
         case TokenizerState::SawNot:
             if (c == '=') {
                 set_token_id(TokenId::NOT_EQUALS);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -978,7 +926,6 @@ void Lexer::tokenize() noexcept
         case TokenizerState::SawVerticalBar:
             if (c == '|') {
                 set_token_id(TokenId::OR);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -991,7 +938,7 @@ void Lexer::tokenize() noexcept
         case TokenizerState::SawAmpersand:
             if (c == '&') {
                 set_token_id(TokenId::AND);
-                append_char(c);
+                
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -1004,14 +951,12 @@ void Lexer::tokenize() noexcept
         case TokenizerState::SawLess:
             if (c == '<') {
                 set_token_id(TokenId::LSHIFT);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             }
             if (c == '=') {
                 set_token_id(TokenId::LESS_OR_EQUALS);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -1024,14 +969,12 @@ void Lexer::tokenize() noexcept
         case TokenizerState::SawGreater:
             if (c == '>') {
                 set_token_id(TokenId::RSHIFT);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
             }
             if (c == '=') {
                 set_token_id(TokenId::GREATER_OR_EQUALS);
-                append_char(c);
                 end_token();
                 state = TokenizerState::Start;
                 break;
@@ -1067,6 +1010,10 @@ void Lexer::tokenize() noexcept
     case Lexer::TokenizerState::LineComment:
         break;
     case Lexer::TokenizerState::Symbol:
+        // we need to finish the token before
+        // we test for a keyword since we need the end_pos
+        end_token();
+
         if (is_invalid_token) {
             is_invalid_token = false;
             set_token_id(TokenId::ERROR);
@@ -1074,8 +1021,6 @@ void Lexer::tokenize() noexcept
         else {
             is_keyword();
         }
-
-        end_token();
         break;
     case Lexer::TokenizerState::Zero:
     case Lexer::TokenizerState::Number:
@@ -1087,6 +1032,7 @@ void Lexer::tokenize() noexcept
         break;
     case Lexer::TokenizerState::NumberDot:
         set_token_id(TokenId::FLOAT_LIT);
+        __fallthrough;
     case Lexer::TokenizerState::FloatFraction:
     case Lexer::TokenizerState::FloatExponentUnsigned:
     case Lexer::TokenizerState::FloatExponentNumber:
@@ -1140,6 +1086,11 @@ void Lexer::return_last_token() const noexcept
     curr_index--;
 }
 
+std::string_view Lexer::get_token_value(const Token& token) const noexcept
+{
+    return std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos);;
+}
+
 void Lexer::begin_token(const TokenId id) noexcept
 {
     curr_token = Token();
@@ -1166,10 +1117,6 @@ void Lexer::end_token() noexcept {
         tokens_vec.push_back(curr_token);
         break;
     }
-}
-
-void Lexer::append_char(const char c) noexcept {
-    curr_token.value.push_back(c);
 }
 
 void Lexer::reset_line() noexcept {
@@ -1227,11 +1174,11 @@ void Lexer::tokenize_error(const char* format, ...) noexcept {
 void Lexer::handle_string_escape(uint8_t c) noexcept {
     if (curr_token.id == TokenId::UNICODE_CHAR) {
         curr_token.char_lit = c;
-        append_char(c);
+        
         state = TokenizerState::CharLiteralEnd;
     }
     else if (curr_token.id == TokenId::STRING) {
-        append_char(c);
+        
         state = TokenizerState::String;
     }
     else {
@@ -1239,7 +1186,7 @@ void Lexer::handle_string_escape(uint8_t c) noexcept {
     }
 }
 
-static std::unordered_map<std::string, TokenId> keywords = {
+static std::unordered_map<std::string_view, TokenId> keywords = {
     {"fn", TokenId::FN},
     {"ret", TokenId::RET},
     {"and", TokenId::AND},
@@ -1248,8 +1195,9 @@ static std::unordered_map<std::string, TokenId> keywords = {
 
 void Lexer::is_keyword() noexcept
 {
-    if (keywords.find(curr_token.value) != keywords.end()) {
-        set_token_id(keywords.at(curr_token.value));
+    auto value = std::string_view(source.begin() + curr_token.start_pos, source.begin() + curr_token.end_pos);
+    if (keywords.find(value) != keywords.end()) {
+        set_token_id(keywords.at(value));
     }
 }
 
@@ -1397,7 +1345,7 @@ struct TokenPrintInfo {
         : value_size(in_value_size), token_name_size(in_token_name_size), id_name(in_id_name), is_value(in_is_value){}
 };
 
-std::string create_values_line(const size_t start, const size_t end, const std::vector<Token>& tokens, const std::vector<TokenPrintInfo>& token_infos) {
+std::string create_values_line(const std::string& source, const size_t start, const size_t end, const std::vector<Token>& tokens, const std::vector<TokenPrintInfo>& token_infos) {
     std::string line;
     for (size_t j = start; j < end; j++) {
         auto& token_info = token_infos.at(j);
@@ -1408,9 +1356,11 @@ std::string create_values_line(const size_t start, const size_t end, const std::
 
         std::string value;
         auto& token = tokens.at(j);
+        auto token_value = std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos);
 
         if (token.id == TokenId::DOC_COMMENT) {
-            for (auto c : token.value) {
+            
+            for (char c : token_value) {
                 switch (c)
                 {
                 case '\a':
@@ -1441,7 +1391,7 @@ std::string create_values_line(const size_t start, const size_t end, const std::
             }
         }
         else {
-            value = token.value;
+            value = token_value;
         }
 
         line.append(value + spaces);
@@ -1487,7 +1437,7 @@ Console print_tokens(Lexer& lexer)
         auto& token = tokens.at(i);
         
         auto& token_name = token_id_name(token.id);
-        auto token_value_size = token.value.size();
+        auto token_value_size = token.get_value_size();
         auto token_name_size = token_name.size() + 2;
 
         auto& token_info = token_infos.emplace_back(token_value_size, token_name_size, token_name, token_value_size > token_name_size);
@@ -1496,7 +1446,7 @@ Console print_tokens(Lexer& lexer)
         
         
         if (total_size + size > 80) {
-            console.push_back(create_values_line(last_it, i, tokens, token_infos));
+            console.push_back(create_values_line(lexer.source, last_it, i, tokens, token_infos));
             console.push_back(create_id_names_line(last_it, i, token_infos));
             last_it = i;
             total_size = 0;
@@ -1504,7 +1454,7 @@ Console print_tokens(Lexer& lexer)
         else {
             total_size += size;
             if (i == tokens.size() -1) {
-                console.push_back(create_values_line(last_it, tokens.size(), tokens, token_infos));
+                console.push_back(create_values_line(lexer.source, last_it, tokens.size(), tokens, token_infos));
                 console.push_back(create_id_names_line(last_it, tokens.size(), token_infos));
             }
         }
