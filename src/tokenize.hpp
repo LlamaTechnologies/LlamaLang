@@ -187,6 +187,7 @@ private:
     void begin_token(const TokenId id) noexcept;
     void set_token_id(const TokenId id) noexcept;
     void end_token() noexcept;
+    void end_token_check_is_keyword()  noexcept;
     void reset_line() noexcept; 
     void is_keyword() noexcept;
     void invalid_char_error(uint8_t c) noexcept;

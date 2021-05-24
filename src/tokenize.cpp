@@ -1000,7 +1000,6 @@ void Lexer::tokenize() noexcept
         else
             curr_column++;
     }
-    cursor_pos--;
 
     // EOF
     switch (state)
@@ -1010,16 +1009,13 @@ void Lexer::tokenize() noexcept
     case Lexer::TokenizerState::LineComment:
         break;
     case Lexer::TokenizerState::Symbol:
-        // we need to finish the token before
-        // we test for a keyword since we need the end_pos
-        end_token();
-
         if (is_invalid_token) {
             is_invalid_token = false;
             set_token_id(TokenId::ERROR);
+            end_token();
         }
         else {
-            is_keyword();
+            end_token_check_is_keyword();
         }
         break;
     case Lexer::TokenizerState::Zero:
@@ -1116,6 +1112,21 @@ void Lexer::end_token() noexcept {
     default:
         tokens_vec.push_back(curr_token);
         break;
+    }
+}
+
+void Lexer::end_token_check_is_keyword() noexcept
+{
+    curr_token.end_pos = cursor_pos;
+    
+    is_keyword();
+
+    switch (curr_token.id) {
+    case TokenId::IDENTIFIER:
+        tokens_vec.push_back(curr_token);
+        break;
+    default:
+        UNREACHEABLE;
     }
 }
 
