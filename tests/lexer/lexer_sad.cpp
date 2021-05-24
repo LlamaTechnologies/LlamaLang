@@ -175,6 +175,18 @@ TEST(LexerSadIntegerTests, IntegerFollowedByIdTest) {
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+/*
+TEST(LexerSadIntegerTests, IntegerSignSpecInvalidTypeSpecTest) {
+    std::vector<Error> errors;
+    Lexer lexer("5_415_uR", "IntegerSignSpecInvalidTypeSpecTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::ERROR);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+*/
+
 //==================================================================================
 //          FLOAT LIT
 //==================================================================================

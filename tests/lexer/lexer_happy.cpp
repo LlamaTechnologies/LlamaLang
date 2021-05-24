@@ -110,6 +110,47 @@ TEST(LexerHappyKeywordsTests, KeywordOrTest) {
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+TEST(LexerHappyKeywordsTests, KeywordFnNewLineTest) {
+    std::vector<Error> errors;
+    Lexer lexer("fn\n", "KeywordFnNewLineTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::FN);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordRetNewLineTest) {
+    std::vector<Error> errors;
+    Lexer lexer("ret \n", "KeywordRetNewLineTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::RET);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordAndNewLineTest) {
+    std::vector<Error> errors;
+    Lexer lexer("and\n", "KeywordAndNewLineTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::AND);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordOrNewLineTest) {
+    std::vector<Error> errors;
+    Lexer lexer("or\n", "KeywordOrNewLineTest", errors);
+    lexer.tokenize();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(lexer.get_current_token().id, TokenId::OR);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+
 //==================================================================================
 //          OPERATORS
 //==================================================================================
@@ -287,11 +328,27 @@ TEST(LexerHappyIntegerTests, IntegerUnsignWordTypeSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierTest) {
     std::vector<Error> errors;
-    Lexer lexer("5415l", "LongTypeSpecifierTest", errors);
+    Lexer lexer("8l", "LongTypeSpecifierTest", errors);
     lexer.tokenize();
 
     BigInt okInt;
-    bigint_init_unsigned(&okInt, 5415);
+    bigint_init_unsigned(&okInt, 8);
+    auto int_token = lexer.get_current_token();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(int_token.id, TokenId::INT_LIT);
+    ASSERT_EQ(int_token.int_lit, okInt);
+    ASSERT_EQ(lexer.source.at(int_token.end_pos), 'l');
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierSpaceTest) {
+    std::vector<Error> errors;
+    Lexer lexer("8l ", "LongTypeSpecifierSpaceTest", errors);
+    lexer.tokenize();
+
+    BigInt okInt;
+    bigint_init_unsigned(&okInt, 8);
     auto int_token = lexer.get_current_token();
 
     ASSERT_EQ(errors.size(), 0L);
@@ -618,3 +675,11 @@ TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
     ASSERT_EQ(char_token.char_lit, L'¶');
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
+
+
+//==================================================================================
+//          PRINT
+//==================================================================================
+
+
+

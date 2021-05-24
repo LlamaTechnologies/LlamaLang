@@ -313,12 +313,12 @@ void Lexer::tokenize() noexcept
                 if (is_invalid_token) {
                     is_invalid_token = false;
                     set_token_id(TokenId::ERROR);
+                    end_token();
                 }
                 else {
-                    is_keyword();
+                    end_token_check_is_keyword();
                 }
                 
-                end_token();
                 state = TokenizerState::Start;
                 continue;
             }
@@ -458,8 +458,7 @@ void Lexer::tokenize() noexcept
             uint32_t digit_value = get_digit_value(c);
             if (digit_value >= radix) {
                 if (is_sign_or_type_specifier(c)) {
-                    if (state == TokenizerState::NumberNoUnderscore)
-                        state = TokenizerState::Number;
+                    state = TokenizerState::SawSignOrTypeSpec;
                     break;
                 } else if (is_trailing_underscore) {
                     invalid_char_error(c);
@@ -499,6 +498,19 @@ void Lexer::tokenize() noexcept
             
             break;
         }
+        case TokenizerState::SawSignOrTypeSpec:
+            if (is_sign_or_type_specifier(c)) {
+                end_token();
+                state = TokenizerState::Start;
+                break;
+            }
+            else {
+                // not my char
+                cursor_pos--;
+                end_token();
+                state = TokenizerState::Start;
+                continue;
+            }
         case TokenizerState::NumberDot:
         {
             // two points '..' means something else?
@@ -1000,15 +1012,16 @@ void Lexer::tokenize() noexcept
         else
             curr_column++;
     }
+    cursor_pos--;
 
     // EOF
     switch (state)
     {
-    case Lexer::TokenizerState::Start:
-    case Lexer::TokenizerState::Error:
-    case Lexer::TokenizerState::LineComment:
+    case TokenizerState::Start:
+    case TokenizerState::Error:
+    case TokenizerState::LineComment:
         break;
-    case Lexer::TokenizerState::Symbol:
+    case TokenizerState::Symbol:
         if (is_invalid_token) {
             is_invalid_token = false;
             set_token_id(TokenId::ERROR);
@@ -1018,39 +1031,40 @@ void Lexer::tokenize() noexcept
             end_token_check_is_keyword();
         }
         break;
-    case Lexer::TokenizerState::Zero:
-    case Lexer::TokenizerState::Number:
+    case TokenizerState::Zero:
+    case TokenizerState::Number:
         if (is_invalid_token) {
             is_invalid_token = false;
             set_token_id(TokenId::ERROR);
         }
         end_token();
         break;
-    case Lexer::TokenizerState::NumberDot:
+    case TokenizerState::NumberDot:
         set_token_id(TokenId::FLOAT_LIT);
         __fallthrough;
-    case Lexer::TokenizerState::FloatFraction:
-    case Lexer::TokenizerState::FloatExponentUnsigned:
-    case Lexer::TokenizerState::FloatExponentNumber:
-    case Lexer::TokenizerState::NumberNoUnderscore:
-    case Lexer::TokenizerState::FloatFractionNoUnderscore:
-    case Lexer::TokenizerState::FloatExponentNumberNoUnderscore:
-    case Lexer::TokenizerState::SawStar:
-    case Lexer::TokenizerState::SawSlash:
-    case Lexer::TokenizerState::SawPercent:
-    case Lexer::TokenizerState::SawPlus:
-    case Lexer::TokenizerState::SawDash:
-    case Lexer::TokenizerState::SawEq:
-    case Lexer::TokenizerState::DocComment:
+    case TokenizerState::SawSignOrTypeSpec:
+    case TokenizerState::FloatFraction:
+    case TokenizerState::FloatExponentUnsigned:
+    case TokenizerState::FloatExponentNumber:
+    case TokenizerState::NumberNoUnderscore:
+    case TokenizerState::FloatFractionNoUnderscore:
+    case TokenizerState::FloatExponentNumberNoUnderscore:
+    case TokenizerState::SawStar:
+    case TokenizerState::SawSlash:
+    case TokenizerState::SawPercent:
+    case TokenizerState::SawPlus:
+    case TokenizerState::SawDash:
+    case TokenizerState::SawEq:
+    case TokenizerState::DocComment:
         end_token();
         break;
-    case Lexer::TokenizerState::String:
+    case TokenizerState::String:
         tokenize_error("unterminated string literal");
         break;
-    case Lexer::TokenizerState::CharLiteral:
+    case TokenizerState::CharLiteral:
         tokenize_error("unterminated Unicode point literal");
         break;
-    case Lexer::TokenizerState::SawStarDocComment:
+    case TokenizerState::SawStarDocComment:
         tokenize_error("unexpected EOF");
         break;
     default:
@@ -1084,7 +1098,7 @@ void Lexer::return_last_token() const noexcept
 
 std::string_view Lexer::get_token_value(const Token& token) const noexcept
 {
-    return std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos);;
+    return std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos + 1);
 }
 
 void Lexer::begin_token(const TokenId id) noexcept
@@ -1122,6 +1136,10 @@ void Lexer::end_token_check_is_keyword() noexcept
     is_keyword();
 
     switch (curr_token.id) {
+    case TokenId::FN:
+    case TokenId::RET:
+    case TokenId::AND:
+    case TokenId::OR:
     case TokenId::IDENTIFIER:
         tokens_vec.push_back(curr_token);
         break;
@@ -1206,7 +1224,7 @@ static std::unordered_map<std::string_view, TokenId> keywords = {
 
 void Lexer::is_keyword() noexcept
 {
-    auto value = std::string_view(source.begin() + curr_token.start_pos, source.begin() + curr_token.end_pos);
+    auto value = std::string_view(source.begin() + curr_token.start_pos, source.begin() + curr_token.end_pos + 1);
     if (keywords.find(value) != keywords.end()) {
         set_token_id(keywords.at(value));
     }
@@ -1334,6 +1352,7 @@ static std::string token_id_names[] = {
     "WS",
     "DOC_COMMENT",
     "LINE_COMMENT",
+    "ERROR",
     "EOF"
 };
 
@@ -1367,7 +1386,7 @@ std::string create_values_line(const std::string& source, const size_t start, co
 
         std::string value;
         auto& token = tokens.at(j);
-        auto token_value = std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos);
+        auto token_value = std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos + 1);
 
         if (token.id == TokenId::DOC_COMMENT) {
             

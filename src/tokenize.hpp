@@ -132,7 +132,7 @@ struct Token {
     }
 
     size_t get_value_size() {
-        return end_pos - start_pos;
+        return (end_pos + 1) - start_pos;
     }
 };
 
@@ -223,6 +223,7 @@ private:
         SawAmpersand,
         SawLess,
         SawGreater,
+        SawSignOrTypeSpec,
         DocComment,                //
         SawStarDocComment,         // * in multiline comment may lead to end comment
         LineComment,               //
