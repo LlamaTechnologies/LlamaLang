@@ -4,6 +4,7 @@
 #include <string>
 
 // ast nodes
+struct Token;
 struct AstNode;
 struct AstDirective;
 struct AstType;
@@ -54,12 +55,12 @@ struct AstBlock {
 };
 
 struct AstVarDef {
-    std::string symbol;
+    std::string_view name;
     AstNode*    type;
 };
 
 struct AstSymbol {
-    std::string symbol;
+    const Token* token;
 };
 
 struct AstFuncCallExpr {
@@ -156,7 +157,7 @@ struct AstNode
         AstNode* grouped_expr;          // L_PAREN expr R_PAREN
         AstUnaryExpr* unary_expr;       // unary_op expr
         AstBinaryExpr* binary_expr;     // expr binary_op expr
-        AstSymbol* var_ref;             // symbol_name
+        AstSymbol*  symbol;             // symbol_name
         AstFuncCallExpr* func_call;     // func_name L_PAREN (expr (, expr)*)? R_PAREN
     } data;
 
@@ -188,7 +189,7 @@ struct AstNode
             data.var_def = new AstVarDef();
             break;
         case AstNodeType::AstSymbol:
-            data.var_ref = new AstSymbol();
+            data.symbol = new AstSymbol();
             break;
         case AstNodeType::AstFuncCallExpr:
             data.func_call = new AstFuncCallExpr();
@@ -243,8 +244,8 @@ struct AstNode
                 delete data.var_def;
             break;
         case AstNodeType::AstSymbol:
-            if (data.var_ref)
-                delete data.var_ref;
+            if (data.symbol)
+                delete data.symbol;
             break;
         case AstNodeType::AstFuncCallExpr:
             if (data.func_call)
