@@ -5,6 +5,7 @@
 #include <cstdarg>
 #include <cassert>
 
+static BinaryExprType get_binary_op(const Token& token) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
 static bool match(const Token token, const TokenId ...) noexcept;
@@ -30,39 +31,57 @@ AstNode* Parser::parse() noexcept {
 * Parses math expressions
 * mulexpr ([+-] mulexpr)*
 */
-AstNode* Parser::parse_expr() noexcept
-{
-    const Token& token = lexer.get_current_token();
+AstNode* Parser::parse_expr() noexcept {
+    auto root_node = parse_mulexpr();
     
-    while (MATCH(token, TokenId::PLUS, TokenId::MINUS)) {
+    for (const Token token = lexer.get_current_token(); MATCH(token, TokenId::PLUS, TokenId::MINUS); ) {
+        lexer.advance();
+        auto mul_expr = parse_mulexpr();
 
+        // create binary node
+        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        binary_expr->data.binary_expr->op1 = root_node;
+        binary_expr->data.binary_expr->bin_op = get_binary_op(token);
+        binary_expr->data.binary_expr->op2 = mul_expr;
+
+        // set the new node as root.
+        root_node = binary_expr;
     }
+    lexer.get_back();
 
-    return nullptr;
+    return root_node;
 }
 
 /*
 * Parses math expressions
 * value ([/*%] value)*
 */
-AstNode* Parser::parse_mulexpr() noexcept
-{
+AstNode* Parser::parse_mulexpr() noexcept {
+    auto root_node = parse_value();
+    
+    for (const Token token = lexer.get_next_token(); MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD); ) {
+        lexer.advance();
+        auto symbol_token = parse_value();
 
-    const Token& token = lexer.get_current_token();
-
-    while (MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD)) {
-
+        // create binary node
+        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        binary_expr->data.binary_expr->op1 = root_node;
+        binary_expr->data.binary_expr->bin_op = get_binary_op(token);
+        binary_expr->data.binary_expr->op2 = symbol_token;
+        
+        // set the new node as root.
+        root_node = binary_expr;
     }
+    lexer.get_back();
 
-    return nullptr;
+    return root_node;
 }
 
 /*
 * Parses math expressions
 * IDENTIFIER | FLOAT_LIT | INT_LIT | UNICODE_CHAR
 */
-AstNode* Parser::parse_value() noexcept
-{
+AstNode* Parser::parse_value() noexcept {
     const Token& token = lexer.get_current_token();
     auto token_value = lexer.get_token_value(token);
 
@@ -97,6 +116,26 @@ AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexce
         token.start_column,
         lexer.file_name, msg);
     return nullptr;
+}
+
+BinaryExprType get_binary_op(const Token& token) noexcept {
+    switch (token.id)
+    {
+    case TokenId::PLUS:
+        return BinaryExprType::ADD;
+    case TokenId::MINUS:
+        return BinaryExprType::SUB;
+    case TokenId::MUL:
+        return BinaryExprType::MUL;
+    case TokenId::DIV:
+        return BinaryExprType::DIV;
+    case TokenId::MOD:
+        return BinaryExprType::MOD;
+    case TokenId::ASSIGN:
+        return BinaryExprType::ASSIGN;
+    default:
+        UNREACHEABLE;
+    }
 }
 
 bool is_symbol_start_char(const char next_char) noexcept {

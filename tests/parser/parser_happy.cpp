@@ -3,7 +3,26 @@
 
 
 //==================================================================================
-//          PARSE FUNCTIONS
+//          PARSE PRODUCT EXPRESSIONS FUNCTIONS
+//==================================================================================
+
+TEST(ParserHappyParseMulExprTests, IdentifierTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar", "IdentifierTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_value();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_NE(value_node->data.symbol->token, nullptr);
+    ASSERT_EQ(value_node->data.symbol->token->id, TokenId::IDENTIFIER);
+}
+
+
+//==================================================================================
+//          PARSE VALUE FUNCTIONS
 //==================================================================================
 
 TEST(ParserHappyParseValueTests, IdentifierTest) {

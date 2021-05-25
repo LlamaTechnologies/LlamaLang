@@ -178,7 +178,10 @@ public:
     const Token& get_next_token() const noexcept;
 
     // --curr_index
-    void return_last_token() const noexcept;
+    void get_back() const noexcept;
+
+    // ++curr_index
+    void advance() const noexcept;
 
     std::string_view get_token_value(const Token& token) const noexcept;
 

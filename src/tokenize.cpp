@@ -1091,9 +1091,13 @@ const Token& Lexer::get_next_token() const noexcept
     return tokens_vec.at(++curr_index);
 }
 
-void Lexer::return_last_token() const noexcept
+void Lexer::get_back() const noexcept
 {
     curr_index--;
+}
+
+void Lexer::advance() const noexcept {
+    ++curr_index;
 }
 
 std::string_view Lexer::get_token_value(const Token& token) const noexcept
