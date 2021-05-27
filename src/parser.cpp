@@ -28,15 +28,17 @@ AstNode* Parser::parse() noexcept {
 }
 
 /*
-* Parses math expressions
-* mulexpr ([+-] mulexpr)*
+* Parses addition like expressions
+* algebraicExpr
+*   : termExpr ('+' | '-' | '&' | '|') termExpr
+*   | termExpr
 */
-AstNode* Parser::parse_expr() noexcept {
-    auto root_node = parse_mulexpr();
+AstNode* Parser::parse_algebraic_expr() noexcept {
+    auto root_node = parse_term_expr();
     
     for (const Token token = lexer.get_current_token(); MATCH(token, TokenId::PLUS, TokenId::MINUS); ) {
         lexer.advance();
-        auto mul_expr = parse_mulexpr();
+        auto mul_expr = parse_term_expr();
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
@@ -53,15 +55,17 @@ AstNode* Parser::parse_expr() noexcept {
 }
 
 /*
-* Parses math expressions
-* value ([/*%] value)*
+* Parses multiplication like expressions
+* termExpr
+*   : primaryExpr ('*' | '/' | '%' | '<<' | '>>' | '&' | '^') primaryExpr
+*   | primaryExpr
 */
-AstNode* Parser::parse_mulexpr() noexcept {
-    auto root_node = parse_value();
+AstNode* Parser::parse_term_expr() noexcept {
+    auto root_node = parse_primary_expr();
     
     for (const Token token = lexer.get_next_token(); MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD); ) {
         lexer.advance();
-        auto symbol_token = parse_value();
+        auto symbol_token = parse_primary_expr();
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
@@ -78,14 +82,21 @@ AstNode* Parser::parse_mulexpr() noexcept {
 }
 
 /*
-* Parses math expressions
-* IDENTIFIER | FLOAT_LIT | INT_LIT | UNICODE_CHAR
+* Parses primary expressions
+* CALL_EXPR | IDENTIFIER | FLOAT_LIT | INT_LIT | UNICODE_CHAR
 */
-AstNode* Parser::parse_value() noexcept {
+AstNode* Parser::parse_primary_expr() noexcept {
     const Token& token = lexer.get_current_token();
     auto token_value = lexer.get_token_value(token);
 
-    if (MATCH(token, TokenId::IDENTIFIER, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
+    if (token.id == TokenId::IDENTIFIER) {
+        // CALL EXPR?
+        // else
+        goto parse_literal;
+    }
+
+    if (MATCH(token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
+parse_literal:
         AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column);
         symbol_node->data.symbol->token = &token;
         return symbol_node;

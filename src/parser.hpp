@@ -39,16 +39,22 @@ public:
 
     // returns AstUnaryExpr
     _NODISCARD AstNode* parse_ret() noexcept;
-    */
 
-    // returns AstSymbol | AstBinaryExpr
+    // returns
     _NODISCARD AstNode* parse_expr() noexcept;
 
-    // returns AstSymbol | AstBinaryExpr
-    _NODISCARD AstNode* parse_mulexpr() noexcept;
+    // returns
+    _NODISCARD AstNode* parse_comp_expr() noexcept;
+    */
 
-    // returns AstSymbol
-    _NODISCARD AstNode* parse_value() noexcept;
+    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr
+    _NODISCARD AstNode* parse_algebraic_expr() noexcept;
+
+    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr
+    _NODISCARD AstNode* parse_term_expr() noexcept;
+
+    // returns AstSymbol | AstFuncCallExpr
+    _NODISCARD AstNode* parse_primary_expr() noexcept;
     
     /*
     // returns AstVarDef

@@ -14,18 +14,22 @@ functionDef
     ;
 
 functionProto
-    : 'fn' IDENTIFIER signature type_
+    : 'fn' IDENTIFIER '(' parameterList? ')' type_
     ;
-
-signature
-    : '(' parameterList? ')'
-    ;
-
 
 parameterList
     : parameterDecl (',' parameterDecl)*
     ;
 
+type_
+    : '*' type_
+    | '[' ']' type_
+    | IDENTIFIER
+    ;
+
+varDef
+    : IDENTIFIER type_ ('=' expression)?
+    ;
 
 parameterDecl
     : IDENTIFIER type_
@@ -35,35 +39,25 @@ block
     : '{' statementList? '}'
     ;
 
+statement
+    : varDef
+    | expression
+    | assignmentStmnt
+    | returnStmt
+    | block
+    | emptyStmt
+    ;
+
 statementList
     : (statement eos)+
     ;
 
-statement
-    : varDef
-    | simpleStmt
-    | returnStmt
-    | block
+assign_op
+    : ('+' | '-' | '|' | '^' | '*' | '/' | '%' | '<<' | '>>' | '&' | '^')? '='
     ;
-
-varDef
-    : IDENTIFIER type_ ('=' expression)?
-    ;
-
-
-simpleStmt
-    : expression
-    | assignmentStmnt
-    | emptyStmt
-    ;
-
 
 assignmentStmnt
     : IDENTIFIER assign_op expression
-    ;
-
-assign_op
-    : ('+' | '-' | '|' | '^' | '*' | '/' | '%' | '<<' | '>>' | '&' | '&^')? '='
     ;
 
 emptyStmt
@@ -75,66 +69,47 @@ returnStmt
     ;
 
 expression
-    : primaryExpr
-    | unaryExpr
-    | expression ('*' | '/' | '%' | '<<' | '>>' | '&' | '&^') expression
-    | expression ('+' | '-' | '|' | '^') expression
-    | expression ('==' | '!=' | '<' | '<=' | '>' | '>=') expression
-    | expression LOGICAL_AND expression
-    | expression LOGICAL_OR expression
-    ;
-
-unaryExpr
-    : primaryExpr
-    | callExpr
-    | unaryOp unaryExpr
-    ;
-
-primaryExpr
-    : literal
-    | IDENTIFIER
+    : compExpr
     | '(' expression ')'
     ;
 
-callExpr
-    : IDENTIFIER '(' expressionList ')'
+compExpr
+    : unaryExpr ('=='|'!=') unaryExpr
+    | unaryExpr ('>='|'<='|'<'|'>') unaryExpr}
+    | unaryExpr
+    ;
+
+unaryExpr
+    : ('!' | '~' | '--' | '++') algebraicExpr
+    | algebraicExpr
+    ;
+
+algebraicExpr
+    : termExpr ('+' | '-' | '&' | '|') termExpr
+    | termExpr
+    ;
+
+termExpr
+    : primaryExpr ('*' | '/' | '%' | '<<' | '>>' | '&' | '^') primaryExpr
+    | primaryExpr
+    ;
+
+primaryExpr
+    : 
+    | callExpr
+    | IDENTIFIER
+    | INT_LIT
+    | FLOAT_LIT
+    | STRING
+    | UNICODE_CHAR
     ;
 
 expressionList
     :  expression (',' expression)*
     ;
 
-unaryOp
-    : ('-' | '--' | '++')
-    ;
-
-type_
-    : typeName
-    | pointer
-    | array
-    ;
-
-pointer
-    : '*' type_
-    ;
-
-array
-    : '[' ']' typeName
-    ;
-    
-typeName
-    : IDENTIFIER
-    ;
-
-literal
-    : INT_LIT
-    | FLOAT_LIT
-    | string_
-    | RUNE_LIT
-    ;
-
-string_
-    : INTERPRETED_STRING_LIT
+callExpr
+    : IDENTIFIER '(' expressionList ')'
     ;
 
 eos
@@ -198,9 +173,9 @@ FLOAT_LIT               : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT) [f]?
                         | '.' DECIMALS EXPONENT? [f]?
                         ;
 
-RUNE_LIT                : '\'' (~[\n\\] | ESCAPED_VALUE) '\'';
+UNICODE_CHAR            : '\'' (~[\n\\] | ESCAPED_VALUE) '\'';
 
-INTERPRETED_STRING_LIT  : '"' (~["\\] | ESCAPED_VALUE)*  '"';
+STRING                  : '"' (~["\\] | ESCAPED_VALUE)*  '"';
 
 // Hidden tokens
 WS                      : [ \t \r \n ' ']+   -> skip;
