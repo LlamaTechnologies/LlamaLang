@@ -27,24 +27,113 @@ AstNode* Parser::parse() noexcept {
     return nullptr;
 }
 
+
 /*
-* Parses addition like expressions
-* algebraicExpr
-*   : termExpr ('+' | '-' | '&' | '|') termExpr
-*   | termExpr
+* Parses any supported expresion
 */
-AstNode* Parser::parse_algebraic_expr() noexcept {
-    auto root_node = parse_term_expr();
-    
-    for (const Token token = lexer.get_current_token(); MATCH(token, TokenId::PLUS, TokenId::MINUS); ) {
-        lexer.advance();
-        auto mul_expr = parse_term_expr();
+AstNode* Parser::parse_expr() noexcept
+{
+    return parse_comp_expr();
+}
+
+/*
+* Parses comparative expresions
+* compExpr
+*   : unaryExpr ('=='|'!=') unaryExpr
+*   | unaryExpr ('>='|'<='|'<'|'>') unaryExpr}
+*   | unaryExpr
+*   ;
+*/
+AstNode* Parser::parse_comp_expr() noexcept
+{
+    auto root_node = parse_unary_expr();
+
+    for (const Token token = lexer.get_next_token(); MATCH(token, TokenId::EQUALS, TokenId::NOT_EQUALS); ) {
+        if (token.id == TokenId::_EOF) {
+            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+        }
+
+        AstNode* unary_expr = parse_unary_expr();
+        for (const Token inner_token = lexer.get_next_token(); MATCH(token, TokenId::GREATER, TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS); ) {
+            AstNode* inner_unary_expr = parse_unary_expr();
+            if (!inner_unary_expr) {
+                //TODO(pablo96): error in unary_expr => sync parsing
+            }
+
+            // create binary node
+            auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, inner_token.start_line, inner_token.start_column);
+            binary_expr->data.binary_expr->op1 = unary_expr;
+            binary_expr->data.binary_expr->bin_op = get_binary_op(inner_token);
+            binary_expr->data.binary_expr->op2 = inner_unary_expr;
+
+            // set the new node as root.
+            unary_expr = binary_expr;
+        }
+
+        if (!unary_expr) {
+            //TODO(pablo96): error in unary_expr => sync parsing
+        }
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
         binary_expr->data.binary_expr->op1 = root_node;
         binary_expr->data.binary_expr->bin_op = get_binary_op(token);
-        binary_expr->data.binary_expr->op2 = mul_expr;
+        binary_expr->data.binary_expr->op2 = unary_expr;
+
+        // set the new node as root.
+        root_node = binary_expr;
+    }
+    lexer.get_back();
+
+    return root_node;
+}
+
+/*
+* Parses unary expresions
+* unaryExpr
+*   : ('!' | '~' | '--' | '++') algebraicExpr
+*   | algebraicExpr
+*   ;
+*/
+AstNode* Parser::parse_unary_expr() noexcept
+{
+    const Token token = lexer.get_current_token();
+    if (MATCH(token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
+        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
+        AstNode* algebraic_expr = parse_algebraic_expr();
+        if (!algebraic_expr) {
+            //TODO(pablo96): error in algebraic_expr => sync parsing
+        }
+        node->data.unary_expr->primary_expr = algebraic_expr;
+    }
+
+    return parse_algebraic_expr();
+}
+
+/*
+* Parses addition like expressions
+* algebraicExpr
+*   : termExpr ('+' | '-' | '|') termExpr
+*   | termExpr
+*/
+AstNode* Parser::parse_algebraic_expr() noexcept {
+    auto root_node = parse_term_expr();
+    
+    for (const Token token = lexer.get_next_token(); MATCH(token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR); ) {
+        if (token.id == TokenId::_EOF) {
+            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+        }
+
+        auto term_expr = parse_term_expr();
+        if (!term_expr) {
+            //TODO(pablo96): error in term_expr => sync parsing
+        }
+
+        // create binary node
+        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        binary_expr->data.binary_expr->op1 = root_node;
+        binary_expr->data.binary_expr->bin_op = get_binary_op(token);
+        binary_expr->data.binary_expr->op2 = term_expr;
 
         // set the new node as root.
         root_node = binary_expr;
@@ -63,9 +152,17 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
 AstNode* Parser::parse_term_expr() noexcept {
     auto root_node = parse_primary_expr();
     
-    for (const Token token = lexer.get_next_token(); MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD); ) {
-        lexer.advance();
+    for (const Token token = lexer.get_next_token();
+        MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR); ) {
+
+        if (token.id == TokenId::_EOF) {
+            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+        }
+
         auto symbol_token = parse_primary_expr();
+        if (!symbol_token) {
+            //TODO(pablo96): error in primary expr => sync parsing
+        }
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
@@ -142,8 +239,28 @@ BinaryExprType get_binary_op(const Token& token) noexcept {
         return BinaryExprType::DIV;
     case TokenId::MOD:
         return BinaryExprType::MOD;
+    case TokenId::LSHIFT:
+        return BinaryExprType::LSHIFT;
+    case TokenId::RSHIFT:
+        return BinaryExprType::RSHIFT;
+    case TokenId::BIT_XOR:
+        return BinaryExprType::BIT_XOR;
+    case TokenId::BIT_AND:
+        return BinaryExprType::BIT_AND;
     case TokenId::ASSIGN:
         return BinaryExprType::ASSIGN;
+    case TokenId::EQUALS:
+        return BinaryExprType::EQUALS;
+    case TokenId::NOT_EQUALS:
+        return BinaryExprType::NOT_EQUALS;
+    case TokenId::GREATER_OR_EQUALS:
+        return BinaryExprType::GREATER_OR_EQUALS;
+    case TokenId::GREATER:
+        return BinaryExprType::GREATER;
+    case TokenId::LESS:
+        return BinaryExprType::LESS;
+    case TokenId::LESS_OR_EQUALS:
+        return BinaryExprType::LESS_OR_EQUALS;
     default:
         UNREACHEABLE;
     }

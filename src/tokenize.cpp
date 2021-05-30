@@ -1080,6 +1080,12 @@ const bool Lexer::has_tokens() const noexcept
     return tokens_vec.size() - (curr_index + 1)  != 0;
 }
 
+const Token& Lexer::get_previous_token() const noexcept
+{
+    // TODO: insert return statement here
+    return tokens_vec.at(curr_index - 1);
+}
+
 const Token& Lexer::get_current_token() const noexcept
 {
     // TODO: insert return statement here

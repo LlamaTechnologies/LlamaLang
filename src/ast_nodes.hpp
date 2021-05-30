@@ -69,12 +69,22 @@ struct AstFuncCallExpr {
 };
 
 enum class BinaryExprType {
-    ADD,    // expr + expr
-    SUB,    // expr - expr
-    MUL,    // expr * expr
-    DIV,    // expr / expr
-    MOD,    // expr % expr
-    ASSIGN, // expr = expr
+    ADD,                // expr +  expr
+    SUB,                // expr -  expr
+    MUL,                // expr *  expr
+    DIV,                // expr /  expr
+    MOD,                // expr %  expr
+    EQUALS,             // expr == expr
+    NOT_EQUALS,         // expr != expr
+    GREATER_OR_EQUALS,  // expr >= expr
+    LESS_OR_EQUALS,     // expr <= expr
+    GREATER,            // expr >  expr
+    LESS,               // expr <  expr
+    LSHIFT,             // expr << expr
+    RSHIFT,             // expr >> expr
+    BIT_XOR,            // expr ^  expr
+    BIT_AND,            // expr &  expr
+    ASSIGN,             // expr =  expr
 };
 
 struct AstBinaryExpr {
