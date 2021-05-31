@@ -1,6 +1,143 @@
 #include <gtest/gtest.h>
 #include "../../src/parser.cpp"
 
+//==================================================================================
+//          PARSE PRODUCT EXPRESSIONS FUNCTIONS
+//==================================================================================
+TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar + myVar2", "Add2IdentifierTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::ADD);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.symbol->token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->data.binary_expr->op2->data.symbol->token->id, TokenId::IDENTIFIER);
+}
+
+
+TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar * myVar2", "Mul2IdentifierTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.symbol->token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->data.binary_expr->op2->data.symbol->token->id, TokenId::IDENTIFIER);
+}
+
+TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
+    std::vector<Error> errors;
+    Lexer lexer("25 * myVar2", "MulNumberIdentifierTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.symbol->token->id, TokenId::INT_LIT);
+    ASSERT_EQ(value_node->data.binary_expr->op2->data.symbol->token->id, TokenId::IDENTIFIER);
+}
+
+TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
+    std::vector<Error> errors;
+    Lexer lexer("25 * 21.5f", "Mul2NumbersTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.symbol->token->id, TokenId::INT_LIT);
+    ASSERT_EQ(value_node->data.binary_expr->op2->data.symbol->token->id, TokenId::FLOAT_LIT);
+}
+
+TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
+    std::vector<Error> errors;
+    Lexer lexer("25 * 21.5f / 'g'", "Mul2NumbersAndCharTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::DIV);
+    ASSERT_EQ(value_node->data.binary_expr->op2->data.symbol->token->id, TokenId::UNICODE_CHAR);
+    ASSERT_EQ(value_node->data.binary_expr->op1->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.binary_expr->bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.binary_expr->op1->data.symbol->token->id, TokenId::INT_LIT);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.binary_expr->op2->data.symbol->token->id, TokenId::FLOAT_LIT);
+}
+
+TEST(ParserHappyParseAddExprTests, IdentifierTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar", "IdentifierTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_NE(value_node->data.symbol->token, nullptr);
+    ASSERT_EQ(value_node->data.symbol->token->id, TokenId::IDENTIFIER);
+}
+
+TEST(ParserHappyParseAddExprTests, FloatTest) {
+    std::vector<Error> errors;
+    Lexer lexer("12_547.12f", "FloatTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_NE(value_node->data.symbol->token, nullptr);
+    ASSERT_EQ(value_node->data.symbol->token->id, TokenId::FLOAT_LIT);
+}
+
+TEST(ParserHappyParseAddExprTests, IntTest) {
+    std::vector<Error> errors;
+    Lexer lexer("12_547", "IntTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_NE(value_node->data.symbol->token, nullptr);
+    ASSERT_EQ(value_node->data.symbol->token->id, TokenId::INT_LIT);
+}
+
+TEST(ParserHappyParseAddExprTests, UnicodeCharTest) {
+    std::vector<Error> errors;
+    Lexer lexer("\'g\'", "UnicodeCharTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_algebraic_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_NE(value_node->data.symbol->token, nullptr);
+    ASSERT_EQ(value_node->data.symbol->token->id, TokenId::UNICODE_CHAR);
+}
 
 //==================================================================================
 //          PARSE PRODUCT EXPRESSIONS FUNCTIONS
