@@ -98,6 +98,7 @@
 static uint32_t get_digit_value(uint8_t c);
 static const char* get_escape_shorthand(uint8_t c);
 static bool is_symbol_char(uint8_t c);
+static bool is_whitespace_char(uint8_t c);
 static bool is_float_specifier(uint8_t c);
 static bool is_sign_or_type_specifier(uint8_t c);
 static bool is_exponent_signifier(uint8_t c, int radix);
@@ -460,18 +461,18 @@ void Lexer::tokenize() noexcept
                 if (is_sign_or_type_specifier(c)) {
                     state = TokenizerState::SawSignOrTypeSpec;
                     break;
-                } else if (is_trailing_underscore) {
-                    invalid_char_error(c);
-                    is_invalid_token = true;
-                    state = TokenizerState::Symbol;
-                    break;
-                } else if (is_symbol_char(c) || !isxdigit(c)) {
-                    invalid_char_error(c);
-                    is_invalid_token = true;
-                    state = TokenizerState::Symbol;
-                    break;
                 }
-                else {
+                else if (is_trailing_underscore) {
+                    invalid_char_error(c);
+                    is_invalid_token = true;
+                    state = TokenizerState::Symbol;
+                    break;
+                } else if ( is_symbol_char(c) || (!isxdigit(c) && !is_whitespace_char(c)) ) {
+                    invalid_char_error(c);
+                    is_invalid_token = true;
+                    state = TokenizerState::Symbol;
+                    break;
+                } else {
                     state = TokenizerState::Start;
                     // not my char
                     cursor_pos--;
@@ -1257,6 +1258,16 @@ bool is_symbol_char(uint8_t c) {
     switch (c) {
     case SYMBOL_CHAR:
         return true;
+    default:
+        return false;
+    }
+}
+
+bool is_whitespace_char(uint8_t c)
+{
+    switch (c) {
+    case WHITESPACE:
+            return true;
     default:
         return false;
     }

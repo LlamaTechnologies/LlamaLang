@@ -152,12 +152,14 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
 AstNode* Parser::parse_term_expr() noexcept {
     auto root_node = parse_primary_expr();
     
-    for (const Token token = lexer.get_next_token();
-        MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR); ) {
+    for (Token token = lexer.get_next_token();
+        MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR);
+        token = lexer.get_next_token()) {
 
         if (token.id == TokenId::_EOF) {
             parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
         }
+        lexer.advance();
 
         auto symbol_token = parse_primary_expr();
         if (!symbol_token) {
@@ -185,6 +187,11 @@ AstNode* Parser::parse_term_expr() noexcept {
 AstNode* Parser::parse_primary_expr() noexcept {
     const Token& token = lexer.get_current_token();
     auto token_value = lexer.get_token_value(token);
+
+    if (token.id == TokenId::_EOF) {
+        parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+        return nullptr;
+    }
 
     if (token.id == TokenId::IDENTIFIER) {
         // CALL EXPR?
