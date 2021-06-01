@@ -46,7 +46,10 @@ AstNode* Parser::parse_expr() noexcept
             return nullptr;
         }
         return expression;
-    } else return parse_comp_expr();
+    }
+    // Was not a ')'
+    lexer.get_back();
+    return parse_comp_expr();
 }
 
 /*
@@ -240,7 +243,7 @@ AstNode* Parser::parse_primary_expr() noexcept {
         return nullptr;
     }
 
-    if (token.id == TokenId::R_PAREN) {
+    if (token.id == TokenId::L_PAREN) {
         lexer.get_back();
         return parse_expr();
     }

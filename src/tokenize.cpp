@@ -98,7 +98,7 @@
 static uint32_t get_digit_value(uint8_t c);
 static const char* get_escape_shorthand(uint8_t c);
 static bool is_symbol_char(uint8_t c);
-static bool is_whitespace_char(uint8_t c);
+static bool is_reserved_char(uint8_t c);
 static bool is_float_specifier(uint8_t c);
 static bool is_sign_or_type_specifier(uint8_t c);
 static bool is_exponent_signifier(uint8_t c, int radix);
@@ -467,7 +467,7 @@ void Lexer::tokenize() noexcept
                     is_invalid_token = true;
                     state = TokenizerState::Symbol;
                     break;
-                } else if ( is_symbol_char(c) || (!isxdigit(c) && !is_whitespace_char(c)) ) {
+                } else if ( is_symbol_char(c) || (!isxdigit(c) && !is_reserved_char(c)) ) {
                     invalid_char_error(c);
                     is_invalid_token = true;
                     state = TokenizerState::Symbol;
@@ -1253,10 +1253,12 @@ bool is_symbol_char(uint8_t c) {
     }
 }
 
-bool is_whitespace_char(uint8_t c)
+bool is_reserved_char(uint8_t c)
 {
     switch (c) {
     case WHITESPACE:
+    case '(':
+    case ')':
             return true;
     default:
         return false;

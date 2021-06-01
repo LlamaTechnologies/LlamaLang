@@ -843,6 +843,30 @@ TEST(ParserHappyParseCompExprTests, UnicodeCharTest) {
     ASSERT_EQ(value_node->data.symbol->token->id, TokenId::UNICODE_CHAR);
 }
 
+
+//==================================================================================
+//          PARSE EXPRESSIONS FUNCTIONS
+//==================================================================================
+
+TEST(ParserHappyParseExprTests, CompGroupedTest) {
+    std::vector<Error> errors;
+    Lexer lexer("(myVar == (myVar2 + 5))", "CompGroupedTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::EQUALS);
+    ASSERT_EQ(value_node->data.binary_expr->op1->data.symbol->token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->data.binary_expr->op2->node_type, AstNodeType::AstBinaryExpr);
+    AstBinaryExpr* sum_node = value_node->data.binary_expr->op2->data.binary_expr;
+    ASSERT_EQ(sum_node->op1->data.symbol->token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(sum_node->op2->data.symbol->token->id, TokenId::INT_LIT);
+}
+
 //==================================================================================
 //          UTILS
 //==================================================================================
