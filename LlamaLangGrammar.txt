@@ -74,13 +74,8 @@ expression
     ;
 
 compExpr
-    : unaryExpr ('=='|'!=') unaryExpr
-    | unaryExpr ('>='|'<='|'<'|'>') unaryExpr}
-    | unaryExpr
-    ;
-
-unaryExpr
-    : ('!' | '~' | '--' | '++') algebraicExpr
+    : algebraicExpr ('=='|'!=') algebraicExpr
+    | algebraicExpr ('>='|'<='|'<'|'>') algebraicExpr
     | algebraicExpr
     ;
 
@@ -90,7 +85,13 @@ algebraicExpr
     ;
 
 termExpr
-    : primaryExpr ('*' | '/' | '%' | '<<' | '>>' | '&' | '^') primaryExpr
+    : unaryExpr ('*' | '/' | '%' | '<<' | '>>' | '&' | '^') unaryExpr
+    | unaryExpr
+    ;
+
+unaryExpr
+    : ('!' | '~' | '--' | '++') primaryExpr
+    | primaryExpr ('!' | '~' | '--' | '++') 
     | primaryExpr
     ;
 

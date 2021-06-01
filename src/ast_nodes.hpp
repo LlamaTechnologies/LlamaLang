@@ -94,7 +94,7 @@ struct AstBinaryExpr {
 };
 
 
-enum class UnaryExprOp {
+enum class UnaryExprType {
     INC,    // ++  primaryExpr
     DEC,    // --  primaryExpr
     NEG,    // -   primaryExpr  
@@ -102,8 +102,8 @@ enum class UnaryExprOp {
 };
 
 struct AstUnaryExpr {
-    UnaryExprOp op;
-    AstNode* primary_expr;
+    UnaryExprType op;
+    AstNode* expr;
 };
 
 
