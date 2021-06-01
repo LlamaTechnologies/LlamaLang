@@ -74,8 +74,7 @@ expression
     ;
 
 compExpr
-    : algebraicExpr ('=='|'!=') algebraicExpr
-    | algebraicExpr ('>='|'<='|'<'|'>') algebraicExpr
+    : algebraicExpr ('=='|'!=' | '>='|'<='|'<'|'>') algebraicExpr
     | algebraicExpr
     ;
 

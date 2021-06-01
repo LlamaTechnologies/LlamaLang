@@ -44,34 +44,17 @@ AstNode* Parser::parse_expr() noexcept
 /*
 * Parses comparative expresions
 * compExpr
-*   : algebraicExpr ('=='|'!=') algebraicExpr
-*   | algebraicExpr ('>='|'<='|'<'|'>') algebraicExpr
+*   : algebraicExpr ('=='|'!=' | '>='| '<=' | '<'| '>') algebraicExpr
 *   | algebraicExpr
 *   ;
 */
-AstNode* Parser::parse_comp_expr() noexcept
-{
+AstNode* Parser::parse_comp_expr() noexcept {
     auto root_node = parse_algebraic_expr();
 
-    for (Token token = lexer.get_next_token(); MATCH(token, TokenId::EQUALS, TokenId::NOT_EQUALS); token = lexer.get_next_token()) {
+    for (Token token = lexer.get_next_token(); MATCH(token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER,
+        TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS); token = lexer.get_next_token()) {
         lexer.advance();
         AstNode* unary_expr = parse_algebraic_expr();
-
-        for (const Token inner_token = lexer.get_next_token(); MATCH(token, TokenId::GREATER, TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS); ) {
-            AstNode* inner_unary_expr = parse_algebraic_expr();
-            if (!inner_unary_expr) {
-                //TODO(pablo96): error in unary_expr => sync parsing
-            }
-
-            // create binary node
-            auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, inner_token.start_line, inner_token.start_column);
-            binary_expr->data.binary_expr->op1 = unary_expr;
-            binary_expr->data.binary_expr->bin_op = get_binary_op(inner_token);
-            binary_expr->data.binary_expr->op2 = inner_unary_expr;
-
-            // set the new node as root.
-            unary_expr = binary_expr;
-        }
 
         if (!unary_expr) {
             //TODO(pablo96): error in unary_expr => sync parsing

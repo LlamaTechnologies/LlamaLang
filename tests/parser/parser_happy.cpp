@@ -23,7 +23,7 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierTest) {
 
 TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
     std::vector<Error> errors;
-    Lexer lexer("myVar == myVar2 == 45", "Add2IdentifierAndIncTest", errors);
+    Lexer lexer("myVar == myVar2 >= 45", "Add2IdentifierAndIncTest", errors);
     lexer.tokenize();
 
     Parser parser(lexer, errors);
@@ -31,7 +31,7 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::EQUALS);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::GREATER_OR_EQUALS);
     ASSERT_EQ(value_node->data.binary_expr->op2->data.symbol->token->id, TokenId::INT_LIT);
     ASSERT_EQ(value_node->data.binary_expr->op1->node_type, AstNodeType::AstBinaryExpr);
     AstBinaryExpr* identComp = value_node->data.binary_expr->op1->data.binary_expr;
@@ -41,7 +41,6 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
 
 }
 
-/*
 TEST(ParserHappyParseCompExprTests, FullAlgebraicCompareTest) {
     std::vector<Error> errors;
     Lexer lexer(".25f + 25 * 14 - 'g' % 15 == 3", "FullAlgebraicCompareTest", errors);
@@ -52,16 +51,20 @@ TEST(ParserHappyParseCompExprTests, FullAlgebraicCompareTest) {
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::SUB);
-    ASSERT_EQ(value_node->data.binary_expr->op2->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->data.binary_expr->op1->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::EQUALS);
+    ASSERT_EQ(value_node->data.binary_expr->op2->data.symbol->token->id, TokenId::INT_LIT);
 
-    AstBinaryExpr* gMod15 = value_node->data.binary_expr->op2->data.binary_expr;
+    AstBinaryExpr* algebraicExpr = value_node->data.binary_expr->op1->data.binary_expr;
+    ASSERT_EQ(algebraicExpr->bin_op, BinaryExprType::SUB);
+    ASSERT_EQ(algebraicExpr->op2->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(algebraicExpr->op1->node_type, AstNodeType::AstBinaryExpr);
+
+    AstBinaryExpr* gMod15 = algebraicExpr->op2->data.binary_expr;
     ASSERT_EQ(gMod15->bin_op, BinaryExprType::MOD);
     ASSERT_EQ(gMod15->op1->data.symbol->token->id, TokenId::UNICODE_CHAR);
     ASSERT_EQ(gMod15->op2->data.symbol->token->id, TokenId::INT_LIT);
 
-    AstBinaryExpr* floatPlusMul = value_node->data.binary_expr->op1->data.binary_expr;
+    AstBinaryExpr* floatPlusMul = algebraicExpr->op1->data.binary_expr;
     ASSERT_EQ(floatPlusMul->bin_op, BinaryExprType::ADD);
     ASSERT_EQ(floatPlusMul->op1->data.symbol->token->id, TokenId::FLOAT_LIT);
     ASSERT_EQ(floatPlusMul->op2->node_type, AstNodeType::AstBinaryExpr);
@@ -71,7 +74,6 @@ TEST(ParserHappyParseCompExprTests, FullAlgebraicCompareTest) {
     ASSERT_EQ(intMulInt->op1->data.symbol->token->id, TokenId::INT_LIT);
     ASSERT_EQ(intMulInt->op2->data.symbol->token->id, TokenId::INT_LIT);
 }
-*/
 
 TEST(ParserHappyParseCompExprTests, Add2IdentifierAndIncTest) {
     std::vector<Error> errors;
