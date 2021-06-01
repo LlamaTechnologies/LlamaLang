@@ -50,14 +50,28 @@ AstNode* Parser::parse_expr() noexcept
 */
 AstNode* Parser::parse_comp_expr() noexcept {
     auto root_node = parse_algebraic_expr();
+    if (!root_node) {
+        const auto& token = lexer.get_next_token();
+        if (token.id == TokenId::_EOF) {
+            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+        }
+        //TODO(pablo96): error in primary expr => sync parsing
+        return nullptr;
+    }
+    
+    do {
+        Token token = lexer.get_next_token();
 
-    for (Token token = lexer.get_next_token(); MATCH(token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER,
-        TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS); token = lexer.get_next_token()) {
-        lexer.advance();
+        if (!MATCH(token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER, TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS)) {
+            // Not my token
+            lexer.get_back();
+            break;
+        }
+
         AstNode* unary_expr = parse_algebraic_expr();
-
         if (!unary_expr) {
             //TODO(pablo96): error in unary_expr => sync parsing
+            break;
         }
 
         // create binary node
@@ -68,8 +82,7 @@ AstNode* Parser::parse_comp_expr() noexcept {
 
         // set the new node as root.
         root_node = binary_expr;
-    }
-    lexer.get_back();
+    } while (true);
 
     return root_node;
 }
@@ -83,22 +96,26 @@ AstNode* Parser::parse_comp_expr() noexcept {
 AstNode* Parser::parse_algebraic_expr() noexcept {
     auto root_node = parse_term_expr();
     if (!root_node) {
-        const auto& token = lexer.get_current_token();
+        const auto& token = lexer.get_next_token();
         if (token.id == TokenId::_EOF) {
             parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
         }
         //TODO(pablo96): error in primary expr => sync parsing
+        return nullptr;
     }
-
-    for (Token token = lexer.get_next_token(); MATCH(token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR); token = lexer.get_next_token()) {
-        if (token.id == TokenId::_EOF) {
-            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+    
+    do {
+        Token token = lexer.get_next_token();
+        if (!MATCH(token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR)) {
+            // Not my token
+            lexer.get_back();
+            break;
         }
-        lexer.advance();
 
         auto term_expr = parse_term_expr();
         if (!term_expr) {
             //TODO(pablo96): error in term_expr => sync parsing
+            break;
         }
 
         // create binary node
@@ -109,8 +126,7 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
 
         // set the new node as root.
         root_node = binary_expr;
-    }
-    lexer.get_back();
+    } while (true);
 
     return root_node;
 }
@@ -125,25 +141,26 @@ AstNode* Parser::parse_term_expr() noexcept {
     auto root_node = parse_unary_expr();
     
     if (!root_node) {
-        const auto& token = lexer.get_current_token();
+        const auto& token = lexer.get_next_token();
         if (token.id == TokenId::_EOF) {
             parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
         }
         //TODO(pablo96): error in primary expr => sync parsing
+        return nullptr;
     }
 
-    for (Token token = lexer.get_next_token();
-        MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR);
-        token = lexer.get_next_token()) {
-
-        if (token.id == TokenId::_EOF) {
-            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+    do {
+        Token token = lexer.get_next_token();
+        if (!MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR)) {
+            // Not my token
+            lexer.get_back();
+            break;
         }
-        lexer.advance();
 
         auto symbol_token = parse_unary_expr();
         if (!symbol_token) {
             //TODO(pablo96): error in primary expr => sync parsing
+            break;
         }
 
         // create binary node
@@ -151,11 +168,10 @@ AstNode* Parser::parse_term_expr() noexcept {
         binary_expr->data.binary_expr->op1 = root_node;
         binary_expr->data.binary_expr->bin_op = get_binary_op(token);
         binary_expr->data.binary_expr->op2 = symbol_token;
-        
+
         // set the new node as root.
         root_node = binary_expr;
-    }
-    lexer.get_back();
+    } while (true);
 
     return root_node;
 }
@@ -169,7 +185,7 @@ AstNode* Parser::parse_term_expr() noexcept {
 *   ;
 */
 AstNode* Parser::parse_unary_expr() noexcept {
-    Token token = lexer.get_current_token();
+    Token token = lexer.get_next_token();
     
     if (token.id == TokenId::_EOF) {
         parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
@@ -179,8 +195,6 @@ AstNode* Parser::parse_unary_expr() noexcept {
     // op primary_expr
     if (MATCH(token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
         AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
-
-        lexer.advance();
         AstNode* primary_expr = parse_primary_expr();
         if (!primary_expr) {
             //TODO(pablo96): error in algebraic_expr => sync parsing
@@ -190,6 +204,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
         return node;
     }
 
+    lexer.get_back();
     AstNode* primary_expr = parse_primary_expr();
     if (!primary_expr) {
         //TODO(pablo96): error in algebraic_expr => sync parsing
@@ -213,7 +228,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
 * CALL_EXPR | IDENTIFIER | FLOAT_LIT | INT_LIT | UNICODE_CHAR
 */
 AstNode* Parser::parse_primary_expr() noexcept {
-    const Token& token = lexer.get_current_token();
+    const Token& token = lexer.get_next_token();
     auto token_value = lexer.get_token_value(token);
 
     if (token.id == TokenId::_EOF) {

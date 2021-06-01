@@ -11,7 +11,7 @@ TEST(LexerHappyIdentifierTests, IdentifierSingleUnderscoreTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::IDENTIFIER);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -22,7 +22,7 @@ TEST(LexerHappyIdentifierTests, IdentifierAlphaOnlyTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::IDENTIFIER);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -32,7 +32,7 @@ TEST(LexerHappyIdentifierTests, IdentifierAlphaNumericTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::IDENTIFIER);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -42,7 +42,7 @@ TEST(LexerHappyIdentifierTests, IdentifierUnderscorePrefixTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::IDENTIFIER);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -52,7 +52,7 @@ TEST(LexerHappyIdentifierTests, IdentifierCompleteTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::IDENTIFIER);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -62,7 +62,7 @@ TEST(LexerHappyIdentifierTests, IdentifierCompleteUnderscorePrefixTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::IDENTIFIER);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -76,7 +76,7 @@ TEST(LexerHappyKeywordsTests, KeywordFnTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::FN);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::FN);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -86,7 +86,7 @@ TEST(LexerHappyKeywordsTests, KeywordRetTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::RET);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::RET);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -96,7 +96,7 @@ TEST(LexerHappyKeywordsTests, KeywordAndTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::AND);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::AND);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -106,7 +106,7 @@ TEST(LexerHappyKeywordsTests, KeywordOrTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::OR);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::OR);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -116,7 +116,7 @@ TEST(LexerHappyKeywordsTests, KeywordFnNewLineTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::FN);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::FN);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -126,7 +126,7 @@ TEST(LexerHappyKeywordsTests, KeywordRetNewLineTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::RET);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::RET);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -136,7 +136,7 @@ TEST(LexerHappyKeywordsTests, KeywordAndNewLineTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::AND);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::AND);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -146,7 +146,7 @@ TEST(LexerHappyKeywordsTests, KeywordOrNewLineTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::OR);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::OR);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -161,7 +161,7 @@ TEST(LexerHappyOperatorsTests, HashOperatorTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::HASH);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::HASH);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -173,7 +173,7 @@ TEST(LexerHappyOperatorsTests, OperatorsTest) {
 
     // do not change order
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::ASSIGN);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::ASSIGN);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::PLUS_PLUS);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::MINUS_MINUS);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::NOT);
@@ -214,7 +214,7 @@ TEST(LexerHappyIntegerTests, IntegerDigitOnlyTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::INT_LIT);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::INT_LIT);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -224,7 +224,7 @@ TEST(LexerHappyIntegerTests, IntegerDigitOnlyZeroPrefixTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::INT_LIT);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::INT_LIT);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -235,7 +235,7 @@ TEST(LexerHappyIntegerTests, IntegerUnderscoreSeparatorTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -251,7 +251,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignedSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -267,7 +267,7 @@ TEST(LexerHappyIntegerTests, IntegerByteTypeSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -283,7 +283,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignByteTypeSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -300,7 +300,7 @@ TEST(LexerHappyIntegerTests, IntegerWordTypeSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -316,7 +316,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignWordTypeSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -333,7 +333,7 @@ TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 8);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -349,7 +349,7 @@ TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierSpaceTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 8);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -365,7 +365,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignLongTypeSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -382,7 +382,7 @@ TEST(LexerHappyIntegerTests, IntegerUnderscoreUnsignLongTypeSpecifierTest) {
 
     BigInt okInt;
     bigint_init_unsigned(&okInt, 5415);
-    auto int_token = lexer.get_current_token();
+    auto int_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(int_token.id, TokenId::INT_LIT);
@@ -402,7 +402,7 @@ TEST(LexerHappyFloatTests, FloatNoDecimalsTest) {
     Lexer lexer("52.", "NoDecimalsTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -415,7 +415,7 @@ TEST(LexerHappyFloatTests, FloatNoDecimalsFloatIdentifierTest) {
     Lexer lexer("52.f", "NoDecimalsFloatIdentifierTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -429,7 +429,7 @@ TEST(LexerHappyFloatTests, FloatNoDecimalsFollowedByEOSTest) {
     Lexer lexer("52.\n", "NoDecimalsFollowedByEOSTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -442,7 +442,7 @@ TEST(LexerHappyFloatTests, FloatNoIntegerPartTest) {
     Lexer lexer(".52", "NoIntegerPartTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -454,6 +454,7 @@ TEST(LexerHappyFloatTests, FloatNegativeNoIntegerPartTest) {
     Lexer lexer("-.52", "FloatNegativeNoIntegerPartTest", errors);
     lexer.tokenize();
 
+    auto minusToken = lexer.get_next_token();
     auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
@@ -466,7 +467,7 @@ TEST(LexerHappyFloatTests, FloatCompleteTest) {
     Lexer lexer("1.52", "FloatCompleteTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -478,7 +479,7 @@ TEST(LexerHappyFloatTests, FloatCompleteFloatSpecifierTest) {
     Lexer lexer("1.52f", "FloatCompleteFloatSpecifierTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -490,7 +491,7 @@ TEST(LexerHappyFloatTests, FloatCompleteExponentTest) {
     Lexer lexer("6.022e23", "FloatCompleteExponentTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -503,7 +504,7 @@ TEST(LexerHappyFloatTests, FloatCompleteNegativExponentTest) {
     Lexer lexer("1.6e-19", "FloatCompleteNegativExponentTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -515,7 +516,7 @@ TEST(LexerHappyFloatTests, FloatCompleteNegativeExponentTest) {
     Lexer lexer("1.6e-19", "FloatCompleteNegativeExponentTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -527,7 +528,7 @@ TEST(LexerHappyFloatTests, FloatCompleteNegativeExponentFloatSpecifierTest) {
     Lexer lexer("1.6e-19f", "FloatCompleteNegativeExponentFloatSpecifierTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -538,7 +539,7 @@ TEST(LexerHappyFloatTests, FloatNegativeCompleteNegativeExponentTest) {
     std::vector<Error> errors;
     Lexer lexer("-1.6e-19", "FloatNegativeCompleteNegativeExponentTest", errors);
     lexer.tokenize();
-
+    auto minusToken = lexer.get_next_token();
     auto float_token = lexer.get_next_token();
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -550,7 +551,7 @@ TEST(LexerHappyFloatTests, FloatDecimalPartOnlyUnderscoreTest) {
     Lexer lexer(".619_485", "FloatDecimalPartOnlyUnderscoreTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
@@ -561,7 +562,7 @@ TEST(LexerHappyFloatTests, FloatDecimalPartOnlyUnderscoreFloatSpecifierTest) {
     Lexer lexer(".619_485f", "FloatDecimalPartOnlyUnderscoreFloatSpecifierTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
@@ -572,7 +573,7 @@ TEST(LexerHappyFloatTests, FloatIntegerPartOnlyUnderscoresTest) {
     Lexer lexer("417_528.", "FloatIntegerPartOnlyUnderscoresTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -584,7 +585,7 @@ TEST(LexerHappyFloatTests, FloatCompleteUnderscoresTest) {
     Lexer lexer("417_528.213_546f", "FloatCompleteUnderscoresTest", errors);
     lexer.tokenize();
 
-    auto float_token = lexer.get_current_token();
+    auto float_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);
@@ -601,7 +602,7 @@ TEST(LexerHappyStringCharTests, EmptyStringTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::STRING);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -611,7 +612,7 @@ TEST(LexerHappyStringCharTests, StringTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::STRING);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -621,7 +622,7 @@ TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::STRING);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -631,7 +632,7 @@ TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_current_token().id, TokenId::STRING);
+    ASSERT_EQ(lexer.get_next_token().id, TokenId::STRING);
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -640,7 +641,7 @@ TEST(LexerHappyStringCharTests, EscapedCharTest) {
     Lexer lexer("\'\\r\'", "EscapedCharTest", errors);
     lexer.tokenize();
 
-    auto char_token = lexer.get_current_token();
+    auto char_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(char_token.id, TokenId::UNICODE_CHAR);
@@ -653,7 +654,7 @@ TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
     Lexer lexer("\'\\x42\'", "EscapedCharTest", errors);
     lexer.tokenize();
 
-    auto char_token = lexer.get_current_token();
+    auto char_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(char_token.id, TokenId::UNICODE_CHAR);
@@ -667,7 +668,7 @@ TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
     Lexer lexer("\'\\u{00B6}\'", "EscapedCharUnicodeTest", errors);
     lexer.tokenize();
 
-    auto char_token = lexer.get_current_token();
+    auto char_token = lexer.get_next_token();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(char_token.id, TokenId::UNICODE_CHAR);

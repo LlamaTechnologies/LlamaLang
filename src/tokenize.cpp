@@ -104,7 +104,7 @@ static bool is_sign_or_type_specifier(uint8_t c);
 static bool is_exponent_signifier(uint8_t c, int radix);
 
 Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
-    : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(0L),
+    : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX),
     curr_line(0L), curr_column(0L), state(TokenizerState::Start),
     radix(10), is_trailing_underscore(false), is_invalid_token(false),
     curr_token(), tokens_vec(), comments_vec()
@@ -128,7 +128,7 @@ Lexer::Lexer(const std::string& _file_name, std::vector<Error>& _errors)
 }
 
 Lexer::Lexer(const std::string& _src_file, const std::string& _file_name, std::vector<Error>& _errors)
-    : file_name(_file_name), source(_src_file), errors(_errors), cursor_pos(0L), curr_index(0L),
+    : file_name(_file_name), source(_src_file), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX),
     curr_line(0L), curr_column(0L), state(TokenizerState::Start),
     radix(10), is_trailing_underscore(false), is_invalid_token(false),
     curr_token(), tokens_vec(), comments_vec()
@@ -1087,12 +1087,6 @@ const Token& Lexer::get_previous_token() const noexcept
     return tokens_vec.at(curr_index - 1);
 }
 
-const Token& Lexer::get_current_token() const noexcept
-{
-    // TODO: insert return statement here
-    return tokens_vec.at(curr_index);
-}
-
 const Token& Lexer::get_next_token() const noexcept
 {
     return tokens_vec.at(++curr_index);
@@ -1101,10 +1095,6 @@ const Token& Lexer::get_next_token() const noexcept
 void Lexer::get_back() const noexcept
 {
     curr_index--;
-}
-
-void Lexer::advance() const noexcept {
-    ++curr_index;
 }
 
 std::string_view Lexer::get_token_value(const Token& token) const noexcept

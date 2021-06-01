@@ -174,16 +174,11 @@ public:
 
     const Token& get_previous_token() const noexcept;
 
-    const Token& get_current_token() const noexcept;
-
     // should not be called after EOF token
     const Token& get_next_token() const noexcept;
 
     // --curr_index
     void get_back() const noexcept;
-
-    // ++curr_index
-    void advance() const noexcept;
 
     std::string_view get_token_value(const Token& token) const noexcept;
 
