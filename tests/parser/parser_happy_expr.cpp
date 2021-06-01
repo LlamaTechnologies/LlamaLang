@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
-#include "../../src/parser.cpp"
+#include "../../src/ast_nodes.hpp"
+#include "../../src/lexer.hpp"
+#include "../../src/parser.hpp"
 
 //==================================================================================
 //          PARSE VALUE FUNCTIONS

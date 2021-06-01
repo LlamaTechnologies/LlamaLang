@@ -45,8 +45,8 @@ parser.cpp
 
 supportedcompilers.hpp
 
-tokenize.hpp
-tokenize.cpp
+lexer.hpp
+lexer.cpp
 )
 
 #link_directories("${CMAKE_SOURCE_DIR}/extern" "${LLVM_DIR}/lib")

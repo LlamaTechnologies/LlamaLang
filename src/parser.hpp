@@ -2,10 +2,14 @@
 #include <vector>
 #include <string>
 
+enum class TokenId;
 class Lexer;
 struct Token;
 struct Error;
 struct AstNode;
+
+bool match(const Token token, const TokenId ...) noexcept;
+#define MATCH(token, ...) match(token, __VA_ARGS__, TokenId(size_t(TokenId::_EOF) + 1))
 
 class Parser {
     const Lexer& lexer;
@@ -36,10 +40,10 @@ public:
 
     // returns AstBinaryExpr
     _NODISCARD AstNode* parse_assignment() noexcept;
+    */
 
     // returns AstUnaryExpr
-    _NODISCARD AstNode* parse_ret() noexcept;
-    */
+    _NODISCARD AstNode* parse_ret_stmnt() noexcept;
 
      // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
     _NODISCARD AstNode* parse_expr() noexcept;

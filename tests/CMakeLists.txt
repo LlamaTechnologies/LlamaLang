@@ -13,7 +13,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/test")
 set(LLAMATEST_SRC
 lexer/lexer_happy.cpp
 lexer/lexer_sad.cpp
-parser/parser_happy.cpp
+parser/parser_happy_expr.cpp
+parser/parser_happy_stmnts.cpp
 "test.cpp"
 )
 

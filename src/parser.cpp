@@ -1,5 +1,5 @@
 #include "parser.hpp"
-#include "tokenize.hpp"
+#include "lexer.hpp"
 #include "ast_nodes.hpp"
 #include "parse_error_msgs.hpp"
 #include <cstdarg>
@@ -7,11 +7,10 @@
 
 static BinaryExprType get_binary_op(const Token& token) noexcept;
 static UnaryExprType get_unary_op(const Token& token) noexcept;
+static bool is_expr_token(const Token& token) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
-static bool match(const Token token, const TokenId ...) noexcept;
 
-#define MATCH(token, ...) match(token, __VA_ARGS__, TokenId(size_t(TokenId::_EOF) + 1))
 #define MAIN_OBJECTS \
 TokenId::HASH:\
 case TokenId::FN:\
@@ -20,14 +19,42 @@ case TokenId::IDENTIFIER
 
 
 Parser::Parser(const Lexer& in_lexer, std::vector<Error>& in_error_vec)
-    : lexer(in_lexer), error_vec(in_error_vec)
-{
-}
+    : lexer(in_lexer), error_vec(in_error_vec) {}
 
 AstNode* Parser::parse() noexcept {
     return nullptr;
 }
 
+/*
+* Parses a return statement
+* returnStmt
+*   | 'ret' expression?
+*   ;
+*/
+AstNode* Parser::parse_ret_stmnt() noexcept {
+    const Token& token = lexer.get_next_token();
+    if (token.id == TokenId::RET) {
+        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
+        node->data.unary_expr->op = get_unary_op(token);
+
+        if (is_expr_token(lexer.get_next_token())) {
+            lexer.get_back();
+
+            auto expr = parse_expr();
+            if (!expr) {
+                //TODO(pablo96): error in unary_expr => sync parsing
+                return nullptr;
+            }
+
+            node->data.unary_expr->expr = expr;
+        } else lexer.get_back();
+
+        return node;
+    }
+
+    // error
+    return nullptr;
+}
 
 /*
 * Parses any supported expresion
@@ -340,6 +367,39 @@ UnaryExprType get_unary_op(const Token& token) noexcept {
         return UnaryExprType::RET;
     default:
         UNREACHEABLE;
+    }
+}
+
+bool is_expr_token(const Token& token) noexcept {
+    switch (token.id) {
+    case TokenId::IDENTIFIER:
+    case TokenId::FLOAT_LIT:
+    case TokenId::INT_LIT:
+    case TokenId::UNICODE_CHAR:
+    case TokenId::NOT:
+    case TokenId::BIT_NOT:
+    case TokenId::PLUS_PLUS:
+    case TokenId::MINUS_MINUS:
+    case TokenId::MUL:
+    case TokenId::DIV:
+    case TokenId::MOD:
+    case TokenId::LSHIFT:
+    case TokenId::RSHIFT:
+    case TokenId::BIT_AND:
+    case TokenId::BIT_XOR:
+    case TokenId::PLUS:
+    case TokenId::MINUS:
+    case TokenId::BIT_OR:
+    case TokenId::EQUALS:
+    case TokenId::NOT_EQUALS:
+    case TokenId::GREATER:
+    case TokenId::GREATER_OR_EQUALS:
+    case TokenId::LESS:
+    case TokenId::LESS_OR_EQUALS:
+    case TokenId::L_PAREN:
+        return true;
+    default:
+        return false;
     }
 }
 
