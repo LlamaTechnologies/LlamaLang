@@ -95,7 +95,7 @@ unaryExpr
     ;
 
 primaryExpr
-    : 
+    : expression
     | callExpr
     | IDENTIFIER
     | INT_LIT

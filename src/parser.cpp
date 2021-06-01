@@ -32,13 +32,21 @@ AstNode* Parser::parse() noexcept {
 /*
 * Parses any supported expresion
 * expression
-*   : compExpr
-*   | '(' expression ')'
+*   : '(' expression ')'
+*   | compExpr
 *   ;
 */
 AstNode* Parser::parse_expr() noexcept
 {
-    return parse_comp_expr();
+    if (lexer.get_next_token().id == TokenId::L_PAREN) {
+        auto expression = parse_expr();
+        if (lexer.get_next_token().id != TokenId::R_PAREN) {
+            const Token& prev_token = lexer.get_previous_token();
+            parse_error(prev_token, ERROR_EXPECTED_R_PAREN_AFTER, lexer.get_token_value(prev_token));
+            return nullptr;
+        }
+        return expression;
+    } else return parse_comp_expr();
 }
 
 /*
@@ -51,10 +59,6 @@ AstNode* Parser::parse_expr() noexcept
 AstNode* Parser::parse_comp_expr() noexcept {
     auto root_node = parse_algebraic_expr();
     if (!root_node) {
-        const auto& token = lexer.get_next_token();
-        if (token.id == TokenId::_EOF) {
-            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
-        }
         //TODO(pablo96): error in primary expr => sync parsing
         return nullptr;
     }
@@ -96,10 +100,6 @@ AstNode* Parser::parse_comp_expr() noexcept {
 AstNode* Parser::parse_algebraic_expr() noexcept {
     auto root_node = parse_term_expr();
     if (!root_node) {
-        const auto& token = lexer.get_next_token();
-        if (token.id == TokenId::_EOF) {
-            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
-        }
         //TODO(pablo96): error in primary expr => sync parsing
         return nullptr;
     }
@@ -141,10 +141,6 @@ AstNode* Parser::parse_term_expr() noexcept {
     auto root_node = parse_unary_expr();
     
     if (!root_node) {
-        const auto& token = lexer.get_next_token();
-        if (token.id == TokenId::_EOF) {
-            parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
-        }
         //TODO(pablo96): error in primary expr => sync parsing
         return nullptr;
     }
@@ -188,7 +184,8 @@ AstNode* Parser::parse_unary_expr() noexcept {
     Token token = lexer.get_next_token();
     
     if (token.id == TokenId::_EOF) {
-        parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+        const Token& prev_token = lexer.get_previous_token();
+        parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
         return nullptr;
     }
 
@@ -225,15 +222,27 @@ AstNode* Parser::parse_unary_expr() noexcept {
 
 /*
 * Parses primary expressions
-* CALL_EXPR | IDENTIFIER | FLOAT_LIT | INT_LIT | UNICODE_CHAR
+* primary_expr
+*   : expression
+*   | call_expr
+*   | IDENTIFIER
+*   | FLOAT_LIT
+*   | INT_LIT
+*   | UNICODE_CHAR
 */
 AstNode* Parser::parse_primary_expr() noexcept {
     const Token& token = lexer.get_next_token();
     auto token_value = lexer.get_token_value(token);
 
     if (token.id == TokenId::_EOF) {
-        parse_error(token, ERROR_UNEXPECTED_EOF, lexer.get_token_value(lexer.get_previous_token()));
+        const Token& prev_token = lexer.get_previous_token();
+        parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
         return nullptr;
+    }
+
+    if (token.id == TokenId::R_PAREN) {
+        lexer.get_back();
+        return parse_expr();
     }
 
     if (token.id == TokenId::IDENTIFIER) {
@@ -249,7 +258,7 @@ parse_literal:
         return symbol_node;
     }
 
-    parse_error(token, ERROR_EXPECTED_VALUE_TOKEN, token_value, token_id_name(token.id));
+    parse_error(token, ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN, token_value, token_id_name(token.id));
     return nullptr;
 }
 
