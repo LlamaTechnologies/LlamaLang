@@ -3,7 +3,7 @@
 #include <filesystem>
 #include "config.hpp"
 #include "console.hpp"
-#include "tokenize.hpp"
+#include "lexer.hpp"
 #include "parser.hpp"
 
 #ifdef _WIN32

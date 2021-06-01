@@ -26,6 +26,38 @@ AstNode* Parser::parse() noexcept {
 }
 
 /*
+* Parses an assignment
+* 
+* assignmentStmnt
+*   : IDENTIFIER assign_op expression
+*   ;
+*/
+AstNode* Parser::parse_assign_stmnt() noexcept {
+    auto identifier_node = parse_primary_expr();
+    if (!identifier_node) {
+        //TODO(pablo96): error in unary_expr => sync parsing
+        return nullptr;
+    }
+
+    const Token& token = lexer.get_next_token();
+    if (token.id == TokenId::ASSIGN) {
+        auto expr = parse_expr();
+        if (!expr) {
+            //TODO(pablo96): error in unary_expr => sync parsing
+            return nullptr;
+        }
+        AstNode* node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        node->data.binary_expr->bin_op = get_binary_op(token);
+        node->data.binary_expr->op1 = identifier_node;
+        node->data.binary_expr->op2 = expr;
+        return node;
+    }
+
+    // Getting here means the prediction failed.
+    UNREACHEABLE;
+}
+
+/*
 * Parses a return statement
 * returnStmt
 *   | 'ret' expression?

@@ -37,10 +37,10 @@ public:
 
     // returns AstSymbol | AstBinaryExpr | AstUnaryExpr
     _NODISCARD AstNode* parse_statement() noexcept;
+    */
 
     // returns AstBinaryExpr
-    _NODISCARD AstNode* parse_assignment() noexcept;
-    */
+    _NODISCARD AstNode* parse_assign_stmnt() noexcept;
 
     // returns AstUnaryExpr
     _NODISCARD AstNode* parse_ret_stmnt() noexcept;
