@@ -55,8 +55,9 @@ struct AstBlock {
 };
 
 struct AstVarDef {
-    std::string_view name;
-    AstNode*    type;
+    std::string_view    name;
+    AstNode*            type;
+    AstNode*            initializer;
 };
 
 struct AstSymbol {

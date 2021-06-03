@@ -34,10 +34,16 @@ public:
 
     // returns AstBlock
     _NODISCARD AstNode* parse_block() noexcept;
+    */
 
     // returns AstSymbol | AstBinaryExpr | AstUnaryExpr
     _NODISCARD AstNode* parse_statement() noexcept;
-    */
+
+    // returns AstVarDef
+    _NODISCARD AstNode* parse_vardef_stmnt() noexcept;
+
+    // returns AstTypeNode
+    _NODISCARD AstNode* parse_type() noexcept;
 
     // returns AstBinaryExpr
     _NODISCARD AstNode* parse_assign_stmnt() noexcept;

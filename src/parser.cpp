@@ -7,6 +7,7 @@
 
 static BinaryExprType get_binary_op(const Token& token) noexcept;
 static UnaryExprType get_unary_op(const Token& token) noexcept;
+static bool is_type_start_token(const Token& token) noexcept;
 static bool is_expr_token(const Token& token) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
@@ -23,6 +24,114 @@ Parser::Parser(const Lexer& in_lexer, std::vector<Error>& in_error_vec)
 
 AstNode* Parser::parse() noexcept {
     return nullptr;
+}
+
+/*
+* This predicts what statement to parse
+* statement
+*   : varDef
+*   | expression
+*   | assignmentStmnt
+*   | returnStmt
+*   | block
+*   | emptyStmt
+*   ;
+*/
+AstNode* Parser::parse_statement() noexcept {
+    const Token& token = lexer.get_next_token();
+    switch (token.id) {
+    case TokenId::IDENTIFIER:
+        const Token& second_token = lexer.get_next_token();
+        if (second_token.id == TokenId::ASSIGN) {
+            if (lexer.get_next_token().id != TokenId::ASSIGN) {
+                lexer.get_back();
+                lexer.get_back(); // second_token
+                lexer.get_back(); // token
+                return parse_assign_stmnt();
+            }
+            // is '==' expression
+            lexer.get_back();
+            goto stmnt_expr;
+        }
+        else if (is_type_start_token(second_token)) {
+            lexer.get_back(); // second_token
+            lexer.get_back(); // token
+            return parse_vardef_stmnt();
+        }
+    stmnt_expr:
+        lexer.get_back(); // second_token
+        lexer.get_back(); // token
+        return parse_expr();
+    case TokenId::RET:
+        lexer.get_back();
+        return parse_ret_stmnt();
+    case TokenId::L_CURLY:
+        // TODO(pablo96): block
+        return nullptr;
+    case TokenId::SEMI:
+        // empty_statement
+        // consume the token and predict again
+        return parse_statement();
+    case TokenId::_EOF:
+        return nullptr;
+    default:
+        UNREACHEABLE;
+    }
+}
+
+/*
+* parses a variable definition/initialization
+* varDef
+*   : IDENTIFIER type_name ('=' expression)?
+*   ;
+*/
+AstNode* Parser::parse_vardef_stmnt() noexcept {
+    const Token& token_symbol_name = lexer.get_next_token();
+
+    if (token_symbol_name.id == TokenId::IDENTIFIER) {
+        auto type_node = parse_type();
+        
+        if (!type_node) {
+            // TODO(pablo96): Handle error
+            // wrong expression expected type name
+            return nullptr;
+        }
+
+        AstNode* var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column);
+        var_def_node->data.var_def->name = lexer.get_token_value(token_symbol_name);
+        var_def_node->data.var_def->type = type_node;
+
+        if (lexer.get_next_token().id == TokenId::ASSIGN) {
+            // TODO(pablo96): parse assignment
+        }
+
+        return var_def_node;
+    }
+
+    // Bad prediction
+    UNREACHEABLE;
+}
+
+/*
+* type_name
+*   : '*' type_name
+*   | '[' ']' type_name
+*   | IDENTIFIER
+*   ;
+*/
+AstNode* Parser::parse_type() noexcept {
+    const Token& token = lexer.get_next_token();
+    if (token.id == TokenId::MUL) {
+
+    }
+    else if (token.id == TokenId::L_BRACKET) {
+
+    }
+    else if (token.id == TokenId::IDENTIFIER) {
+
+    }
+    // Bad prediction
+    UNREACHEABLE;
 }
 
 /*
@@ -399,6 +508,17 @@ UnaryExprType get_unary_op(const Token& token) noexcept {
         return UnaryExprType::RET;
     default:
         UNREACHEABLE;
+    }
+}
+
+bool is_type_start_token(const Token& token) noexcept {
+    switch (token.id) {
+    case TokenId::IDENTIFIER:
+    case TokenId::L_BRACKET:
+    case TokenId::MUL:
+        return true;
+    default:
+        return false;
     }
 }
 
