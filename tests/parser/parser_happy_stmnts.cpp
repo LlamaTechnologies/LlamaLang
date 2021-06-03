@@ -171,3 +171,114 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
     ASSERT_EQ(data_type_node->ast_type.type, AstTypeType::DataType);
     ASSERT_EQ(data_type_node->ast_type.name, "i32");
 }
+
+
+//==================================================================================
+//          PARSE ANY STATEMENT
+//==================================================================================
+
+TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_statement();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_NE(value_node->var_def.type, nullptr);
+    auto type_node = value_node->var_def.type;
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(type_node->ast_type.name, "i32");
+}
+
+TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_statement();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_NE(value_node->var_def.type, nullptr);
+    auto type_node = value_node->var_def.type;
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::Array);
+    ASSERT_NE(type_node->ast_type.data_type, nullptr);
+    auto data_type_node = type_node->ast_type.data_type;
+    ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(data_type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(data_type_node->ast_type.name, "i32");
+}
+
+TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_statement();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_NE(value_node->var_def.type, nullptr);
+    auto type_node = value_node->var_def.type;
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::Pointer);
+    ASSERT_NE(type_node->ast_type.data_type, nullptr);
+    auto data_type_node = type_node->ast_type.data_type;
+    ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(data_type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(data_type_node->ast_type.name, "i32");
+}
+
+TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar = 5 * (6 + 9)", "AssignStmntTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_statement();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
+    ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(value_node->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
+}
+
+TEST(ParserHappyStmntTests, StatementRetStmnt) {
+    std::vector<Error> errors;
+    Lexer lexer("ret myVar * (5 + 8)", "Ret stmnt", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_statement();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
+    ASSERT_NE(value_node->unary_expr.expr, nullptr);
+}
+
+TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
+    std::vector<Error> errors;
+    Lexer lexer("ret ", "RetEmptyStmnt", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_statement();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
+    ASSERT_EQ(value_node->unary_expr.expr, nullptr);
+}
+
