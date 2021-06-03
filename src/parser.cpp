@@ -126,14 +126,54 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
 AstNode* Parser::parse_type() noexcept {
     const Token& token = lexer.get_next_token();
     if (token.id == TokenId::MUL) {
+        // POINTER TYPE
         AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
         type_node->ast_type.type = AstTypeType::Pointer;
+        const Token& next_token = lexer.get_next_token();
+        if (!is_type_start_token(next_token)) {
+            parse_error(next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
+            lexer.get_back();
+            delete type_node;
+            return nullptr;
+        }
+        lexer.get_back();
+        type_node->ast_type.data_type = parse_type();
+
+        return type_node;
     }
     else if (token.id == TokenId::L_BRACKET) {
+        // ARRAY TYPE
+        const Token& r_braket_token = lexer.get_next_token();
+        if (r_braket_token.id != TokenId::R_BRACKET) {
+            parse_error(r_braket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(r_braket_token));
+            lexer.get_back();
+            return nullptr;
+        }
+        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
+        type_node->ast_type.type = AstTypeType::Array;
 
+        const Token& next_token = lexer.get_next_token();
+        if (!is_type_start_token(next_token)) {
+            parse_error(next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
+            lexer.get_back();
+            delete type_node;
+            return nullptr;
+        }
+        lexer.get_back();
+        type_node->ast_type.data_type = parse_type();
+
+        return type_node;
     }
     else if (token.id == TokenId::IDENTIFIER) {
-
+        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
+        type_node->ast_type.type = AstTypeType::DataType;
+        type_node->ast_type.name = lexer.get_token_value(token);
+        return type_node;
+    }
+    else if (token.id == TokenId::_EOF) {
+        const Token& prev_token = lexer.get_previous_token();
+        parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+        return nullptr;
     }
     // Bad prediction
     UNREACHEABLE;

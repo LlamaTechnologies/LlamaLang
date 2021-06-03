@@ -64,7 +64,7 @@ TEST(ParserHappyStmntTests, TypeNameParse) {
     lexer.tokenize();
 
     Parser parser(lexer, errors);
-    auto value_node = parser.parse_assign_stmnt();
+    auto value_node = parser.parse_type();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
@@ -79,15 +79,15 @@ TEST(ParserHappyStmntTests, TypeArrayParse) {
     lexer.tokenize();
 
     Parser parser(lexer, errors);
-    auto value_node = parser.parse_assign_stmnt();
+    auto value_node = parser.parse_type();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(value_node->ast_type.type, AstTypeType::Array);
     ASSERT_NE(value_node->ast_type.data_type, nullptr);
-    ASSERT_NE(value_node->ast_type.data_type->ast_type, AstNodeType::AstType);
-    ASSERT_NE(value_node->ast_type.data_type->ast_type.type, AstTypeType::DataType);
-    ASSERT_NE(value_node->ast_type.data_type->ast_type.name, "MyType");
+    ASSERT_EQ(value_node->ast_type.data_type->node_type, AstNodeType::AstType);
+    ASSERT_EQ(value_node->ast_type.data_type->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(value_node->ast_type.data_type->ast_type.name, "MyType");
 }
 
 TEST(ParserHappyStmntTests, TypePointerParse) {
@@ -96,13 +96,13 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
     lexer.tokenize();
 
     Parser parser(lexer, errors);
-    auto value_node = parser.parse_assign_stmnt();
+    auto value_node = parser.parse_type();
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(value_node->ast_type.type, AstTypeType::Pointer);
     ASSERT_NE(value_node->ast_type.data_type, nullptr);
-    ASSERT_NE(value_node->ast_type.data_type->ast_type, AstNodeType::AstType);
-    ASSERT_NE(value_node->ast_type.data_type->ast_type.type, AstTypeType::DataType);
-    ASSERT_NE(value_node->ast_type.data_type->ast_type.name, "MyType");
+    ASSERT_EQ(value_node->ast_type.data_type->node_type, AstNodeType::AstType);
+    ASSERT_EQ(value_node->ast_type.data_type->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(value_node->ast_type.data_type->ast_type.name, "MyType");
 }
