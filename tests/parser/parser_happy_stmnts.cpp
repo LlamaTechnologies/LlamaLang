@@ -4,7 +4,7 @@
 #include "../../src/parser.hpp"
 
 //==================================================================================
-//          PARSE RETURN STATEMENTS
+//          PARSE RETURN STATEMENT
 //==================================================================================
 
 TEST(ParserHappyStmntTests, RetStmnt) {
@@ -36,7 +36,7 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
 }
 
 //==================================================================================
-//          PARSE ASSIGN STATEMENTS
+//          PARSE ASSIGN STATEMENT
 //==================================================================================
 
 TEST(ParserHappyStmntTests, AssignStmntTest) {
@@ -72,7 +72,6 @@ TEST(ParserHappyStmntTests, TypeNameParse) {
     ASSERT_EQ(value_node->ast_type.name, "MyType");
 }
 
-
 TEST(ParserHappyStmntTests, TypeArrayParse) {
     std::vector<Error> errors;
     Lexer lexer("[]MyType", "TypeArrayParse", errors);
@@ -105,4 +104,70 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
     ASSERT_EQ(value_node->ast_type.data_type->node_type, AstNodeType::AstType);
     ASSERT_EQ(value_node->ast_type.data_type->ast_type.type, AstTypeType::DataType);
     ASSERT_EQ(value_node->ast_type.data_type->ast_type.name, "MyType");
+}
+
+//==================================================================================
+//          PARSE VARIABLE DEFINITION STATEMENT
+//==================================================================================
+
+TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_vardef_stmnt();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_NE(value_node->var_def.type, nullptr);
+    auto type_node = value_node->var_def.type;
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(type_node->ast_type.name, "i32");
+}
+
+TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_vardef_stmnt();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_NE(value_node->var_def.type, nullptr);
+    auto type_node = value_node->var_def.type;
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::Array);
+    ASSERT_NE(type_node->ast_type.data_type, nullptr);
+    auto data_type_node = type_node->ast_type.data_type;
+    ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(data_type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(data_type_node->ast_type.name, "i32");
+}
+
+TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_vardef_stmnt();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_NE(value_node->var_def.type, nullptr);
+    auto type_node = value_node->var_def.type;
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::Pointer);
+    ASSERT_NE(type_node->ast_type.data_type, nullptr);
+    auto data_type_node = type_node->ast_type.data_type;
+    ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(data_type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(data_type_node->ast_type.name, "i32");
 }

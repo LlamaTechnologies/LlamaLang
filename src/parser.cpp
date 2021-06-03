@@ -90,7 +90,7 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
     const Token& token_symbol_name = lexer.get_next_token();
 
     if (token_symbol_name.id == TokenId::IDENTIFIER) {
-        auto type_node = parse_type();
+        AstNode* type_node = parse_type();
         
         if (!type_node) {
             // TODO(pablo96): Handle error
