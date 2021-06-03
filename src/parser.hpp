@@ -31,10 +31,10 @@ public:
 
     // returns AstFuncProto
     _NODISCARD AstNode* parse_function_proto() noexcept;
+    */
 
     // returns AstBlock
     _NODISCARD AstNode* parse_block() noexcept;
-    */
 
     // returns AstSymbol | AstBinaryExpr | AstUnaryExpr
     _NODISCARD AstNode* parse_statement() noexcept;
@@ -69,13 +69,8 @@ public:
     // returns AstSymbol | AstFuncCallExpr
     _NODISCARD AstNode* parse_primary_expr() noexcept;
     
-    /*
-    // returns AstVarDef
-    _NODISCARD AstNode* parse_variable_def() noexcept;
-
-    // returns AstType
-    _NODISCARD AstNode* parse_type() noexcept;
-    */
     AstNode* parse_error(const Token& token, const char* format, ...) noexcept;
+
+    bool is_new_line_between(const size_t start_pos, const size_t end_pos);
 };
 

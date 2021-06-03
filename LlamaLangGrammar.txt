@@ -21,6 +21,10 @@ parameterList
     : parameterDecl (',' parameterDecl)*
     ;
 
+parameterDecl
+    : IDENTIFIER type_
+    ;
+
 type_
     : '*' type_
     | '[' ']' type_
@@ -31,12 +35,8 @@ varDef
     : IDENTIFIER type_ ('=' expression)?
     ;
 
-parameterDecl
-    : IDENTIFIER type_
-    ;
-
 block
-    : '{' statementList? '}'
+    : '{' (statement eos)* '}'
     ;
 
 statement
@@ -46,10 +46,6 @@ statement
     | returnStmt
     | block
     | emptyStmt
-    ;
-
-statementList
-    : (statement eos)+
     ;
 
 assign_op

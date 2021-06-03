@@ -27,6 +27,64 @@ AstNode* Parser::parse() noexcept {
 }
 
 /*
+* Parses a (function | if-else stmnt) block
+* block
+*   : '{' (statement eos)* '}'
+*   ;
+*/
+AstNode* Parser::parse_block() noexcept {
+    Token token = lexer.get_next_token();
+    if (token.id != TokenId::L_CURLY) {
+        UNREACHEABLE;
+    }
+
+    AstNode* block_node = new AstNode(AstNodeType::AstBlock, token.start_line, token.start_column);
+
+    token = lexer.get_next_token();
+    if (token.id == TokenId::R_CURLY) {
+        // Empty block
+        return block_node;
+    }
+    
+    do {
+        if (token.id == TokenId::_EOF) {
+            const Token& prev_token = lexer.get_previous_token();
+            parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+            delete block_node;
+            return nullptr;
+        }
+
+        lexer.get_back();
+        auto stmnt = parse_statement();
+        if (!stmnt) {
+            // TODO(pablo96): handle error in statement parsing
+            delete block_node;
+            return nullptr;
+        }
+
+        const Token& semicolon_token = lexer.get_next_token();
+        if (token.id != TokenId::SEMI) {
+            bool has_new_line = is_new_line_between(token.end_pos, semicolon_token.start_pos);
+            if (!has_new_line) {
+                // statement wrong ending
+                parse_error(token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(token));
+                delete block_node;
+                return nullptr;
+            }
+
+            // was not a semicolon.
+            lexer.get_back();
+        }
+
+        block_node->block.statements.push_back(stmnt);
+
+        token = lexer.get_next_token();
+    } while (token.id != TokenId::R_CURLY);
+
+    return block_node;
+}
+
+/*
 * This predicts what statement to parse
 * statement
 *   : varDef
@@ -503,6 +561,13 @@ AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexce
         token.start_column,
         lexer.file_name, msg);
     return nullptr;
+}
+
+bool Parser::is_new_line_between(const size_t start_pos, const size_t end_pos) {
+    auto start_it = lexer.source.begin();
+    auto str_view = std::string_view(start_it + start_pos, start_it + end_pos);
+
+    return str_view.find_first_of('\n') != str_view.npos;
 }
 
 BinaryExprType get_binary_op(const Token& token) noexcept {
