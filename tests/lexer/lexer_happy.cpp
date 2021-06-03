@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../../src/tokenize.hpp"
+#include "../../src/lexer.hpp"
 
 //==================================================================================
 //          IDENTIFIER

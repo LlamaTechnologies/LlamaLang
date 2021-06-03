@@ -40,7 +40,7 @@ AstNode* Parser::parse() noexcept {
 AstNode* Parser::parse_statement() noexcept {
     const Token& token = lexer.get_next_token();
     switch (token.id) {
-    case TokenId::IDENTIFIER:
+    case TokenId::IDENTIFIER: {
         const Token& second_token = lexer.get_next_token();
         if (second_token.id == TokenId::ASSIGN) {
             if (lexer.get_next_token().id != TokenId::ASSIGN) {
@@ -62,6 +62,7 @@ AstNode* Parser::parse_statement() noexcept {
         lexer.get_back(); // second_token
         lexer.get_back(); // token
         return parse_expr();
+    }
     case TokenId::RET:
         lexer.get_back();
         return parse_ret_stmnt();
@@ -98,11 +99,14 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
         }
 
         AstNode* var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column);
-        var_def_node->data.var_def->name = lexer.get_token_value(token_symbol_name);
-        var_def_node->data.var_def->type = type_node;
+        var_def_node->var_def.name = lexer.get_token_value(token_symbol_name);
+        var_def_node->var_def.type = type_node;
 
         if (lexer.get_next_token().id == TokenId::ASSIGN) {
             // TODO(pablo96): parse assignment
+        }
+        else {
+            var_def_node->var_def.initializer = nullptr;
         }
 
         return var_def_node;
@@ -122,7 +126,8 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
 AstNode* Parser::parse_type() noexcept {
     const Token& token = lexer.get_next_token();
     if (token.id == TokenId::MUL) {
-
+        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
+        type_node->ast_type.type = AstTypeType::Pointer;
     }
     else if (token.id == TokenId::L_BRACKET) {
 
@@ -156,9 +161,9 @@ AstNode* Parser::parse_assign_stmnt() noexcept {
             return nullptr;
         }
         AstNode* node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
-        node->data.binary_expr->bin_op = get_binary_op(token);
-        node->data.binary_expr->op1 = identifier_node;
-        node->data.binary_expr->op2 = expr;
+        node->binary_expr.bin_op = get_binary_op(token);
+        node->binary_expr.op1 = identifier_node;
+        node->binary_expr.op2 = expr;
         return node;
     }
 
@@ -176,7 +181,7 @@ AstNode* Parser::parse_ret_stmnt() noexcept {
     const Token& token = lexer.get_next_token();
     if (token.id == TokenId::RET) {
         AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
-        node->data.unary_expr->op = get_unary_op(token);
+        node->unary_expr.op = get_unary_op(token);
 
         if (is_expr_token(lexer.get_next_token())) {
             lexer.get_back();
@@ -187,8 +192,12 @@ AstNode* Parser::parse_ret_stmnt() noexcept {
                 return nullptr;
             }
 
-            node->data.unary_expr->expr = expr;
-        } else lexer.get_back();
+            node->unary_expr.expr = expr;
+        }
+        else {
+            node->unary_expr.expr = nullptr;
+            lexer.get_back();
+        }
 
         return node;
     }
@@ -251,9 +260,9 @@ AstNode* Parser::parse_comp_expr() noexcept {
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
-        binary_expr->data.binary_expr->op1 = root_node;
-        binary_expr->data.binary_expr->bin_op = get_binary_op(token);
-        binary_expr->data.binary_expr->op2 = unary_expr;
+        binary_expr->binary_expr.op1 = root_node;
+        binary_expr->binary_expr.bin_op = get_binary_op(token);
+        binary_expr->binary_expr.op2 = unary_expr;
 
         // set the new node as root.
         root_node = binary_expr;
@@ -291,9 +300,9 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
-        binary_expr->data.binary_expr->op1 = root_node;
-        binary_expr->data.binary_expr->bin_op = get_binary_op(token);
-        binary_expr->data.binary_expr->op2 = term_expr;
+        binary_expr->binary_expr.op1 = root_node;
+        binary_expr->binary_expr.bin_op = get_binary_op(token);
+        binary_expr->binary_expr.op2 = term_expr;
 
         // set the new node as root.
         root_node = binary_expr;
@@ -332,9 +341,9 @@ AstNode* Parser::parse_term_expr() noexcept {
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
-        binary_expr->data.binary_expr->op1 = root_node;
-        binary_expr->data.binary_expr->bin_op = get_binary_op(token);
-        binary_expr->data.binary_expr->op2 = symbol_token;
+        binary_expr->binary_expr.op1 = root_node;
+        binary_expr->binary_expr.bin_op = get_binary_op(token);
+        binary_expr->binary_expr.op2 = symbol_token;
 
         // set the new node as root.
         root_node = binary_expr;
@@ -367,8 +376,8 @@ AstNode* Parser::parse_unary_expr() noexcept {
         if (!primary_expr) {
             //TODO(pablo96): error in algebraic_expr => sync parsing
         }
-        node->data.unary_expr->op = get_unary_op(token);
-        node->data.unary_expr->expr = primary_expr;
+        node->unary_expr.op = get_unary_op(token);
+        node->unary_expr.expr = primary_expr;
         return node;
     }
 
@@ -382,8 +391,8 @@ AstNode* Parser::parse_unary_expr() noexcept {
     // primary_expr op
     if (MATCH(token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
         AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
-        node->data.unary_expr->expr = primary_expr;
-        node->data.unary_expr->op = get_unary_op(token);
+        node->unary_expr.expr = primary_expr;
+        node->unary_expr.op = get_unary_op(token);
         return node;
     }
     lexer.get_back();
@@ -425,7 +434,7 @@ AstNode* Parser::parse_primary_expr() noexcept {
     if (MATCH(token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
 parse_literal:
         AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column);
-        symbol_node->data.symbol->token = &token;
+        symbol_node->symbol.token = &token;
         return symbol_node;
     }
 

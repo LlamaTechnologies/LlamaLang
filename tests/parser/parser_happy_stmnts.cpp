@@ -17,8 +17,8 @@ TEST(ParserHappyStmntTests, RetStmnt) {
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
-    ASSERT_EQ(value_node->data.unary_expr->op, UnaryExprType::RET);
-    ASSERT_NE(value_node->data.unary_expr->expr, nullptr);
+    ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
+    ASSERT_NE(value_node->unary_expr.expr, nullptr);
 }
 
 TEST(ParserHappyStmntTests, RetEmptyStmnt) {
@@ -31,8 +31,8 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
-    ASSERT_EQ(value_node->data.unary_expr->op, UnaryExprType::RET);
-    ASSERT_EQ(value_node->data.unary_expr->expr, nullptr);
+    ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
+    ASSERT_EQ(value_node->unary_expr.expr, nullptr);
 }
 
 //==================================================================================
@@ -49,9 +49,9 @@ TEST(ParserHappyStmntTests, AssignStmntTest) {
 
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr); 
-    ASSERT_EQ(value_node->data.binary_expr->bin_op, BinaryExprType::ASSIGN);
-    ASSERT_EQ(value_node->data.binary_expr->op1->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(value_node->data.binary_expr->op2->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
+    ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(value_node->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
 }
 
 
