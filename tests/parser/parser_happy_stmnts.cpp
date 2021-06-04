@@ -282,3 +282,29 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
     ASSERT_EQ(value_node->unary_expr.expr, nullptr);
 }
 
+
+//==================================================================================
+//          PARSE BLOCK STATEMENT
+//==================================================================================
+
+TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
+    std::vector<Error> errors;
+    Lexer lexer("{myVar i32\nret myvar}", "BlockNoSpaceNearCurliesTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_block();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(value_node->block.statements.size(), 2);
+    ASSERT_EQ(value_node->block.statements.at(0)->node_type, AstNodeType::AstVarDef);
+    AstNode* var_def_node = value_node->block.statements.at(0);
+    ASSERT_EQ(var_def_node->var_def.name, "myVar");
+    ASSERT_NE(var_def_node->var_def.type, nullptr);
+    AstNode* type_node = var_def_node->var_def.type;
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(type_node->ast_type.name, "i32");
+}

@@ -35,6 +35,7 @@ AstNode* Parser::parse() noexcept {
 AstNode* Parser::parse_block() noexcept {
     Token token = lexer.get_next_token();
     if (token.id != TokenId::L_CURLY) {
+        // bad_prediction
         UNREACHEABLE;
     }
 
@@ -55,7 +56,7 @@ AstNode* Parser::parse_block() noexcept {
         }
 
         lexer.get_back();
-        auto stmnt = parse_statement();
+        AstNode* stmnt = parse_statement();
         if (!stmnt) {
             // TODO(pablo96): handle error in statement parsing
             delete block_node;
@@ -65,7 +66,8 @@ AstNode* Parser::parse_block() noexcept {
         const Token& semicolon_token = lexer.get_next_token();
         if (token.id != TokenId::SEMI) {
             bool has_new_line = is_new_line_between(token.end_pos, semicolon_token.start_pos);
-            if (!has_new_line) {
+            // checking for r_curly allows for '{stmnt}' as block
+            if (token.id != TokenId::R_CURLY && !has_new_line) {
                 // statement wrong ending
                 parse_error(token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(token));
                 delete block_node;

@@ -52,6 +52,8 @@ struct AstParamDecl {
 
 struct AstBlock {
     std::vector<AstNode*> statements;
+
+    AstBlock() : statements(std::vector<AstNode*>()) {}
 };
 
 struct AstVarDef {
@@ -174,5 +176,103 @@ struct AstNode {
     AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column)
         : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {}
 
+    AstNode(const AstNode& other)
+        : parent(other.parent), line(other.line), column(other.column), node_type(other.node_type) {
+        switch (other.node_type)
+        {
+        case AstNodeType::AstSourceCode:
+            source_code = other.source_code;
+            break;
+        case AstNodeType::AstDirective:
+            directive = other.directive;
+            break;
+        case AstNodeType::AstFuncDef:
+            function_def = other.function_def;
+            break;
+        case AstNodeType::AstFuncProto:
+            function_proto = other.function_proto;
+            break;
+        case AstNodeType::AstParamDecl:
+            param_decl = other.param_decl;
+            break;
+        case AstNodeType::AstBlock:
+            block = other.block;
+            break;
+        case AstNodeType::AstType:
+            ast_type = other.ast_type;
+            break;
+        case AstNodeType::AstVarDef:
+            var_def = other.var_def;
+            break;
+        case AstNodeType::AstSymbol:
+            symbol = other.symbol;
+            break;
+        case AstNodeType::AstFuncCallExpr:
+            func_call = other.func_call;
+            break;
+        case AstNodeType::AstBinaryExpr:
+            binary_expr = other.binary_expr;
+            break;
+        case AstNodeType::AstUnaryExpr:
+            unary_expr = other.unary_expr;
+            break;
+        default:
+            UNREACHEABLE;
+        }
+    }
+
     virtual ~AstNode() {}
+
+    AstNode& operator=(const AstNode& other) {
+        if (this != &other) // not a self-assignment
+        {
+            parent      = other.parent;
+            line        = other.line;
+            column      = other.column;
+            node_type   = other.node_type;
+
+            switch (other.node_type)
+            {
+            case AstNodeType::AstSourceCode:
+                source_code = other.source_code;
+                break;
+            case AstNodeType::AstDirective:
+                directive = other.directive;
+                break;
+            case AstNodeType::AstFuncDef:
+                function_def = other.function_def;
+                break;
+            case AstNodeType::AstFuncProto:
+                function_proto = other.function_proto;
+                break;
+            case AstNodeType::AstParamDecl:
+                param_decl = other.param_decl;
+                break;
+            case AstNodeType::AstBlock:
+                block = other.block;
+                break;
+            case AstNodeType::AstType:
+                ast_type = other.ast_type;
+                break;
+            case AstNodeType::AstVarDef:
+                var_def = other.var_def;
+                break;
+            case AstNodeType::AstSymbol:
+                symbol = other.symbol;
+                break;
+            case AstNodeType::AstFuncCallExpr:
+                func_call = other.func_call;
+                break;
+            case AstNodeType::AstBinaryExpr:
+                binary_expr = other.binary_expr;
+                break;
+            case AstNodeType::AstUnaryExpr:
+                unary_expr = other.unary_expr;
+                break;
+            default:
+                UNREACHEABLE;
+            }
+        }
+        return *this;
+    }
 };
