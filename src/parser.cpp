@@ -198,8 +198,10 @@ AstNode* Parser::parse_type() noexcept {
             return nullptr;
         }
         lexer.get_back();
-        type_node->ast_type.data_type = parse_type();
-
+        auto data_tye_node = parse_type();
+        data_tye_node->parent = type_node;
+        type_node->ast_type.data_type = data_tye_node;
+        
         return type_node;
     }
     else if (token.id == TokenId::L_BRACKET) {
@@ -221,8 +223,10 @@ AstNode* Parser::parse_type() noexcept {
             return nullptr;
         }
         lexer.get_back();
-        type_node->ast_type.data_type = parse_type();
-
+        auto data_tye_node = parse_type();
+        data_tye_node->parent = type_node;
+        type_node->ast_type.data_type = data_tye_node;
+        
         return type_node;
     }
     else if (token.id == TokenId::IDENTIFIER) {
@@ -263,6 +267,7 @@ AstNode* Parser::parse_assign_stmnt() noexcept {
         }
         AstNode* node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
         expr->parent = node;
+        identifier_node->parent = node;
         node->binary_expr.bin_op = get_binary_op(token);
         node->binary_expr.op1 = identifier_node;
         node->binary_expr.op2 = expr;
