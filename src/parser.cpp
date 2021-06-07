@@ -166,9 +166,10 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
             // TODO(pablo96): parse assignment
         }
         else {
+            lexer.get_back();
             var_def_node->var_def.initializer = nullptr;
         }
-
+        
         return var_def_node;
     }
 
