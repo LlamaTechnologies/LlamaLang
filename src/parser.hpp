@@ -1,4 +1,5 @@
 #pragma once
+#include "common_defs.hpp"
 #include <vector>
 #include <string>
 
@@ -8,7 +9,7 @@ struct Token;
 struct Error;
 struct AstNode;
 
-bool match(const Token token, const TokenId ...) noexcept;
+bool match(const Token* token, ...) noexcept;
 #define MATCH(token, ...) match(token, __VA_ARGS__, TokenId(size_t(TokenId::_EOF) + 1))
 
 class Parser {
@@ -21,53 +22,53 @@ public:
 
     /*
     // returns AstSourceCode
-    _NODISCARD AstNode* parse_source_code() noexcept;
+    LL_NODISCARD AstNode* parse_source_code() noexcept;
 
     // returns AstDirective
-    _NODISCARD AstNode* parse_basic_directive() noexcept;
+    LL_NODISCARD AstNode* parse_basic_directive() noexcept;
 
     // returns AstFuncDef
-    _NODISCARD AstNode* parse_function_def() noexcept;
+    LL_NODISCARD AstNode* parse_function_def() noexcept;
 
     // returns AstFuncProto
-    _NODISCARD AstNode* parse_function_proto() noexcept;
+    LL_NODISCARD AstNode* parse_function_proto() noexcept;
     */
 
     // returns AstBlock
-    _NODISCARD AstNode* parse_block() noexcept;
+    LL_NODISCARD AstNode* parse_block() noexcept;
 
     // returns AstSymbol | AstBinaryExpr | AstUnaryExpr
-    _NODISCARD AstNode* parse_statement() noexcept;
+    LL_NODISCARD AstNode* parse_statement() noexcept;
 
     // returns AstVarDef
-    _NODISCARD AstNode* parse_vardef_stmnt() noexcept;
+    LL_NODISCARD AstNode* parse_vardef_stmnt() noexcept;
 
     // returns AstTypeNode
-    _NODISCARD AstNode* parse_type() noexcept;
+    LL_NODISCARD AstNode* parse_type() noexcept;
 
     // returns AstBinaryExpr
-    _NODISCARD AstNode* parse_assign_stmnt() noexcept;
+    LL_NODISCARD AstNode* parse_assign_stmnt() noexcept;
 
     // returns AstUnaryExpr
-    _NODISCARD AstNode* parse_ret_stmnt() noexcept;
+    LL_NODISCARD AstNode* parse_ret_stmnt() noexcept;
 
      // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
-    _NODISCARD AstNode* parse_expr() noexcept;
+    LL_NODISCARD AstNode* parse_expr() noexcept;
 
     // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
-    _NODISCARD AstNode* parse_comp_expr() noexcept;
+    LL_NODISCARD AstNode* parse_comp_expr() noexcept;
 
     // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
-    _NODISCARD AstNode* parse_algebraic_expr() noexcept;
+    LL_NODISCARD AstNode* parse_algebraic_expr() noexcept;
 
     // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
-    _NODISCARD AstNode* parse_term_expr() noexcept;
+    LL_NODISCARD AstNode* parse_term_expr() noexcept;
 
     // returns AstSymbol | AstFuncCallExpr | AstUnaryExpr
-    _NODISCARD AstNode* parse_unary_expr() noexcept;
+    LL_NODISCARD AstNode* parse_unary_expr() noexcept;
 
     // returns AstSymbol | AstFuncCallExpr
-    _NODISCARD AstNode* parse_primary_expr() noexcept;
+    LL_NODISCARD AstNode* parse_primary_expr() noexcept;
     
     AstNode* parse_error(const Token& token, const char* format, ...) noexcept;
 

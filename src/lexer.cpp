@@ -139,7 +139,7 @@ void Lexer::tokenize() noexcept
 {
     // reading file while no errors in it
     for (/*cursor_pos = 0*/; cursor_pos < source.size(); cursor_pos++) {
-        char c = source[cursor_pos];
+        unsigned char c = source[cursor_pos];
 
         switch (state)
         {
@@ -418,7 +418,7 @@ void Lexer::tokenize() noexcept
                 is_trailing_underscore = false;
                 state = TokenizerState::Number;
             }
-            __fallthrough;
+            LL_FALLTHROUGH
             // we saw a number that my have '.' '_' or [eEpP]
         case TokenizerState::Number:
         {
@@ -543,7 +543,7 @@ void Lexer::tokenize() noexcept
                 is_trailing_underscore = false;
                 state = TokenizerState::FloatFraction;
             }
-            __fallthrough;
+            LL_FALLTHROUGH
         case TokenizerState::FloatFraction:
         {
             if (c == '_') {
@@ -611,7 +611,7 @@ void Lexer::tokenize() noexcept
                 is_trailing_underscore = false;
                 state = TokenizerState::FloatExponentNumber;
             }
-            __fallthrough;
+            LL_FALLTHROUGH
         case TokenizerState::FloatExponentNumber:
         {
             if (c == '_') {
@@ -1042,7 +1042,7 @@ void Lexer::tokenize() noexcept
         break;
     case TokenizerState::NumberDot:
         set_token_id(TokenId::FLOAT_LIT);
-        __fallthrough;
+        LL_FALLTHROUGH
     case TokenizerState::SawSignOrTypeSpec:
     case TokenizerState::FloatFraction:
     case TokenizerState::FloatExponentUnsigned:
@@ -1314,7 +1314,7 @@ static const char* get_escape_shorthand(uint8_t c) {
     }
 }
 
-static std::string token_id_names[] = {
+static const char * token_id_names[] = {
     "HASH",
     "FUNC",
     "RET",
@@ -1369,7 +1369,7 @@ static std::string token_id_names[] = {
     "EOF"
 };
 
-inline std::string& token_id_name(TokenId id) {
+inline const char * token_id_name(TokenId id) {
     return token_id_names[(size_t)id];
 }
 
@@ -1479,7 +1479,7 @@ Console print_tokens(Lexer& lexer)
     {
         auto& token = tokens.at(i);
         
-        auto& token_name = token_id_name(token.id);
+        auto token_name = std::string(token_id_name(token.id));
         auto token_value_size = token.get_value_size();
         auto token_name_size = token_name.size() + 2;
 

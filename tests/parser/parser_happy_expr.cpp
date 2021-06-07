@@ -30,6 +30,7 @@ TEST(ParserHappyParseValueTests, FloatTest) {
     auto value_node = parser.parse_primary_expr();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
     ASSERT_NE(value_node->symbol.token, nullptr);
     ASSERT_EQ(value_node->symbol.token->id, TokenId::FLOAT_LIT);
@@ -876,17 +877,17 @@ TEST(ParserHappyParseExprTests, CompGroupedTest) {
 TEST(ParserHappyUtilTests, MatchFuncTest) {
     Token token;
     token.id = TokenId::FN;
-    ASSERT_EQ(match(token, TokenId::AND, TokenId::_EOF, TokenId::FN, TokenId(size_t(TokenId::_EOF) + 1)), true);
+    ASSERT_EQ(match(&token, TokenId::AND, TokenId::_EOF, TokenId::FN, TokenId(size_t(TokenId::_EOF) + 1)), true);
 }
 
 TEST(ParserHappyUtilTests, MatchMacroTest) {
     Token token;
     token.id = TokenId::FN;
-    ASSERT_EQ(MATCH(token, TokenId::AND, TokenId::_EOF, TokenId::FN), true);
+    ASSERT_EQ(MATCH(&token, TokenId::AND, TokenId::_EOF, TokenId::FN), true);
 }
 
 TEST(ParserHappyUtilTests, MatchMacroNoMatchTest) {
     Token token;
     token.id = TokenId::FN;
-    ASSERT_EQ(MATCH(token, TokenId::AND, TokenId::_EOF, TokenId::OR), false);
+    ASSERT_EQ(MATCH(&token, TokenId::AND, TokenId::_EOF, TokenId::OR), false);
 }

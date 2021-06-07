@@ -149,6 +149,7 @@ enum class AstNodeType {
 };
 
 // base ast node
+// 96 bytes
 struct AstNode {
     AstNode* parent;
     size_t line;

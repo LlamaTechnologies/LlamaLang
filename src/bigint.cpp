@@ -10,6 +10,7 @@
 #include <limits>
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 
 static void bigint_normalize(BigInt *dest) {
     const uint64_t *digits = bigint_ptr(dest);

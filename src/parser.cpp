@@ -2,7 +2,7 @@
 #include "lexer.hpp"
 #include "ast_nodes.hpp"
 #include "parse_error_msgs.hpp"
-#include <cstdarg>
+#include <stdarg.h>
 #include <cassert>
 
 static BinaryExprType get_binary_op(const Token& token) noexcept;
@@ -346,7 +346,7 @@ AstNode* Parser::parse_comp_expr() noexcept {
     do {
         Token token = lexer.get_next_token();
 
-        if (!MATCH(token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER, TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS)) {
+        if (!MATCH(&token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER, TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS)) {
             // Not my token
             lexer.get_back();
             break;
@@ -386,7 +386,7 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
     
     do {
         Token token = lexer.get_next_token();
-        if (!MATCH(token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR)) {
+        if (!MATCH(&token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR)) {
             // Not my token
             lexer.get_back();
             break;
@@ -427,7 +427,7 @@ AstNode* Parser::parse_term_expr() noexcept {
 
     do {
         Token token = lexer.get_next_token();
-        if (!MATCH(token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR)) {
+        if (!MATCH(&token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR)) {
             // Not my token
             lexer.get_back();
             break;
@@ -470,7 +470,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
     }
 
     // op primary_expr
-    if (MATCH(token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
+    if (MATCH(&token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
         AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
         AstNode* primary_expr = parse_primary_expr();
         if (!primary_expr) {
@@ -489,7 +489,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
 
     token = lexer.get_next_token();
     // primary_expr op
-    if (MATCH(token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
+    if (MATCH(&token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
         AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
         node->unary_expr.expr = primary_expr;
         node->unary_expr.op = get_unary_op(token);
@@ -531,7 +531,7 @@ AstNode* Parser::parse_primary_expr() noexcept {
         goto parse_literal;
     }
 
-    if (MATCH(token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
+    if (MATCH(&token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
 parse_literal:
         AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column);
         symbol_node->symbol.token = &token;
@@ -689,13 +689,11 @@ bool is_whitespace_char(const char _char) noexcept {
     }
 }
 
-bool match(const Token token, const TokenId ...) noexcept
-{
+bool match(const Token* token, ...) noexcept {
     va_list vargv;
     va_start(vargv, token);
 
-    for (;;)
-    {
+    do {
         const TokenId id = va_arg(vargv, TokenId);
 
         // run out of token_ids
@@ -705,9 +703,9 @@ bool match(const Token token, const TokenId ...) noexcept
         }
 
         // found match
-        if (token.id == id) {
+        if (token->id == id) {
             va_end(vargv);
             return true;
         }
-    }
+    } while(true);
 }
