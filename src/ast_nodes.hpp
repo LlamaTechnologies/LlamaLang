@@ -156,19 +156,20 @@ struct AstNode {
     AstNodeType node_type;
 
     // actual node
-    AstSourceCode   source_code;
-    AstDirective    directive;      // # dir_name args*
-    AstFuncDef      function_def;   // function definition
-    AstFuncProto    function_proto; // fn name L_PAREN param_decl (, param_decl)* R_PAREN
-    AstParamDecl    param_decl;     // name type
-    AstBlock        block;          // L_CURLY statements R_CURLY
-    AstVarDef       var_def;        // name type
-    AstType         ast_type;       // type
-    AstUnaryExpr    unary_expr;     // unary_op expr
-    AstBinaryExpr   binary_expr;    // expr binary_op expr
-    AstSymbol       symbol;         // symbol_name
-    AstFuncCallExpr func_call;      // func_name L_PAREN (expr (, expr)*)? R_PAREN
-
+    //union {
+        AstSourceCode   source_code;
+        AstDirective    directive;      // # dir_name args*
+        AstFuncDef      function_def;   // function definition
+        AstFuncProto    function_proto; // fn name L_PAREN param_decl (, param_decl)* R_PAREN
+        AstParamDecl    param_decl;     // name type
+        AstBlock        block;          // L_CURLY statements R_CURLY
+        AstVarDef       var_def;        // name type
+        AstType         ast_type;       // type
+        AstUnaryExpr    unary_expr;     // unary_op expr
+        AstBinaryExpr   binary_expr;    // expr binary_op expr
+        AstSymbol       symbol;         // symbol_name
+        AstFuncCallExpr func_call;      // func_name L_PAREN (expr (, expr)*)? R_PAREN
+    //};
 
     AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column)
         : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {}

@@ -43,8 +43,6 @@ parse_error_msgs.hpp
 parser.hpp
 parser.cpp
 
-supported_compilers.hpp
-
 lexer.hpp
 lexer.cpp
 )

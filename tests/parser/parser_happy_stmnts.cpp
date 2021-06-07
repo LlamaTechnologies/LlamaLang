@@ -299,12 +299,20 @@ TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
     ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
     ASSERT_EQ(value_node->block.statements.size(), 2);
+
     ASSERT_EQ(value_node->block.statements.at(0)->node_type, AstNodeType::AstVarDef);
     AstNode* var_def_node = value_node->block.statements.at(0);
+    ASSERT_EQ(var_def_node->parent, value_node);
     ASSERT_EQ(var_def_node->var_def.name, "myVar");
     ASSERT_NE(var_def_node->var_def.type, nullptr);
     AstNode* type_node = var_def_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(type_node->ast_type.type, AstTypeType::DataType);
     ASSERT_EQ(type_node->ast_type.name, "i32");
+
+    ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
+    AstNode* ret_node = value_node->block.statements.at(1);
+    ASSERT_EQ(ret_node->parent, value_node);
+    ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
+    ASSERT_NE(ret_node->unary_expr.expr, nullptr);
 }
