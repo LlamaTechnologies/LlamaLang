@@ -33,28 +33,28 @@ AstNode* Parser::parse() noexcept {
 *   ;
 */
 AstNode* Parser::parse_block() noexcept {
-    Token token = lexer.get_next_token();
-    if (token.id != TokenId::L_CURLY) {
+    const Token& l_curly_token = lexer.get_next_token();
+    if (l_curly_token.id != TokenId::L_CURLY) {
         // bad_prediction
         UNREACHEABLE;
     }
 
-    AstNode* block_node = new AstNode(AstNodeType::AstBlock, token.start_line, token.start_column);
+    AstNode* block_node = new AstNode(AstNodeType::AstBlock, l_curly_token.start_line, l_curly_token.start_column);
 
-    token = lexer.get_next_token();
-    if (token.id == TokenId::R_CURLY) {
-        // Empty block
-        return block_node;
-    }
-    
-    do {
+    for (;;) {
+        const Token& token = lexer.get_next_token();
+        
+        if (token.id == TokenId::R_CURLY) {
+            break;
+        }
+
         if (token.id == TokenId::_EOF) {
             const Token& prev_token = lexer.get_previous_token();
             parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
             delete block_node;
             return nullptr;
         }
-
+        
         lexer.get_back();
         AstNode* stmnt = parse_statement();
         if (!stmnt) {
@@ -64,10 +64,10 @@ AstNode* Parser::parse_block() noexcept {
         }
 
         const Token& semicolon_token = lexer.get_next_token();
-        if (token.id != TokenId::SEMI) {
+        if (semicolon_token.id != TokenId::SEMI) {
             bool has_new_line = is_new_line_between(token.end_pos, semicolon_token.start_pos);
             // checking for r_curly allows for '{stmnt}' as block
-            if (token.id != TokenId::R_CURLY && !has_new_line) {
+            if (semicolon_token.id != TokenId::R_CURLY && !has_new_line) {
                 // statement wrong ending
                 parse_error(token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(token));
                 delete block_node;
@@ -78,10 +78,9 @@ AstNode* Parser::parse_block() noexcept {
             lexer.get_back();
         }
 
+        stmnt->parent = block_node;
         block_node->block.statements.push_back(stmnt);
-
-        token = lexer.get_next_token();
-    } while (token.id != TokenId::R_CURLY);
+    }
 
     return block_node;
 }
@@ -159,6 +158,7 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
         }
 
         AstNode* var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column);
+        type_node->parent = var_def_node;
         var_def_node->var_def.name = lexer.get_token_value(token_symbol_name);
         var_def_node->var_def.type = type_node;
 
@@ -261,6 +261,7 @@ AstNode* Parser::parse_assign_stmnt() noexcept {
             return nullptr;
         }
         AstNode* node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        expr->parent = node;
         node->binary_expr.bin_op = get_binary_op(token);
         node->binary_expr.op1 = identifier_node;
         node->binary_expr.op2 = expr;
@@ -292,8 +293,10 @@ AstNode* Parser::parse_ret_stmnt() noexcept {
                 return nullptr;
             }
 
+            expr->parent = node;
             node->unary_expr.expr = expr;
         }
+        // void return
         else {
             node->unary_expr.expr = nullptr;
             lexer.get_back();
@@ -344,7 +347,7 @@ AstNode* Parser::parse_comp_expr() noexcept {
     }
     
     do {
-        Token token = lexer.get_next_token();
+        const Token& token = lexer.get_next_token();
 
         if (!MATCH(&token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER, TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS)) {
             // Not my token
@@ -360,6 +363,7 @@ AstNode* Parser::parse_comp_expr() noexcept {
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        unary_expr->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
         binary_expr->binary_expr.op2 = unary_expr;
@@ -385,7 +389,7 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
     }
     
     do {
-        Token token = lexer.get_next_token();
+        const Token& token = lexer.get_next_token();
         if (!MATCH(&token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR)) {
             // Not my token
             lexer.get_back();
@@ -400,6 +404,7 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        term_expr->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
         binary_expr->binary_expr.op2 = term_expr;
@@ -426,7 +431,7 @@ AstNode* Parser::parse_term_expr() noexcept {
     }
 
     do {
-        Token token = lexer.get_next_token();
+        const Token& token = lexer.get_next_token();
         if (!MATCH(&token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND, TokenId::BIT_XOR)) {
             // Not my token
             lexer.get_back();
@@ -441,6 +446,7 @@ AstNode* Parser::parse_term_expr() noexcept {
 
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        symbol_token->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
         binary_expr->binary_expr.op2 = symbol_token;
@@ -461,22 +467,23 @@ AstNode* Parser::parse_term_expr() noexcept {
 *   ;
 */
 AstNode* Parser::parse_unary_expr() noexcept {
-    Token token = lexer.get_next_token();
+    const Token& unary_op_token = lexer.get_next_token();
     
-    if (token.id == TokenId::_EOF) {
+    if (unary_op_token.id == TokenId::_EOF) {
         const Token& prev_token = lexer.get_previous_token();
         parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
         return nullptr;
     }
 
     // op primary_expr
-    if (MATCH(&token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
-        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
+    if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
+        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, unary_op_token.start_line, unary_op_token.start_column);
         AstNode* primary_expr = parse_primary_expr();
         if (!primary_expr) {
             //TODO(pablo96): error in algebraic_expr => sync parsing
         }
-        node->unary_expr.op = get_unary_op(token);
+        primary_expr->parent = node;
+        node->unary_expr.op = get_unary_op(unary_op_token);
         node->unary_expr.expr = primary_expr;
         return node;
     }
@@ -487,10 +494,11 @@ AstNode* Parser::parse_unary_expr() noexcept {
         //TODO(pablo96): error in algebraic_expr => sync parsing
     }
 
-    token = lexer.get_next_token();
+    const Token& token = lexer.get_next_token();
     // primary_expr op
     if (MATCH(&token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
         AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
+        primary_expr->parent = node;
         node->unary_expr.expr = primary_expr;
         node->unary_expr.op = get_unary_op(token);
         return node;

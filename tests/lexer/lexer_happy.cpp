@@ -673,7 +673,6 @@ TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(char_token.id, TokenId::UNICODE_CHAR);
     ASSERT_EQ(char_token.char_lit, L'\u00B6');
-    ASSERT_EQ(char_token.char_lit, L'�');
     ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
