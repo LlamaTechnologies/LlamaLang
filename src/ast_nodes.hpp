@@ -2,6 +2,7 @@
 #include "common_defs.hpp"
 #include <vector>
 #include <string>
+#include <assert.h>
 
 // ast nodes
 struct Token;
@@ -173,6 +174,15 @@ struct AstNode {
 
     AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column)
         : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {}
+
+
+    AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column, const std::string & type_name)
+        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {
+        assert(in_node_type == AstNodeType::AstType);
+
+        ast_type.type = AstTypeType::DataType;
+        ast_type.name = type_name;
+    }
 
     AstNode(const AstNode& other)
         : parent(other.parent), line(other.line), column(other.column), node_type(other.node_type) {

@@ -284,6 +284,10 @@ void Lexer::tokenize() noexcept
                 begin_token(TokenId::BIT_NOT);
                 end_token();
                 break;
+            case ',':
+                begin_token(TokenId::COMMA);
+                end_token();
+                break;
             case '^':
                 begin_token(TokenId::BIT_XOR);
                 end_token();

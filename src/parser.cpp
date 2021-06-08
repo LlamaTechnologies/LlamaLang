@@ -19,6 +19,8 @@ case TokenId::IDENTIFIER
 
 
 
+
+
 Parser::Parser(const Lexer& in_lexer, std::vector<Error>& in_error_vec)
     : lexer(in_lexer), error_vec(in_error_vec) {}
 
@@ -29,7 +31,7 @@ AstNode* Parser::parse() noexcept {
 /*
 * Parses a function prototype
 * functionProto
-*   : 'fn' IDENTIFIER '(' parameterList? ')' type_name
+*   : 'fn' IDENTIFIER '(' (parameterDecl (',' parameterDecl)*)? ')' type_name
 *   ;
 */
 AstNode* Parser::parse_function_proto() noexcept {
@@ -71,6 +73,10 @@ AstNode* Parser::parse_function_proto() noexcept {
                 break;
             }
 
+            if (token.id == TokenId::COMMA) {
+                continue;
+            }
+
             if (token.id == TokenId::_EOF) {
                 const Token& prev_token = lexer.get_previous_token();
                 parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
@@ -93,7 +99,9 @@ AstNode* Parser::parse_function_proto() noexcept {
 
     // return type
     {
+        AstNode* ret_type_node = nullptr;
         const Token& ret_type_token = lexer.get_next_token();
+
         if (!is_type_start_token(ret_type_token)) {
             // TODO(pablo96): Handle error
             // UNEXPECTED TOKEN
@@ -102,7 +110,7 @@ AstNode* Parser::parse_function_proto() noexcept {
         }
 
         lexer.get_back();
-        auto ret_type_node = parse_type();
+        ret_type_node = parse_type();
         if (!ret_type_node) {
             // TODO(pablo96): Handle error
             delete func_prot_node;
