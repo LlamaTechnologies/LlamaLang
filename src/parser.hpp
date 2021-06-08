@@ -26,10 +26,10 @@ public:
 
     // returns AstDirective
     LL_NODISCARD AstNode* parse_basic_directive() noexcept;
+    */
 
     // returns AstFuncDef
     LL_NODISCARD AstNode* parse_function_def() noexcept;
-    */
 
     // returns AstFuncProto
     LL_NODISCARD AstNode* parse_function_proto() noexcept;

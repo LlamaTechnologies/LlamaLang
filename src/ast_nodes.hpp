@@ -43,7 +43,6 @@ struct AstFuncProto {
     std::string_view        name;
     std::vector<AstNode*>   params;
     AstNode*                return_type;
-    AstNode*                fn_def_node;
 };
 
 struct AstParamDecl {

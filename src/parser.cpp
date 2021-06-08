@@ -17,15 +17,48 @@ TokenId::HASH:\
 case TokenId::FN:\
 case TokenId::IDENTIFIER
 
-
-
-
-
 Parser::Parser(const Lexer& in_lexer, std::vector<Error>& in_error_vec)
     : lexer(in_lexer), error_vec(in_error_vec) {}
 
 AstNode* Parser::parse() noexcept {
     return nullptr;
+}
+
+AstNode* Parser::parse_function_def() noexcept {
+    const Token& fn_token = lexer.get_next_token();
+    if (fn_token.id != TokenId::FN) {
+        // Bad prediction
+        UNREACHEABLE;
+    }
+
+    lexer.get_back();
+    auto func_prot_node = parse_function_proto();
+    if (!func_prot_node) {
+        // TODO(pablo96): Handle error
+        return nullptr;
+    }
+
+    const Token& l_curly_token = lexer.get_next_token();
+    if (l_curly_token.id != TokenId::L_CURLY) {
+        // just a function declaration (prototype)
+        return func_prot_node;
+    }
+
+    lexer.get_back();
+    auto block_node = parse_block();
+    if (!block_node) {
+        // TODO(pablo96): Handle error
+        delete func_prot_node;
+        return nullptr;
+    }
+
+    auto func_node = new AstNode(AstNodeType::AstFuncDef, fn_token.start_line, fn_token.start_column);
+    func_prot_node->parent = func_node;
+    block_node->parent = func_node;
+    func_node->function_def.proto = func_prot_node;
+    func_node->function_def.block = block_node;
+    
+    return func_node;
 }
 
 /*
