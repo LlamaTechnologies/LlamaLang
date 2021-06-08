@@ -370,6 +370,7 @@ AstNode* Parser::parse_comp_expr() noexcept {
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
         unary_expr->parent = binary_expr;
+        root_node->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
         binary_expr->binary_expr.op2 = unary_expr;
