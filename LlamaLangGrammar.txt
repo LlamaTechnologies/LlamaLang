@@ -14,11 +14,7 @@ functionDef
     ;
 
 functionProto
-    : 'fn' IDENTIFIER '(' parameterList? ')' type_
-    ;
-
-parameterList
-    : parameterDecl (',' parameterDecl)*
+    : 'fn' IDENTIFIER '(' (parameterDecl (',' parameterDecl)*)? ')' type_
     ;
 
 parameterDecl

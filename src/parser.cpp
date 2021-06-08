@@ -27,6 +27,125 @@ AstNode* Parser::parse() noexcept {
 }
 
 /*
+* Parses a function prototype
+* functionProto
+*   : 'fn' IDENTIFIER '(' parameterList? ')' type_name
+*   ;
+*/
+AstNode* Parser::parse_function_proto() noexcept {
+    const Token& fn_token = lexer.get_next_token();
+
+    if (fn_token.id != TokenId::FN) {
+        // Bad prediction
+        UNREACHEABLE;
+    }
+
+    auto func_prot_node = new AstNode(AstNodeType::AstFuncProto, fn_token.start_line, fn_token.start_column);
+
+    // function name
+    {
+        const Token& func_name_token = lexer.get_next_token();
+        if (func_name_token.id != TokenId::IDENTIFIER) {
+            // TODO(pablo96): Handle error
+            // UNEXPECTED TOKEN
+            delete func_prot_node;
+            return nullptr;
+        }
+        func_prot_node->function_proto.name = lexer.get_token_value(func_name_token);
+    }
+
+    // parameter list
+    {
+        const Token& l_paren_token = lexer.get_next_token();
+        if (l_paren_token.id != TokenId::L_PAREN) {
+            // TODO(pablo96): Handle error
+            // UNEXPECTED TOKEN
+            return nullptr;
+            delete func_prot_node;
+        }
+
+        for (;;) {
+            const Token& token = lexer.get_next_token();
+
+            if (token.id == TokenId::R_PAREN) {
+                break;
+            }
+
+            if (token.id == TokenId::_EOF) {
+                const Token& prev_token = lexer.get_previous_token();
+                parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+                delete func_prot_node;
+                return nullptr;
+            }
+
+            lexer.get_back();
+            auto param_node = parse_param_decl();
+            if (!param_node) {
+                // TODO(pablo96): Handle error
+                delete func_prot_node;
+                return nullptr;
+            }
+
+            param_node->parent = func_prot_node;
+            func_prot_node->function_proto.params.push_back(param_node);
+        }
+    }
+
+    // return type
+    {
+        const Token& ret_type_token = lexer.get_next_token();
+        if (!is_type_start_token(ret_type_token)) {
+            // TODO(pablo96): Handle error
+            // UNEXPECTED TOKEN
+            delete func_prot_node;
+            return nullptr;
+        }
+
+        lexer.get_back();
+        auto ret_type_node = parse_type();
+        if (!ret_type_node) {
+            // TODO(pablo96): Handle error
+            delete func_prot_node;
+            return nullptr;
+        }
+
+        ret_type_node->parent = func_prot_node;
+        func_prot_node->function_proto.return_type = ret_type_node;
+    }
+
+    return func_prot_node;
+}
+
+/*
+* Parses a paramter declaration
+* parameterDecl
+*   : IDENTIFIER type_name
+*   ;
+*/
+AstNode* Parser::parse_param_decl() noexcept {
+    const Token& name_token = lexer.get_next_token();
+
+    if (name_token.id != TokenId::IDENTIFIER) {
+        // Bad prediction
+        UNREACHEABLE;
+    }
+
+    AstNode* type_node = parse_type();
+
+    if (!type_node) {
+        // TODO(pablo96): Handle error
+        // wrong expression expected type name
+        return nullptr;
+    }
+
+    AstNode* param_decl_node = new AstNode(AstNodeType::AstParamDecl, name_token.start_line, name_token.start_column);
+    type_node->parent = param_decl_node;
+    param_decl_node->param_decl.name = lexer.get_token_value(name_token);
+    param_decl_node->param_decl.type = type_node;
+    return param_decl_node;
+}
+
+/*
 * Parses a (function | if-else stmnt) block
 * block
 *   : '{' (statement eos)* '}'
@@ -148,33 +267,33 @@ AstNode* Parser::parse_statement() noexcept {
 AstNode* Parser::parse_vardef_stmnt() noexcept {
     const Token& token_symbol_name = lexer.get_next_token();
 
-    if (token_symbol_name.id == TokenId::IDENTIFIER) {
-        AstNode* type_node = parse_type();
-        
-        if (!type_node) {
-            // TODO(pablo96): Handle error
-            // wrong expression expected type name
-            return nullptr;
-        }
-
-        AstNode* var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column);
-        type_node->parent = var_def_node;
-        var_def_node->var_def.name = lexer.get_token_value(token_symbol_name);
-        var_def_node->var_def.type = type_node;
-
-        if (lexer.get_next_token().id == TokenId::ASSIGN) {
-            // TODO(pablo96): parse assignment
-        }
-        else {
-            lexer.get_back();
-            var_def_node->var_def.initializer = nullptr;
-        }
-        
-        return var_def_node;
+    if (token_symbol_name.id != TokenId::IDENTIFIER) {
+        // Bad prediction
+        UNREACHEABLE;
     }
 
-    // Bad prediction
-    UNREACHEABLE;
+    AstNode* type_node = parse_type();
+        
+    if (!type_node) {
+        // TODO(pablo96): Handle error
+        // wrong expression expected type name
+        return nullptr;
+    }
+
+    AstNode* var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column);
+    type_node->parent = var_def_node;
+    var_def_node->var_def.name = lexer.get_token_value(token_symbol_name);
+    var_def_node->var_def.type = type_node;
+
+    if (lexer.get_next_token().id == TokenId::ASSIGN) {
+        // TODO(pablo96): parse assignment
+    }
+    else {
+        lexer.get_back();
+        var_def_node->var_def.initializer = nullptr;
+    }
+        
+    return var_def_node;
 }
 
 /*

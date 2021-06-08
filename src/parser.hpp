@@ -29,10 +29,13 @@ public:
 
     // returns AstFuncDef
     LL_NODISCARD AstNode* parse_function_def() noexcept;
+    */
 
     // returns AstFuncProto
     LL_NODISCARD AstNode* parse_function_proto() noexcept;
-    */
+
+    // returns AstParamDecl
+    LL_NODISCARD AstNode* parse_param_decl() noexcept;
 
     // returns AstBlock
     LL_NODISCARD AstNode* parse_block() noexcept;
