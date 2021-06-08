@@ -305,6 +305,20 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
 //          PARSE BLOCK STATEMENT
 //==================================================================================
 
+TEST(ParserHappyStmntTests, BlockEmptyTest) {
+    std::vector<Error> errors;
+    Lexer lexer("{}", "BlockEmptyTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_block();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(value_node->block.statements.size(), 0L);
+}
+
 TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
     std::vector<Error> errors;
     Lexer lexer("{myVar i32\nret myvar}", "BlockNoSpaceNearCurliesTest", errors);
@@ -548,3 +562,224 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
     ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
 }
 
+
+//==================================================================================
+//          PARSE FUNCTION DEFINITION STATEMENT
+//==================================================================================
+
+TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
+    std::vector<Error> errors;
+    Lexer lexer("fn myFunc() void {}", "FuncDefNoParamsVoidBlockTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_def();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
+    ASSERT_NE(value_node->function_def.block, nullptr);
+    ASSERT_NE(value_node->function_def.proto, nullptr);
+    ASSERT_EQ(value_node->function_def.block->parent, value_node);
+    ASSERT_EQ(value_node->function_def.block->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(value_node->function_def.block->block.statements.size(), 0L);
+
+    auto proto_node = value_node->function_def.proto;
+    ASSERT_EQ(proto_node->parent, value_node);
+    ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
+    ASSERT_EQ(proto_node->function_proto.name, "myFunc");
+    ASSERT_EQ(proto_node->function_proto.params.size(), 0L);
+
+    auto ret_type_node = proto_node->function_proto.return_type;
+    ASSERT_NE(ret_type_node, nullptr);
+    ASSERT_EQ(ret_type_node->parent, proto_node);
+    ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(ret_type_node->ast_type.name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
+}
+
+TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
+    std::vector<Error> errors;
+    Lexer lexer("fn myFunc(param1 i32) i32 {}", "FuncDefSingleParamsVoidBlockTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_def();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
+    ASSERT_NE(value_node->function_def.block, nullptr);
+    ASSERT_NE(value_node->function_def.proto, nullptr);
+    ASSERT_EQ(value_node->function_def.block->parent, value_node);
+    ASSERT_EQ(value_node->function_def.block->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(value_node->function_def.block->block.statements.size(), 0L);
+
+    auto proto_node = value_node->function_def.proto;
+    ASSERT_EQ(proto_node->parent, value_node);
+    ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
+    ASSERT_EQ(proto_node->function_proto.name, "myFunc");
+    ASSERT_NE(proto_node->function_proto.return_type, nullptr);
+    ASSERT_EQ(proto_node->function_proto.params.size(), 1L);
+
+    auto param_node = proto_node->function_proto.params.at(0L);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+    ASSERT_EQ(param_node->parent, proto_node);
+    ASSERT_EQ(param_node->param_decl.name, "param1");
+    ASSERT_NE(param_node->param_decl.type, nullptr);
+    ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
+    ASSERT_EQ(param_node->param_decl.type->parent, param_node);
+    ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type, AstTypeType::DataType);
+
+    auto ret_type_node = proto_node->function_proto.return_type;
+    ASSERT_NE(ret_type_node, nullptr);
+    ASSERT_EQ(ret_type_node->parent, proto_node);
+    ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
+}
+
+TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
+    std::vector<Error> errors;
+    Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "FuncDefMultiParamsVoidBlockTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_def();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
+    ASSERT_NE(value_node->function_def.block, nullptr);
+    ASSERT_NE(value_node->function_def.proto, nullptr);
+    ASSERT_EQ(value_node->function_def.block->parent, value_node);
+    ASSERT_EQ(value_node->function_def.block->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(value_node->function_def.block->block.statements.size(), 0L);
+
+
+    auto proto_node = value_node->function_def.proto;
+    ASSERT_EQ(proto_node->parent, value_node);
+    ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
+    ASSERT_EQ(proto_node->function_proto.name, "myFunc");
+    ASSERT_NE(proto_node->function_proto.return_type, nullptr);
+    ASSERT_EQ(proto_node->function_proto.params.size(), 3L);
+
+    for (auto param_node : proto_node->function_proto.params) {
+        ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+        ASSERT_EQ(param_node->parent, proto_node);
+        ASSERT_EQ(param_node->param_decl.name, "param1");
+        ASSERT_NE(param_node->param_decl.type, nullptr);
+        ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
+        ASSERT_EQ(param_node->param_decl.type->parent, param_node);
+        ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
+        ASSERT_EQ(param_node->param_decl.type->ast_type.type, AstTypeType::DataType);
+    }
+
+    auto ret_type_node = proto_node->function_proto.return_type;
+    ASSERT_NE(ret_type_node, nullptr);
+    ASSERT_EQ(ret_type_node->parent, proto_node);
+    ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
+}
+
+TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
+    std::vector<Error> errors;
+    Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "FuncDefNoParamsTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_def();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
+    ASSERT_NE(value_node->function_def.block, nullptr);
+    ASSERT_NE(value_node->function_def.proto, nullptr);
+    auto block_node = value_node->function_def.block;
+    ASSERT_EQ(block_node->parent, value_node);
+    ASSERT_EQ(block_node->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(block_node->block.statements.size(), 1L);
+
+    auto var_def_node = value_node->function_def.block->block.statements.at(0);
+    ASSERT_NE(var_def_node, nullptr);
+    ASSERT_EQ(var_def_node->parent, block_node);
+    ASSERT_EQ(var_def_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(var_def_node->var_def.name, "myVar");
+    ASSERT_NE(var_def_node->var_def.type, nullptr);
+    ASSERT_EQ(var_def_node->var_def.initializer, nullptr);
+
+    auto type_node = var_def_node->var_def.type;
+    ASSERT_EQ(type_node->parent, var_def_node);
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type, AstTypeType::DataType);
+    ASSERT_EQ(type_node->ast_type.name, "i32");
+
+    auto proto_node = value_node->function_def.proto;
+    ASSERT_EQ(proto_node->parent, value_node);
+    ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
+    ASSERT_EQ(proto_node->function_proto.name, "myFunc");
+    ASSERT_EQ(proto_node->function_proto.params.size(), 0L);
+
+    auto ret_type_node = proto_node->function_proto.return_type;
+    ASSERT_NE(ret_type_node, nullptr);
+    ASSERT_EQ(ret_type_node->parent, proto_node);
+    ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(ret_type_node->ast_type.name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
+}
+
+TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
+    std::vector<Error> errors;
+    Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "FuncDefSingleParamsTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_def();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
+    ASSERT_NE(value_node->function_def.block, nullptr);
+    ASSERT_NE(value_node->function_def.proto, nullptr);
+
+    auto block_node = value_node->function_def.block;
+    ASSERT_EQ(block_node->parent, value_node);
+    ASSERT_EQ(block_node->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(block_node->block.statements.size(), 1L);
+
+    auto ret_node = block_node->block.statements.at(0);
+    ASSERT_NE(ret_node, nullptr);
+    ASSERT_EQ(ret_node->parent, block_node);
+    ASSERT_EQ(ret_node->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
+    ASSERT_NE(ret_node->unary_expr.expr, nullptr);
+    ASSERT_EQ(ret_node->unary_expr.expr->parent, ret_node);
+    ASSERT_EQ(ret_node->unary_expr.expr->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(ret_node->unary_expr.expr->binary_expr.bin_op, BinaryExprType::ADD);
+
+    auto proto_node = value_node->function_def.proto;
+    ASSERT_EQ(proto_node->parent, value_node);
+    ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
+    ASSERT_EQ(proto_node->function_proto.name, "myFunc");
+    ASSERT_NE(proto_node->function_proto.return_type, nullptr);
+    ASSERT_EQ(proto_node->function_proto.params.size(), 1L);
+
+    auto param_node = proto_node->function_proto.params.at(0L);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+    ASSERT_EQ(param_node->parent, proto_node);
+    ASSERT_EQ(param_node->param_decl.name, "param1");
+    ASSERT_NE(param_node->param_decl.type, nullptr);
+    ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
+    ASSERT_EQ(param_node->param_decl.type->parent, param_node);
+    ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type, AstTypeType::DataType);
+
+    auto ret_type_node = proto_node->function_proto.return_type;
+    ASSERT_NE(ret_type_node, nullptr);
+    ASSERT_EQ(ret_type_node->parent, proto_node);
+    ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
+}
