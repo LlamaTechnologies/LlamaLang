@@ -80,6 +80,7 @@ TEST(ParserHappyParseUnaryExprTests, PreIncIdentifierTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
     ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::INC);
     ASSERT_EQ(value_node->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
 }
 
 TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
@@ -94,6 +95,7 @@ TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
     ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::INC);
     ASSERT_EQ(value_node->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
 }
 
 TEST(ParserHappyParseUnaryExprTests, IdentifierTest) {
@@ -172,6 +174,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
     ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstUnaryExpr);
     ASSERT_EQ(value_node->binary_expr.op1->unary_expr.op, UnaryExprType::DEC);
     ASSERT_EQ(value_node->binary_expr.op1->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
@@ -189,6 +193,9 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
     ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstUnaryExpr);
     ASSERT_EQ(value_node->binary_expr.op1->unary_expr.op, UnaryExprType::INC);
     ASSERT_EQ(value_node->binary_expr.op1->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
+
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierTest) {
@@ -204,6 +211,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::IDENTIFIER);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 }
 
 TEST(ParserHappyParseMulExprTests, MulNumberIdentifierTest) {
@@ -219,6 +228,8 @@ TEST(ParserHappyParseMulExprTests, MulNumberIdentifierTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
@@ -234,6 +245,8 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::FLOAT_LIT);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
@@ -249,9 +262,15 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::DIV);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::UNICODE_CHAR);
     ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.bin_op, BinaryExprType::MUL);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.op2->symbol.token->id, TokenId::FLOAT_LIT);
+    auto bin_exp_op1 = value_node->binary_expr.op1;
+    ASSERT_EQ(bin_exp_op1->parent, value_node);
+    ASSERT_EQ(bin_exp_op1->binary_expr.bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(bin_exp_op1->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(bin_exp_op1->binary_expr.op2->symbol.token->id, TokenId::FLOAT_LIT);
+    auto bin_exp2_op1 = bin_exp_op1->binary_expr.op1;
+    auto bin_exp2_op2 = bin_exp_op1->binary_expr.op2;
+    ASSERT_EQ(bin_exp2_op1->parent, bin_exp_op1);
+    ASSERT_EQ(bin_exp2_op2->parent, bin_exp_op1);
 }
 
 TEST(ParserHappyParseMulExprTests, IdentifierTest) {
@@ -326,9 +345,13 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierAndIncTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ADD);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::IDENTIFIER);
-    ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstUnaryExpr);
-    ASSERT_EQ(value_node->binary_expr.op1->unary_expr.op, UnaryExprType::INC);
-    ASSERT_EQ(value_node->binary_expr.op1->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
+    auto bin_exp_op1 = value_node->binary_expr.op1;
+    ASSERT_EQ(bin_exp_op1->parent, value_node);
+    ASSERT_EQ(bin_exp_op1->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(bin_exp_op1->unary_expr.op, UnaryExprType::INC);
+    ASSERT_EQ(bin_exp_op1->unary_expr.expr->parent, bin_exp_op1);
+    ASSERT_EQ(bin_exp_op1->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
 }
 
 TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
@@ -342,6 +365,8 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ADD);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::IDENTIFIER);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::IDENTIFIER);
 }
@@ -357,6 +382,8 @@ TEST(ParserHappyParseAddExprTests, AddIdentifierNumberTest) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ADD);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::IDENTIFIER);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::INT_LIT);
 }
@@ -372,6 +399,8 @@ TEST(ParserHappyParseAddExprTests, Add2NumbersTest) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ADD);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::FLOAT_LIT);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::INT_LIT);
 }
@@ -387,11 +416,17 @@ TEST(ParserHappyParseAddExprTests, Add2NumberAndCharTest) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::SUB);
-    ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::UNICODE_CHAR);
-    ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.bin_op, BinaryExprType::ADD);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.op1->symbol.token->id, TokenId::FLOAT_LIT);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.op2->symbol.token->id, TokenId::INT_LIT);
+    auto bin_op1 = value_node->binary_expr.op1;
+    auto bin_op2 = value_node->binary_expr.op2;
+    ASSERT_EQ(bin_op2->symbol.token->id, TokenId::UNICODE_CHAR);
+    ASSERT_EQ(bin_op2->parent, value_node);
+    ASSERT_EQ(bin_op1->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(bin_op1->parent, value_node);
+    ASSERT_EQ(bin_op1->binary_expr.bin_op, BinaryExprType::ADD);
+    ASSERT_EQ(bin_op1->binary_expr.op1->symbol.token->id, TokenId::FLOAT_LIT);
+    ASSERT_EQ(bin_op1->binary_expr.op2->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(bin_op1->binary_expr.op1->parent, bin_op1);
+    ASSERT_EQ(bin_op1->binary_expr.op2->parent, bin_op1);
 }
 
 TEST(ParserHappyParseAddExprTests, FullAlgebraicTest) {
@@ -407,21 +442,29 @@ TEST(ParserHappyParseAddExprTests, FullAlgebraicTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::SUB);
     ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(value_node->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 
-    const AstBinaryExpr& gMod15 = value_node->binary_expr.op2->binary_expr; 
-    ASSERT_EQ(gMod15.bin_op, BinaryExprType::MOD);
-    ASSERT_EQ(gMod15.op1->symbol.token->id, TokenId::UNICODE_CHAR);
-    ASSERT_EQ(gMod15.op2->symbol.token->id, TokenId::INT_LIT);
+    const auto gMod15 = value_node->binary_expr.op2; 
+    ASSERT_EQ(gMod15->binary_expr.bin_op, BinaryExprType::MOD);
+    ASSERT_EQ(gMod15->binary_expr.op1->symbol.token->id, TokenId::UNICODE_CHAR);
+    ASSERT_EQ(gMod15->binary_expr.op2->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(gMod15->binary_expr.op1->parent, gMod15);
+    ASSERT_EQ(gMod15->binary_expr.op2->parent, gMod15);
 
-    const AstBinaryExpr& floatPlusMul = value_node->binary_expr.op1->binary_expr;
-    ASSERT_EQ(floatPlusMul.bin_op, BinaryExprType::ADD);
-    ASSERT_EQ(floatPlusMul.op1->symbol.token->id, TokenId::FLOAT_LIT);
-    ASSERT_EQ(floatPlusMul.op2->node_type, AstNodeType::AstBinaryExpr);
+    const auto floatPlusMul = value_node->binary_expr.op1;
+    ASSERT_EQ(floatPlusMul->binary_expr.bin_op, BinaryExprType::ADD);
+    ASSERT_EQ(floatPlusMul->binary_expr.op1->symbol.token->id, TokenId::FLOAT_LIT);
+    ASSERT_EQ(floatPlusMul->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(floatPlusMul->binary_expr.op1->parent, floatPlusMul);
+    ASSERT_EQ(floatPlusMul->binary_expr.op2->parent, floatPlusMul);
 
-    const AstBinaryExpr& intMulInt = floatPlusMul.op2->binary_expr;
-    ASSERT_EQ(intMulInt.bin_op, BinaryExprType::MUL);
-    ASSERT_EQ(intMulInt.op1->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(intMulInt.op2->node_type, AstNodeType::AstSymbol);
+    const auto intMulInt = floatPlusMul->binary_expr.op2;
+    ASSERT_EQ(intMulInt->binary_expr.bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(intMulInt->binary_expr.op1->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(intMulInt->binary_expr.op2->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(intMulInt->binary_expr.op1->parent, intMulInt);
+    ASSERT_EQ(intMulInt->binary_expr.op2->parent, intMulInt);
 }
 
 TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
@@ -437,6 +480,8 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::IDENTIFIER);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 }
 
 TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
@@ -452,6 +497,8 @@ TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::IDENTIFIER);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 }
 
 TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
@@ -467,6 +514,8 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
     ASSERT_EQ(value_node->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::FLOAT_LIT);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
 }
 
 TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
@@ -482,9 +531,15 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::DIV);
     ASSERT_EQ(value_node->binary_expr.op2->symbol.token->id, TokenId::UNICODE_CHAR);
     ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.bin_op, BinaryExprType::MUL);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
-    ASSERT_EQ(value_node->binary_expr.op1->binary_expr.op2->symbol.token->id, TokenId::FLOAT_LIT);
+    auto bin_exp_op1 = value_node->binary_expr.op1;
+    ASSERT_EQ(bin_exp_op1->parent, value_node);
+    ASSERT_EQ(bin_exp_op1->binary_expr.bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(bin_exp_op1->binary_expr.op1->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(bin_exp_op1->binary_expr.op2->symbol.token->id, TokenId::FLOAT_LIT);
+    auto bin_exp2_op1 = bin_exp_op1->binary_expr.op1;
+    auto bin_exp2_op2 = bin_exp_op1->binary_expr.op2;
+    ASSERT_EQ(bin_exp2_op1->parent, bin_exp_op1);
+    ASSERT_EQ(bin_exp2_op2->parent, bin_exp_op1);
 }
 
 TEST(ParserHappyParseAddExprTests, IdentifierTest) {

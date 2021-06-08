@@ -411,6 +411,7 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
         term_expr->parent = binary_expr;
+        root_node->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
         binary_expr->binary_expr.op2 = term_expr;
@@ -453,6 +454,7 @@ AstNode* Parser::parse_term_expr() noexcept {
         // create binary node
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
         symbol_token->parent = binary_expr;
+        root_node->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
         binary_expr->binary_expr.op2 = symbol_token;
