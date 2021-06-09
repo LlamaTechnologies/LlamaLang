@@ -768,6 +768,10 @@ AstNode* Parser::parse_unary_expr() noexcept {
         AstNode* primary_expr = parse_primary_expr();
         if (!primary_expr) {
             //TODO(pablo96): error in algebraic_expr => sync parsing
+            // if this happens to be
+            // ++ERROR_TOKEN
+            // then we need to see if we can start over from the next token
+            // for that we need to go back a step up into algebraic
         }
         primary_expr->parent = node;
         node->unary_expr.op = get_unary_op(unary_op_token);
@@ -779,6 +783,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
     AstNode* primary_expr = parse_primary_expr();
     if (!primary_expr) {
         //TODO(pablo96): error in algebraic_expr => sync parsing
+
     }
 
     const Token& token = lexer.get_next_token();

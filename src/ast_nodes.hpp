@@ -156,6 +156,7 @@ struct AstNode {
     AstNodeType node_type;
 
     // actual node
+    // TODO: try to use std::variant instead of union
     //union {
         AstSourceCode   source_code;
         AstDirective    directive;      // # dir_name args*
