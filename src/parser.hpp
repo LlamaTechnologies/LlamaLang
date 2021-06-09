@@ -20,10 +20,10 @@ public:
 
     AstNode* parse() noexcept;
 
-    /*
     // returns AstSourceCode
     LL_NODISCARD AstNode* parse_source_code() noexcept;
 
+    /*
     // returns AstDirective
     LL_NODISCARD AstNode* parse_basic_directive() noexcept;
     */
@@ -76,5 +76,8 @@ public:
     AstNode* parse_error(const Token& token, const char* format, ...) noexcept;
 
     bool is_new_line_between(const size_t start_pos, const size_t end_pos);
+
+    // consumes the forbiden statement, report the error and return true else returns false
+    bool is_forbiden_statement(const Token& token) noexcept;
 };
 

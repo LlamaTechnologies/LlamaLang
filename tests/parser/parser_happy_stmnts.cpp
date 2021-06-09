@@ -783,3 +783,68 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
     ASSERT_EQ(ret_type_node->ast_type.name, "i32");
     ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
 }
+
+
+//==================================================================================
+//          PARSE FULL PROGRAM
+//==================================================================================
+
+TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
+    const char* source_code = 
+        "/* Test program */\n" // multiline comment
+        "\n"
+        ";\n"           // empty statement : discarded
+        ";"             // empty statement : discarded
+        "myVar i32\n"   // variable definition
+        "myVar\n"       // unused variable reference : discarded
+        "myVar;\n"      // unused variable reference : discarded
+        "\n"
+        "fn myFunc() void {\n"
+        "\tret\n"
+        "}";
+
+    std::vector<Error> errors;
+    Lexer lexer(source_code, "FullProgramNoNewLineEnd", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* source_code_node = parser.parse();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(source_code_node, nullptr);
+    ASSERT_EQ(source_code_node->node_type, AstNodeType::AstSourceCode);
+    ASSERT_EQ(source_code_node->source_code.children.size(), 2L);
+    auto main_stmnts = source_code_node->source_code.children;
+
+    AstNode* var_def_node = main_stmnts.at(0);
+    AstNode* func_def_node = main_stmnts.at(1);
+    ASSERT_NE(func_def_node, nullptr);
+    ASSERT_EQ(func_def_node->node_type, AstNodeType::AstFuncDef);
+    ASSERT_NE(func_def_node->function_def.block, nullptr);
+    ASSERT_NE(func_def_node->function_def.proto, nullptr);
+
+    auto block_node = func_def_node->function_def.block;
+    ASSERT_EQ(block_node->parent, func_def_node);
+    ASSERT_EQ(block_node->node_type, AstNodeType::AstBlock);
+    ASSERT_EQ(block_node->block.statements.size(), 1L);
+
+    auto ret_node = block_node->block.statements.at(0);
+    ASSERT_NE(ret_node, nullptr);
+    ASSERT_EQ(ret_node->parent, block_node);
+    ASSERT_EQ(ret_node->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
+    ASSERT_EQ(ret_node->unary_expr.expr, nullptr);
+
+    auto proto_node = func_def_node->function_def.proto;
+    ASSERT_EQ(proto_node->parent, func_def_node);
+    ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
+    ASSERT_EQ(proto_node->function_proto.name, "myFunc");
+    ASSERT_EQ(proto_node->function_proto.params.size(), 0L);
+
+    auto ret_type_node = proto_node->function_proto.return_type;
+    ASSERT_NE(ret_type_node, nullptr);
+    ASSERT_EQ(ret_type_node->parent, proto_node);
+    ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(ret_type_node->ast_type.name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
+}

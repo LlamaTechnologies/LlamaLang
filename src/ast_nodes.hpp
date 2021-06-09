@@ -228,7 +228,17 @@ struct AstNode {
         }
     }
 
-    virtual ~AstNode() {}
+    virtual ~AstNode() {
+        if (node_type == AstNodeType::AstBlock) {
+            for (auto node : block.statements) {
+                delete node;
+            }
+        } else if (node_type == AstNodeType::AstSourceCode) {
+            for (auto node : source_code.children) {
+                delete node;
+            }
+        }
+    }
 
     AstNode& operator=(const AstNode& other) {
         if (this != &other) // not a self-assignment
