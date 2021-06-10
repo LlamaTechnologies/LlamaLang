@@ -827,7 +827,14 @@ AstNode* Parser::parse_primary_expr() noexcept {
 
     if (token.id == TokenId::IDENTIFIER) {
         // CALL EXPR?
+        const Token& next_token = lexer.get_next_token();
+        if (next_token.id == TokenId::L_PAREN) {
+            lexer.get_back(); // LPAREN
+            lexer.get_back(); // IDENTIFIER
+            return parse_function_call();
+        }
         // else
+        lexer.get_back();
         goto parse_literal;
     }
 
@@ -840,6 +847,59 @@ parse_literal:
 
     parse_error(token, ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN, token_value, token_id_name(token.id));
     return nullptr;
+}
+
+/*
+* functionCallExpr
+*   : IDENTIFIER '(' (expression (, expression))? ')'
+*   ;
+*/
+AstNode* Parser::parse_function_call() noexcept {
+    const Token& name_token = lexer.get_next_token();
+    if (name_token.id != TokenId::IDENTIFIER) {
+        // bad prediction
+        UNREACHEABLE;
+    }
+
+    const Token& lparen_token = lexer.get_next_token();
+    if (lparen_token.id != TokenId::L_PAREN) {
+        // bad prediction
+        UNREACHEABLE;
+    }
+
+    AstNode* func_call_node = new AstNode(AstNodeType::AstFuncCallExpr, name_token.start_line, name_token.start_column);
+    func_call_node->func_call.fn_name = lexer.get_token_value(name_token);
+
+    // arguments
+    for (;;) {
+        const Token& token = lexer.get_next_token();
+        if (token.id == TokenId::R_PAREN) {
+            break;
+        }
+
+        if (token.id == TokenId::COMMA) {
+            continue;
+        }
+
+        if (token.id == TokenId::_EOF) {
+            const Token& prev_token = lexer.get_previous_token();
+            parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+            delete func_call_node;
+            return nullptr;
+        }
+
+        lexer.get_back();
+        auto expr = parse_expr();
+        if (!expr) {
+            //TODO(pablo96): Handle error
+            // find a comma or rparen
+            continue;
+        }
+        expr->parent = func_call_node;
+        func_call_node->func_call.params.push_back(expr);
+    }
+
+    return func_call_node;
 }
 
 AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexcept {

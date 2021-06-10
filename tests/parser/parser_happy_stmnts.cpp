@@ -784,6 +784,101 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
     ASSERT_EQ(ret_type_node->ast_type.type, AstTypeType::DataType);
 }
 
+//==================================================================================
+//          PARSE FUNCTION CALL STATEMENT
+//==================================================================================
+
+TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myFunc()", "FuncCallNoParamsTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_call();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
+    ASSERT_EQ(value_node->func_call.params.size(), 0L);
+}
+
+TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myFunc(5)", "FuncCall1ParamTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_call();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
+    ASSERT_EQ(value_node->func_call.params.size(), 1L);
+    auto param_node = value_node->func_call.params.at(0);
+    ASSERT_NE(param_node, nullptr);
+    ASSERT_EQ(param_node->parent, value_node);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(param_node->symbol.token->id, TokenId::INT_LIT);
+}
+
+TEST(ParserHappyStmntTests, FuncCallNestedTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myFunc(myFunc2(5))", "FuncCallNestedTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_call();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
+    ASSERT_EQ(value_node->func_call.params.size(), 1L);
+    auto param_node_func = value_node->func_call.params.at(0);
+    ASSERT_NE(param_node_func, nullptr);
+    ASSERT_EQ(param_node_func->parent, value_node);
+    ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
+    ASSERT_EQ(param_node_func->func_call.params.size(), 1L);
+    auto param_node = param_node_func->func_call.params.at(0);
+    ASSERT_NE(param_node, nullptr);
+    ASSERT_EQ(param_node->parent, param_node_func);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(param_node->symbol.token->id, TokenId::INT_LIT);
+}
+
+TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myFunc(myVar, myFunc2(5))", "FuncCallMultiParamsTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    AstNode* value_node = parser.parse_function_call();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
+    ASSERT_EQ(value_node->func_call.params.size(), 2L);
+    auto param_node = value_node->func_call.params.at(0);
+    ASSERT_NE(param_node, nullptr);
+    ASSERT_EQ(param_node->parent, value_node);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(param_node->symbol.token->id, TokenId::IDENTIFIER);
+    auto param_node_func = value_node->func_call.params.at(1);
+    ASSERT_NE(param_node_func, nullptr);
+    ASSERT_EQ(param_node_func->parent, value_node);
+    ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
+    ASSERT_EQ(param_node_func->func_call.params.size(), 1L);
+    auto func_param_node = param_node_func->func_call.params.at(0);
+    ASSERT_NE(func_param_node, nullptr);
+    ASSERT_EQ(func_param_node->parent, param_node_func);
+    ASSERT_EQ(func_param_node->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(func_param_node->symbol.token->id, TokenId::INT_LIT);
+}
 
 //==================================================================================
 //          PARSE FULL PROGRAM

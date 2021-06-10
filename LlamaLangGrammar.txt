@@ -96,12 +96,8 @@ primaryExpr
     | UNICODE_CHAR
     ;
 
-expressionList
-    :  expression (',' expression)*
-    ;
-
 callExpr
-    : IDENTIFIER '(' expressionList ')'
+    : IDENTIFIER '(' (expression (',' expression)*)? ')'
     ;
 
 eos

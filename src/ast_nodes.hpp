@@ -67,6 +67,7 @@ struct AstSymbol {
 };
 
 struct AstFuncCallExpr {
+    std::string_view        fn_name;
     AstNode*                fn_ref;
     std::vector<AstNode*>   params;
 };
@@ -236,6 +237,10 @@ struct AstNode {
             }
         } else if (node_type == AstNodeType::AstSourceCode) {
             for (auto node : source_code.children) {
+                delete node;
+            }
+        }else if (node_type == AstNodeType::AstFuncCallExpr) {
+            for (auto node : func_call.params) {
                 delete node;
             }
         }

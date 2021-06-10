@@ -70,8 +70,11 @@ public:
     // returns AstSymbol | AstFuncCallExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_unary_expr() noexcept;
 
-    // returns AstSymbol | AstFuncCallExpr
+    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_primary_expr() noexcept;
+
+    // returns AstFuncCallExpr
+    LL_NODISCARD AstNode* parse_function_call() noexcept;
     
     AstNode* parse_error(const Token& token, const char* format, ...) noexcept;
 

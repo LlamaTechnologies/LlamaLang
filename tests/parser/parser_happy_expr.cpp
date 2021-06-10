@@ -98,6 +98,26 @@ TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
     ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
 }
 
+TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
+    std::vector<Error> errors;
+    Lexer lexer("++myFunc()", "PreIncFuncCallTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_unary_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::INC);
+    ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
+    auto func_call = value_node->unary_expr.expr;
+    ASSERT_NE(func_call, nullptr);
+    ASSERT_EQ(func_call->parent, value_node);
+    ASSERT_EQ(func_call->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(func_call->func_call.fn_name, "myFunc");
+    ASSERT_EQ(func_call->func_call.params.size(), 0L);
+}
+
 TEST(ParserHappyParseUnaryExprTests, IdentifierTest) {
     std::vector<Error> errors;
     Lexer lexer("myVar", "IdentifierTest", errors);
@@ -176,6 +196,30 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
     ASSERT_EQ(value_node->binary_expr.op1->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
     ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
     ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
+}
+
+TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar-- * myFunc()", "Mul2IdentifierAndFuncCallTest", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_term_expr();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
+    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(value_node->binary_expr.op1->unary_expr.op, UnaryExprType::DEC);
+    ASSERT_EQ(value_node->binary_expr.op1->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
+
+    auto func_call = value_node->binary_expr.op2;
+    ASSERT_NE(func_call, nullptr);
+    ASSERT_EQ(func_call->parent, value_node);
+    ASSERT_EQ(func_call->node_type, AstNodeType::AstFuncCallExpr);
+    ASSERT_EQ(func_call->func_call.fn_name, "myFunc");
+    ASSERT_EQ(func_call->func_call.params.size(), 0L);
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
