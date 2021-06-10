@@ -2,8 +2,10 @@
 #include "common_defs.hpp"
 #include <vector>
 #include <string>
+#include <assert.h>
 
 // ast nodes
+struct Token;
 struct AstNode;
 struct AstDirective;
 struct AstType;
@@ -28,8 +30,8 @@ enum class DirectiveType {
 const std::string get_directive_type_name(const DirectiveType) noexcept;
 
 struct AstDirective {
-    DirectiveType   directive_type;
-    std::string     argument;
+    DirectiveType       directive_type;
+    std::string_view    argument;
 };
 
 struct AstFuncDef {
@@ -38,52 +40,65 @@ struct AstFuncDef {
 };
 
 struct AstFuncProto {
-    std::string name;
-    std::vector<AstNode*> params;
-    AstNode* return_type;
-    AstNode* fn_def_node;
+    std::string_view        name;
+    std::vector<AstNode*>   params;
+    AstNode*                return_type;
 };
 
 struct AstParamDecl {
-    AstNode* type;
-    std::string name;
+    AstNode*            type;
+    std::string_view    name;
 };
 
 struct AstBlock {
     std::vector<AstNode*> statements;
+
+    AstBlock() : statements(std::vector<AstNode*>()) {}
 };
 
 struct AstVarDef {
-    std::string symbol;
-    AstNode*    type;
+    std::string_view    name;
+    AstNode*            type;
+    AstNode*            initializer;
 };
 
 struct AstSymbol {
-    std::string symbol;
+    const Token* token;
 };
 
 struct AstFuncCallExpr {
-    AstNode* fn_ref;
-    std::vector<AstNode*> params;
+    std::string_view        fn_name;
+    AstNode*                fn_ref;
+    std::vector<AstNode*>   params;
 };
 
 enum class BinaryExprType {
-    ADD,    // expr + expr
-    SUB,    // expr - expr
-    MUL,    // expr * expr
-    DIV,    // expr / expr
-    MOD,    // expr % expr
-    ASSIGN, // expr = expr
+    ADD,                // expr +  expr
+    SUB,                // expr -  expr
+    MUL,                // expr *  expr
+    DIV,                // expr /  expr
+    MOD,                // expr %  expr
+    EQUALS,             // expr == expr
+    NOT_EQUALS,         // expr != expr
+    GREATER_OR_EQUALS,  // expr >= expr
+    LESS_OR_EQUALS,     // expr <= expr
+    GREATER,            // expr >  expr
+    LESS,               // expr <  expr
+    LSHIFT,             // expr << expr
+    RSHIFT,             // expr >> expr
+    BIT_XOR,            // expr ^  expr
+    BIT_AND,            // expr &  expr
+    ASSIGN,             // expr =  expr
 };
 
 struct AstBinaryExpr {
-    AstNode* op1;
-    BinaryExprType bin_op;
-    AstNode* op2;
+    AstNode*        op1;
+    BinaryExprType  bin_op;
+    AstNode*        op2;
 };
 
 
-enum class UnaryExprOp {
+enum class UnaryExprType {
     INC,    // ++  primaryExpr
     DEC,    // --  primaryExpr
     NEG,    // -   primaryExpr  
@@ -91,8 +106,8 @@ enum class UnaryExprOp {
 };
 
 struct AstUnaryExpr {
-    UnaryExprOp op;
-    AstNode* primary_expr;
+    UnaryExprType   op;
+    AstNode*        expr;
 };
 
 
@@ -109,13 +124,13 @@ enum class AstTypeType {
 };
 
 struct AstType {
-    AstTypeType type;
-    AstNode* data_type;
-    std::string name;
+    AstTypeType             type;   //pointer | Array | DataType
+    union {
+        AstNode*            data_type; // actual type (Pointer|Array)
+        std::string_view    name;   // name of the type
+    };
 
-    AstType() : type(AstTypeType::DataType), data_type(nullptr), name("") {
-
-    }
+    AstType() : type(AstTypeType::DataType), data_type(nullptr) {}
 };
 
 // ast nodes enum
@@ -135,132 +150,152 @@ enum class AstNodeType {
 };
 
 // base ast node
-struct AstNode
-{
+struct AstNode {
     AstNode* parent;
     size_t line;
     size_t column;
     AstNodeType node_type;
 
-
     // actual node
-    union {
-        AstSourceCode* source_code;
-        AstDirective* directive;        // # dir_name args*
-        AstFuncDef* function_def;       // function definition
-        AstFuncProto* function_proto;   // fn name L_PAREN param_decl (, param_decl)* R_PAREN
-        AstParamDecl* param_decl;       // name type
-        AstBlock* block;                // L_CURLY statements R_CURLY
-        AstVarDef* var_def;             // name type
-        AstType* ast_type;              // type
-        AstNode* grouped_expr;          // L_PAREN expr R_PAREN
-        AstUnaryExpr* unary_expr;       // unary_op expr
-        AstBinaryExpr* binary_expr;     // expr binary_op expr
-        AstSymbol* var_ref;             // symbol_name
-        AstFuncCallExpr* func_call;     // func_name L_PAREN (expr (, expr)*)? R_PAREN
-    } data;
-
+    // TODO: try to use std::variant instead of union
+    //union {
+        AstSourceCode   source_code;
+        AstDirective    directive;      // # dir_name args*
+        AstFuncDef      function_def;   // function definition
+        AstFuncProto    function_proto; // fn name L_PAREN param_decl (, param_decl)* R_PAREN
+        AstParamDecl    param_decl;     // name type
+        AstBlock        block;          // L_CURLY statements R_CURLY
+        AstVarDef       var_def;        // name type
+        AstType         ast_type;       // type
+        AstUnaryExpr    unary_expr;     // unary_op expr
+        AstBinaryExpr   binary_expr;    // expr binary_op expr
+        AstSymbol       symbol;         // symbol_name
+        AstFuncCallExpr func_call;      // func_name L_PAREN (expr (, expr)*)? R_PAREN
+    //};
 
     AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column)
-        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type)
-    {
-        switch (node_type)
+        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {}
+
+
+    AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column, const std::string & type_name)
+        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {
+        assert(in_node_type == AstNodeType::AstType);
+
+        ast_type.type = AstTypeType::DataType;
+        ast_type.name = type_name;
+    }
+
+    AstNode(const AstNode& other)
+        : parent(other.parent), line(other.line), column(other.column), node_type(other.node_type) {
+        switch (other.node_type)
         {
         case AstNodeType::AstSourceCode:
-            data.source_code = new AstSourceCode();
+            source_code = other.source_code;
             break;
         case AstNodeType::AstDirective:
-            data.directive = new AstDirective();
+            directive = other.directive;
             break;
         case AstNodeType::AstFuncDef:
-            data.function_def = new AstFuncDef();
+            function_def = other.function_def;
             break;
         case AstNodeType::AstFuncProto:
-            data.function_proto = new AstFuncProto();
+            function_proto = other.function_proto;
             break;
         case AstNodeType::AstParamDecl:
-            data.param_decl = new AstParamDecl();
+            param_decl = other.param_decl;
             break;
         case AstNodeType::AstBlock:
-            data.block = new AstBlock();
-            break;
-        case AstNodeType::AstVarDef:
-            data.var_def = new AstVarDef();
-            break;
-        case AstNodeType::AstSymbol:
-            data.var_ref = new AstSymbol();
-            break;
-        case AstNodeType::AstFuncCallExpr:
-            data.func_call = new AstFuncCallExpr();
-            break;
-        case AstNodeType::AstBinaryExpr:
-            data.binary_expr = new AstBinaryExpr();
-            break;
-        case AstNodeType::AstUnaryExpr:
-            data.unary_expr = new AstUnaryExpr();
+            block = other.block;
             break;
         case AstNodeType::AstType:
-            data.ast_type = new AstType();
+            ast_type = other.ast_type;
+            break;
+        case AstNodeType::AstVarDef:
+            var_def = other.var_def;
+            break;
+        case AstNodeType::AstSymbol:
+            symbol = other.symbol;
+            break;
+        case AstNodeType::AstFuncCallExpr:
+            func_call = other.func_call;
+            break;
+        case AstNodeType::AstBinaryExpr:
+            binary_expr = other.binary_expr;
+            break;
+        case AstNodeType::AstUnaryExpr:
+            unary_expr = other.unary_expr;
             break;
         default:
             UNREACHEABLE;
         }
     }
 
-    ~AstNode() {
-        switch (node_type)
-        {
-        case AstNodeType::AstSourceCode:
-            if (data.source_code)
-                delete data.source_code;
-            break;
-        case AstNodeType::AstDirective:
-            if (data.directive)
-                delete data.directive;
-            break;
-        case AstNodeType::AstFuncDef:
-            if (data.function_def)
-                delete data.function_def;
-            break;
-        case AstNodeType::AstFuncProto:
-            if (data.function_proto)
-                delete data.function_proto;
-            break;
-        case AstNodeType::AstParamDecl:
-            if (data.param_decl)
-                delete data.param_decl;
-            break;
-        case AstNodeType::AstBlock:
-            if (data.block)
-                delete data.block;
-            break;
-        case AstNodeType::AstType:
-            if (data.ast_type)
-                delete data.ast_type;
-            break;
-        case AstNodeType::AstVarDef:
-            if (data.var_def)
-                delete data.var_def;
-            break;
-        case AstNodeType::AstSymbol:
-            if (data.var_ref)
-                delete data.var_ref;
-            break;
-        case AstNodeType::AstFuncCallExpr:
-            if (data.func_call)
-                delete data.func_call;
-            break;
-        case AstNodeType::AstBinaryExpr:
-            if (data.binary_expr)
-                delete data.binary_expr;
-            break;
-        case AstNodeType::AstUnaryExpr:
-            if (data.unary_expr)
-                delete data.unary_expr;
-            break;
-        default:
-            UNREACHEABLE;
-            break;
+    virtual ~AstNode() {
+        if (node_type == AstNodeType::AstBlock) {
+            for (auto node : block.statements) {
+                delete node;
+            }
+        } else if (node_type == AstNodeType::AstSourceCode) {
+            for (auto node : source_code.children) {
+                delete node;
+            }
+        }else if (node_type == AstNodeType::AstFuncCallExpr) {
+            for (auto node : func_call.params) {
+                delete node;
+            }
         }
+    }
+
+    AstNode& operator=(const AstNode& other) {
+        if (this != &other) // not a self-assignment
+        {
+            parent      = other.parent;
+            line        = other.line;
+            column      = other.column;
+            node_type   = other.node_type;
+
+            switch (other.node_type)
+            {
+            case AstNodeType::AstSourceCode:
+                source_code = other.source_code;
+                break;
+            case AstNodeType::AstDirective:
+                directive = other.directive;
+                break;
+            case AstNodeType::AstFuncDef:
+                function_def = other.function_def;
+                break;
+            case AstNodeType::AstFuncProto:
+                function_proto = other.function_proto;
+                break;
+            case AstNodeType::AstParamDecl:
+                param_decl = other.param_decl;
+                break;
+            case AstNodeType::AstBlock:
+                block = other.block;
+                break;
+            case AstNodeType::AstType:
+                ast_type = other.ast_type;
+                break;
+            case AstNodeType::AstVarDef:
+                var_def = other.var_def;
+                break;
+            case AstNodeType::AstSymbol:
+                symbol = other.symbol;
+                break;
+            case AstNodeType::AstFuncCallExpr:
+                func_call = other.func_call;
+                break;
+            case AstNodeType::AstBinaryExpr:
+                binary_expr = other.binary_expr;
+                break;
+            case AstNodeType::AstUnaryExpr:
+                unary_expr = other.unary_expr;
+                break;
+            default:
+                UNREACHEABLE;
+            }
+        }
+        return *this;
     }
 };

@@ -1,19 +1,8 @@
 #pragma once
-const char* ERROR_MULTILINE_DIRECTIVE                   = "cant break directive into multiple lines";
-const char* ERROR_UNKNOWN_DIRECTIVE                     = "unknown directive %s";
-const char* ERROR_MORE_THAN_ONE_DIRECTIVE_ARG           = "directives cant have more than 1 argument";
-const char* ERROR_DIRECTIVE_NAME_STRING                 = "directive name is a string";
-const char* ERROR_NO_MAIN_STMNT                         = "no main statement at %s";
-const char* ERROR_UNEXPECTED_EOF                        = "unexpected end of file at token %s";
-const char* ERROR_EXPECTED_FUNCTION_NAME_INSTEAD        = "expected function name, found %s";
-const char* ERROR_EXPECTED_FUNCTION_SIGNATURE_INSTEAD   = "expected %c at function signature, found %s";
-const char* ERROR_EXPECTED_FUNCTION_RET_TYPE            = "expected function return type, found %s";
-const char* ERROR_SIGNATURE_END_EXPECTED                = "expected signature end token \')\', found %s";
-const char* ERROR_PARAM_DECL_TYPE_EXPECTED              = "expected param type instead of %s";
-const char* ERROR_PARAM_NAME_SIGNATURE_END_EXPECTED     = "expected param name or signature end token \')\', found %s";
-const char* ERROR_INVALID_TYPE                          = "expected a valid type at %s";
-const char* ERROR_EXPECTED_R_CURLY                      = "expected a closing \'}\' at the end of the block";
-const char* ERROR_INVALID_STATMENT_START                = "statement should begin with (IDENTIFIER, SEMICOLON, \'ret\' or block_begin:\'{\') but %s was given";
-
-
+static const char* ERROR_UNEXPECTED_EOF_AFTER                   = "unexpected end of file after '%s'";
+static const char* ERROR_EXPECTED_R_PAREN_AFTER                 = "expected ')' after '%s'";
+static const char* ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN  = "expected number, identifier or char instead of '%s'";
+static const char* ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF          = "expected type name, array type '[]' or pointer type '*' instead of '%s'";
+static const char* ERROR_EXPECTED_CLOSING_BRAKET_BEFORE         = "expected clossing bracket ']' before '%s'";
+static const char* ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER    = "expected new line or semicolor ';' after '%s'";
 

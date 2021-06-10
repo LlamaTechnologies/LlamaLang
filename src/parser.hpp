@@ -1,11 +1,16 @@
 #pragma once
+#include "common_defs.hpp"
 #include <vector>
 #include <string>
 
+enum class TokenId;
 class Lexer;
 struct Token;
 struct Error;
 struct AstNode;
+
+bool match(const Token* token, ...) noexcept;
+#define MATCH(token, ...) match(token, __VA_ARGS__, TokenId(size_t(TokenId::_EOF) + 1))
 
 class Parser {
     const Lexer& lexer;
@@ -15,30 +20,67 @@ public:
 
     AstNode* parse() noexcept;
 
-private:
+    // returns AstSourceCode
+    LL_NODISCARD AstNode* parse_source_code() noexcept;
 
-    _NODISCARD AstNode* parse_source_code() noexcept;
+    /*
+    // returns AstDirective
+    LL_NODISCARD AstNode* parse_basic_directive() noexcept;
+    */
 
-    _NODISCARD AstNode* parse_basic_directive() noexcept;
+    // returns AstFuncDef
+    LL_NODISCARD AstNode* parse_function_def() noexcept;
 
-    _NODISCARD AstNode* parse_function_def() noexcept;
+    // returns AstFuncProto
+    LL_NODISCARD AstNode* parse_function_proto() noexcept;
 
-    _NODISCARD AstNode* parse_function_proto() noexcept;
+    // returns AstParamDecl
+    LL_NODISCARD AstNode* parse_param_decl() noexcept;
 
-    _NODISCARD AstNode* parse_block() noexcept;
+    // returns AstBlock
+    LL_NODISCARD AstNode* parse_block() noexcept;
 
-    _NODISCARD AstNode* parse_statement() noexcept;
+    // returns AstSymbol | AstBinaryExpr | AstUnaryExpr
+    LL_NODISCARD AstNode* parse_statement() noexcept;
 
-    _NODISCARD AstNode* parse_assignment() noexcept;
+    // returns AstVarDef
+    LL_NODISCARD AstNode* parse_vardef_stmnt() noexcept;
 
-    _NODISCARD AstNode* parse_ret() noexcept;
+    // returns AstTypeNode
+    LL_NODISCARD AstNode* parse_type() noexcept;
 
-    _NODISCARD AstNode* parse_expr() noexcept;
+    // returns AstBinaryExpr
+    LL_NODISCARD AstNode* parse_assign_stmnt() noexcept;
 
-    _NODISCARD AstNode* parse_variable_def() noexcept;
+    // returns AstUnaryExpr
+    LL_NODISCARD AstNode* parse_ret_stmnt() noexcept;
 
-    _NODISCARD AstNode* parse_type() noexcept;
+     // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    LL_NODISCARD AstNode* parse_expr() noexcept;
 
+    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    LL_NODISCARD AstNode* parse_comp_expr() noexcept;
+
+    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    LL_NODISCARD AstNode* parse_algebraic_expr() noexcept;
+
+    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    LL_NODISCARD AstNode* parse_term_expr() noexcept;
+
+    // returns AstSymbol | AstFuncCallExpr | AstUnaryExpr
+    LL_NODISCARD AstNode* parse_unary_expr() noexcept;
+
+    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    LL_NODISCARD AstNode* parse_primary_expr() noexcept;
+
+    // returns AstFuncCallExpr
+    LL_NODISCARD AstNode* parse_function_call() noexcept;
+    
     AstNode* parse_error(const Token& token, const char* format, ...) noexcept;
+
+    bool is_new_line_between(const size_t start_pos, const size_t end_pos);
+
+    // consumes the forbiden statement, report the error and return true else returns false
+    bool is_forbiden_statement(const Token& token) noexcept;
 };
 
