@@ -1,16 +1,16 @@
 # find llvm
-#find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
 
-#message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-#message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 # Set your project compile flags.
 # E.g. if using the C++ header files
 # you will need to enable C++11 support
 # for your compiler.
 
-#include_directories(${LLVM_INCLUDE_DIRS})
-#add_definitions(${LLVM_DEFINITIONS})
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
 
 set(EXEC_NAME ${CMAKE_PROJECT_NAME})
 
@@ -47,8 +47,6 @@ lexer.hpp
 lexer.cpp
 )
 
-#link_directories("${CMAKE_SOURCE_DIR}/extern" "${LLVM_DIR}/lib")
-
 # Engine executable name
 add_executable(${EXEC_NAME} ${LLAMALANG_SRC})
 
@@ -60,10 +58,10 @@ set_target_properties(${EXEC_NAME} PROPERTIES PROJECT_LABEL ${EXEC_NAME})
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
-#llvm_map_components_to_libnames(llvm_libs support core binaryformat bitwriter)
+llvm_map_components_to_libnames(llvm_libs support core binaryformat bitwriter)
 
 # Link against LLVM libraries
-#target_link_libraries(${EXEC_NAME} ${llvm_libs})
+target_link_libraries(${EXEC_NAME} ${llvm_libs})
 
 # set filters
 foreach(_source IN ITEMS ${LLAMALANG_SRC})
