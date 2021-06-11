@@ -30,11 +30,19 @@ bigint.cpp
 common_defs.hpp
 common_defs.cpp
 
-config.hpp
+compiler.hpp
+compiler.cpp
+
 console.hpp
 
 error.hpp
 error.cpp
+
+ir.hpp
+ir.cpp
+
+lexer.hpp
+lexer.cpp
 
 main.cpp
 
@@ -42,9 +50,6 @@ parse_error_msgs.hpp
 
 parser.hpp
 parser.cpp
-
-lexer.hpp
-lexer.cpp
 )
 
 # Engine executable name
@@ -87,5 +92,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 if (MSVC)
         set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Release>>")
         set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/tests/MyProgram")
+        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/tests/resources")
+        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_COMMAND_ARGUMENTS "-s MyProgram_Main.llang")
 endif()
