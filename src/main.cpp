@@ -4,6 +4,7 @@
 #include "console.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "compiler.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -33,7 +34,7 @@ int main(int argc, const char *argv[])
 
   // arg parsing
   {
-      for (size_t i = 0; i < argc; i += 2) {
+      for (size_t i = 1; i < argc; i += 2) {
           const char* option = argv[i];
           size_t option_len = strlen(option);
           if (strncmp(option, ARG_SRC_FILE, option_len > 2 ? 2 : option_len) == 0) {
@@ -57,7 +58,8 @@ int main(int argc, const char *argv[])
   }
 
   // open source file
-  std::ifstream source_file(current_dir_path.string() + source_name);
+  auto file_path = current_dir_path.string() + "\\" + source_name;
+  std::ifstream source_file(file_path);
   {
       if (!source_file.is_open()) {
           // error could not find file
@@ -103,17 +105,19 @@ int main(int argc, const char *argv[])
   }
 
   std::vector<Error> errors;
-  Lexer lexer(source_code, errors);
+  Lexer lexer(source_code, source_name, errors);
   lexer.tokenize();
   
+  /*
   auto print_lines = print_tokens(lexer);
   for (auto line : print_lines)
       console::WriteLine(line);
-  
+  */
+
   Parser parser(lexer, errors);
   auto source_code_node = parser.parse();
   
-  compiler::compile(source_code_node);
+  compiler::compile(output_dir_str, output_name, source_code_node);
 
   return 0;
   //return Compiler::compile(build_options);

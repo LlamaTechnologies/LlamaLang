@@ -19,10 +19,13 @@ class LlvmIrGenerator {
 public:
     LlvmIrGenerator(const std::string& _output_directory, const std::string& _executable_name);
     ~LlvmIrGenerator();
-
-    void generate(const AstNode* in_node);
+    
+    void generateFuncProto(const AstFuncProto& in_func_proto, AstFuncDef* in_function);
+    void generateFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function);
+    void generateVarDef(const AstVarDef& in_var_def, const bool is_global);
 
     void flush();
+
 private:
-    void generateFuncProto(const AstFuncProto& in_funcProto);
+    llvm::Type* translateType(AstType& in_type);
 };

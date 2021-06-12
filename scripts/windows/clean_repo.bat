@@ -1,1 +1,1 @@
-if exist "../../project" rm -f -r "../../project"
+if exist "../../project" del -f -r "../../project"

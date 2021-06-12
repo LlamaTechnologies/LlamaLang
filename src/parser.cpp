@@ -11,6 +11,7 @@ static bool is_type_start_token(const Token& token) noexcept;
 static bool is_expr_token(const Token& token) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
+static AstTypeId get_type_id(std::string_view in_name, TypeInfo** info) noexcept;
 
 //  ('=='|'!=' | '!' | '>=' | '<=' | '<' | '>')
 #define COMPARATIVE_OPERATOR \
@@ -467,7 +468,7 @@ AstNode* Parser::parse_type() noexcept {
     if (token.id == TokenId::MUL) {
         // POINTER TYPE
         AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
-        type_node->ast_type.type = AstTypeType::Pointer;
+        type_node->ast_type.type_id = AstTypeId::Pointer;
         const Token& next_token = lexer.get_next_token();
         if (!is_type_start_token(next_token)) {
             parse_error(next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
@@ -478,7 +479,7 @@ AstNode* Parser::parse_type() noexcept {
         lexer.get_back();
         auto data_tye_node = parse_type();
         data_tye_node->parent = type_node;
-        type_node->ast_type.data_type = data_tye_node;
+        type_node->ast_type.child_type = data_tye_node;
         
         return type_node;
     }
@@ -491,7 +492,7 @@ AstNode* Parser::parse_type() noexcept {
             return nullptr;
         }
         AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
-        type_node->ast_type.type = AstTypeType::Array;
+        type_node->ast_type.type_id = AstTypeId::Array;
 
         const Token& next_token = lexer.get_next_token();
         if (!is_type_start_token(next_token)) {
@@ -503,14 +504,14 @@ AstNode* Parser::parse_type() noexcept {
         lexer.get_back();
         auto data_tye_node = parse_type();
         data_tye_node->parent = type_node;
-        type_node->ast_type.data_type = data_tye_node;
+        type_node->ast_type.child_type = data_tye_node;
         
         return type_node;
     }
     else if (token.id == TokenId::IDENTIFIER) {
         AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
-        type_node->ast_type.type = AstTypeType::DataType;
-        type_node->ast_type.name = lexer.get_token_value(token);
+        type_node->ast_type.type_id = get_type_id(lexer.get_token_value(token), &type_node->ast_type.type_info);
+        
         return type_node;
     }
     else if (token.id == TokenId::_EOF) {
@@ -1080,6 +1081,38 @@ bool is_whitespace_char(const char _char) noexcept {
     }
 }
 
+struct TypeIdAstTypeId {
+    AstTypeId id;
+    TypeInfo info;
+};
+
+std::unordered_map<std::string_view, TypeIdAstTypeId> typesIds = {
+    {"i8",   {AstTypeId::Integer,       {"i8"  , nullptr, 8  , true}}},
+    {"i16",  {AstTypeId::Integer,       {"i16" , nullptr, 16 , true}}},
+    {"i32",  {AstTypeId::Integer,       {"i32" , nullptr, 32 , true}}},
+    {"i64",  {AstTypeId::Integer,       {"i64" , nullptr, 64 , true}}},
+    {"i128", {AstTypeId::Integer,       {"i128", nullptr, 128, true}}},
+    {"u8"  , {AstTypeId::Integer,       {"u8"  , nullptr, 8  , false}}},
+    {"u16" , {AstTypeId::Integer,       {"u16" , nullptr, 16 , false}}},
+    {"u32" , {AstTypeId::Integer,       {"u32" , nullptr, 32 , false}}},
+    {"u64" , {AstTypeId::Integer,       {"u64" , nullptr, 64 , false}}},
+    {"u128", {AstTypeId::Integer,       {"u128", nullptr, 128, false}}},
+    {"f32" , {AstTypeId::FloatingPoint, {"f32" , nullptr, 32 , true}}},
+    {"f64" , {AstTypeId::FloatingPoint, {"f64" , nullptr, 64 , true}}},
+    {"f128", {AstTypeId::FloatingPoint, {"f128", nullptr, 128, true}}},
+    {"void", {AstTypeId::Void,          {"void", nullptr, 0  , false}}},
+    {"bool", {AstTypeId::Bool,          {"bool", nullptr, 1  , false}}}
+};
+
+AstTypeId get_type_id(std::string_view in_name, TypeInfo** info) noexcept {
+    if (typesIds.find(in_name) == typesIds.end()) {
+        (*info)->name = in_name;
+        return AstTypeId::Struct;
+    }
+    auto type_info = typesIds[in_name];
+    *info = new TypeInfo(type_info.info);
+    return type_info.id;
+}
 
 bool match(const Token* token, ...) noexcept {
     va_list vargv;
