@@ -124,6 +124,8 @@ llvm::Type* LlvmIrGenerator::translateType(AstType& in_type) {
             return llvm::Type::getInt32Ty(context);
         case 64:
             return llvm::Type::getInt64Ty(context);
+        case 128:
+            return llvm::Type::getInt128Ty(context);
         default:
             UNREACHEABLE;
         } break;
@@ -132,6 +134,8 @@ llvm::Type* LlvmIrGenerator::translateType(AstType& in_type) {
             return llvm::Type::getFloatTy(context);
         if (in_type.type_info->bit_size == 64)
             return llvm::Type::getDoubleTy(context);
+        if (in_type.type_info->bit_size == 128)
+            return llvm::Type::getFP128Ty(context);
         LL_FALLTHROUGH
     default:
         UNREACHEABLE;
