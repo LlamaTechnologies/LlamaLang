@@ -3,6 +3,9 @@
 #include <vector>
 #include <string>
 #include <assert.h>
+#include <cstddef>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Function.h>
 
 // ast nodes
 struct Token;
@@ -37,6 +40,7 @@ struct AstDirective {
 struct AstFuncDef {
     AstNode* proto;
     AstNode* block;
+    llvm::Function* function = nullptr;
 };
 
 struct AstFuncProto {
@@ -117,20 +121,29 @@ struct AstSourceCode {
 };
 
 
-enum class AstTypeType {
+enum class AstTypeId {
     Pointer,
     Array,
-    DataType
+    Void,
+    Bool,
+    Integer,
+    FloatingPoint,
+    Struct
+};
+
+struct TypeInfo {
+    std::string_view    name;
+    LLVMTypeRef         llvm_type;
+    uint32_t            bit_size;
+    bool                is_signed;
 };
 
 struct AstType {
-    AstTypeType             type;   //pointer | Array | DataType
-    union {
-        AstNode*            data_type; // actual type (Pointer|Array)
-        std::string_view    name;   // name of the type
-    };
+    AstTypeId       type_id;    // Pointer Array Integer FloatingPoint
+    AstNode*        child_type; // Not null if type == (pointer | array)
+    TypeInfo*       type_info;  // null if type == (pointer | array)
 
-    AstType() : type(AstTypeType::DataType), data_type(nullptr) {}
+    AstType() : type_id(AstTypeId::Void), child_type(nullptr), type_info(nullptr) {}
 };
 
 // ast nodes enum
@@ -176,60 +189,6 @@ struct AstNode {
     AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column)
         : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {}
 
-
-    AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column, const std::string & type_name)
-        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {
-        assert(in_node_type == AstNodeType::AstType);
-
-        ast_type.type = AstTypeType::DataType;
-        ast_type.name = type_name;
-    }
-
-    AstNode(const AstNode& other)
-        : parent(other.parent), line(other.line), column(other.column), node_type(other.node_type) {
-        switch (other.node_type)
-        {
-        case AstNodeType::AstSourceCode:
-            source_code = other.source_code;
-            break;
-        case AstNodeType::AstDirective:
-            directive = other.directive;
-            break;
-        case AstNodeType::AstFuncDef:
-            function_def = other.function_def;
-            break;
-        case AstNodeType::AstFuncProto:
-            function_proto = other.function_proto;
-            break;
-        case AstNodeType::AstParamDecl:
-            param_decl = other.param_decl;
-            break;
-        case AstNodeType::AstBlock:
-            block = other.block;
-            break;
-        case AstNodeType::AstType:
-            ast_type = other.ast_type;
-            break;
-        case AstNodeType::AstVarDef:
-            var_def = other.var_def;
-            break;
-        case AstNodeType::AstSymbol:
-            symbol = other.symbol;
-            break;
-        case AstNodeType::AstFuncCallExpr:
-            func_call = other.func_call;
-            break;
-        case AstNodeType::AstBinaryExpr:
-            binary_expr = other.binary_expr;
-            break;
-        case AstNodeType::AstUnaryExpr:
-            unary_expr = other.unary_expr;
-            break;
-        default:
-            UNREACHEABLE;
-        }
-    }
-
     virtual ~AstNode() {
         if (node_type == AstNodeType::AstBlock) {
             for (auto node : block.statements) {
@@ -244,58 +203,5 @@ struct AstNode {
                 delete node;
             }
         }
-    }
-
-    AstNode& operator=(const AstNode& other) {
-        if (this != &other) // not a self-assignment
-        {
-            parent      = other.parent;
-            line        = other.line;
-            column      = other.column;
-            node_type   = other.node_type;
-
-            switch (other.node_type)
-            {
-            case AstNodeType::AstSourceCode:
-                source_code = other.source_code;
-                break;
-            case AstNodeType::AstDirective:
-                directive = other.directive;
-                break;
-            case AstNodeType::AstFuncDef:
-                function_def = other.function_def;
-                break;
-            case AstNodeType::AstFuncProto:
-                function_proto = other.function_proto;
-                break;
-            case AstNodeType::AstParamDecl:
-                param_decl = other.param_decl;
-                break;
-            case AstNodeType::AstBlock:
-                block = other.block;
-                break;
-            case AstNodeType::AstType:
-                ast_type = other.ast_type;
-                break;
-            case AstNodeType::AstVarDef:
-                var_def = other.var_def;
-                break;
-            case AstNodeType::AstSymbol:
-                symbol = other.symbol;
-                break;
-            case AstNodeType::AstFuncCallExpr:
-                func_call = other.func_call;
-                break;
-            case AstNodeType::AstBinaryExpr:
-                binary_expr = other.binary_expr;
-                break;
-            case AstNodeType::AstUnaryExpr:
-                unary_expr = other.unary_expr;
-                break;
-            default:
-                UNREACHEABLE;
-            }
-        }
-        return *this;
     }
 };

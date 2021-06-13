@@ -1,10 +1,10 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include "config.hpp"
 #include "console.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "compiler.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -14,147 +14,113 @@
 #define GetCurrentDir getcwd
 #endif
 
-#define MOD_KEY_SRC_FOLDER "src_folder"
-#define MOD_KEY_MODULE_NAME "module_name"
-#define MOD_KEY_EXPORT_MOD_INFO "export_mod_info"
-#define MOD_KEY_TYPE "type"
+#define ARG_SRC_FILE "-s"
+#define ARG_OUT_NAME "-o"
+#define ARG_OUT_DIR  "-O"
 
 static std::string get_current_dir();
-static void parseModuleFile(std::ifstream &moduleFile, ModuleConfig &moduleConfig);
-static std::string get_first_file_name(const ModuleConfig& module_config, int &error);
 
 int main(int argc, const char *argv[])
 {
   namespace fs = std::filesystem;
+  // get current directory
+  auto current_dir_str = get_current_dir();
+  fs::path current_dir_path(current_dir_str);
+  fs::directory_iterator current_dir(current_dir_path);
 
-  fs::path currentDirPath(get_current_dir());
-  std::fstream logFile(currentDirPath.string() + "logs/llama.log", std::ios::out);
+  std::string source_name;
+  std::string output_name;
+  std::string output_dir_str;
 
-  // read config file
-  fs::directory_iterator currentDir(currentDirPath);
+  // arg parsing
+  {
+      for (size_t i = 1; i < argc; i += 2) {
+          const char* option = argv[i];
+          size_t option_len = strlen(option);
+          if (strncmp(option, ARG_SRC_FILE, option_len > 2 ? 2 : option_len) == 0) {
+              source_name = argv[i + 1];
+          }
+          else if (strncmp(option, ARG_OUT_NAME, option_len > 2 ? 2 : option_len) == 0) {
+              output_name = argv[i + 1];
+          }
+          else if (strncmp(option, ARG_OUT_DIR, option_len > 2 ? 2 : option_len) == 0) {
+              output_dir_str = argv[i + 1];
+          }
+          else {
+              std::cout << "bad argument: " << option << std::endl;
+              return -1;
+          }
+      }
 
-  bool compileModule = true;
+      if (output_dir_str.empty()) {
+          output_dir_str = current_dir_str;
+      }
+  }
 
+  // open source file
+  auto file_path = current_dir_path.string() + "\\" + source_name;
+  std::ifstream source_file(file_path);
+  {
+      if (!source_file.is_open()) {
+          // error could not find file
+          std::cout << "could not find file \"" << source_name << "\" in directory \"" << current_dir_str << "\"" << std::endl;
+          return -1;
+      }
+      if (source_file.bad()) {
+          // error corrupted file
+          std::cout << "corrupted file \"" << source_name << std::endl;
+          return -1;
+      }
+  }
+
+  /*
   for (auto entry : currentDir) {
     if (entry.is_regular_file()) {
       auto fileName = entry.path().filename();
 
-      if (fileName == "llang.config") {
-        compileModule = false;
-        break;
+      if (fileName == "build.llang") {
+
       }
     }
   }
+  */
 
+  std::string source_code;
+  // get source_code
+  {
+      // go to end of file
+      source_file.seekg(0, std::ios::end);
 
-  if (compileModule) {
-    ModuleConfig moduleConfig = {
-      currentDirPath.string(),
-      currentDirPath.filename().string(),
-      MODULE_TYPE::EXE,
-      false
-    };
+      // Reserve memory
+      source_code.reserve(source_file.tellg());
 
-    std::ifstream moduleFile(currentDirPath.string() + "/llang.module");
+      // reset file cursor
+      source_file.seekg(0, std::ios::beg);
 
-    if (moduleFile.is_open()) {
-      parseModuleFile(moduleFile, moduleConfig);
-    }
+      // store content in this.source
+      source_code.assign((std::istreambuf_iterator<char>(source_file)), std::istreambuf_iterator<char>());
 
-    std::vector<Error> errors;
-
-    int error;
-    std::string file_name = get_first_file_name(moduleConfig, error);
-    
-    if (error) {
-        return error;
-    }
-
-    Lexer lexer(file_name, errors);
-    lexer.tokenize();
-    auto print_lines = print_tokens(lexer);
-    for (auto line : print_lines)
-        console::WriteLine(line);
-
-    Parser parser(lexer, errors);
-    auto sourceCodeNode = parser.parse();
-    return 0;
+      // close file
+      source_file.close();
   }
 
-  // solution not supported yet
-  console::WriteLine("Solution not supported yet");
-  return -1;
+  std::vector<Error> errors;
+  Lexer lexer(source_code, source_name, errors);
+  lexer.tokenize();
+  
+  /*
+  auto print_lines = print_tokens(lexer);
+  for (auto line : print_lines)
+      console::WriteLine(line);
+  */
 
-  //return Compiler::compile(solutionConfig);
-}
+  Parser parser(lexer, errors);
+  auto source_code_node = parser.parse();
+  
+  compiler::compile(output_dir_str, output_name, source_code_node);
 
-void parseModuleFile(std::ifstream &moduleFile, ModuleConfig &moduleConfig)
-{
-  namespace fs = std::filesystem;
-
-  while (moduleFile.good() && !moduleFile.eof()) {
-    std::string key;
-    std::string value;
-
-    moduleFile >> key;
-    moduleFile >> value;
-
-    auto semiPos = key.find_first_of(":");
-    key = key.substr(0, semiPos);
-
-    if (key == MOD_KEY_SRC_FOLDER) {
-      moduleConfig.srcFolder = fs::canonical(value).string();
-    } else if (key == MOD_KEY_MODULE_NAME) {
-      moduleConfig.moduleName = value;
-    } else if (key == MOD_KEY_EXPORT_MOD_INFO) {
-      moduleConfig.exportInfo = value == "true";
-    } else if (key == MOD_KEY_TYPE) {
-      if (value == "EXE")
-        moduleConfig.moduleType = MODULE_TYPE::EXE;
-      else if (value == "DLL")
-        moduleConfig.moduleType = MODULE_TYPE::DLL;
-      else if (value == "LIB")
-        moduleConfig.moduleType = MODULE_TYPE::LIB;
-      else
-        console::WriteLine("Invalid module type: " + value);
-    }
-  }
-}
-
-std::string get_first_file_name(const ModuleConfig& module_config, int &error)
-{
-    namespace fs = std::filesystem;
-    auto folder_name = module_config.srcFolder;
-
-    auto path = fs::canonical(folder_name);
-    error = 0;
-
-    if (!fs::exists(path)) {
-        console::WriteLine("Directory not found: " + folder_name);
-        error = -1;
-        return "";
-    }
-
-    if (!fs::is_directory(path)) {
-        console::WriteLine("Path is not a directory: " + folder_name);
-        error = -1;
-        return "";
-    }
-
-    auto directory = fs::recursive_directory_iterator(folder_name);
-
-    for (auto entry : directory) {
-        auto filePath = entry.path();
-        auto ext = filePath.extension().string();
-        auto fileName = filePath.filename().string();
-
-        if (entry.is_regular_file() && ext == ".llang") {
-            return entry.path().string();
-        }
-    }
-
-    error = -1;
-    return "";
+  return 0;
+  //return Compiler::compile(build_options);
 }
 
 std::string get_current_dir()

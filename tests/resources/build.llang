@@ -1,0 +1,27 @@
+
+fn build(b: Builder) {
+    // b.setDefaultReleaseMode(Builder.RELEASE_MODES.RELEASE_FAST);
+    
+    // const mode = b.standardReleaseOptions()
+    // const target = b.standardTargetOptions(.{});
+    // const rel_zig_exe = try fs.path.relative(b.allocator, b.build_root, b.zig_exe);
+    
+    // var docgen_exe = b.addExecutable("docgen", "doc/docgen.zig");
+    // var docgen_cmd = docgen_exe.run();
+    
+    //docgen_cmd.addArgs(&[_][]const u8{
+    //    rel_zig_exe,
+    //    "doc" ++ fs.path.sep_str ++ "langref.html.in",
+    //    langref_out_path,
+    //});
+    //docgen_cmd.step.dependOn(&docgen_exe.step);
+    //const docs_step = b.step("docs", "Build documentation");
+    //docs_step.dependOn(&docgen_cmd.step);
+    //const toolchain_step = b.step("test-toolchain", "Run the tests for the toolchain");
+    //var test_stage2 = b.addTest("src/test.zig");
+    //test_stage2.setBuildMode(mode);
+    //test_stage2.addPackagePath("stage2_tests", "test/stage2/test.zig");
+    //const fmt_build_zig = b.addFmt(&[_][]const u8{"build.zig"});
+
+    //const skip_debug = b.option(bool, "skip-debug", "Main test suite skips debug builds") orelse false;
+}
