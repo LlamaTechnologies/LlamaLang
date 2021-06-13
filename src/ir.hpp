@@ -23,9 +23,10 @@ public:
     void generateFuncProto(const AstFuncProto& in_func_proto, AstFuncDef* in_function);
     void generateFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function);
     void generateVarDef(const AstVarDef& in_var_def, const bool is_global);
-
     void flush();
 
 private:
     llvm::Type* translateType(AstType& in_type);
+    llvm::Constant* translateConstant(AstSymbol& in_symbol);
+
 };
