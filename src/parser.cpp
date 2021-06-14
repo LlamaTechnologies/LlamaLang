@@ -62,7 +62,7 @@ AstNode* Parser::parse_source_code() noexcept {
     const Token& first_token = lexer.get_next_token();
     lexer.get_back();
 
-    AstNode* source_code_node = new AstNode(AstNodeType::AstSourceCode, first_token.start_line, first_token.start_column);
+    AstNode* source_code_node = new AstNode(AstNodeType::AstSourceCode, first_token.start_line, first_token.start_column, lexer.file_name);
     
     for (;;) {
         AstNode* node = nullptr;
@@ -170,7 +170,7 @@ AstNode* Parser::parse_function_def() noexcept {
         return nullptr;
     }
 
-    auto func_node = new AstNode(AstNodeType::AstFuncDef, fn_token.start_line, fn_token.start_column);
+    auto func_node = new AstNode(AstNodeType::AstFuncDef, fn_token.start_line, fn_token.start_column, lexer.file_name);
     func_prot_node->parent = func_node;
     block_node->parent = func_node;
     func_node->function_def.proto = func_prot_node;
@@ -193,7 +193,7 @@ AstNode* Parser::parse_function_proto() noexcept {
         UNREACHEABLE;
     }
 
-    auto func_prot_node = new AstNode(AstNodeType::AstFuncProto, fn_token.start_line, fn_token.start_column);
+    auto func_prot_node = new AstNode(AstNodeType::AstFuncProto, fn_token.start_line, fn_token.start_column, lexer.file_name);
 
     // function name
     {
@@ -297,7 +297,7 @@ AstNode* Parser::parse_param_decl() noexcept {
         return nullptr;
     }
 
-    AstNode* param_decl_node = new AstNode(AstNodeType::AstParamDecl, name_token.start_line, name_token.start_column);
+    AstNode* param_decl_node = new AstNode(AstNodeType::AstParamDecl, name_token.start_line, name_token.start_column, lexer.file_name);
     type_node->parent = param_decl_node;
     param_decl_node->param_decl.name = lexer.get_token_value(name_token);
     param_decl_node->param_decl.type = type_node;
@@ -317,7 +317,7 @@ AstNode* Parser::parse_block() noexcept {
         UNREACHEABLE;
     }
 
-    AstNode* block_node = new AstNode(AstNodeType::AstBlock, l_curly_token.start_line, l_curly_token.start_column);
+    AstNode* block_node = new AstNode(AstNodeType::AstBlock, l_curly_token.start_line, l_curly_token.start_column, lexer.file_name);
 
     for (;;) {
         const Token& token = lexer.get_next_token();
@@ -440,7 +440,7 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
         return nullptr;
     }
 
-    AstNode* var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column);
+    AstNode* var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column, lexer.file_name);
     type_node->parent = var_def_node;
     var_def_node->var_def.name = lexer.get_token_value(token_symbol_name);
     var_def_node->var_def.type = type_node;
@@ -467,7 +467,7 @@ AstNode* Parser::parse_type() noexcept {
     const Token& token = lexer.get_next_token();
     if (token.id == TokenId::MUL) {
         // POINTER TYPE
-        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
+        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, lexer.file_name);
         type_node->ast_type.type_id = AstTypeId::Pointer;
         const Token& next_token = lexer.get_next_token();
         if (!is_type_start_token(next_token)) {
@@ -491,7 +491,7 @@ AstNode* Parser::parse_type() noexcept {
             lexer.get_back();
             return nullptr;
         }
-        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
+        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, lexer.file_name);
         type_node->ast_type.type_id = AstTypeId::Array;
 
         const Token& next_token = lexer.get_next_token();
@@ -509,7 +509,7 @@ AstNode* Parser::parse_type() noexcept {
         return type_node;
     }
     else if (token.id == TokenId::IDENTIFIER) {
-        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column);
+        AstNode* type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, lexer.file_name);
         type_node->ast_type.type_id = get_type_id(lexer.get_token_value(token), &type_node->ast_type.type_info);
         
         return type_node;
@@ -544,7 +544,7 @@ AstNode* Parser::parse_assign_stmnt() noexcept {
             //TODO(pablo96): error in unary_expr => sync parsing
             return nullptr;
         }
-        AstNode* node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        AstNode* node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
         expr->parent = node;
         identifier_node->parent = node;
         node->binary_expr.bin_op = get_binary_op(token);
@@ -570,7 +570,7 @@ AstNode* Parser::parse_ret_stmnt() noexcept {
         UNREACHEABLE;
     }
 
-    AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
+    AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column, lexer.file_name);
     node->unary_expr.op = get_unary_op(token);
 
     if (is_expr_token(lexer.get_next_token())) {
@@ -647,7 +647,7 @@ AstNode* Parser::parse_comp_expr() noexcept {
         }
 
         // create binary node
-        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
         unary_expr->parent = binary_expr;
         root_node->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
@@ -689,7 +689,7 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
         }
 
         // create binary node
-        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
         term_expr->parent = binary_expr;
         root_node->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
@@ -732,7 +732,7 @@ AstNode* Parser::parse_term_expr() noexcept {
         }
 
         // create binary node
-        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column);
+        auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
         symbol_token->parent = binary_expr;
         root_node->parent = binary_expr;
         binary_expr->binary_expr.op1 = root_node;
@@ -765,7 +765,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
 
     // op primary_expr
     if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
-        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, unary_op_token.start_line, unary_op_token.start_column);
+        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, unary_op_token.start_line, unary_op_token.start_column, lexer.file_name);
         AstNode* primary_expr = parse_primary_expr();
         if (!primary_expr) {
             //TODO(pablo96): error in algebraic_expr => sync parsing
@@ -790,7 +790,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
     const Token& token = lexer.get_next_token();
     // primary_expr op
     if (MATCH(&token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
-        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column);
+        AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column, lexer.file_name);
         primary_expr->parent = node;
         node->unary_expr.expr = primary_expr;
         node->unary_expr.op = get_unary_op(token);
@@ -841,7 +841,7 @@ AstNode* Parser::parse_primary_expr() noexcept {
 
     if (MATCH(&token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
 parse_literal:
-        AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column);
+        AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column, lexer.file_name);
         symbol_node->symbol.token = &token;
         return symbol_node;
     }
@@ -868,7 +868,7 @@ AstNode* Parser::parse_function_call() noexcept {
         UNREACHEABLE;
     }
 
-    AstNode* func_call_node = new AstNode(AstNodeType::AstFuncCallExpr, name_token.start_line, name_token.start_column);
+    AstNode* func_call_node = new AstNode(AstNodeType::AstFuncCallExpr, name_token.start_line, name_token.start_column, lexer.file_name);
     func_call_node->func_call.fn_name = lexer.get_token_value(name_token);
 
     // arguments

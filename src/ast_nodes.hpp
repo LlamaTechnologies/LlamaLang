@@ -168,6 +168,7 @@ struct AstNode {
     size_t line;
     size_t column;
     AstNodeType node_type;
+    std::string file_name;
 
     // actual node
     // TODO: try to use std::variant instead of union
@@ -186,8 +187,8 @@ struct AstNode {
         AstFuncCallExpr func_call;      // func_name L_PAREN (expr (, expr)*)? R_PAREN
     //};
 
-    AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column)
-        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {}
+    AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column, std::string in_file_name)
+        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type), file_name(in_file_name) {}
 
     virtual ~AstNode() {
         if (node_type == AstNodeType::AstBlock) {

@@ -117,7 +117,7 @@ int main(int argc, const char *argv[])
   Parser parser(lexer, errors);
   auto source_code_node = parser.parse();
   
-  compiler::compile(output_dir_str, output_name, source_code_node);
+  compiler::compile(output_dir_str, output_name, source_code_node, errors);
 
   return 0;
   //return Compiler::compile(build_options);
