@@ -839,7 +839,9 @@ AstNode* Parser::parse_primary_expr() noexcept {
         return nullptr;
     }
 
+    
     if (token.id == TokenId::L_PAREN) {
+        // group expression
         lexer.get_back();
         return parse_expr();
     }
@@ -856,7 +858,7 @@ AstNode* Parser::parse_primary_expr() noexcept {
         lexer.get_back();
         goto parse_literal;
     }
-
+    
     if (MATCH(&token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
 parse_literal:
         AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column, lexer.file_name);
