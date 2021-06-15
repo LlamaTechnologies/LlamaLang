@@ -5,7 +5,12 @@
 #include <assert.h>
 #include <cstddef>
 #include <llvm/IR/Type.h>
-#include <llvm/IR/Function.h>
+
+namespace llvm {
+    class Function;
+}
+
+typedef struct LLVMOpaqueType* LLVMTypeRef;
 
 // ast nodes
 struct Token;

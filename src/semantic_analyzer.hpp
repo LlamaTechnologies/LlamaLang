@@ -2,8 +2,12 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include "ast_nodes.hpp"
 #include "error.hpp"
+
+struct AstFuncProto;
+struct AstFuncDef;
+struct AstBlock;
+struct AstNode;
 
 enum class SymbolType {
     VARIABLE,

@@ -1,7 +1,3 @@
-######################################
-# DIRECTORIES AND NAMES
-######################################
-
 set(TEST_NAME  ${CMAKE_PROJECT_NAME}_tests)
 
 # set output directories
@@ -17,8 +13,6 @@ parser/parser_happy_expr.cpp
 parser/parser_happy_stmnts.cpp
 "test.cpp"
 )
-
-link_directories("${CMAKE_SOURCE_DIR}/lib" "${LLVM_DIR}/lib")
 
 # Engine executable name
 add_executable(${TEST_NAME} ${LLAMATEST_SRC})

@@ -1,5 +1,6 @@
 #include "semantic_analyzer.hpp"
 #include <stdarg.h>
+#include "ast_nodes.hpp"
 
 static bool is_ret_stmnt(const AstNode* stmnt);
 

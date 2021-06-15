@@ -4,6 +4,7 @@
 #include "parse_error_msgs.hpp"
 #include <stdarg.h>
 #include <cassert>
+#include <unordered_map>
 
 static BinaryExprType get_binary_op(const Token& token) noexcept;
 static UnaryExprType get_unary_op(const Token& token) noexcept;
@@ -445,8 +446,25 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
     var_def_node->var_def.name = lexer.get_token_value(token_symbol_name);
     var_def_node->var_def.type = type_node;
 
-    if (lexer.get_next_token().id == TokenId::ASSIGN) {
-        // TODO(pablo96): parse assignment
+    const Token& assign_token = lexer.get_next_token();
+    if (assign_token.id == TokenId::ASSIGN) {
+        auto identifier_node = new AstNode(AstNodeType::AstSymbol, token_symbol_name.start_line, token_symbol_name.start_column, lexer.file_name);
+        identifier_node->symbol.token = &token_symbol_name;
+        auto expr = parse_expr();
+        if (!expr) {
+            //TODO(pablo96): error in unary_expr => sync parsing
+            return nullptr;
+        }
+
+        AstNode* assign_node = new AstNode(AstNodeType::AstBinaryExpr, assign_token.start_line, assign_token.start_column, lexer.file_name);
+        expr->parent = assign_node;
+        identifier_node->parent = assign_node;
+        assign_node->binary_expr.bin_op = get_binary_op(assign_token);
+        assign_node->binary_expr.op1 = identifier_node;
+        assign_node->binary_expr.op2 = expr;
+            
+        assign_node->parent = var_def_node;
+        var_def_node->var_def.initializer = assign_node;
     }
     else {
         lexer.get_back();
@@ -1106,7 +1124,11 @@ std::unordered_map<std::string_view, TypeIdAstTypeId> typesIds = {
 
 AstTypeId get_type_id(std::string_view in_name, TypeInfo** info) noexcept {
     if (typesIds.find(in_name) == typesIds.end()) {
-        (*info)->name = in_name;
+        *info = new TypeInfo();
+        (*info)->name       = in_name;
+        (*info)->llvm_type  = nullptr;
+        (*info)->bit_size   = 8;
+        (*info)->is_signed  = false;
         return AstTypeId::Struct;
     }
     auto type_info = typesIds[in_name];
