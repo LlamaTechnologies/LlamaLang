@@ -1041,8 +1041,8 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
     auto func_param_node = param_node_func->func_call.params.at(0);
     ASSERT_NE(func_param_node, nullptr);
     ASSERT_EQ(func_param_node->parent, param_node_func);
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
-    ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
+    ASSERT_EQ(func_param_node->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(func_param_node->const_value.type, ConstValueType::INT);
 }
 
 //==================================================================================
