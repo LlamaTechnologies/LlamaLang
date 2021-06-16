@@ -174,7 +174,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
     std::vector<Error> errors;
-    Lexer lexer("myVar i32 = 65", "VarDefSimpleTypeInitializerParse", errors);
+    Lexer lexer("myVar i32 = -65", "VarDefSimpleTypeInitializerParse", errors);
     lexer.tokenize();
 
     Parser parser(lexer, errors);
@@ -184,10 +184,9 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
     ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
-    ASSERT_NE(value_node->var_def.type, nullptr);
-    ASSERT_NE(value_node->var_def.initializer, nullptr);
 
     auto type_node = value_node->var_def.type;
+    ASSERT_NE(type_node, nullptr);
     ASSERT_EQ(type_node->parent, value_node);
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
@@ -197,13 +196,23 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
     ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
 
     auto init_node = value_node->var_def.initializer;
+    ASSERT_NE(init_node, nullptr);
     ASSERT_EQ(init_node->parent, value_node);
     ASSERT_EQ(init_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
-    ASSERT_EQ(init_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(init_node->binary_expr.op2->node_type, AstNodeType::AstSymbol);
+    ASSERT_NE(init_node->binary_expr.op1, nullptr);
     ASSERT_EQ(init_node->binary_expr.op1->parent, init_node);
-    ASSERT_EQ(init_node->binary_expr.op2->parent, init_node);
+    ASSERT_EQ(init_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
+
+    auto neg_int_node = init_node->binary_expr.op2;
+    ASSERT_NE(neg_int_node, nullptr);
+    ASSERT_EQ(neg_int_node->parent, init_node);
+    ASSERT_EQ(neg_int_node->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(neg_int_node->unary_expr.op, UnaryExprType::NEG);
+    ASSERT_NE(neg_int_node->unary_expr.expr, nullptr);
+    ASSERT_EQ(neg_int_node->unary_expr.expr->parent, neg_int_node);
+    ASSERT_EQ(neg_int_node->unary_expr.expr->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(neg_int_node->unary_expr.expr->const_value.type, ConstValueType::INT);
 }
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
@@ -218,10 +227,9 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
     ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
-    ASSERT_NE(value_node->var_def.type, nullptr);
-    ASSERT_NE(value_node->var_def.initializer, nullptr);
 
     auto type_node = value_node->var_def.type;
+    ASSERT_NE(type_node, nullptr);
     ASSERT_EQ(type_node->parent, value_node);
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
@@ -231,22 +239,27 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
     ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
 
     auto init_node = value_node->var_def.initializer;
+    ASSERT_NE(init_node, nullptr);
     ASSERT_EQ(init_node->parent, value_node);
     ASSERT_EQ(init_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
-    ASSERT_EQ(init_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(init_node->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_NE(init_node->binary_expr.op1, nullptr);
+    ASSERT_NE(init_node->binary_expr.op2, nullptr);
     ASSERT_EQ(init_node->binary_expr.op1->parent, init_node);
     ASSERT_EQ(init_node->binary_expr.op2->parent, init_node);
+    ASSERT_EQ(init_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(init_node->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
 
     auto add_node = init_node->binary_expr.op2;
+    ASSERT_NE(add_node, nullptr);
     ASSERT_EQ(add_node->binary_expr.bin_op, BinaryExprType::ADD);
-    ASSERT_EQ(add_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(add_node->binary_expr.op2->node_type, AstNodeType::AstSymbol);
+    ASSERT_NE(add_node->binary_expr.op1, nullptr);
+    ASSERT_NE(add_node->binary_expr.op2, nullptr);
     ASSERT_EQ(add_node->binary_expr.op1->parent, add_node);
     ASSERT_EQ(add_node->binary_expr.op2->parent, add_node);
+    ASSERT_EQ(add_node->binary_expr.op1->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(add_node->binary_expr.op2->node_type, AstNodeType::AstSymbol);
 }
-
 
 TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
     std::vector<Error> errors;
@@ -962,11 +975,12 @@ TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
     ASSERT_EQ(value_node->func_call.params.size(), 1L);
+
     auto param_node = value_node->func_call.params.at(0);
     ASSERT_NE(param_node, nullptr);
     ASSERT_EQ(param_node->parent, value_node);
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(param_node->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
 }
 
 TEST(ParserHappyStmntTests, FuncCallNestedTest) {
@@ -982,17 +996,19 @@ TEST(ParserHappyStmntTests, FuncCallNestedTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
     ASSERT_EQ(value_node->func_call.params.size(), 1L);
+    
     auto param_node_func = value_node->func_call.params.at(0);
     ASSERT_NE(param_node_func, nullptr);
     ASSERT_EQ(param_node_func->parent, value_node);
     ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
     ASSERT_EQ(param_node_func->func_call.params.size(), 1L);
+    
     auto param_node = param_node_func->func_call.params.at(0);
     ASSERT_NE(param_node, nullptr);
     ASSERT_EQ(param_node->parent, param_node_func);
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(param_node->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
 }
 
 TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
@@ -1008,22 +1024,25 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
     ASSERT_EQ(value_node->func_call.params.size(), 2L);
+    
     auto param_node = value_node->func_call.params.at(0);
     ASSERT_NE(param_node, nullptr);
     ASSERT_EQ(param_node->parent, value_node);
     ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
     ASSERT_EQ(param_node->symbol.token->id, TokenId::IDENTIFIER);
+    
     auto param_node_func = value_node->func_call.params.at(1);
     ASSERT_NE(param_node_func, nullptr);
     ASSERT_EQ(param_node_func->parent, value_node);
     ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
     ASSERT_EQ(param_node_func->func_call.params.size(), 1L);
+    
     auto func_param_node = param_node_func->func_call.params.at(0);
     ASSERT_NE(func_param_node, nullptr);
     ASSERT_EQ(func_param_node->parent, param_node_func);
-    ASSERT_EQ(func_param_node->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(func_param_node->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
 }
 
 //==================================================================================

@@ -500,7 +500,6 @@ void Lexer::tokenize() noexcept
             bigint_mul(&multiplied, &curr_token.int_lit, &radix_bi);
 
             bigint_add(&curr_token.int_lit, &multiplied, &digit_value_bi);
-            
             break;
         }
         case TokenizerState::SawSignOrTypeSpec:

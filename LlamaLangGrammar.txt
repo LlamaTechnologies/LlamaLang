@@ -81,8 +81,8 @@ termExpr
     ;
 
 unaryExpr
-    : ('!' | '~' | '--' | '++') primaryExpr
-    | primaryExpr ('!' | '~' | '--' | '++') 
+    : ('!' | '~' | '--' | '++' | '-') primaryExpr
+    | primaryExpr ('!' | '~' | '--' | '++' | '-') 
     | primaryExpr
     ;
 

@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <cstddef>
 #include <llvm/IR/Type.h>
+#include "bigint.hpp"
+#include "bigfloat.hpp"
 
 namespace llvm {
     class Function;
@@ -75,6 +77,21 @@ struct AstSymbol {
     const Token* token;
 };
 
+enum class ConstValueType {
+    INT,
+    FLOAT,
+    CHAR
+};
+
+struct AstConstValue {
+    ConstValueType type;
+union {
+    BigInt      integer;
+    BigFloat    floating_point;
+    uint32_t    unicode_char;
+};
+};
+
 struct AstFuncCallExpr {
     std::string_view        fn_name;
     AstNode*                fn_ref;
@@ -106,11 +123,11 @@ struct AstBinaryExpr {
     AstNode*        op2;
 };
 
-
 enum class UnaryExprType {
     INC,    // ++  primaryExpr
     DEC,    // --  primaryExpr
-    NEG,    // -   primaryExpr  
+    NEG,    // -   primaryExpr
+    BIT_INV,// ~   primaryExpr
     RET     // ret Expr
 };
 
@@ -119,12 +136,9 @@ struct AstUnaryExpr {
     AstNode*        expr;
 };
 
-
-
 struct AstSourceCode {
     std::vector<AstNode*> children;
 };
-
 
 enum class AstTypeId {
     Pointer,
@@ -162,6 +176,7 @@ enum class AstNodeType {
     AstType,
     AstVarDef,
     AstSymbol,
+    AstConstValue,
     AstFuncCallExpr,
     AstBinaryExpr,
     AstUnaryExpr
@@ -189,6 +204,7 @@ struct AstNode {
         AstUnaryExpr    unary_expr;     // unary_op expr
         AstBinaryExpr   binary_expr;    // expr binary_op expr
         AstSymbol       symbol;         // symbol_name
+        AstConstValue   const_value;    // constant value
         AstFuncCallExpr func_call;      // func_name L_PAREN (expr (, expr)*)? R_PAREN
     //};
 

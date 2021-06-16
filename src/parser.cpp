@@ -767,14 +767,19 @@ AstNode* Parser::parse_term_expr() noexcept {
 /*
 * Parses unary expresions
 * unaryExpr
-*   : ('!' | '~' | '--' | '++') primaryExpr
-*   | primaryExpr ('!' | '~' | '--' | '++')
+*   : ('!' | '~' | '--' | '++' | '-') primaryExpr
+*   | primaryExpr ('!' | '~' | '--' | '++' | '-')
 *   | primaryExpr
 *   ;
 */
 AstNode* Parser::parse_unary_expr() noexcept {
+consume_plus:
     const Token& unary_op_token = lexer.get_next_token();
-    
+    if (unary_op_token.id == TokenId::PLUS) {
+        // ignore plus token
+        goto consume_plus;
+    }
+
     if (unary_op_token.id == TokenId::_EOF) {
         const Token& prev_token = lexer.get_previous_token();
         parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
@@ -782,7 +787,10 @@ AstNode* Parser::parse_unary_expr() noexcept {
     }
 
     // op primary_expr
-    if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
+    if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS, TokenId::MINUS)) {
+        if (unary_op_token.id == TokenId::MINUS)
+            lexer.get_back();
+
         AstNode* node = new AstNode(AstNodeType::AstUnaryExpr, unary_op_token.start_line, unary_op_token.start_column, lexer.file_name);
         AstNode* primary_expr = parse_primary_expr();
         if (!primary_expr) {
@@ -791,6 +799,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
             // ++ERROR_TOKEN
             // then we need to see if we can start over from the next token
             // for that we need to go back a step up into algebraic
+            return nullptr;
         }
         primary_expr->parent = node;
         node->unary_expr.op = get_unary_op(unary_op_token);
@@ -802,7 +811,7 @@ AstNode* Parser::parse_unary_expr() noexcept {
     AstNode* primary_expr = parse_primary_expr();
     if (!primary_expr) {
         //TODO(pablo96): error in algebraic_expr => sync parsing
-
+        return nullptr;
     }
 
     const Token& token = lexer.get_next_token();
@@ -831,7 +840,6 @@ AstNode* Parser::parse_unary_expr() noexcept {
 */
 AstNode* Parser::parse_primary_expr() noexcept {
     const Token& token = lexer.get_next_token();
-    auto token_value = lexer.get_token_value(token);
 
     if (token.id == TokenId::_EOF) {
         const Token& prev_token = lexer.get_previous_token();
@@ -856,17 +864,41 @@ AstNode* Parser::parse_primary_expr() noexcept {
         }
         // else
         lexer.get_back();
-        goto parse_literal;
-    }
-    
-    if (MATCH(&token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
-parse_literal:
+
         AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column, lexer.file_name);
         symbol_node->symbol.token = &token;
         return symbol_node;
     }
+    
+    bool is_negative = token.id == TokenId::MINUS;
 
-    parse_error(token, ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN, token_value, token_id_name(token.id));
+    const Token& number_token = is_negative ? lexer.get_next_token() : token;
+
+    if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
+        AstNode* const_value_node = new AstNode(AstNodeType::AstConstValue, token.start_line, token.start_column, lexer.file_name);
+        switch (number_token.id) {
+        case TokenId::INT_LIT:
+            const_value_node->const_value.type = ConstValueType::INT;
+            const_value_node->const_value.integer = number_token.int_lit;
+            const_value_node->const_value.integer.is_negative = is_negative;
+            break;
+        case TokenId::FLOAT_LIT:
+            const_value_node->const_value.type = ConstValueType::FLOAT;
+            const_value_node->const_value.floating_point = number_token.float_lit;
+            // parse float
+            break;
+        case TokenId::UNICODE_CHAR:
+            const_value_node->const_value.type = ConstValueType::CHAR;
+            const_value_node->const_value.unicode_char = number_token.char_lit;
+            break;
+        default: UNREACHEABLE;
+        }
+        
+        return const_value_node;
+    }
+
+    auto token_value = lexer.get_token_value(number_token);
+    parse_error(number_token, ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN, token_value, token_id_name(number_token.id));
     return nullptr;
 }
 
@@ -1030,8 +1062,10 @@ UnaryExprType get_unary_op(const Token& token) noexcept {
         return UnaryExprType::INC;
     case TokenId::MINUS_MINUS:
         return UnaryExprType::DEC;
-    case TokenId::BIT_NOT:
+    case TokenId::MINUS:
         return UnaryExprType::NEG;
+    case TokenId::BIT_NOT:
+        return UnaryExprType::BIT_INV;
     case TokenId::RET:
         return UnaryExprType::RET;
     default:

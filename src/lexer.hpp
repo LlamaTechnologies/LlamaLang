@@ -2,6 +2,7 @@
 #include <vector>
 #include "error.hpp"
 #include "bigint.hpp"
+#include "bigfloat.hpp"
 
 enum class TokenId {
     HASH,               // #
@@ -74,14 +75,8 @@ enum class TokenId {
 };
 
 const char * token_id_name(TokenId id);
-
-typedef struct { uint64_t v[2]; } float128_t;
 typedef uint32_t Char;
 
-struct BigFloat {
-    float128_t value;
-    bool overflow;
-};
 
 struct Token {
     TokenId       id;
