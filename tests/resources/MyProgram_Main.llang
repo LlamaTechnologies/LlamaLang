@@ -1,7 +1,7 @@
 //#module MyProgram
 //#load "MyProgram.llang"
 
-f i32
+f i32 = 0
 
 fn myProgramInit(param1 i32) i32 {
     // f = myFunction(f + 5)

@@ -29,13 +29,9 @@ struct Table {
     std::string name;
     
 
-    Table(const std::string& in_name, Table* in_parent) : parent(in_parent), name(in_name), symbols(new SymbolMap()){}
+    Table(const std::string& in_name, Table* in_parent) : parent(in_parent), name(in_name) {}
 
-    virtual ~Table() {
-        delete symbols;
-    }
-
-    Table& create_child(const std::string& in_name);
+    Table* create_child(const std::string& in_name);
 
     void remove_last_child();
 
@@ -43,12 +39,12 @@ struct Table {
 
 private:
     std::vector<Table>  children_scopes;
-    SymbolMap*          symbols;
+    SymbolMap           symbols;
 };
 
 class SemanticAnalyzer {
-    Table global_symbol_table = Table("global_scope", nullptr);
-    Table symbol_table = global_symbol_table;
+    Table* global_symbol_table = new Table("global_scope", nullptr);
+    Table* symbol_table = global_symbol_table;
     std::vector<Error> errors;
 public:
     SemanticAnalyzer(std::vector<Error>& in_errors) : errors(in_errors) {}
