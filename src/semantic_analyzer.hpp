@@ -53,9 +53,9 @@ public:
     bool analizeFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function);
     bool analizeVarDef(const AstNode* in_node, const bool is_global);
 
-private:
     bool analizeExpr(const AstNode* in_expr);
     void check_type(const AstNode* type_node0, const AstNode* type_node1);
 
+private:
     void add_semantic_error(const AstNode* in_node, const char* in_msg, ...);
 };
