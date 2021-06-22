@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include "error.hpp"
 
-struct AstFuncProto;
 struct AstFuncDef;
 struct AstBlock;
 struct AstNode;
@@ -15,29 +14,41 @@ enum class SymbolType {
 };
 
 struct Symbol {
-    const std::string& name;
-    const SymbolType  type;
+    const std::string&  name;
+    const SymbolType    type;
+    const AstNode*      data_node;
 
-    Symbol(const std::string& in_name, const SymbolType in_type)
-        : name(in_name), type(in_type) {}
+    Symbol(const std::string&in_name, const SymbolType in_type, const AstNode* in_data)
+        : name(in_name), type(in_type), data_node(in_data) {}
 };
 
 struct Table {
-    std::string                             name;
-    std::vector<Table>                      children_scopes;
-    std::unordered_map<std::string, Symbol> symbols;
+    using SymbolMap = std::unordered_map<std::string, Symbol>;
 
-    Table(const std::string& in_name) : name(in_name) {}
+    Table*      parent;
+    std::string name;
+    
 
-    void add_child(Table& in_child);
+    Table(const std::string& in_name, Table* in_parent) : parent(in_parent), name(in_name), symbols(new SymbolMap()){}
+
+    virtual ~Table() {
+        delete symbols;
+    }
+
+    Table& create_child(const std::string& in_name);
 
     void remove_last_child();
 
-    void add_symbol(const std::string& in_name, const SymbolType in_type);
+    void add_symbol(const std::string& in_name, const SymbolType in_type, const AstNode* in_data);
+
+private:
+    std::vector<Table>  children_scopes;
+    SymbolMap*          symbols;
 };
 
 class SemanticAnalyzer {
-    Table symbol_table = Table("global_scope");
+    Table global_symbol_table = Table("global_scope", nullptr);
+    Table symbol_table = global_symbol_table;
     std::vector<Error> errors;
 public:
     SemanticAnalyzer(std::vector<Error>& in_errors) : errors(in_errors) {}

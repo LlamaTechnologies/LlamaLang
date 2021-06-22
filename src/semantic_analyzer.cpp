@@ -8,27 +8,18 @@ static bool is_ret_stmnt(const AstNode* stmnt);
 static const AstNode* get_expr_type(const AstNode* expr);
 static std::unordered_map<const AstNode*, const AstNode*> cached_expr_types;
 
-/*
-Table* Table::get_parent() {
-    return parent;
-}
 
 Table& Table::create_child(const std::string& in_name) {
     return children_scopes.emplace_back(in_name, this);
-}
-*/
-
-void Table::add_child(Table& in_child) {
-    children_scopes.push_back(in_child);
 }
 
 void Table::remove_last_child() {
     children_scopes.erase(children_scopes.end());
 }
 
-void Table::add_symbol(const std::string& in_name, const SymbolType in_type) {
-    Symbol symbol = Symbol(in_name, in_type);
-    symbols.emplace(in_name, symbol);
+void Table::add_symbol(const std::string& in_name, const SymbolType in_type, const AstNode* in_data) {
+    Symbol symbol = Symbol(in_name, in_type, in_data);
+    symbols->emplace(in_name, symbol);
 }
 
 bool SemanticAnalyzer::analizeFuncProto(const AstNode* in_proto_node) {
@@ -45,9 +36,8 @@ bool SemanticAnalyzer::analizeFuncProto(const AstNode* in_proto_node) {
 
     auto str_name = std::string(func_proto.name);
 
-    symbol_table.add_symbol(str_name, SymbolType::FUNCTION);
-
-    // symbol_table = symbol_table.create_child(std::string(func_proto.name));
+    symbol_table.add_symbol(str_name, SymbolType::FUNCTION, in_proto_node);
+    symbol_table = symbol_table.create_child(std::string(func_proto.name));
 
     return true;
 }
@@ -85,7 +75,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
             return false;
         }
 
-        //global_symbol_table.add_symbol(var_name, SymbolType::VARIABLE, in_node);
+        global_symbol_table.add_symbol(var_name, SymbolType::VARIABLE, in_node);
 
         return true;
     }
@@ -98,7 +88,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
         return false;
     }
     
-    symbol_table.add_symbol(var_name, SymbolType::VARIABLE);
+    symbol_table.add_symbol(var_name, SymbolType::VARIABLE, in_node);
 
     return true;
 }
