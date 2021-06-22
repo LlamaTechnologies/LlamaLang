@@ -42,12 +42,13 @@ class SemanticAnalyzer {
 public:
     SemanticAnalyzer(std::vector<Error>& in_errors) : errors(in_errors) {}
 
-    bool analizeFuncProto(const AstFuncProto& in_func_proto, AstFuncDef* in_function);
+    bool analizeFuncProto(const AstNode* in_func_proto);
     bool analizeFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function);
     bool analizeVarDef(const AstNode* in_node, const bool is_global);
 
 private:
     bool analizeExpr(const AstNode* in_expr);
+    void check_type(const AstNode* type_node0, const AstNode* type_node1);
 
     void add_semantic_error(const AstNode* in_node, const char* in_msg, ...);
 };

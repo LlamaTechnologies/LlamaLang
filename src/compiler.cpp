@@ -11,11 +11,11 @@ void compiler::compile(const std::string& in_output_directory, const std::string
     for (auto child : in_source_code_node->source_code.children) {
         switch (child->node_type) {
         case AstNodeType::AstFuncDef:
-            if (analyzer.analizeFuncProto(child->function_def.proto->function_proto, &child->function_def))
+            if (analyzer.analizeFuncProto(child->function_def.proto))
                 generator.generateFuncProto(child->function_def.proto->function_proto, &child->function_def);
             break;
         case AstNodeType::AstFuncProto:
-            if (analyzer.analizeFuncProto(child->function_proto, nullptr))
+            if (analyzer.analizeFuncProto(child))
                 generator.generateFuncProto(child->function_proto, nullptr);
             break;
         case AstNodeType::AstVarDef:

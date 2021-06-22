@@ -31,8 +31,7 @@ void Table::add_symbol(const std::string& in_name, const SymbolType in_type) {
     symbols.emplace(in_name, symbol);
 }
 
-bool SemanticAnalyzer::analizeFuncProto(const AstFuncProto& in_func_proto, AstFuncDef* in_function)/*(const AstNode* in_proto_node)*/ {
-    /*
+bool SemanticAnalyzer::analizeFuncProto(const AstNode* in_proto_node) {
     assert(in_proto_node != nullptr);
     assert(in_proto_node->node_type == AstNodeType::AstFuncProto);
 
@@ -49,7 +48,6 @@ bool SemanticAnalyzer::analizeFuncProto(const AstFuncProto& in_func_proto, AstFu
     symbol_table.add_symbol(str_name, SymbolType::FUNCTION);
 
     // symbol_table = symbol_table.create_child(std::string(func_proto.name));
-    */
 
     return true;
 }
@@ -109,7 +107,6 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
     return false;
 }
 
-/*
 void SemanticAnalyzer::check_type(const AstNode* type_node0, const AstNode* type_node1) {
     assert(type_node0 != nullptr);
     assert(type_node1 != nullptr);
@@ -151,7 +148,6 @@ void SemanticAnalyzer::check_type(const AstNode* type_node0, const AstNode* type
 
     add_semantic_error(type_node0, ERROR_TYPES_MISMATCH);
 }
-*/
 
 void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in_msg, ...) {
     va_list ap, ap2;
