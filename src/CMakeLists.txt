@@ -42,6 +42,8 @@ parser.cpp
 
 semantic_analyzer.hpp
 semantic_analyzer.cpp
+
+semantic_error_msgs.hpp
 )
 
 # Engine executable name
