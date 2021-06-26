@@ -144,3 +144,37 @@ TEST(SemanticTypes, Float) {
     ASSERT_EQ(errors.size(), 0L);
 }
 
+//==================================================================================
+//          SEMANTIC VARIABLES DEFINITION
+//==================================================================================
+
+TEST(SemanticVariableDefinitions, GlobalVariable) {
+    std::vector<Error> errors;
+
+    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
+    i32_type_node->ast_type.type_id = AstTypeId::Integer;
+    i32_type_node->ast_type.type_info = new TypeInfo();
+    i32_type_node->ast_type.type_info->bit_size = 32;
+    i32_type_node->ast_type.type_info->is_signed = true;
+    i32_type_node->ast_type.type_info->name = "i32";
+
+    BigInt integer_value;
+    bigint_init_signed(&integer_value, 0L);
+
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+    const_value_node->const_value.integer = integer_value;
+
+    auto var_def_node= new AstNode(AstNodeType::AstVarDef, 0, 0, "");
+    var_def_node->var_def.type = i32_type_node;
+    var_def_node->var_def.name = "global_var";
+    var_def_node->var_def.initializer = const_value_node;
+
+
+    SemanticAnalyzer analizer(errors);
+    bool is_valid = analizer.analizeVarDef(var_def_node, true);
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(is_valid, true);
+}
+

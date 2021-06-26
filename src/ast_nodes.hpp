@@ -127,6 +127,7 @@ enum class UnaryExprType {
     INC,    // ++  primaryExpr
     DEC,    // --  primaryExpr
     NEG,    // -   primaryExpr
+    NOT,    // !   primaryExpr
     BIT_INV,// ~   primaryExpr
     RET     // ret Expr
 };

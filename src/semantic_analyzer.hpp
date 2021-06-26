@@ -16,7 +16,7 @@ enum class SymbolType {
 struct Symbol {
     const std::string&  name;
     const SymbolType    type;
-    const AstNode*      data_node;
+    const AstNode* const      data_node;
 
     Symbol(const std::string&in_name, const SymbolType in_type, const AstNode* in_data)
         : name(in_name), type(in_type), data_node(in_data) {}
@@ -32,6 +32,10 @@ struct Table {
     Table(const std::string& in_name, Table* in_parent) : parent(in_parent), name(in_name) {}
 
     Table* create_child(const std::string& in_name);
+
+    bool has_child(const std::string& in_name);
+
+    const Symbol& get_child(const std::string& in_name);
 
     void remove_last_child();
 
@@ -49,13 +53,34 @@ class SemanticAnalyzer {
 public:
     SemanticAnalyzer(std::vector<Error>& in_errors) : errors(in_errors) {}
 
+    /* Returns true. */
     bool analizeFuncProto(const AstNode* in_func_proto);
+
+    /* Returns true if all statements are OK. */
     bool analizeFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function);
+    
+    /* Returns true if:
+     * - global variable has initializer.
+     * - initializer expr is compatible with variable's type.
+     * - variable is not shadowing another in the same scope.
+     */
     bool analizeVarDef(const AstNode* in_node, const bool is_global);
 
+    /* Returns true if:
+    * - all refered variables had been defined
+    * - all constants types are valid to be in the same operation
+    */
     bool analizeExpr(const AstNode* in_expr);
+
+    /* IMPORTANT: DO NOT CALL THIS METHOD | IT SHOULD BE PRIVATE BUT GTEST NEED ACCESS TO IT 
+    * NOTE: if they dont match an error is pushed to the error vector.
+    */
     void check_type(const AstNode* type_node0, const AstNode* type_node1);
 
 private:
+    const AstNode* get_expr_type(const AstNode* expr);
+
+    const AstNode* resolve_function(const std::string& in_name);
+
     void add_semantic_error(const AstNode* in_node, const char* in_msg, ...);
 };

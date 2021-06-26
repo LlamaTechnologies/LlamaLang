@@ -1,16 +1,25 @@
 #include "semantic_analyzer.hpp"
 #include "semantic_error_msgs.hpp"
 #include "ast_nodes.hpp"
+#include "Types.hpp"
+#include "common_defs.hpp"
 #include <stdarg.h>
 
 static bool is_ret_stmnt(const AstNode* stmnt);
 
-static const AstNode* get_expr_type(const AstNode* expr);
-static std::unordered_map<const AstNode*, const AstNode*> cached_expr_types;
-
-
 Table* Table::create_child(const std::string& in_name) {
     return &children_scopes.emplace_back(in_name, this);
+}
+
+bool Table::has_child(const std::string& in_name) {
+    return symbols.find(in_name) != symbols.end();
+}
+
+const Symbol& Table::get_child(const std::string& in_name) {
+#ifdef LL_DEBUG
+    if (has_child(in_name))
+#endif
+        return symbols.at(in_name);
 }
 
 void Table::remove_last_child() {
@@ -139,6 +148,19 @@ void SemanticAnalyzer::check_type(const AstNode* type_node0, const AstNode* type
     add_semantic_error(type_node0, ERROR_TYPES_MISMATCH);
 }
 
+const AstNode* SemanticAnalyzer::resolve_function(const std::string& in_name) {
+    auto curr_table = symbol_table;
+    do {
+        if (curr_table->has_child(in_name)) {
+            const Symbol& symbol = curr_table->get_child(in_name);
+            return symbol.data_node;
+        }
+        curr_table = curr_table->parent;
+    } while (curr_table);
+
+    return nullptr;
+}
+
 void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in_msg, ...) {
     va_list ap, ap2;
     va_start(ap, in_msg);
@@ -161,15 +183,42 @@ void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in
         in_node->file_name, msg);
 }
 
-bool is_ret_stmnt(const AstNode* stmnt) {
-    return stmnt->node_type == AstNodeType::AstUnaryExpr && stmnt->unary_expr.op == UnaryExprType::RET;
+const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
+    // TODO(pablo96): get expr type
+    switch (expr->node_type) {
+    case AstNodeType::AstBinaryExpr:
+        auto bin_expr = expr->binary_expr;
+        switch (bin_expr.bin_op) {
+        case BinaryExprType::ASSIGN:
+            return get_expr_type(bin_expr.op2);
+        case BinaryExprType::EQUALS:
+        case BinaryExprType::NOT_EQUALS:
+        case BinaryExprType::GREATER:
+        case BinaryExprType::LESS:
+        case BinaryExprType::GREATER_OR_EQUALS:
+        case BinaryExprType::LESS_OR_EQUALS:
+            return get_type_node("bool");
+        default:
+
+        }
+    case AstNodeType::AstUnaryExpr:
+        auto unary_expr = expr->unary_expr;
+        switch (unary_expr.op) {
+        case UnaryExprType::NOT:
+            return get_type_node("bool");
+        default:
+            return get_expr_type(unary_expr.expr);
+        }
+    case AstNodeType::AstFuncCallExpr:
+        auto func_node = resolve_function(std::string(expr->func_call.fn_name));
+        return get_expr_type(func_node);
+    default:
+        break;
+    }
+    return nullptr;
 }
 
-const AstNode* get_expr_type(const AstNode* expr) {
-    if (cached_expr_types.find(expr) != cached_expr_types.end()) {
-        return cached_expr_types.at(expr);
-    }
-    // TODO(pablo96): get expr type
-    return nullptr;
+bool is_ret_stmnt(const AstNode* stmnt) {
+    return stmnt->node_type == AstNodeType::AstUnaryExpr && stmnt->unary_expr.op == UnaryExprType::RET;
 }
 
