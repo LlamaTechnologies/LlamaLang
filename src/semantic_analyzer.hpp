@@ -72,15 +72,12 @@ public:
     */
     bool analizeExpr(const AstNode* in_expr);
 
-    /* IMPORTANT: DO NOT CALL THIS METHOD | IT SHOULD BE PRIVATE BUT GTEST NEED ACCESS TO IT 
-    * NOTE: if they dont match an error is pushed to the error vector.
-    */
-    void check_type(const AstNode* type_node0, const AstNode* type_node1);
-
 private:
+    bool check_type_compat(const AstNode* type_node0, const AstNode* type_node1, const AstNode* expr_node);
+
     const AstNode* get_expr_type(const AstNode* expr);
 
-    const AstNode* resolve_function(const std::string& in_name);
+    const AstNode* resolve_function_variable(const std::string& in_name);
 
     void add_semantic_error(const AstNode* in_node, const char* in_msg, ...);
 };

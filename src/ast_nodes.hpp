@@ -75,6 +75,7 @@ struct AstVarDef {
 
 struct AstSymbol {
     const Token* token;
+    std::string_view cached_name;
 };
 
 enum class ConstValueType {

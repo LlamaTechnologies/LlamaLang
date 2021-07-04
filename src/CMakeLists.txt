@@ -2,9 +2,9 @@ set(EXEC_NAME ${CMAKE_PROJECT_NAME})
 set(LIB_NAME ${EXEC_NAME}_lib)
 
 # set output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/engine")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/engine")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/engine")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 # set llang sources
 set(LLAMALANG_SRC
@@ -44,6 +44,9 @@ semantic_analyzer.hpp
 semantic_analyzer.cpp
 
 semantic_error_msgs.hpp
+
+types.hpp
+types.cpp
 )
 
 # Engine executable name

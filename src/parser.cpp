@@ -13,7 +13,6 @@ static bool is_type_start_token(const Token& token) noexcept;
 static bool is_expr_token(const Token& token) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
-static AstTypeId get_type_id(std::string_view in_name, TypeInfo** info) noexcept;
 
 //  ('=='|'!=' | '!' | '>=' | '<=' | '<' | '>')
 #define COMPARATIVE_OPERATOR \

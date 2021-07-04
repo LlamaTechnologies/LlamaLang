@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 static bool is_ret_stmnt(const AstNode* stmnt);
+static const AstNode* get_best_type(const AstNode* type_node0, const AstNode* type_node1);
 
 Table* Table::create_child(const std::string& in_name) {
     return &children_scopes.emplace_back(in_name, this);
@@ -20,6 +21,9 @@ const Symbol& Table::get_child(const std::string& in_name) {
     if (has_child(in_name))
 #endif
         return symbols.at(in_name);
+#ifdef LL_DEBUG
+    UNREACHEABLE;
+#endif
 }
 
 void Table::remove_last_child() {
@@ -59,10 +63,11 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock& in_func_block, AstFuncDe
     for (auto stmnt : in_func_block.statements) {
         if (is_ret_stmnt(stmnt)) {
             auto expr_type = get_expr_type(stmnt->unary_expr.expr);
-            //check_type(expr_type, ret_type);
-        }
-        if (stmnt->node_type == AstNodeType::AstVarDef) {
+            check_type_compat(expr_type, ret_type, stmnt);
+        } else if (stmnt->node_type == AstNodeType::AstVarDef) {
             analizeVarDef(stmnt, false);
+        } else {
+            analizeExpr(stmnt);
         }
     }
 
@@ -78,6 +83,12 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
     const AstVarDef& var_def = in_node->var_def;
     auto var_name = std::string(var_def.name);
 
+    if (var_def.initializer) {
+        auto expr_type = get_expr_type(var_def.initializer);
+        if (!check_type_compat(var_def.type, expr_type, in_node))
+            return false;
+    }
+
     if (is_global) {
         if (!var_def.initializer) {
             add_semantic_error(in_node, ERROR_GLOBAL_NEED_INITIALIZER, var_def.name);
@@ -89,66 +100,40 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
         return true;
     }
 
-
-    /* Local variable */
-
-    if (var_def.initializer) {
-        // TODO: check assign types
-        return false;
-    }
-    
     symbol_table->add_symbol(var_name, SymbolType::VARIABLE, in_node);
 
     return true;
 }
 
 bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
-    return false;
+        switch (in_expr->node_type) {
+        case AstNodeType::AstBinaryExpr: {
+            auto bin_expr = in_expr->binary_expr;
+            // TODO (pablo96): add special case for assignment
+            return analizeExpr(bin_expr.op1) && analizeExpr(bin_expr.op2);
+        }
+        case AstNodeType::AstUnaryExpr: {
+            auto unary_expr = in_expr->unary_expr;
+            // TODO (pablo96): check if expr type is a number or bool
+            return analizeExpr(unary_expr.expr);
+        }
+        case AstNodeType::AstFuncCallExpr: {
+            return resolve_function_variable(std::string(in_expr->func_call.fn_name)) != nullptr;
+        }
+        case AstNodeType::AstSymbol: {
+            auto name = std::string(in_expr->symbol.cached_name);
+            return resolve_function_variable(name) != nullptr;
+        }
+        case AstNodeType::AstConstValue: {
+            return true;
+        }
+        default:
+            UNREACHEABLE;
+        }
+        return false;
 }
 
-void SemanticAnalyzer::check_type(const AstNode* type_node0, const AstNode* type_node1) {
-    assert(type_node0 != nullptr);
-    assert(type_node1 != nullptr);
-    assert(type_node0->node_type == AstNodeType::AstType);
-    assert(type_node1->node_type == AstNodeType::AstType);
-
-    const AstType& type0 = type_node0->ast_type;
-    const AstType& type1 = type_node1->ast_type;
-
-    if (type1.type_id == type0.type_id) {
-        if (type1.type_id == AstTypeId::Void || type1.type_id == AstTypeId::Bool) {
-            return;
-        }
-
-        if (type1.type_id == AstTypeId::Pointer || type1.type_id == AstTypeId::Array) {
-            check_type(type0.child_type, type1.child_type);
-            return;
-        }
-        else {
-            switch (type1.type_id) {
-            case AstTypeId::Integer:
-                if (type1.type_info->bit_size != type0.type_info->bit_size) {
-                    add_semantic_error(type_node0, ERROR_TYPES_SIZE_MISMATCH);
-                }
-                if (type1.type_info->is_signed != type0.type_info->is_signed) {
-                    add_semantic_error(type_node0, ERROR_INTEGERS_SIGN_MISMATCH);
-                }
-                return;
-            case AstTypeId::FloatingPoint:
-                if (type1.type_info->bit_size != type0.type_info->bit_size) {
-                    add_semantic_error(type_node0, ERROR_TYPES_SIZE_MISMATCH);
-                }
-                return;
-            default:
-                UNREACHEABLE;
-            }
-        }
-    }
-
-    add_semantic_error(type_node0, ERROR_TYPES_MISMATCH);
-}
-
-const AstNode* SemanticAnalyzer::resolve_function(const std::string& in_name) {
+const AstNode* SemanticAnalyzer::resolve_function_variable(const std::string& in_name) {
     auto curr_table = symbol_table;
     do {
         if (curr_table->has_child(in_name)) {
@@ -183,14 +168,44 @@ void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in
         in_node->file_name, msg);
 }
 
+bool SemanticAnalyzer::check_type_compat(const AstNode* type_node0, const AstNode* type_node1, const AstNode* expr_node) {
+    assert(type_node0 != nullptr);
+    assert(type_node1 != nullptr);
+    assert(type_node0->node_type == AstNodeType::AstType);
+    assert(type_node1->node_type == AstNodeType::AstType);
+    assert(expr_node->node_type != AstNodeType::AstType);
+
+    const AstType& type0 = type_node0->ast_type;
+    const AstType& type1 = type_node1->ast_type;
+
+    if (type1.type_id == type0.type_id) {
+        return true;
+        if (type1.type_id == AstTypeId::Pointer || type1.type_id == AstTypeId::Array)
+            return check_type_compat(type0.child_type, type1.child_type, expr_node);
+    }
+
+    // incompatible types
+    // void | bool
+    // int  | bool
+    // int  | void
+    // int  | float
+    // int  | pointer
+    // int  | array
+    // float| bool
+    // float| void
+    // float| array
+    // float| pointer
+    // array| pointer
+    add_semantic_error(expr_node, ERROR_TYPES_MISMATCH);
+
+    return false;
+}
+
 const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
-    // TODO(pablo96): get expr type
     switch (expr->node_type) {
-    case AstNodeType::AstBinaryExpr:
+    case AstNodeType::AstBinaryExpr: {
         auto bin_expr = expr->binary_expr;
         switch (bin_expr.bin_op) {
-        case BinaryExprType::ASSIGN:
-            return get_expr_type(bin_expr.op2);
         case BinaryExprType::EQUALS:
         case BinaryExprType::NOT_EQUALS:
         case BinaryExprType::GREATER:
@@ -199,9 +214,15 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
         case BinaryExprType::LESS_OR_EQUALS:
             return get_type_node("bool");
         default:
-
+            auto type0 = get_expr_type(bin_expr.op1);
+            auto type1 = get_expr_type(bin_expr.op2);
+            if (check_type_compat(type0, type1, expr))
+                return get_best_type(type0, type1);
+            return nullptr;
         }
-    case AstNodeType::AstUnaryExpr:
+        UNREACHEABLE;
+    }
+    case AstNodeType::AstUnaryExpr: {
         auto unary_expr = expr->unary_expr;
         switch (unary_expr.op) {
         case UnaryExprType::NOT:
@@ -209,16 +230,74 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
         default:
             return get_expr_type(unary_expr.expr);
         }
-    case AstNodeType::AstFuncCallExpr:
-        auto func_node = resolve_function(std::string(expr->func_call.fn_name));
-        return get_expr_type(func_node);
-    default:
-        break;
     }
-    return nullptr;
+    case AstNodeType::AstFuncCallExpr: {
+        auto func_node = resolve_function_variable(std::string(expr->func_call.fn_name));
+        return get_expr_type(func_node);
+    }
+    case AstNodeType::AstFuncDef: {
+        auto proto_node = expr->function_def.proto->function_proto;
+        return proto_node.return_type;
+    }
+    case AstNodeType::AstFuncProto: {
+        auto proto_node = expr->function_proto;
+        return proto_node.return_type;
+    }
+    case AstNodeType::AstSymbol: {
+        // NOTE (pablo96): should make it posible to resolve function names as func pointers
+        auto name = std::string(expr->symbol.cached_name);
+        auto var_node = resolve_function_variable(name);
+        if (!var_node) {
+            return nullptr;
+        }
+        if (var_node->node_type == AstNodeType::AstVarDef) {
+            return var_node->var_def.type;
+        }
+        if (var_node->node_type == AstNodeType::AstFuncDef) {
+            return var_node->function_def.proto->function_proto.return_type;
+        }
+        if (var_node->node_type == AstNodeType::AstFuncProto) {
+            return var_node->function_proto.return_type;
+        }
+        UNREACHEABLE;
+    }
+    case AstNodeType::AstConstValue: {
+        auto const_value = expr->const_value;
+        switch (const_value.type) {
+        case ConstValueType::FLOAT:
+            return get_type_node("f128");
+        case ConstValueType::INT:
+            if (const_value.integer.is_negative)
+                return get_type_node("i128");
+            return get_type_node("u128");
+        case ConstValueType::CHAR:
+            return get_type_node("u32");
+        default:
+            UNREACHEABLE;
+        }
+    }
+    default:
+        UNREACHEABLE;
+    }
 }
 
 bool is_ret_stmnt(const AstNode* stmnt) {
     return stmnt->node_type == AstNodeType::AstUnaryExpr && stmnt->unary_expr.op == UnaryExprType::RET;
+}
+
+const AstNode* get_best_type(const AstNode* type_node0, const AstNode* type_node1) {
+    assert(type_node0 != nullptr);
+    assert(type_node1 != nullptr);
+    assert(type_node0->node_type == AstNodeType::AstType);
+    assert(type_node1->node_type == AstNodeType::AstType);
+
+    const AstType& type0 = type_node0->ast_type;
+    const AstType& type1 = type_node1->ast_type;
+
+    if (type1.type_id == AstTypeId::Pointer || type1.type_id == AstTypeId::Array) {
+        return get_best_type(type0.child_type, type1.child_type);
+    }
+    
+    return type0.type_info->bit_size > type1.type_info->bit_size ? type_node0 : type_node1;
 }
 
