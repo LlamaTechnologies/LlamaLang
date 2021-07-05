@@ -1,1 +1,1 @@
-if exist "../../project" del -f -r "../../project"
+if exist "../../project" rd /s /q "../../project"
