@@ -35,6 +35,7 @@
 /bin/Debug
 /bin/Release
 /project
+/build
 /cmake-build-debug
 /.antlr4
 /.antlr
