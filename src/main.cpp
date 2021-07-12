@@ -1,6 +1,8 @@
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <filesystem>
+#include <stddef.h> // size_t
 #include "console.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"

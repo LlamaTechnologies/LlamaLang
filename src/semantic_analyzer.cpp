@@ -244,7 +244,7 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
         return proto_node.return_type;
     }
     case AstNodeType::AstSymbol: {
-        // NOTE (pablo96): should make it posible to resolve function names as func pointers
+        // TODO(pablo96): should make it posible to resolve function names as func pointers
         auto name = std::string(expr->symbol.cached_name);
         auto var_node = resolve_function_variable(name);
         if (!var_node) {

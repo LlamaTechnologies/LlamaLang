@@ -124,5 +124,8 @@ ipch/
 # astyle backup
 *.orig
 
+bin/*
+
 #Except
 !/scripts/windows/*.exe
+!/bin/README.md

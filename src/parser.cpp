@@ -153,7 +153,7 @@ AstNode* Parser::parse_function_def() noexcept {
     lexer.get_back();
     auto func_prot_node = parse_function_proto();
     if (!func_prot_node) {
-        // TODO(pablo96): Handle error
+        // TODO(pablo96): handle error
         return nullptr;
     }
 
@@ -166,7 +166,7 @@ AstNode* Parser::parse_function_def() noexcept {
     lexer.get_back();
     auto block_node = parse_block();
     if (!block_node) {
-        // TODO(pablo96): Handle error
+        // TODO(pablo96): handle error
         delete func_prot_node;
         return nullptr;
     }
@@ -200,8 +200,7 @@ AstNode* Parser::parse_function_proto() noexcept {
     {
         const Token& func_name_token = lexer.get_next_token();
         if (func_name_token.id != TokenId::IDENTIFIER) {
-            // TODO(pablo96): Handle error
-            // UNEXPECTED TOKEN
+            // TODO(pablo96): handle error | UNEXPECTED TOKEN
             delete func_prot_node;
             return nullptr;
         }
@@ -212,8 +211,7 @@ AstNode* Parser::parse_function_proto() noexcept {
     {
         const Token& l_paren_token = lexer.get_next_token();
         if (l_paren_token.id != TokenId::L_PAREN) {
-            // TODO(pablo96): Handle error
-            // UNEXPECTED TOKEN
+            // TODO(pablo96): handle error | UNEXPECTED TOKEN
             return nullptr;
             delete func_prot_node;
         }
@@ -239,7 +237,7 @@ AstNode* Parser::parse_function_proto() noexcept {
             lexer.get_back();
             auto param_node = parse_param_decl();
             if (!param_node) {
-                // TODO(pablo96): Handle error
+                // TODO(pablo96): handle error
                 delete func_prot_node;
                 return nullptr;
             }
@@ -255,8 +253,7 @@ AstNode* Parser::parse_function_proto() noexcept {
         const Token& ret_type_token = lexer.get_next_token();
 
         if (!is_type_start_token(ret_type_token)) {
-            // TODO(pablo96): Handle error
-            // UNEXPECTED TOKEN
+            // TODO(pablo96): handle error | UNEXPECTED TOKEN
             delete func_prot_node;
             return nullptr;
         }
@@ -264,7 +261,7 @@ AstNode* Parser::parse_function_proto() noexcept {
         lexer.get_back();
         ret_type_node = parse_type();
         if (!ret_type_node) {
-            // TODO(pablo96): Handle error
+            // TODO(pablo96): handle error
             delete func_prot_node;
             return nullptr;
         }
@@ -293,8 +290,7 @@ AstNode* Parser::parse_param_decl() noexcept {
     AstNode* type_node = parse_type();
 
     if (!type_node) {
-        // TODO(pablo96): Handle error
-        // wrong expression expected type name
+        // TODO(pablo96): handle error | wrong expression expected type name
         return nullptr;
     }
 
@@ -406,7 +402,7 @@ AstNode* Parser::parse_statement() noexcept {
         lexer.get_back();
         return parse_ret_stmnt();
     case TokenId::L_CURLY:
-        // TODO(pablo96): block
+        // TODO(pablo96): parse block
         return nullptr;
     case TokenId::SEMI:
         // empty_statement
@@ -436,8 +432,7 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
     AstNode* type_node = parse_type();
         
     if (!type_node) {
-        // TODO(pablo96): Handle error
-        // wrong expression expected type name
+        // TODO(pablo96): handle error | wrong expression expected type name
         return nullptr;
     }
 
@@ -452,7 +447,7 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
         identifier_node->symbol.token = &token_symbol_name;
         auto expr = parse_expr();
         if (!expr) {
-            //TODO(pablo96): error in unary_expr => sync parsing
+            //TODO(pablo96): handle error in unary_expr => sync parsing
             return nullptr;
         }
 
@@ -944,8 +939,7 @@ AstNode* Parser::parse_function_call() noexcept {
         lexer.get_back();
         auto expr = parse_expr();
         if (!expr) {
-            //TODO(pablo96): Handle error
-            // find a comma or rparen
+            //TODO(pablo96): handle error | find a comma or rparen
             continue;
         }
         expr->parent = func_call_node;
@@ -979,8 +973,8 @@ AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexce
 }
 
 bool Parser::is_new_line_between(const size_t start_pos, const size_t end_pos) {
-    auto start_it = lexer.source.begin();
-    auto str_view = std::string_view(start_it + start_pos, start_it + end_pos);
+    auto start_it = lexer.source.data();
+    auto str_view = std::string_view(start_it + start_pos, end_pos);
 
     return str_view.find_first_of('\n') != str_view.npos;
 }
@@ -989,31 +983,32 @@ bool Parser::is_forbiden_statement(const Token& token) noexcept {
     switch (token.id) {
     case TokenId::ASSIGN: {
         // IDENTIFIER = ...
-        // TODO: Wrong place for assingment
+        // TODO(pablo96): Wrong place for assingment
         return true;
     }
     case TokenId::L_PAREN: {
         // IDENTIFIER(...
-        // TODO: Wrong place for function call
+        // TODO(pablo96): Wrong place for function call
         return true;
     }
     case COMPARATIVE_OPERATOR: {
         // IDENTIFIER ==...
-        // TODO: Wrong place for comparative expr
+        // TODO(pablo96): Wrong place for comparative expr
         return true;
     }
     case ARITHMETIC_OPERATOR: {
         // IDENTIFIER +...
-        // TODO: Wrong place for arithmetic expr
+        // TODO(pablo96): Wrong place for arithmetic expr
         return true;
     }
     case BITWISE_OPERATOR: {
         // IDENTIFIER &...
-        // TODO: Wrong place for bitwise expr
+        // TODO(pablo96): Wrong place for bitwise expr
         return true;
     }
+    default:
+        return false;
     }
-    return false;
 }
 
 BinaryExprType get_binary_op(const Token& token) noexcept {

@@ -79,7 +79,7 @@ TEST(LexerSadKeywordsTests, KeywordOrUpperCaseTest) {
 //          OPERATORS
 //==================================================================================
 
-/* TODO: implement this functionality
+/* TODO(pablo96): implement forbiden operators
 TEST(LexerHappyOperatorsTests, ForbiddenOperatorsTest) {
     std::vector<Error> errors;
     Lexer lexer("## %% ||| &&& === +++ --- ** /// ++= --= **= %%= ^^ ~~ <<< >>> >>< <<> <>< ><>",
@@ -191,7 +191,7 @@ TEST(LexerSadIntegerTests, IntegerSignSpecInvalidTypeSpecTest) {
 //          FLOAT LIT
 //==================================================================================
 
-// TODO: 
+// TODO(pablo96): float literal parsing
 
 //==================================================================================
 //          STRING | CHARS

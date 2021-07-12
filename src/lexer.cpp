@@ -1102,7 +1102,7 @@ void Lexer::get_back() const noexcept
 
 std::string_view Lexer::get_token_value(const Token& token) const noexcept
 {
-    return std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos + 1);
+    return std::string_view(source.data() + token.start_pos, token.end_pos + 1);
 }
 
 void Lexer::begin_token(const TokenId id) noexcept
@@ -1228,7 +1228,7 @@ static std::unordered_map<std::string_view, TokenId> keywords = {
 
 void Lexer::is_keyword() noexcept
 {
-    auto value = std::string_view(source.begin() + curr_token.start_pos, source.begin() + curr_token.end_pos + 1);
+    auto value = std::string_view(source.data() + curr_token.start_pos, curr_token.end_pos + 1);
     if (keywords.find(value) != keywords.end()) {
         set_token_id(keywords.at(value));
     }
@@ -1402,7 +1402,7 @@ std::string create_values_line(const std::string& source, const size_t start, co
 
         std::string value;
         auto& token = tokens.at(j);
-        auto token_value = std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos + 1);
+        auto token_value = std::string_view(source.data() + token.start_pos, token.end_pos + 1);
 
         if (token.id == TokenId::DOC_COMMENT) {
             
