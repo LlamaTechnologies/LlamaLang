@@ -179,9 +179,12 @@ bool SemanticAnalyzer::check_type_compat(const AstNode* type_node0, const AstNod
     const AstType& type1 = type_node1->ast_type;
 
     if (type1.type_id == type0.type_id) {
-        return true;
         if (type1.type_id == AstTypeId::Pointer || type1.type_id == AstTypeId::Array)
             return check_type_compat(type0.child_type, type1.child_type, expr_node);
+        if (type0.type_id == AstTypeId::Struct)
+            // NOTE: Structs No Supported 
+            UNREACHEABLE;
+        return true;
     }
 
     // incompatible types

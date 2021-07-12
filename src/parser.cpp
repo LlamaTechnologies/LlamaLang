@@ -974,7 +974,8 @@ AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexce
 
 bool Parser::is_new_line_between(const size_t start_pos, const size_t end_pos) {
     auto start_it = lexer.source.data();
-    auto str_view = std::string_view(start_it + start_pos, end_pos);
+    auto len = end_pos - start_pos;
+    auto str_view = std::string_view(start_it + start_pos, len);
 
     return str_view.find_first_of('\n') != str_view.npos;
 }

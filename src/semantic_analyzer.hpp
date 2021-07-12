@@ -72,8 +72,8 @@ public:
     */
     bool analizeExpr(const AstNode* in_expr);
 
-private:
     bool check_type_compat(const AstNode* type_node0, const AstNode* type_node1, const AstNode* expr_node);
+private:
 
     const AstNode* get_expr_type(const AstNode* expr);
 

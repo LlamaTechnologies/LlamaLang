@@ -10,6 +10,7 @@
 
 TEST(SemanticTypes, BoolVoid) {
     std::vector<Error> errors;
+    auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
     auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_0->ast_type.type_id = AstTypeId::Bool;
@@ -22,13 +23,15 @@ TEST(SemanticTypes, BoolVoid) {
 
 
     SemanticAnalyzer analizer(errors);
-    analizer.check_type(node_type_0, node_type_1);
+    analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+
 
     ASSERT_EQ(errors.size(), 0L);
 }
 
 TEST(SemanticTypes, StructsUnsuported) {
     std::vector<Error> errors;
+    auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
     auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_0->ast_type.type_id = AstTypeId::Struct;
@@ -42,11 +45,12 @@ TEST(SemanticTypes, StructsUnsuported) {
 
     SemanticAnalyzer analizer(errors);
 
-    ASSERT_DEATH(analizer.check_type(node_type_0, node_type_1), "");
+    ASSERT_DEATH(analizer.check_type_compat(node_type_0, node_type_1, node_expr), "");
 }
 
 TEST(SemanticTypes, Pointer) {
     std::vector<Error> errors;
+    auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
     auto node_child_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_child_type_0->ast_type.type_id = AstTypeId::Integer;
@@ -69,13 +73,14 @@ TEST(SemanticTypes, Pointer) {
     node_type_1->ast_type.child_type = node_child_type_1;
 
     SemanticAnalyzer analizer(errors);
-    analizer.check_type(node_type_0, node_type_1);
+    analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
     ASSERT_EQ(errors.size(), 0L);
 }
 
 TEST(SemanticTypes, Array) {
     std::vector<Error> errors;
+    auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
     
     auto node_child_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_child_type_0->ast_type.type_id = AstTypeId::Integer;
@@ -98,13 +103,14 @@ TEST(SemanticTypes, Array) {
     node_type_1->ast_type.child_type = node_child_type_1;
 
     SemanticAnalyzer analizer(errors);
-    analizer.check_type(node_type_0, node_type_1);
+    analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
     ASSERT_EQ(errors.size(), 0L);
 }
 
 TEST(SemanticTypes, Integer) {
     std::vector<Error> errors;
+    auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
     auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_0->ast_type.type_id = AstTypeId::Integer;
@@ -119,13 +125,14 @@ TEST(SemanticTypes, Integer) {
 
 
     SemanticAnalyzer analizer(errors);
-    analizer.check_type(node_type_0, node_type_1);
+    analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
     ASSERT_EQ(errors.size(), 0L);
 }
 
 TEST(SemanticTypes, Float) {
     std::vector<Error> errors;
+    auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
     auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_0->ast_type.type_id = AstTypeId::FloatingPoint;
@@ -139,7 +146,7 @@ TEST(SemanticTypes, Float) {
     node_type_1->ast_type.type_info->is_signed = false;
 
     SemanticAnalyzer analizer(errors);
-    analizer.check_type(node_type_0, node_type_1);
+    analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
     ASSERT_EQ(errors.size(), 0L);
 }
