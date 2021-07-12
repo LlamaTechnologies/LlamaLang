@@ -12,6 +12,7 @@ lexer/lexer_sad.cpp
 parser/parser_happy_expr.cpp
 parser/parser_happy_stmnts.cpp
 semantic/semantic_happy.cpp
+semantic/semantic_sad.cpp
 "test.cpp"
 )
 

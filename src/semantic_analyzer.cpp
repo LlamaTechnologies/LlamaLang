@@ -166,6 +166,8 @@ void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in
         in_node->line,
         in_node->column,
         in_node->file_name, msg);
+    
+    errors.push_back(error);
 }
 
 bool SemanticAnalyzer::check_type_compat(const AstNode* type_node0, const AstNode* type_node1, const AstNode* expr_node) {
