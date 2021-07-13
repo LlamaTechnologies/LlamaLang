@@ -31,6 +31,7 @@ struct AstFuncCallExpr;
 struct AstBinaryExpr;
 struct AstUnaryExpr;
 
+// IMPORTANT: do not change order of labels!
 enum class DirectiveType {
     Run,
     Load,
@@ -124,6 +125,7 @@ struct AstBinaryExpr {
     AstNode*        op2;
 };
 
+// IMPORTANT: do not change order of labels!
 enum class UnaryExprType {
     INC,    // ++  primaryExpr
     DEC,    // --  primaryExpr
@@ -132,6 +134,8 @@ enum class UnaryExprType {
     BIT_INV,// ~   primaryExpr
     RET     // ret Expr
 };
+
+const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept;
 
 struct AstUnaryExpr {
     UnaryExprType   op;

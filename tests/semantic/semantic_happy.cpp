@@ -258,3 +258,11 @@ TEST(SemanticExpressions, ResolveKnownSymbol) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(is_valid, true);
 }
+
+TEST(SemanticExpressions, UnaryExprBool) {
+
+}
+
+TEST(SemanticExpressions, UnaryExprBool) {
+
+}

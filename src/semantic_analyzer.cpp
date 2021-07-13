@@ -114,7 +114,29 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
         }
         case AstNodeType::AstUnaryExpr: {
             auto unary_expr = in_expr->unary_expr;
-            // TODO (pablo96): check if expr type is a number or bool
+            if (unary_expr.op == UnaryExprType::RET)
+                UNREACHEABLE;
+
+            auto type_node = get_expr_type(unary_expr.expr);
+
+            // Overloading operators is not supported
+            if (type_node->ast_type.type_id == AstTypeId::Struct) {
+                auto operator_symbol = get_unary_op_symbol(unary_expr.op);
+                add_semantic_error(in_expr, ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR, operator_symbol);
+                return false;
+            }
+            // If it is a boolean expr only the NOT operator is valid
+            if (type_node->ast_type.type_id == AstTypeId::Bool && unary_expr.op != UnaryExprType::NOT) {
+                auto operator_symbol = get_unary_op_symbol(unary_expr.op);
+                add_semantic_error(in_expr, ERROR_UNSUPORTED_OP_BOOL_EXPR, operator_symbol);
+                return false;
+            }
+            // If it is not boolean expr the NOT operator is invalid
+            if (type_node->ast_type.type_id != AstTypeId::Bool && unary_expr.op == UnaryExprType::NOT) {
+                add_semantic_error(in_expr, ERROR_UNSUPORTED_OP_NOT_BOOL_EXPR);
+                return false;
+            } 
+
             return analizeExpr(unary_expr.expr);
         }
         case AstNodeType::AstFuncCallExpr: {
