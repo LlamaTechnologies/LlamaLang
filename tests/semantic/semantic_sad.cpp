@@ -148,3 +148,25 @@ TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
     ASSERT_EQ(errors.size(), 1L);
     ASSERT_EQ(is_valid, false);
 }
+
+//==================================================================================
+//          SEMANTIC EXPRESSIONS
+//==================================================================================
+
+TEST(SemanticExpressions, ResolveUnknownSymbol) {
+    // given: symbol node
+    std::string var_name = "global_var";
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = std::string_view(var_name.data(), var_name.size());
+
+    // given: configured analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr
+    bool is_valid = analizer.analizeExpr(symbol_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}

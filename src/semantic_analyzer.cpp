@@ -118,11 +118,11 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
             return analizeExpr(unary_expr.expr);
         }
         case AstNodeType::AstFuncCallExpr: {
-            return resolve_function_variable(std::string(in_expr->func_call.fn_name)) != nullptr;
+            return resolve_function_variable(std::string(in_expr->func_call.fn_name), in_expr) != nullptr;
         }
         case AstNodeType::AstSymbol: {
             auto name = std::string(in_expr->symbol.cached_name);
-            return resolve_function_variable(name) != nullptr;
+            return resolve_function_variable(name, in_expr) != nullptr;
         }
         case AstNodeType::AstConstValue: {
             return true;
@@ -133,7 +133,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
         return false;
 }
 
-const AstNode* SemanticAnalyzer::resolve_function_variable(const std::string& in_name) {
+const AstNode* SemanticAnalyzer::resolve_function_variable(const std::string& in_name, const AstNode* in_parent_node) {
     auto curr_table = symbol_table;
     do {
         if (curr_table->has_child(in_name)) {
@@ -143,6 +143,9 @@ const AstNode* SemanticAnalyzer::resolve_function_variable(const std::string& in
         curr_table = curr_table->parent;
     } while (curr_table);
 
+
+    add_semantic_error(in_parent_node, ERROR_UNKNOWN_SYMBOL, in_name);
+    
     return nullptr;
 }
 
@@ -237,7 +240,7 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
         }
     }
     case AstNodeType::AstFuncCallExpr: {
-        auto func_node = resolve_function_variable(std::string(expr->func_call.fn_name));
+        auto func_node = resolve_function_variable(std::string(expr->func_call.fn_name), expr);
         return get_expr_type(func_node);
     }
     case AstNodeType::AstFuncDef: {
@@ -251,7 +254,7 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
     case AstNodeType::AstSymbol: {
         // TODO(pablo96): should make it posible to resolve function names as func pointers
         auto name = std::string(expr->symbol.cached_name);
-        auto var_node = resolve_function_variable(name);
+        auto var_node = resolve_function_variable(name, expr);
         if (!var_node) {
             return nullptr;
         }

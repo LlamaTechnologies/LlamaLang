@@ -4,3 +4,4 @@ static const char* ERROR_TYPES_SIZE_MISMATCH    = "types size mismatch";
 static const char* ERROR_INTEGERS_SIGN_MISMATCH = "integers sign mismatch";
 static const char* ERROR_TYPES_MISMATCH         = "types mismatch";
 static const char* ERROR_GLOBAL_NEED_INITIALIZER= "global variable has to be initialized";
+static const char* ERROR_UNKNOWN_SYMBOL         = "unknown symbol '%s'";

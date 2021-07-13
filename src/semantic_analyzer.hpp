@@ -56,7 +56,10 @@ public:
     /* Returns true. */
     bool analizeFuncProto(const AstNode* in_func_proto);
 
-    /* Returns true if all statements are OK. */
+    /* Returns true if:
+     * - all middle statements are OK.
+     * - return statment type match function's return type
+     */
     bool analizeFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function);
     
     /* Returns true if:
@@ -72,12 +75,13 @@ public:
     */
     bool analizeExpr(const AstNode* in_expr);
 
+
     bool check_type_compat(const AstNode* type_node0, const AstNode* type_node1, const AstNode* expr_node);
 private:
 
     const AstNode* get_expr_type(const AstNode* expr);
 
-    const AstNode* resolve_function_variable(const std::string& in_name);
+    const AstNode* resolve_function_variable(const std::string& in_name, const AstNode* in_parent_node);
 
     void add_semantic_error(const AstNode* in_node, const char* in_msg, ...);
 };

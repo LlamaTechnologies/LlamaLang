@@ -209,3 +209,56 @@ TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
     ASSERT_EQ(is_valid, true);
 }
 
+//==================================================================================
+//          SEMANTIC EXPRESSIONS
+//==================================================================================
+
+TEST(SemanticExpressions, ConstantValue) {
+    BigInt integer_value;
+    bigint_init_signed(&integer_value, 0L);
+
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+    const_value_node->const_value.integer = integer_value;
+
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+    bool is_valid = analizer.analizeExpr(const_value_node);
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(is_valid, true);
+}
+
+TEST(SemanticExpressions, ResolveKnownSymbol) {
+    // given: variable definition
+    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
+    i32_type_node->ast_type.type_id = AstTypeId::Integer;
+    i32_type_node->ast_type.type_info = new TypeInfo();
+    i32_type_node->ast_type.type_info->bit_size = 32;
+    i32_type_node->ast_type.type_info->is_signed = true;
+    i32_type_node->ast_type.type_info->name = "i32";
+
+    auto var_def_node= new AstNode(AstNodeType::AstVarDef, 0, 0, "");
+    var_def_node->var_def.type = i32_type_node;
+    auto var_name = var_def_node->var_def.name = "global_var";
+
+    // given: symbol node
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = std::string_view(var_name.data(), var_name.size());
+
+    // given: configured analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+    analizer.analizeVarDef(var_def_node, false);
+
+    // when: call to analize_expr
+    bool is_valid = analizer.analizeExpr(symbol_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(is_valid, true);
+}
+
+TEST(SemanticExpressions, ResolveKnownSymbol) {
+    
+}
