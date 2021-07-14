@@ -105,7 +105,7 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef& in_var_def, const bool is_
         if (assignStmntNode) {
             auto& assignStmnt = assignStmntNode->binary_expr;
             assert(assignStmnt.bin_op == BinaryExprType::ASSIGN);
-            init_value = translateConstant(assignStmnt.op2->const_value);
+            init_value = translateConstant(assignStmnt.right_expr->const_value);
         } else {
             init_value = getConstantDefaultValue(in_var_def.type->ast_type, type);
         }

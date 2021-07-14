@@ -113,17 +113,18 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
                 case BinaryExprType::LSHIFT:
                 case BinaryExprType::RSHIFT:
                 {
-                    if (!analizeExpr(bin_expr.op1) || !analizeExpr(bin_expr.op2))
+                    if (!analizeExpr(bin_expr.left_expr) || !analizeExpr(bin_expr.right_expr))
                         return false;
                     
                     // right value should be an integer
-                    auto r_expr_type_node = get_expr_type(bin_expr.op2);
+                    auto r_expr_type_node = get_expr_type(bin_expr.right_expr);
                     if (r_expr_type_node->ast_type.type_id != AstTypeId::Integer) {
+                        add_semantic_error(in_expr, ERROR_BIT_SHIFT_LEFT_EXPR_NO_INT);
                         return false;
                     }
 
                     // now we depend on left expr beeing ok
-                    return get_expr_type(bin_expr.op1);
+                    return get_expr_type(bin_expr.left_expr);
                 }
                 case BinaryExprType::EQUALS:
                 case BinaryExprType::NOT_EQUALS:
@@ -132,7 +133,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
                 case BinaryExprType::GREATER:
                 case BinaryExprType::LESS:
                     // We just check their expressions are good
-                    return analizeExpr(bin_expr.op1) && analizeExpr(bin_expr.op2);
+                    return analizeExpr(bin_expr.left_expr) && analizeExpr(bin_expr.right_expr);
                 case BinaryExprType::ADD:
                 case BinaryExprType::SUB:
                 case BinaryExprType::MUL:
@@ -140,11 +141,11 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
                 case BinaryExprType::MOD:
                 case BinaryExprType::ASSIGN:
                 {
-                    if (!analizeExpr(bin_expr.op1) || !analizeExpr(bin_expr.op2))
+                    if (!analizeExpr(bin_expr.left_expr) || !analizeExpr(bin_expr.right_expr))
                         return false;
                     
-                    auto l_expr_type_node = get_expr_type(bin_expr.op1);
-                    auto r_expr_type_node = get_expr_type(bin_expr.op2);
+                    auto l_expr_type_node = get_expr_type(bin_expr.left_expr);
+                    auto r_expr_type_node = get_expr_type(bin_expr.right_expr);
                     
                     // We check they have compatible types
                     return check_type_compat(l_expr_type_node, r_expr_type_node, in_expr);
@@ -295,8 +296,8 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
         case BinaryExprType::LESS_OR_EQUALS:
             return get_type_node("bool");
         default:
-            auto type0 = get_expr_type(bin_expr.op1);
-            auto type1 = get_expr_type(bin_expr.op2);
+            auto type0 = get_expr_type(bin_expr.left_expr);
+            auto type1 = get_expr_type(bin_expr.right_expr);
             if (check_type_compat(type0, type1, expr))
                 return get_best_type(type0, type1);
             return nullptr;

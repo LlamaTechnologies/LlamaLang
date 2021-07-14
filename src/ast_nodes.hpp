@@ -122,9 +122,9 @@ enum class BinaryExprType {
 };
 
 struct AstBinaryExpr {
-    AstNode*        op1;
+    AstNode*        left_expr;
     BinaryExprType  bin_op;
-    AstNode*        op2;
+    AstNode*        right_expr;
 };
 
 // IMPORTANT: do not change order of labels!

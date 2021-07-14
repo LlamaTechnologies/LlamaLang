@@ -455,8 +455,8 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
         expr->parent = assign_node;
         identifier_node->parent = assign_node;
         assign_node->binary_expr.bin_op = get_binary_op(assign_token);
-        assign_node->binary_expr.op1 = identifier_node;
-        assign_node->binary_expr.op2 = expr;
+        assign_node->binary_expr.left_expr = identifier_node;
+        assign_node->binary_expr.right_expr = expr;
             
         assign_node->parent = var_def_node;
         var_def_node->var_def.initializer = assign_node;
@@ -561,8 +561,8 @@ AstNode* Parser::parse_assign_stmnt() noexcept {
         expr->parent = node;
         identifier_node->parent = node;
         node->binary_expr.bin_op = get_binary_op(token);
-        node->binary_expr.op1 = identifier_node;
-        node->binary_expr.op2 = expr;
+        node->binary_expr.left_expr = identifier_node;
+        node->binary_expr.right_expr = expr;
         return node;
     }
 
@@ -663,9 +663,9 @@ AstNode* Parser::parse_comp_expr() noexcept {
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
         unary_expr->parent = binary_expr;
         root_node->parent = binary_expr;
-        binary_expr->binary_expr.op1 = root_node;
+        binary_expr->binary_expr.left_expr = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
-        binary_expr->binary_expr.op2 = unary_expr;
+        binary_expr->binary_expr.right_expr = unary_expr;
 
         // set the new node as root.
         root_node = binary_expr;
@@ -705,9 +705,9 @@ AstNode* Parser::parse_algebraic_expr() noexcept {
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
         term_expr->parent = binary_expr;
         root_node->parent = binary_expr;
-        binary_expr->binary_expr.op1 = root_node;
+        binary_expr->binary_expr.left_expr = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
-        binary_expr->binary_expr.op2 = term_expr;
+        binary_expr->binary_expr.right_expr = term_expr;
 
         // set the new node as root.
         root_node = binary_expr;
@@ -748,9 +748,9 @@ AstNode* Parser::parse_term_expr() noexcept {
         auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
         symbol_token->parent = binary_expr;
         root_node->parent = binary_expr;
-        binary_expr->binary_expr.op1 = root_node;
+        binary_expr->binary_expr.left_expr = root_node;
         binary_expr->binary_expr.bin_op = get_binary_op(token);
-        binary_expr->binary_expr.op2 = symbol_token;
+        binary_expr->binary_expr.right_expr = symbol_token;
 
         // set the new node as root.
         root_node = binary_expr;

@@ -237,3 +237,159 @@ TEST(SemanticExpressions, UnaryExprNumberWrongOp) {
     ASSERT_EQ(errors.size(), 1L);
     ASSERT_EQ(is_valid, false);
 }
+
+TEST(SemanticExpressions, BinaryExprBitShiftNoIntRExpr) {
+    // given: expr
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::FLOAT;
+
+    // given: biary expr
+    auto binary_epxr_node= new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    // bin_expr -> 1 << 1
+    binary_epxr_node->binary_expr.bin_op = BinaryExprType::LSHIFT;
+    binary_epxr_node->binary_expr.left_expr = const_value_node;
+    binary_epxr_node->binary_expr.right_expr = const_value_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    // with: a number expresion
+    // with: a unary operator valid for the expr type
+    bool is_valid = analizer.analizeExpr(binary_epxr_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}
+
+TEST(SemanticExpressions, BinaryExprBitShiftUnknownSymbol) {
+    // given: l_expr -> unkown symbol node
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = "var_name";
+    
+    // given: r_expr
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+
+    // given: biary expr -> var_name << 1
+    auto binary_epxr_node= new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    binary_epxr_node->binary_expr.bin_op = BinaryExprType::LSHIFT;
+    binary_epxr_node->binary_expr.left_expr = symbol_node;
+    binary_epxr_node->binary_expr.right_expr = const_value_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    // with: a number expresion
+    // with: a unary operator valid for the expr type
+    bool is_valid = analizer.analizeExpr(binary_epxr_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}
+
+TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
+    // given: l_expr -> unkown symbol node
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = "var_name";
+
+    // given: r_expr -> constant integer
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+
+    // given: biary expr -> my_var == SOME_INT
+    auto binary_epxr_node= new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    binary_epxr_node->binary_expr.bin_op = BinaryExprType::EQUALS;
+    binary_epxr_node->binary_expr.left_expr = symbol_node;
+    binary_epxr_node->binary_expr.right_expr = const_value_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr
+    // with: symbol as left expr
+    // with: constant as right expr
+    bool is_valid = analizer.analizeExpr(binary_epxr_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}
+
+TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
+    // given: variable definition
+    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
+    i32_type_node->ast_type.type_id = AstTypeId::Integer;
+    i32_type_node->ast_type.type_info = new TypeInfo();
+    i32_type_node->ast_type.type_info->bit_size = 32;
+    i32_type_node->ast_type.type_info->is_signed = true;
+    i32_type_node->ast_type.type_info->name = "i32";
+
+    auto var_def_node= new AstNode(AstNodeType::AstVarDef, 0, 0, "");
+    var_def_node->var_def.type = i32_type_node;
+    auto var_name = var_def_node->var_def.name = "my_var";
+
+    // given: l_expr -> symbol node
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = std::string_view(var_name.data(), var_name.size());
+
+    // given: r_expr -> constant integer
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::FLOAT;
+
+    // given: biary expr -> my_var = SOME_INT
+    auto binary_epxr_node= new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    binary_epxr_node->binary_expr.bin_op = BinaryExprType::ASSIGN;
+    binary_epxr_node->binary_expr.left_expr = symbol_node;
+    binary_epxr_node->binary_expr.right_expr = const_value_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+    bool is_valid_var_def = analizer.analizeVarDef(var_def_node, false);
+
+    // when: call to analize_expr 
+    // with: symbol as left expr
+    // with: constant as right expr
+    bool is_valid = analizer.analizeExpr(binary_epxr_node);
+
+    // then:
+    ASSERT_EQ(is_valid_var_def, true);
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}
+
+TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
+    // given: l_expr -> symbol node
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = "my_var";
+
+    // given: r_expr -> constant integer
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::FLOAT;
+
+    // given: biary expr -> my_var = SOME_INT
+    auto binary_epxr_node= new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    binary_epxr_node->binary_expr.bin_op = BinaryExprType::ASSIGN;
+    binary_epxr_node->binary_expr.left_expr = symbol_node;
+    binary_epxr_node->binary_expr.right_expr = const_value_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    // with: symbol as left expr
+    // with: constant as right expr
+    bool is_valid = analizer.analizeExpr(binary_epxr_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}
