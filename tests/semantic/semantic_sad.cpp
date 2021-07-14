@@ -166,7 +166,7 @@ TEST(SemanticExpressions, UnknownConstantValue) {
     ASSERT_DEATH(analizer.analizeExpr(const_value_node), "");
 }
 
-TEST(SemanticExpressions, ResolveUnknownSymbol) {
+TEST(SemanticExpressions, ResolveUnknownVariableSymbol) {
     // given: symbol node
     std::string var_name = "global_var";
     auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");

@@ -75,7 +75,10 @@ public:
     */
     bool analizeExpr(const AstNode* in_expr);
 
-
+    /* Returns true if:
+    * - types are the same type_id
+    * - if pointers types have the same sub type_id
+    */
     bool check_type_compat(const AstNode* type_node0, const AstNode* type_node1, const AstNode* expr_node);
 private:
 

@@ -109,8 +109,49 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
         switch (in_expr->node_type) {
         case AstNodeType::AstBinaryExpr: {
             auto bin_expr = in_expr->binary_expr;
-            // TODO (pablo96): add special case for assignment
-            return analizeExpr(bin_expr.op1) && analizeExpr(bin_expr.op2);
+            switch (bin_expr.bin_op) {
+                case BinaryExprType::LSHIFT:
+                case BinaryExprType::RSHIFT:
+                {
+                    if (!analizeExpr(bin_expr.op1) || !analizeExpr(bin_expr.op2))
+                        return false;
+                    
+                    // right value should be an integer
+                    auto r_expr_type_node = get_expr_type(bin_expr.op2);
+                    if (r_expr_type_node->ast_type.type_id != AstTypeId::Integer) {
+                        return false;
+                    }
+
+                    // now we depend on left expr beeing ok
+                    return get_expr_type(bin_expr.op1);
+                }
+                case BinaryExprType::EQUALS:
+                case BinaryExprType::NOT_EQUALS:
+                case BinaryExprType::GREATER_OR_EQUALS:
+                case BinaryExprType::LESS_OR_EQUALS:
+                case BinaryExprType::GREATER:
+                case BinaryExprType::LESS:
+                    // We just check their expressions are good
+                    return analizeExpr(bin_expr.op1) && analizeExpr(bin_expr.op2);
+                case BinaryExprType::ADD:
+                case BinaryExprType::SUB:
+                case BinaryExprType::MUL:
+                case BinaryExprType::DIV:
+                case BinaryExprType::MOD:
+                case BinaryExprType::ASSIGN:
+                {
+                    if (!analizeExpr(bin_expr.op1) || !analizeExpr(bin_expr.op2))
+                        return false;
+                    
+                    auto l_expr_type_node = get_expr_type(bin_expr.op1);
+                    auto r_expr_type_node = get_expr_type(bin_expr.op2);
+                    
+                    // We check they have compatible types
+                    return check_type_compat(l_expr_type_node, r_expr_type_node, in_expr);
+                }
+                default:
+                    UNREACHEABLE;
+            }
         }
         case AstNodeType::AstUnaryExpr: {
             auto unary_expr = in_expr->unary_expr;
@@ -218,7 +259,8 @@ bool SemanticAnalyzer::check_type_compat(const AstNode* type_node0, const AstNod
         if (type1.type_id == AstTypeId::Pointer || type1.type_id == AstTypeId::Array)
             return check_type_compat(type0.child_type, type1.child_type, expr_node);
         if (type0.type_id == AstTypeId::Struct)
-            // NOTE: Structs No Supported 
+            // NOTE: Structs No Supported
+            // TODO: Add support for structs
             UNREACHEABLE;
         return true;
     }

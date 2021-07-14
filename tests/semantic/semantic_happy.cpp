@@ -229,7 +229,7 @@ TEST(SemanticExpressions, ConstantValue) {
     ASSERT_EQ(is_valid, true);
 }
 
-TEST(SemanticExpressions, ResolveKnownSymbol) {
+TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
     // given: variable definition
     auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
     i32_type_node->ast_type.type_id = AstTypeId::Integer;
@@ -341,3 +341,6 @@ TEST(SemanticExpressions, UnaryExprNumberBitwiseOp) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(is_valid, true);
 }
+
+
+
