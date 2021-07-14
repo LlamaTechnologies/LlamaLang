@@ -153,6 +153,19 @@ TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
 //          SEMANTIC EXPRESSIONS
 //==================================================================================
 
+TEST(SemanticExpressions, UnknownConstantValue) {
+    BigInt integer_value;
+    bigint_init_signed(&integer_value, 0L);
+
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType(-1);
+    const_value_node->const_value.integer = integer_value;
+
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+    ASSERT_DEATH(analizer.analizeExpr(const_value_node), "");
+}
+
 TEST(SemanticExpressions, ResolveUnknownSymbol) {
     // given: symbol node
     std::string var_name = "global_var";
@@ -165,6 +178,60 @@ TEST(SemanticExpressions, ResolveUnknownSymbol) {
 
     // when: call to analize_expr
     bool is_valid = analizer.analizeExpr(symbol_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}
+
+TEST(SemanticExpressions, UnaryExprBoolWrongOp) {
+    // given: expr
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::BOOL;
+    const_value_node->const_value.boolean = false;
+
+    // given: unary expr
+    auto unary_epxr_node= new AstNode(AstNodeType::AstUnaryExpr, 0, 0, "");
+    unary_epxr_node->unary_expr.op = UnaryExprType::NEG;
+    unary_epxr_node->unary_expr.expr = const_value_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    // with: a bool expresion
+    // with: a unary operator valid for the expr type
+    bool is_valid = analizer.analizeExpr(unary_epxr_node);
+
+    // then:
+    ASSERT_EQ(errors.size(), 1L);
+    ASSERT_EQ(is_valid, false);
+}
+
+TEST(SemanticExpressions, UnaryExprNumberWrongOp) {
+    // given: lexed integer number
+    BigInt integer_value;
+    bigint_init_signed(&integer_value, 0L);
+
+    // given: expr
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+    const_value_node->const_value.integer = integer_value;
+
+    // given: unary expr
+    auto unary_epxr_node= new AstNode(AstNodeType::AstUnaryExpr, 0, 0, "");
+    unary_epxr_node->unary_expr.op = UnaryExprType::NOT;
+    unary_epxr_node->unary_expr.expr = const_value_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    // with: a number expresion
+    // with: a unary operator valid for the expr type
+    bool is_valid = analizer.analizeExpr(unary_epxr_node);
 
     // then:
     ASSERT_EQ(errors.size(), 1L);

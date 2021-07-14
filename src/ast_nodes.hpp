@@ -80,6 +80,7 @@ struct AstSymbol {
 };
 
 enum class ConstValueType {
+    BOOL,
     INT,
     FLOAT,
     CHAR
@@ -88,6 +89,7 @@ enum class ConstValueType {
 struct AstConstValue {
     ConstValueType type;
 union {
+    bool        boolean;
     BigInt      integer;
     BigFloat    floating_point;
     uint32_t    unicode_char;

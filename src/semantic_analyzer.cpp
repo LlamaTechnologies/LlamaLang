@@ -147,7 +147,16 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
             return resolve_function_variable(name, in_expr) != nullptr;
         }
         case AstNodeType::AstConstValue: {
-            return true;
+            switch (in_expr->const_value.type)
+            {
+            case ConstValueType::BOOL:
+            case ConstValueType::INT:
+            case ConstValueType::FLOAT:
+            case ConstValueType::CHAR:
+                return true;
+            default:
+                UNREACHEABLE;
+            }
         }
         default:
             UNREACHEABLE;
@@ -294,6 +303,8 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
     case AstNodeType::AstConstValue: {
         auto const_value = expr->const_value;
         switch (const_value.type) {
+        case ConstValueType::BOOL:
+            return get_type_node("bool");
         case ConstValueType::FLOAT:
             return get_type_node("f128");
         case ConstValueType::INT:
