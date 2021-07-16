@@ -55,22 +55,22 @@ public:
     // returns AstUnaryExpr
     LL_NODISCARD AstNode* parse_ret_stmnt() noexcept;
 
-     // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+     // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_expr() noexcept;
 
-    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_comp_expr() noexcept;
 
-    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_algebraic_expr() noexcept;
 
-    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_term_expr() noexcept;
 
-    // returns AstSymbol | AstFuncCallExpr | AstUnaryExpr
+    // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_unary_expr() noexcept;
 
-    // returns AstSymbol | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+    // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
     LL_NODISCARD AstNode* parse_primary_expr() noexcept;
 
     // returns AstFuncCallExpr

@@ -8,7 +8,7 @@
 #pragma once
 #include "common_defs.hpp"
 #include <stdint.h>
-#include <stddef.h>
+#include <stddef.h> //size_t
 
 struct BigInt {
     size_t digit_count;

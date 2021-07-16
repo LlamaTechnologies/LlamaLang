@@ -105,7 +105,7 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef& in_var_def, const bool is_
         if (assignStmntNode) {
             auto& assignStmnt = assignStmntNode->binary_expr;
             assert(assignStmnt.bin_op == BinaryExprType::ASSIGN);
-            init_value = translateConstant(assignStmnt.op2->symbol);
+            init_value = translateConstant(assignStmnt.right_expr->const_value);
         } else {
             init_value = getConstantDefaultValue(in_var_def.type->ast_type, type);
         }
@@ -173,26 +173,19 @@ llvm::Type* LlvmIrGenerator::translateType(AstType& in_type) {
     }
 }
 
-llvm::Constant* LlvmIrGenerator::translateConstant(AstSymbol& in_symbol) {
-    TokenId r_value_type = in_symbol.token->id;
-    if (r_value_type == TokenId::INT_LIT) {
-        const BigInt& int_val = in_symbol.token->int_lit;
-        llvm::Constant* constant;
-        return constant;
+llvm::Constant* LlvmIrGenerator::translateConstant(AstConstValue& in_const) {
+    ConstValueType r_value_type = in_const.type;
+    if (r_value_type == ConstValueType::INT) {
+        const BigInt& int_val = in_const.integer;
+        return llvm::ConstantInt::get(context, llvm::APInt(32, 0));
     }
-    else if (r_value_type == TokenId::FLOAT_LIT) {
-        const BigFloat& float_val = in_symbol.token->float_lit;
-        llvm::Constant* constant;
-        return constant;
+    else if (r_value_type == ConstValueType::FLOAT) {
+        const BigFloat& float_val = in_const.floating_point;
+        return llvm::ConstantFP::get(context, llvm::APFloat(0.0f));
     }
-    else if (r_value_type == TokenId::UNICODE_CHAR) {
-        const uint32_t char_val = in_symbol.token->char_lit;
-        llvm::Constant* constant;
-        return constant;
-    }
-    else if (r_value_type == TokenId::STRING) {
-        // TODO: add support for strings
-        UNREACHEABLE;
+    else if (r_value_type == ConstValueType::CHAR) {
+        const uint32_t char_val = in_const.unicode_char;
+        return llvm::ConstantInt::get(context, llvm::APInt(32, 0));
     }
  
     // wrong token

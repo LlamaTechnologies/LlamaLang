@@ -1,13 +1,9 @@
-######################################
-# DIRECTORIES AND NAMES
-######################################
-
 set(TEST_NAME  ${CMAKE_PROJECT_NAME}_tests)
 
 # set output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/test")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/test")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/test")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 # set llang sources
 set(LLAMATEST_SRC
@@ -15,10 +11,10 @@ lexer/lexer_happy.cpp
 lexer/lexer_sad.cpp
 parser/parser_happy_expr.cpp
 parser/parser_happy_stmnts.cpp
+semantic/semantic_happy.cpp
+semantic/semantic_sad.cpp
 "test.cpp"
 )
-
-link_directories("${CMAKE_SOURCE_DIR}/lib" "${LLVM_DIR}/lib")
 
 # Engine executable name
 add_executable(${TEST_NAME} ${LLAMATEST_SRC})

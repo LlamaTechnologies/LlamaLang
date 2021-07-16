@@ -5,7 +5,14 @@
 #include <assert.h>
 #include <cstddef>
 #include <llvm/IR/Type.h>
-#include <llvm/IR/Function.h>
+#include "bigint.hpp"
+#include "bigfloat.hpp"
+
+namespace llvm {
+    class Function;
+}
+
+typedef struct LLVMOpaqueType* LLVMTypeRef;
 
 // ast nodes
 struct Token;
@@ -24,6 +31,7 @@ struct AstFuncCallExpr;
 struct AstBinaryExpr;
 struct AstUnaryExpr;
 
+// IMPORTANT: do not change order of labels!
 enum class DirectiveType {
     Run,
     Load,
@@ -68,6 +76,24 @@ struct AstVarDef {
 
 struct AstSymbol {
     const Token* token;
+    std::string_view cached_name;
+};
+
+enum class ConstValueType {
+    BOOL,
+    INT,
+    FLOAT,
+    CHAR
+};
+
+struct AstConstValue {
+    ConstValueType type;
+union {
+    bool        boolean;
+    BigInt      integer;
+    BigFloat    floating_point;
+    uint32_t    unicode_char;
+};
 };
 
 struct AstFuncCallExpr {
@@ -96,30 +122,31 @@ enum class BinaryExprType {
 };
 
 struct AstBinaryExpr {
-    AstNode*        op1;
+    AstNode*        left_expr;
     BinaryExprType  bin_op;
-    AstNode*        op2;
+    AstNode*        right_expr;
 };
 
-
+// IMPORTANT: do not change order of labels!
 enum class UnaryExprType {
     INC,    // ++  primaryExpr
     DEC,    // --  primaryExpr
-    NEG,    // -   primaryExpr  
+    NEG,    // -   primaryExpr
+    NOT,    // !   primaryExpr
+    BIT_INV,// ~   primaryExpr
     RET     // ret Expr
 };
+
+const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept;
 
 struct AstUnaryExpr {
     UnaryExprType   op;
     AstNode*        expr;
 };
 
-
-
 struct AstSourceCode {
     std::vector<AstNode*> children;
 };
-
 
 enum class AstTypeId {
     Pointer,
@@ -157,6 +184,7 @@ enum class AstNodeType {
     AstType,
     AstVarDef,
     AstSymbol,
+    AstConstValue,
     AstFuncCallExpr,
     AstBinaryExpr,
     AstUnaryExpr
@@ -168,6 +196,7 @@ struct AstNode {
     size_t line;
     size_t column;
     AstNodeType node_type;
+    std::string file_name;
 
     // actual node
     // TODO: try to use std::variant instead of union
@@ -183,11 +212,12 @@ struct AstNode {
         AstUnaryExpr    unary_expr;     // unary_op expr
         AstBinaryExpr   binary_expr;    // expr binary_op expr
         AstSymbol       symbol;         // symbol_name
+        AstConstValue   const_value;    // constant value
         AstFuncCallExpr func_call;      // func_name L_PAREN (expr (, expr)*)? R_PAREN
     //};
 
-    AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column)
-        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type) {}
+    AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column, std::string in_file_name)
+        : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type), file_name(in_file_name) {}
 
     virtual ~AstNode() {
         if (node_type == AstNodeType::AstBlock) {

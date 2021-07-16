@@ -9,8 +9,12 @@
 #define LL_CLANG
 #endif
 
-#ifdef LL_VISUASTUDIO
+#ifdef LL_VISUALSTUDIO
 #define __func__ __FUNCTION__
+#ifdef _DEBUG
+#define LL_DEBUG
+#undef _DEBUG
+#endif
 #endif
 
 #define LL_NODISCARD    [[nodiscard]]
@@ -20,3 +24,4 @@
 void panic(const char* format, ...);
 
 #define UNREACHEABLE panic("Unreachable at %s:%d in %s. This is a bug in the compiler.", __FILE__, __LINE__, __func__)
+

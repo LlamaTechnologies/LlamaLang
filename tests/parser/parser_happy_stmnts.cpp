@@ -16,6 +16,7 @@ TEST(ParserHappyStmntTests, RetStmnt) {
     auto value_node = parser.parse_ret_stmnt();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
     ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
     ASSERT_NE(value_node->unary_expr.expr, nullptr);
@@ -31,6 +32,7 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
     auto value_node = parser.parse_ret_stmnt();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
     ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
     ASSERT_EQ(value_node->unary_expr.expr, nullptr);
@@ -49,17 +51,36 @@ TEST(ParserHappyStmntTests, AssignStmntTest) {
     auto value_node = parser.parse_assign_stmnt();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr); 
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
-    ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(value_node->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
-    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
 }
 
 //==================================================================================
 //          PARSE TYPES
 //==================================================================================
+
+TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
+    std::vector<Error> errors;
+    Lexer lexer("i32", "TypeNameIsPrimitiveParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_type();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(value_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(value_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(value_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(value_node->ast_type.type_info->is_signed, true);
+}
 
 TEST(ParserHappyStmntTests, TypeNameParse) {
     std::vector<Error> errors;
@@ -70,9 +91,13 @@ TEST(ParserHappyStmntTests, TypeNameParse) {
     auto value_node = parser.parse_type();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(value_node->ast_type.name, "MyType");
+    ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Struct);
+    ASSERT_EQ(value_node->ast_type.type_info->name, "MyType");
+    ASSERT_EQ(value_node->ast_type.type_info->bit_size, 8);
+    ASSERT_EQ(value_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(value_node->ast_type.type_info->is_signed, false);
 }
 
 TEST(ParserHappyStmntTests, TypeArrayParse) {
@@ -84,13 +109,17 @@ TEST(ParserHappyStmntTests, TypeArrayParse) {
     auto value_node = parser.parse_type();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Array);
     ASSERT_NE(value_node->ast_type.child_type, nullptr);
     ASSERT_EQ(value_node->ast_type.child_type->parent, value_node);
     ASSERT_EQ(value_node->ast_type.child_type->node_type, AstNodeType::AstType);
-    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(value_node->ast_type.child_type->ast_type.name, "MyType");
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_id, AstTypeId::Struct);
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->name, "MyType");
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->bit_size, 8);
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->is_signed, false);
 }
 
 TEST(ParserHappyStmntTests, TypePointerParse) {
@@ -102,13 +131,17 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
     auto value_node = parser.parse_type();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Pointer);
     ASSERT_NE(value_node->ast_type.child_type, nullptr);
     ASSERT_EQ(value_node->ast_type.child_type->parent, value_node);
     ASSERT_EQ(value_node->ast_type.child_type->node_type, AstNodeType::AstType);
-    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(value_node->ast_type.child_type->ast_type.name, "MyType");
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_id, AstTypeId::Struct);
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->name, "MyType");
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->bit_size, 8);
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->is_signed, false);
 }
 
 //==================================================================================
@@ -124,14 +157,108 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
     auto value_node = parser.parse_vardef_stmnt();
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_EQ(value_node->var_def.initializer, nullptr);
     ASSERT_NE(value_node->var_def.type, nullptr);
     auto type_node = value_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(type_node->parent, value_node);
-    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(type_node->ast_type.name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+}
+
+TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar i32 = -65", "VarDefSimpleTypeInitializerParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_vardef_stmnt();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+
+    auto type_node = value_node->var_def.type;
+    ASSERT_NE(type_node, nullptr);
+    ASSERT_EQ(type_node->parent, value_node);
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+
+    auto init_node = value_node->var_def.initializer;
+    ASSERT_NE(init_node, nullptr);
+    ASSERT_EQ(init_node->parent, value_node);
+    ASSERT_EQ(init_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
+    ASSERT_NE(init_node->binary_expr.left_expr, nullptr);
+    ASSERT_EQ(init_node->binary_expr.left_expr->parent, init_node);
+    ASSERT_EQ(init_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
+
+    auto neg_int_node = init_node->binary_expr.right_expr;
+    ASSERT_NE(neg_int_node, nullptr);
+    ASSERT_EQ(neg_int_node->parent, init_node);
+    ASSERT_EQ(neg_int_node->node_type, AstNodeType::AstUnaryExpr);
+    ASSERT_EQ(neg_int_node->unary_expr.op, UnaryExprType::NEG);
+    ASSERT_NE(neg_int_node->unary_expr.expr, nullptr);
+    ASSERT_EQ(neg_int_node->unary_expr.expr->parent, neg_int_node);
+    ASSERT_EQ(neg_int_node->unary_expr.expr->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(neg_int_node->unary_expr.expr->const_value.type, ConstValueType::INT);
+}
+
+TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
+    std::vector<Error> errors;
+    Lexer lexer("myVar i32 = 65 + PI", "VarDefSimpleTypeInitializerAddParse", errors);
+    lexer.tokenize();
+
+    Parser parser(lexer, errors);
+    auto value_node = parser.parse_vardef_stmnt();
+
+    ASSERT_EQ(errors.size(), 0L);
+    ASSERT_NE(value_node, nullptr);
+    ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
+    ASSERT_EQ(value_node->var_def.name, "myVar");
+
+    auto type_node = value_node->var_def.type;
+    ASSERT_NE(type_node, nullptr);
+    ASSERT_EQ(type_node->parent, value_node);
+    ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+
+    auto init_node = value_node->var_def.initializer;
+    ASSERT_NE(init_node, nullptr);
+    ASSERT_EQ(init_node->parent, value_node);
+    ASSERT_EQ(init_node->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
+    ASSERT_NE(init_node->binary_expr.left_expr, nullptr);
+    ASSERT_NE(init_node->binary_expr.right_expr, nullptr);
+    ASSERT_EQ(init_node->binary_expr.left_expr->parent, init_node);
+    ASSERT_EQ(init_node->binary_expr.right_expr->parent, init_node);
+    ASSERT_EQ(init_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(init_node->binary_expr.right_expr->node_type, AstNodeType::AstBinaryExpr);
+
+    auto add_node = init_node->binary_expr.right_expr;
+    ASSERT_NE(add_node, nullptr);
+    ASSERT_EQ(add_node->binary_expr.bin_op, BinaryExprType::ADD);
+    ASSERT_NE(add_node->binary_expr.left_expr, nullptr);
+    ASSERT_NE(add_node->binary_expr.right_expr, nullptr);
+    ASSERT_EQ(add_node->binary_expr.left_expr->parent, add_node);
+    ASSERT_EQ(add_node->binary_expr.right_expr->parent, add_node);
+    ASSERT_EQ(add_node->binary_expr.left_expr->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(add_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
 }
 
 TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
@@ -145,6 +272,7 @@ TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_EQ(value_node->var_def.initializer, nullptr);
     ASSERT_NE(value_node->var_def.type, nullptr);
     auto type_node = value_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
@@ -154,8 +282,11 @@ TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
     auto data_type_node = type_node->ast_type.child_type;
     ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(data_type_node->parent, type_node);
-    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(data_type_node->ast_type.name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
 }
 
 TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
@@ -169,6 +300,7 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_EQ(value_node->var_def.initializer, nullptr);
     ASSERT_NE(value_node->var_def.type, nullptr);
     auto type_node = value_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
@@ -178,8 +310,11 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
     auto data_type_node = type_node->ast_type.child_type;
     ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(data_type_node->parent, type_node);
-    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(data_type_node->ast_type.name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
 }
 
 
@@ -198,12 +333,16 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_EQ(value_node->var_def.initializer, nullptr);
     ASSERT_NE(value_node->var_def.type, nullptr);
     auto type_node = value_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(type_node->parent, value_node);
-    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(type_node->ast_type.name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
 }
 
 TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
@@ -217,6 +356,7 @@ TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_EQ(value_node->var_def.initializer, nullptr);
     ASSERT_NE(value_node->var_def.type, nullptr);
     auto type_node = value_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
@@ -226,8 +366,11 @@ TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
     auto data_type_node = type_node->ast_type.child_type;
     ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(data_type_node->parent, type_node);
-    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(data_type_node->ast_type.name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
 }
 
 TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
@@ -241,6 +384,7 @@ TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
     ASSERT_EQ(value_node->var_def.name, "myVar");
+    ASSERT_EQ(value_node->var_def.initializer, nullptr);
     ASSERT_NE(value_node->var_def.type, nullptr);
     auto type_node = value_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
@@ -250,8 +394,11 @@ TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
     auto data_type_node = type_node->ast_type.child_type;
     ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
     ASSERT_EQ(data_type_node->parent, type_node);
-    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(data_type_node->ast_type.name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
 }
 
 TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
@@ -265,10 +412,10 @@ TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
     ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
-    ASSERT_EQ(value_node->binary_expr.op1->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(value_node->binary_expr.op2->node_type, AstNodeType::AstBinaryExpr);
-    ASSERT_EQ(value_node->binary_expr.op1->parent, value_node);
-    ASSERT_EQ(value_node->binary_expr.op2->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
+    ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstBinaryExpr);
+    ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
+    ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
 }
 
 TEST(ParserHappyStmntTests, StatementRetStmnt) {
@@ -339,8 +486,11 @@ TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
     ASSERT_NE(var_def_node->var_def.type, nullptr);
     AstNode* type_node = var_def_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(type_node->ast_type.name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
 
     ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
     AstNode* ret_node = value_node->block.statements.at(1);
@@ -369,8 +519,11 @@ TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
     ASSERT_NE(var_def_node->var_def.type, nullptr);
     AstNode* type_node = var_def_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(type_node->ast_type.name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
 
     ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
     AstNode* ret_node = value_node->block.statements.at(1);
@@ -399,8 +552,11 @@ TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
     ASSERT_NE(var_def_node->var_def.type, nullptr);
     AstNode* type_node = var_def_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(type_node->ast_type.name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
 
     ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
     AstNode* ret_node = value_node->block.statements.at(1);
@@ -429,8 +585,11 @@ TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
     ASSERT_NE(var_def_node->var_def.type, nullptr);
     AstNode* type_node = var_def_node->var_def.type;
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(type_node->ast_type.name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
+    ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
+    ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
 
     ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
     AstNode* ret_node = value_node->block.statements.at(1);
@@ -460,8 +619,8 @@ TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
     auto ret_type_node = value_node->function_proto.return_type;
     ASSERT_EQ(ret_type_node->parent, value_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "void");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
 }
 
 TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
@@ -486,14 +645,14 @@ TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
     ASSERT_NE(param_node->param_decl.type, nullptr);
     ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
     ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-    ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
 
     auto ret_type_node = value_node->function_proto.return_type;
     ASSERT_EQ(ret_type_node->parent, value_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "void");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
 }
 
 TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
@@ -518,15 +677,15 @@ TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
         ASSERT_NE(param_node->param_decl.type, nullptr);
         ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
         ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-        ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
-        ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::DataType);
+        ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
+        ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
     }
 
     auto ret_type_node = value_node->function_proto.return_type;
     ASSERT_EQ(ret_type_node->parent, value_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
 }
 
 TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
@@ -551,15 +710,15 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
         ASSERT_NE(param_node->param_decl.type, nullptr);
         ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
         ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-        ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
-        ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::DataType);
+        ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
+        ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
     }
 
     auto ret_type_node = value_node->function_proto.return_type;
     ASSERT_EQ(ret_type_node->parent, value_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
 }
 
 
@@ -594,8 +753,8 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
     ASSERT_NE(ret_type_node, nullptr);
     ASSERT_EQ(ret_type_node->parent, proto_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "void");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
 }
 
 TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
@@ -629,15 +788,15 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
     ASSERT_NE(param_node->param_decl.type, nullptr);
     ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
     ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-    ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
 
     auto ret_type_node = proto_node->function_proto.return_type;
     ASSERT_NE(ret_type_node, nullptr);
     ASSERT_EQ(ret_type_node->parent, proto_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
 }
 
 TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
@@ -672,16 +831,16 @@ TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
         ASSERT_NE(param_node->param_decl.type, nullptr);
         ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
         ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-        ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
-        ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::DataType);
+        ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
+        ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
     }
 
     auto ret_type_node = proto_node->function_proto.return_type;
     ASSERT_NE(ret_type_node, nullptr);
     ASSERT_EQ(ret_type_node->parent, proto_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
 }
 
 TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
@@ -713,8 +872,8 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
     auto type_node = var_def_node->var_def.type;
     ASSERT_EQ(type_node->parent, var_def_node);
     ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::DataType);
-    ASSERT_EQ(type_node->ast_type.name, "i32");
+    ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
 
     auto proto_node = value_node->function_def.proto;
     ASSERT_EQ(proto_node->parent, value_node);
@@ -726,8 +885,8 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
     ASSERT_NE(ret_type_node, nullptr);
     ASSERT_EQ(ret_type_node->parent, proto_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "void");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
 }
 
 TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
@@ -773,15 +932,15 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
     ASSERT_NE(param_node->param_decl.type, nullptr);
     ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
     ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-    ASSERT_EQ(param_node->param_decl.type->ast_type.name, "i32");
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
+    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
 
     auto ret_type_node = proto_node->function_proto.return_type;
     ASSERT_NE(ret_type_node, nullptr);
     ASSERT_EQ(ret_type_node->parent, proto_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "i32");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
 }
 
 //==================================================================================
@@ -816,11 +975,12 @@ TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
     ASSERT_EQ(value_node->func_call.params.size(), 1L);
+
     auto param_node = value_node->func_call.params.at(0);
     ASSERT_NE(param_node, nullptr);
     ASSERT_EQ(param_node->parent, value_node);
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(param_node->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
 }
 
 TEST(ParserHappyStmntTests, FuncCallNestedTest) {
@@ -836,17 +996,19 @@ TEST(ParserHappyStmntTests, FuncCallNestedTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
     ASSERT_EQ(value_node->func_call.params.size(), 1L);
+    
     auto param_node_func = value_node->func_call.params.at(0);
     ASSERT_NE(param_node_func, nullptr);
     ASSERT_EQ(param_node_func->parent, value_node);
     ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
     ASSERT_EQ(param_node_func->func_call.params.size(), 1L);
+    
     auto param_node = param_node_func->func_call.params.at(0);
     ASSERT_NE(param_node, nullptr);
     ASSERT_EQ(param_node->parent, param_node_func);
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(param_node->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
 }
 
 TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
@@ -862,22 +1024,25 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
     ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
     ASSERT_EQ(value_node->func_call.params.size(), 2L);
+    
     auto param_node = value_node->func_call.params.at(0);
     ASSERT_NE(param_node, nullptr);
     ASSERT_EQ(param_node->parent, value_node);
     ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
     ASSERT_EQ(param_node->symbol.token->id, TokenId::IDENTIFIER);
+    
     auto param_node_func = value_node->func_call.params.at(1);
     ASSERT_NE(param_node_func, nullptr);
     ASSERT_EQ(param_node_func->parent, value_node);
     ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
     ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
     ASSERT_EQ(param_node_func->func_call.params.size(), 1L);
+    
     auto func_param_node = param_node_func->func_call.params.at(0);
     ASSERT_NE(func_param_node, nullptr);
     ASSERT_EQ(func_param_node->parent, param_node_func);
-    ASSERT_EQ(func_param_node->node_type, AstNodeType::AstSymbol);
-    ASSERT_EQ(func_param_node->symbol.token->id, TokenId::INT_LIT);
+    ASSERT_EQ(func_param_node->node_type, AstNodeType::AstConstValue);
+    ASSERT_EQ(func_param_node->const_value.type, ConstValueType::INT);
 }
 
 //==================================================================================
@@ -940,6 +1105,6 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
     ASSERT_NE(ret_type_node, nullptr);
     ASSERT_EQ(ret_type_node->parent, proto_node);
     ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-    ASSERT_EQ(ret_type_node->ast_type.name, "void");
-    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::DataType);
+    ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
+    ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
 }

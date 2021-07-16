@@ -500,7 +500,6 @@ void Lexer::tokenize() noexcept
             bigint_mul(&multiplied, &curr_token.int_lit, &radix_bi);
 
             bigint_add(&curr_token.int_lit, &multiplied, &digit_value_bi);
-            
             break;
         }
         case TokenizerState::SawSignOrTypeSpec:
@@ -1087,7 +1086,6 @@ const bool Lexer::has_tokens() const noexcept
 
 const Token& Lexer::get_previous_token() const noexcept
 {
-    // TODO: insert return statement here
     return tokens_vec.at(curr_index - 1);
 }
 
@@ -1103,7 +1101,8 @@ void Lexer::get_back() const noexcept
 
 std::string_view Lexer::get_token_value(const Token& token) const noexcept
 {
-    return std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos + 1);
+    auto len = token.end_pos - token.start_pos + 1;
+    return std::string_view(source.data() + token.start_pos, len);
 }
 
 void Lexer::begin_token(const TokenId id) noexcept
@@ -1229,7 +1228,8 @@ static std::unordered_map<std::string_view, TokenId> keywords = {
 
 void Lexer::is_keyword() noexcept
 {
-    auto value = std::string_view(source.begin() + curr_token.start_pos, source.begin() + curr_token.end_pos + 1);
+    auto len = curr_token.end_pos - curr_token.start_pos + 1;
+    auto value = std::string_view(source.data() + curr_token.start_pos, len);
     if (keywords.find(value) != keywords.end()) {
         set_token_id(keywords.at(value));
     }
@@ -1392,6 +1392,7 @@ struct TokenPrintInfo {
         : value_size(in_value_size), token_name_size(in_token_name_size), id_name(in_id_name), is_value(in_is_value){}
 };
 
+/* Used by print_tokens */
 std::string create_values_line(const std::string& source, const size_t start, const size_t end, const std::vector<Token>& tokens, const std::vector<TokenPrintInfo>& token_infos) {
     std::string line;
     for (size_t j = start; j < end; j++) {
@@ -1403,7 +1404,8 @@ std::string create_values_line(const std::string& source, const size_t start, co
 
         std::string value;
         auto& token = tokens.at(j);
-        auto token_value = std::string_view(source.begin() + token.start_pos, source.begin() + token.end_pos + 1);
+        auto len = token.end_pos - token.start_pos;
+        auto token_value = std::string_view(source.data() + token.start_pos, len);
 
         if (token.id == TokenId::DOC_COMMENT) {
             
@@ -1450,6 +1452,7 @@ std::string create_values_line(const std::string& source, const size_t start, co
     return line;
 }
 
+/* Used by print_tokens */
 std::string create_id_names_line(const size_t start, const size_t end, const std::vector<TokenPrintInfo>& token_infos) {
     std::string line;
     for (size_t j = start; j < end; j++) {

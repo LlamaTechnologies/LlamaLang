@@ -27,6 +27,5 @@ public:
 
 private:
     llvm::Type* translateType(AstType& in_type);
-    llvm::Constant* translateConstant(AstSymbol& in_symbol);
-
+    llvm::Constant* translateConstant(AstConstValue& in_const);
 };

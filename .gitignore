@@ -35,6 +35,7 @@
 /bin/Debug
 /bin/Release
 /project
+/build
 /cmake-build-debug
 /.antlr4
 /.antlr
@@ -123,5 +124,8 @@ ipch/
 # astyle backup
 *.orig
 
+bin/*
+
 #Except
 !/scripts/windows/*.exe
+!/bin/README.md
