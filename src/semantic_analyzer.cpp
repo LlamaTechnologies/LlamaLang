@@ -59,9 +59,12 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock& in_func_block, AstFuncDe
     auto ret_type = in_function.proto->function_proto.return_type;
 
     size_t errors_before = errors.size();
+    bool has_ret_type = ret_type->ast_type.type_id != AstTypeId::Void;
+    bool has_ret_stmnt = false;
 
     for (auto stmnt : in_func_block.statements) {
         if (is_ret_stmnt(stmnt)) {
+            has_ret_stmnt = true;
             auto expr_type = get_expr_type(stmnt->unary_expr.expr);
             check_type_compat(expr_type, ret_type, stmnt);
         } else if (stmnt->node_type == AstNodeType::AstVarDef) {
@@ -69,6 +72,11 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock& in_func_block, AstFuncDe
         } else {
             analizeExpr(stmnt);
         }
+    }
+
+    // if the function should return a type and it doesnt then report it;
+    if (has_ret_type && !has_ret_stmnt) {
+        add_semantic_error(in_function.proto, ERROR_REQUIRE_RET_STMNT);
     }
 
     size_t errors_after = errors.size();

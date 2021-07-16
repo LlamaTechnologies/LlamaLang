@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "../../src/error.hpp"
 #include "../../src/ast_nodes.hpp"
+#include "../../src/Types.hpp"
 #include "../../src/semantic_analyzer.hpp"
 
 
@@ -12,19 +13,11 @@ TEST(SemanticTypes, BoolVoid) {
     std::vector<Error> errors;
     auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
-    auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_type_0->ast_type.type_id = AstTypeId::Bool;
-    node_type_0->ast_type.type_info = new TypeInfo();
-    node_type_0->ast_type.type_info->bit_size = 1;
-    auto node_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_type_1->ast_type.type_id = AstTypeId::Bool;
-    node_type_1->ast_type.type_info = new TypeInfo();
-    node_type_1->ast_type.type_info->bit_size = 1;
-
+    auto node_type_0 = get_type_node("bool");
+    auto node_type_1 = get_type_node("bool");
 
     SemanticAnalyzer analizer(errors);
     analizer.check_type_compat(node_type_0, node_type_1, node_expr);
-
 
     ASSERT_EQ(errors.size(), 0L);
 }
@@ -52,21 +45,13 @@ TEST(SemanticTypes, Pointer) {
     std::vector<Error> errors;
     auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
-    auto node_child_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_child_type_0->ast_type.type_id = AstTypeId::Integer;
-    node_child_type_0->ast_type.type_info = new TypeInfo();
-    node_child_type_0->ast_type.type_info->bit_size = 32;
-    node_child_type_0->ast_type.type_info->is_signed = true;
+    auto node_child_type_0 = get_type_node("i32");
 
     auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_0->ast_type.type_id = AstTypeId::Pointer;
     node_type_0->ast_type.child_type = node_child_type_0;
 
-    auto node_child_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_child_type_1->ast_type.type_id = AstTypeId::Integer;
-    node_child_type_1->ast_type.type_info = new TypeInfo();
-    node_child_type_1->ast_type.type_info->bit_size = 32;
-    node_child_type_1->ast_type.type_info->is_signed = true;
+    auto node_child_type_1 = get_type_node("i32");
 
     auto node_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_1->ast_type.type_id = AstTypeId::Pointer;
@@ -82,21 +67,13 @@ TEST(SemanticTypes, Array) {
     std::vector<Error> errors;
     auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
     
-    auto node_child_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_child_type_0->ast_type.type_id = AstTypeId::Integer;
-    node_child_type_0->ast_type.type_info = new TypeInfo();
-    node_child_type_0->ast_type.type_info->bit_size = 32;
-    node_child_type_0->ast_type.type_info->is_signed = true;
+    auto node_child_type_0 = get_type_node("i32");
 
     auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_0->ast_type.type_id = AstTypeId::Array;
     node_type_0->ast_type.child_type = node_child_type_0;
 
-    auto node_child_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_child_type_1->ast_type.type_id = AstTypeId::Integer;
-    node_child_type_1->ast_type.type_info = new TypeInfo();
-    node_child_type_1->ast_type.type_info->bit_size = 32;
-    node_child_type_1->ast_type.type_info->is_signed = true;
+    auto node_child_type_1 = get_type_node("i32");
 
     auto node_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
     node_type_1->ast_type.type_id = AstTypeId::Array;
@@ -112,17 +89,8 @@ TEST(SemanticTypes, Integer) {
     std::vector<Error> errors;
     auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
-    auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_type_0->ast_type.type_id = AstTypeId::Integer;
-    node_type_0->ast_type.type_info = new TypeInfo();
-    node_type_0->ast_type.type_info->bit_size = 32;
-    node_type_0->ast_type.type_info->is_signed = true;
-    auto node_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_type_1->ast_type.type_id = AstTypeId::Integer;
-    node_type_1->ast_type.type_info = new TypeInfo();
-    node_type_1->ast_type.type_info->bit_size = 32;
-    node_type_1->ast_type.type_info->is_signed = true;
-
+    auto node_type_0 = get_type_node("i32");
+    auto node_type_1 = get_type_node("i32");
 
     SemanticAnalyzer analizer(errors);
     analizer.check_type_compat(node_type_0, node_type_1, node_expr);
@@ -134,16 +102,8 @@ TEST(SemanticTypes, Float) {
     std::vector<Error> errors;
     auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
 
-    auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_type_0->ast_type.type_id = AstTypeId::FloatingPoint;
-    node_type_0->ast_type.type_info = new TypeInfo();
-    node_type_0->ast_type.type_info->bit_size = 1;
-    node_type_0->ast_type.type_info->is_signed = true;
-    auto node_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
-    node_type_1->ast_type.type_id = AstTypeId::FloatingPoint;
-    node_type_1->ast_type.type_info = new TypeInfo();
-    node_type_1->ast_type.type_info->bit_size = 1;
-    node_type_1->ast_type.type_info->is_signed = false;
+    auto node_type_0 = get_type_node("f32");
+    auto node_type_1 = get_type_node("f32");
 
     SemanticAnalyzer analizer(errors);
     analizer.check_type_compat(node_type_0, node_type_1, node_expr);
@@ -158,13 +118,8 @@ TEST(SemanticTypes, Float) {
 TEST(SemanticVariableDefinitions, GlobalVariable) {
     bool is_global = true;
     std::vector<Error> errors;
-
-    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
-    i32_type_node->ast_type.type_id = AstTypeId::Integer;
-    i32_type_node->ast_type.type_info = new TypeInfo();
-    i32_type_node->ast_type.type_info->bit_size = 32;
-    i32_type_node->ast_type.type_info->is_signed = true;
-    i32_type_node->ast_type.type_info->name = "i32";
+ 
+    auto i32_type_node = get_type_node("i32");
 
     BigInt integer_value;
     bigint_init_signed(&integer_value, 0L);
@@ -190,12 +145,7 @@ TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
     bool is_global = false;
     std::vector<Error> errors;
 
-    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
-    i32_type_node->ast_type.type_id = AstTypeId::Integer;
-    i32_type_node->ast_type.type_info = new TypeInfo();
-    i32_type_node->ast_type.type_info->bit_size = 32;
-    i32_type_node->ast_type.type_info->is_signed = true;
-    i32_type_node->ast_type.type_info->name = "i32";
+    auto i32_type_node = get_type_node("i32");
 
     auto var_def_node= new AstNode(AstNodeType::AstVarDef, 0, 0, "");
     var_def_node->var_def.type = i32_type_node;
@@ -231,12 +181,7 @@ TEST(SemanticExpressions, ConstantValue) {
 
 TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
     // given: variable definition
-    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
-    i32_type_node->ast_type.type_id = AstTypeId::Integer;
-    i32_type_node->ast_type.type_info = new TypeInfo();
-    i32_type_node->ast_type.type_info->bit_size = 32;
-    i32_type_node->ast_type.type_info->is_signed = true;
-    i32_type_node->ast_type.type_info->name = "i32";
+     auto i32_type_node = get_type_node("i32");
 
     auto var_def_node= new AstNode(AstNodeType::AstVarDef, 0, 0, "");
     var_def_node->var_def.type = i32_type_node;
@@ -375,12 +320,7 @@ TEST(SemanticExpressions, BinaryExprBitShift) {
 
 TEST(SemanticExpressions, BinaryExprBoolOperator) {
     // given: variable definition
-    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
-    i32_type_node->ast_type.type_id = AstTypeId::Integer;
-    i32_type_node->ast_type.type_info = new TypeInfo();
-    i32_type_node->ast_type.type_info->bit_size = 32;
-    i32_type_node->ast_type.type_info->is_signed = true;
-    i32_type_node->ast_type.type_info->name = "i32";
+     auto i32_type_node = get_type_node("i32");
 
     auto var_def_node= new AstNode(AstNodeType::AstVarDef, 0, 0, "");
     var_def_node->var_def.type = i32_type_node;
@@ -418,12 +358,7 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
 
 TEST(SemanticExpressions, BinaryExprAssignOperator) {
     // given: variable definition
-    auto i32_type_node = new AstNode(AstNodeType::AstType, 0, 0, "");
-    i32_type_node->ast_type.type_id = AstTypeId::Integer;
-    i32_type_node->ast_type.type_info = new TypeInfo();
-    i32_type_node->ast_type.type_info->bit_size = 32;
-    i32_type_node->ast_type.type_info->is_signed = true;
-    i32_type_node->ast_type.type_info->name = "i32";
+     auto i32_type_node = get_type_node("i32");
 
     auto var_def_node= new AstNode(AstNodeType::AstVarDef, 0, 0, "");
     var_def_node->var_def.type = i32_type_node;
@@ -457,4 +392,116 @@ TEST(SemanticExpressions, BinaryExprAssignOperator) {
     ASSERT_EQ(is_valid_var_def, true);
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(is_valid, true);
+}
+
+//==================================================================================
+//          SEMANTIC FUNCTIONS
+//==================================================================================
+
+TEST(SemanticExpressions, FunctionNoRet) {
+    // given: variable definition
+    auto i32_type_node = get_type_node("i32");
+
+    auto var_def_node = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
+    var_def_node->var_def.type = i32_type_node;
+    auto var_name = var_def_node->var_def.name = "my_var";
+
+    // given: l_expr -> symbol node
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = std::string_view(var_name.data(), var_name.size());
+
+    // given: r_expr -> constant integer
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+
+    // given: biary expr -> my_var = SOME_INT
+    auto binary_epxr_node = new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    binary_epxr_node->binary_expr.bin_op = BinaryExprType::ASSIGN;
+    binary_epxr_node->binary_expr.left_expr = symbol_node;
+    binary_epxr_node->binary_expr.right_expr = const_value_node;
+
+    // given: function proto -> fn my_func() void
+    auto function_proto_node = new AstNode(AstNodeType::AstFuncProto, 0, 0, "");
+    function_proto_node->function_proto.name = "my_func";
+    function_proto_node->function_proto.return_type = get_type_node("void");
+
+    // given: function block
+    auto function_block_node = new AstNode(AstNodeType::AstBlock, 0, 0, "");
+    function_block_node->block.statements.push_back(var_def_node);
+    function_block_node->block.statements.push_back(binary_epxr_node);
+
+    // given: function
+    auto function_node= new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    function_node->function_def.proto = function_proto_node;
+    function_node->function_def.block = function_block_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
+    bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
+
+    // then:
+    ASSERT_EQ(is_valid_proto, true);
+    ASSERT_EQ(is_valid, true);
+    ASSERT_EQ(errors.size(), 0L);
+}
+
+TEST(SemanticExpressions, FunctionRet) {
+    // given: variable definition
+    auto i32_type_node = get_type_node("i32");
+
+    auto var_def_node = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
+    var_def_node->var_def.type = i32_type_node;
+    auto var_name = var_def_node->var_def.name = "my_var";
+
+    // given: l_expr -> symbol node
+    auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
+    symbol_node->symbol.cached_name = std::string_view(var_name.data(), var_name.size());
+
+    // given: r_expr -> constant integer
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+
+    // given: binary expr -> my_var = SOME_INT
+    auto binary_epxr_node = new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    binary_epxr_node->binary_expr.bin_op = BinaryExprType::ASSIGN;
+    binary_epxr_node->binary_expr.left_expr = symbol_node;
+    binary_epxr_node->binary_expr.right_expr = const_value_node;
+
+    // given: unary expr -> ret my_var
+    auto ret_stmnt_node = new AstNode(AstNodeType::AstUnaryExpr, 0, 0, "");
+    ret_stmnt_node->unary_expr.op = UnaryExprType::RET;
+    ret_stmnt_node->unary_expr.expr = symbol_node;
+
+    // given: function proto -> fn my_func() i32
+    auto function_proto_node = new AstNode(AstNodeType::AstFuncProto, 0, 0, "");
+    function_proto_node->function_proto.name = "my_func";
+    function_proto_node->function_proto.return_type = i32_type_node;
+
+    // given: function block
+    auto function_block_node = new AstNode(AstNodeType::AstBlock, 0, 0, "");
+    function_block_node->block.statements.push_back(var_def_node);
+    function_block_node->block.statements.push_back(binary_epxr_node);
+    function_block_node->block.statements.push_back(ret_stmnt_node);
+
+    // given: function
+    auto function_node= new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    function_node->function_def.proto = function_proto_node;
+    function_node->function_def.block = function_block_node;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
+    bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
+
+    // then:
+    ASSERT_EQ(is_valid_proto, true);
+    ASSERT_EQ(is_valid, true);
+    ASSERT_EQ(errors.size(), 0L);
 }
