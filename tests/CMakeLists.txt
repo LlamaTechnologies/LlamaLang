@@ -13,7 +13,9 @@ parser/parser_happy_expr.cpp
 parser/parser_happy_stmnts.cpp
 semantic/semantic_happy.cpp
 semantic/semantic_sad.cpp
-"test.cpp"
+integration/integrations.cpp
+
+test.cpp
 )
 
 # Engine executable name

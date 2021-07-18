@@ -60,7 +60,7 @@ int main(int argc, const char *argv[])
   }
 
   // open source file
-  auto file_path = current_dir_path.string() + "\\" + source_name;
+  auto file_path = fs::absolute(fs::path(source_name));
   std::ifstream source_file(file_path);
   {
       if (!source_file.is_open()) {

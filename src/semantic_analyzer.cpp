@@ -27,12 +27,17 @@ const Symbol& Table::get_child(const std::string& in_name) {
 }
 
 void Table::remove_last_child() {
-    children_scopes.erase(children_scopes.end());
+    children_scopes.pop_back();
 }
 
 void Table::add_symbol(const std::string& in_name, const SymbolType in_type, const AstNode* in_data) {
     Symbol symbol = Symbol(in_name, in_type, in_data);
+    last_symbol_key = in_name;
     symbols.emplace(in_name, symbol);
+}
+
+void Table::remove_last_symbol() {
+    symbols.erase(last_symbol_key);
 }
 
 bool SemanticAnalyzer::analizeFuncProto(const AstNode* in_proto_node) {
@@ -91,12 +96,6 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
     const AstVarDef& var_def = in_node->var_def;
     auto var_name = std::string(var_def.name);
 
-    if (var_def.initializer) {
-        auto expr_type = get_expr_type(var_def.initializer);
-        if (!check_type_compat(var_def.type, expr_type, in_node))
-            return false;
-    }
-
     if (is_global) {
         if (!var_def.initializer) {
             add_semantic_error(in_node, ERROR_GLOBAL_NEED_INITIALIZER, var_def.name);
@@ -105,10 +104,24 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
 
         global_symbol_table->add_symbol(var_name, SymbolType::VARIABLE, in_node);
 
+        auto expr_type = get_expr_type(var_def.initializer);
+        if (!check_type_compat(var_def.type, expr_type, in_node)) {
+            global_symbol_table->remove_last_symbol();
+            return false;
+        }
+
         return true;
     }
 
     symbol_table->add_symbol(var_name, SymbolType::VARIABLE, in_node);
+
+    if (var_def.initializer) {
+        auto expr_type = get_expr_type(var_def.initializer);
+        if (!check_type_compat(var_def.type, expr_type, in_node)) {
+            symbol_table->remove_last_symbol();
+            return false;
+        }
+    }
 
     return true;
 }

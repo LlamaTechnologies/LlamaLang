@@ -445,6 +445,7 @@ AstNode* Parser::parse_vardef_stmnt() noexcept {
     if (assign_token.id == TokenId::ASSIGN) {
         auto identifier_node = new AstNode(AstNodeType::AstSymbol, token_symbol_name.start_line, token_symbol_name.start_column, lexer.file_name);
         identifier_node->symbol.token = &token_symbol_name;
+        identifier_node->symbol.cached_name = lexer.get_token_value(token_symbol_name);
         auto expr = parse_expr();
         if (!expr) {
             //TODO(pablo96): handle error in unary_expr => sync parsing
@@ -862,6 +863,7 @@ AstNode* Parser::parse_primary_expr() noexcept {
 
         AstNode* symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column, lexer.file_name);
         symbol_node->symbol.token = &token;
+        symbol_node->symbol.cached_name = lexer.get_token_value(token);
         return symbol_node;
     }
     

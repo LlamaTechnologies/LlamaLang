@@ -41,9 +41,12 @@ struct Table {
 
     void add_symbol(const std::string& in_name, const SymbolType in_type, const AstNode* in_data);
 
+    void remove_last_symbol();
+
 private:
     std::vector<Table>  children_scopes;
     SymbolMap           symbols;
+    std::string         last_symbol_key;
 };
 
 class SemanticAnalyzer {
