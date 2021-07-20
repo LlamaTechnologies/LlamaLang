@@ -7,11 +7,7 @@
 struct AstFuncDef;
 struct AstBlock;
 struct AstNode;
-
-enum class SymbolType {
-    VARIABLE,
-    FUNCTION
-};
+enum class SymbolType;
 
 struct Symbol {
     const std::string&  name;
@@ -24,6 +20,7 @@ struct Symbol {
 
 struct Table {
     using SymbolMap = std::unordered_map<std::string, Symbol>;
+    using TableMap = std::unordered_map<std::string, Table*>;
 
     Table*      parent;
     std::string name;
@@ -35,7 +32,9 @@ struct Table {
 
     bool has_child(const std::string& in_name);
 
-    const Symbol& get_child(const std::string& in_name);
+    bool has_symbol(const std::string& in_name);
+
+    const Symbol& get_symbol(const std::string& in_name);
 
     void remove_last_child();
 
@@ -44,9 +43,10 @@ struct Table {
     void remove_last_symbol();
 
 private:
-    std::vector<Table>  children_scopes;
-    SymbolMap           symbols;
-    std::string         last_symbol_key;
+    TableMap    children_scopes;
+    SymbolMap   symbols;
+    std::string last_symbol_key;
+    std::string last_child_key;
 };
 
 class SemanticAnalyzer {
@@ -87,7 +87,7 @@ private:
 
     const AstNode* get_expr_type(const AstNode* expr);
 
-    const AstNode* resolve_function_variable(const std::string& in_name, const AstNode* in_parent_node);
+    const AstNode* resolve_function_variable(const std::string& in_name, const AstNode* in_parent_node, SymbolType* out_symbol_type = nullptr);
 
     void add_semantic_error(const AstNode* in_node, const char* in_msg, ...);
 };

@@ -2,7 +2,7 @@
 #include "ir.hpp"
 #include "semantic_analyzer.hpp"
 
-void compiler::compile(const std::string& in_output_directory, const std::string& in_executable_name, AstNode* in_source_code_node, std::vector<Error>& errors) {
+bool compiler::compile(const std::string& in_output_directory, const std::string& in_executable_name, AstNode* in_source_code_node, std::vector<Error>& errors) {
     assert(in_source_code_node->node_type == AstNodeType::AstSourceCode);
     static LlvmIrGenerator generator(in_output_directory, in_executable_name);
     static SemanticAnalyzer analyzer(errors);
@@ -28,12 +28,13 @@ void compiler::compile(const std::string& in_output_directory, const std::string
         }
     }
 
+    bool has_errors = false;
     // second pass
     for (auto child : in_source_code_node->source_code.children) {
         switch (child->node_type) {
         case AstNodeType::AstFuncDef:
             if (analyzer.analizeFuncBlock(child->function_def.block->block, child->function_def))
-                generator.generateFuncBlock(child->function_def.block->block, child->function_def);
+                has_errors = has_errors && generator.generateFuncBlock(child->function_def.block->block, child->function_def);
             break; 
         default:
             continue;
@@ -43,5 +44,7 @@ void compiler::compile(const std::string& in_output_directory, const std::string
     // generate IR output
     generator.flush();
 
-    // generate exe|lib|dll output
+    // TODO(pablo96): generate exe|lib|dll output
+
+    return has_errors;
 }

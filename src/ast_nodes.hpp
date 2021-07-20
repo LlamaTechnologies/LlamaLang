@@ -10,6 +10,7 @@
 
 namespace llvm {
     class Function;
+    class Value;
 }
 
 typedef struct LLVMOpaqueType* LLVMTypeRef;
@@ -69,14 +70,23 @@ struct AstBlock {
 };
 
 struct AstVarDef {
-    std::string_view    name;
-    AstNode*            type;
-    AstNode*            initializer;
+    mutable llvm::Value*    llvm_value;
+    std::string_view        name;
+    AstNode*                type;
+    AstNode*                initializer;
+};
+
+enum class SymbolType {
+    FUNC,
+    VAR
 };
 
 struct AstSymbol {
-    const Token* token;
-    std::string_view cached_name;
+    mutable SymbolType  type;
+    mutable
+    const AstNode*      data;   // resolved ast node
+    const Token*        token;
+    std::string_view    cached_name;
 };
 
 enum class ConstValueType {

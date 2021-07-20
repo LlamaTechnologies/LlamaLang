@@ -27,7 +27,8 @@ TEST(Integrations, FromCompiler) {
     Parser parser(lexer, errors);
     auto source_code_node = parser.parse();
 
-    compiler::compile(output_path, executable_name, source_code_node, errors);
+    bool error_code = compiler::compile(output_path, executable_name, source_code_node, errors);
 
     ASSERT_EQ(errors.size(), 0L);
+    ASSERT_EQ(error_code, 0);
 }

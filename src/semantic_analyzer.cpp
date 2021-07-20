@@ -9,14 +9,21 @@ static bool is_ret_stmnt(const AstNode* stmnt);
 static const AstNode* get_best_type(const AstNode* type_node0, const AstNode* type_node1);
 
 Table* Table::create_child(const std::string& in_name) {
-    return &children_scopes.emplace_back(in_name, this);
+    auto child = new Table(in_name, this);
+    last_child_key = in_name;
+    children_scopes.emplace(in_name, child);
+    return child;
 }
 
 bool Table::has_child(const std::string& in_name) {
+    return children_scopes.find(in_name) != children_scopes.end();
+}
+
+bool Table::has_symbol(const std::string& in_name) {
     return symbols.find(in_name) != symbols.end();
 }
 
-const Symbol& Table::get_child(const std::string& in_name) {
+const Symbol& Table::get_symbol(const std::string& in_name) {
 #ifdef LL_DEBUG
     if (has_child(in_name))
 #endif
@@ -27,7 +34,7 @@ const Symbol& Table::get_child(const std::string& in_name) {
 }
 
 void Table::remove_last_child() {
-    children_scopes.pop_back();
+    children_scopes.erase(last_child_key);
 }
 
 void Table::add_symbol(const std::string& in_name, const SymbolType in_type, const AstNode* in_data) {
@@ -54,7 +61,7 @@ bool SemanticAnalyzer::analizeFuncProto(const AstNode* in_proto_node) {
 
     auto str_name = std::string(func_proto.name);
 
-    symbol_table->add_symbol(str_name, SymbolType::FUNCTION, in_proto_node);
+    symbol_table->add_symbol(str_name, SymbolType::FUNC, in_proto_node);
     symbol_table = symbol_table->create_child(std::string(func_proto.name));
 
     return true;
@@ -70,6 +77,7 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock& in_func_block, AstFuncDe
     for (auto stmnt : in_func_block.statements) {
         if (is_ret_stmnt(stmnt)) {
             has_ret_stmnt = true;
+            analizeExpr(stmnt);
             auto expr_type = get_expr_type(stmnt->unary_expr.expr);
             check_type_compat(expr_type, ret_type, stmnt);
         } else if (stmnt->node_type == AstNodeType::AstVarDef) {
@@ -102,7 +110,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
             return false;
         }
 
-        global_symbol_table->add_symbol(var_name, SymbolType::VARIABLE, in_node);
+        global_symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
 
         auto expr_type = get_expr_type(var_def.initializer);
         if (!check_type_compat(var_def.type, expr_type, in_node)) {
@@ -113,7 +121,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
         return true;
     }
 
-    symbol_table->add_symbol(var_name, SymbolType::VARIABLE, in_node);
+    symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
 
     if (var_def.initializer) {
         auto expr_type = get_expr_type(var_def.initializer);
@@ -177,9 +185,6 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
         }
         case AstNodeType::AstUnaryExpr: {
             auto unary_expr = in_expr->unary_expr;
-            if (unary_expr.op == UnaryExprType::RET)
-                UNREACHEABLE;
-
             auto type_node = get_expr_type(unary_expr.expr);
 
             // Overloading operators is not supported
@@ -207,7 +212,8 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
         }
         case AstNodeType::AstSymbol: {
             auto name = std::string(in_expr->symbol.cached_name);
-            return resolve_function_variable(name, in_expr) != nullptr;
+            auto data = in_expr->symbol.data = resolve_function_variable(name, in_expr, &in_expr->symbol.type);
+            return  data != nullptr;
         }
         case AstNodeType::AstConstValue: {
             switch (in_expr->const_value.type)
@@ -227,11 +233,19 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
         return false;
 }
 
-const AstNode* SemanticAnalyzer::resolve_function_variable(const std::string& in_name, const AstNode* in_parent_node) {
+const AstNode* SemanticAnalyzer::resolve_function_variable(const std::string& in_name, const AstNode* in_parent_node, SymbolType* out_symbol_type) {
     auto curr_table = symbol_table;
     do {
         if (curr_table->has_child(in_name)) {
-            const Symbol& symbol = curr_table->get_child(in_name);
+            const Symbol& symbol = curr_table->get_symbol(in_name);
+            if (out_symbol_type)
+                *out_symbol_type = SymbolType::FUNC;
+            return symbol.data_node;
+        }
+        if (curr_table->has_symbol(in_name)) {
+            const Symbol& symbol = curr_table->get_symbol(in_name);
+            if (out_symbol_type)
+                *out_symbol_type = SymbolType::VAR;
             return symbol.data_node;
         }
         curr_table = curr_table->parent;

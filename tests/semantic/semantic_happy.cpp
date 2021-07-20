@@ -202,6 +202,7 @@ TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
     // then:
     ASSERT_EQ(errors.size(), 0L);
     ASSERT_EQ(is_valid, true);
+    ASSERT_EQ(symbol_node->symbol.type, SymbolType::VAR);
 }
 
 TEST(SemanticExpressions, UnaryExprBool) {

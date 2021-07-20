@@ -62,19 +62,33 @@ void LlvmIrGenerator::generateFuncProto(const AstFuncProto& in_func_proto, AstFu
     
 }
 
-void LlvmIrGenerator::generateFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function) {
+bool LlvmIrGenerator::generateFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function) {
     // Create a new basic block to start insertion into.
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(context, "entry", in_function.function);
     builder->SetInsertPoint(BB);
 
     // Genereate body and finish the function with the return value
-    uint32_t bit_size = in_function.proto->function_proto.return_type->ast_type.type_info->bit_size;
-    llvm::Value* retVal = llvm::ConstantInt::get(context, llvm::APInt(bit_size, std::stol("1"), false));
-
-    if (retVal)
-        builder->CreateRet(retVal);
-    else
-        builder->CreateRetVoid();
+    for (auto stmnt : in_func_block.statements) {
+        switch (stmnt->node_type) {
+        case AstNodeType::AstVarDef:
+            generateVarDef(stmnt->var_def, false);
+            break;
+        case AstNodeType::AstUnaryExpr:
+            generateUnaryExpr(stmnt->unary_expr);
+            break;
+        case AstNodeType::AstBinaryExpr:
+            generateBinaryExpr(stmnt->binary_expr);
+            break;
+        case AstNodeType::AstFuncCallExpr:
+            generateFuncCallExpr(stmnt->func_call);
+            break;
+        default: 
+            // ignore stmnt:
+            ///// const_value;
+            ///// symbol;
+            break;
+        }
+    }
 
     // Validate the generated code, checking for consistency.
     if (llvm::verifyFunction(*in_function.function)) {
@@ -89,6 +103,25 @@ void LlvmIrGenerator::generateFuncBlock(const AstBlock& in_func_block, AstFuncDe
 
         // Error reading body, remove function.
         in_function.function->eraseFromParent();
+        return false;
+    }
+    return true;
+}
+
+llvm::Value* LlvmIrGenerator::generateExpr(const AstNode* in_expr) {
+    switch (in_expr->node_type) {
+    case AstNodeType::AstUnaryExpr:
+        return generateUnaryExpr(in_expr->unary_expr);
+    case AstNodeType::AstBinaryExpr:
+        return generateBinaryExpr(in_expr->binary_expr);
+    case AstNodeType::AstFuncCallExpr:
+        return generateFuncCallExpr(in_expr->func_call);
+    case AstNodeType::AstSymbol:
+        return generateSymbolExpr(in_expr->symbol);
+    case AstNodeType::AstConstValue:
+        return translateConstant(in_expr->const_value);
+    default:
+        UNREACHEABLE;
     }
 }
 
@@ -99,6 +132,8 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef& in_var_def, const bool is_
     if (is_global) {
         code_module->getOrInsertGlobal(name, type);
         auto globalVar = code_module->getNamedGlobal(name);
+        in_var_def.llvm_value = globalVar;
+
         auto assignStmntNode = in_var_def.initializer;
         llvm::Constant* init_value;
         
@@ -114,20 +149,101 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef& in_var_def, const bool is_
     }
     else {
         auto* varInst = builder->CreateAlloca(type, nullptr, name);
+        in_var_def.llvm_value = varInst;
+
         auto assignStmntNode = in_var_def.initializer;
 
         if (assignStmntNode) {
             auto& assignStmnt = assignStmntNode->binary_expr;
             assert(assignStmnt.bin_op == BinaryExprType::ASSIGN);
-            //translateBinaryExpr(assignStmnt);
+            //generateBinaryExpr(assignStmnt);
         }
     }
 }
 
+llvm::Value* LlvmIrGenerator::generateUnaryExpr(const AstUnaryExpr& in_unary_expr) {
+    // TODO(pablo96): Add support for fp. This only works for integer values.
+    switch (in_unary_expr.op)
+    {
+    case UnaryExprType::RET: {
+        if (in_unary_expr.expr) {
+            auto retval = generateExpr(in_unary_expr.expr);
+            return builder->CreateRet(retval);
+        }
+        return builder->CreateRetVoid();
+    }
+    case UnaryExprType::INC: {
+        auto symbol_ref = generateExpr(in_unary_expr.expr);
+        return builder->CreateAdd(symbol_ref, llvm::ConstantInt::get(context, llvm::APInt(128, 1)));
+    }
+    case UnaryExprType::DEC: {
+        auto symbol_ref = generateExpr(in_unary_expr.expr);
+        return builder->CreateSub(symbol_ref, llvm::ConstantInt::get(context, llvm::APInt(128, 1)));
+    }
+    case UnaryExprType::NEG: {
+        auto symbol_ref = generateExpr(in_unary_expr.expr);
+        return builder->CreateSub(symbol_ref, llvm::ConstantInt::get(context, llvm::APInt(128, 0)), "", false, true);
+    }
+    case UnaryExprType::NOT:
+    case UnaryExprType::BIT_INV: {
+        auto symbol_ref = generateExpr(in_unary_expr.expr);
+        return builder->CreateNot(symbol_ref);
+    }
+    default:
+        UNREACHEABLE;
+    }
+}
+
+llvm::Value* LlvmIrGenerator::generateBinaryExpr(const AstBinaryExpr& in_binary_expr) {
+    switch(in_binary_expr.bin_op) {
+        case BinaryExprType::ASSIGN:
+            return nullptr;
+        case BinaryExprType::BIT_AND:
+        case BinaryExprType::BIT_XOR:
+        case BinaryExprType::LSHIFT:
+        case BinaryExprType::RSHIFT:
+            return nullptr;
+        case BinaryExprType::EQUALS:
+        case BinaryExprType::NOT_EQUALS:
+        case BinaryExprType::GREATER:
+        case BinaryExprType::GREATER_OR_EQUALS:
+        case BinaryExprType::LESS:
+        case BinaryExprType::LESS_OR_EQUALS:
+            return nullptr;
+        case BinaryExprType::ADD:
+        case BinaryExprType::SUB:
+        case BinaryExprType::MUL:
+        case BinaryExprType::DIV:
+        case BinaryExprType::MOD:
+            return nullptr;
+        default:
+            UNREACHEABLE;
+    }
+}
+
+llvm::Value* LlvmIrGenerator::generateSymbolExpr(const AstSymbol& in_symbol) {
+    switch (in_symbol.type) {
+    case SymbolType::FUNC: {
+        return nullptr;
+    }
+    case SymbolType::VAR: {
+        return builder->CreateLoad(in_symbol.data->var_def.llvm_value);
+    }
+    default: 
+        UNREACHEABLE;
+    }
+}
+
+llvm::Value* LlvmIrGenerator::generateFuncCallExpr(const AstFuncCallExpr& in_call_expr) {
+    return nullptr;
+}
+
 void LlvmIrGenerator::flush() {
+#ifndef LT_TESTS
 #ifdef _DEBUG
     console::WriteLine();
     code_module->dump();
+#endif
 #endif
 
     std::error_code error_code;
@@ -139,7 +255,7 @@ void LlvmIrGenerator::flush() {
     llvm_output_file.close();
 }
 
-llvm::Type* LlvmIrGenerator::translateType(AstType& in_type) {
+llvm::Type* LlvmIrGenerator::translateType(const AstType& in_type) {
     switch (in_type.type_id) {
     case AstTypeId::Void:
         return llvm::Type::getVoidTy(context);
@@ -173,7 +289,7 @@ llvm::Type* LlvmIrGenerator::translateType(AstType& in_type) {
     }
 }
 
-llvm::Constant* LlvmIrGenerator::translateConstant(AstConstValue& in_const) {
+llvm::Constant* LlvmIrGenerator::translateConstant(const AstConstValue& in_const) {
     ConstValueType r_value_type = in_const.type;
     if (r_value_type == ConstValueType::INT) {
         const BigInt& int_val = in_const.integer;
@@ -204,3 +320,51 @@ llvm::Constant* getConstantDefaultValue(const AstType& in_type, llvm::Type* in_l
         UNREACHEABLE;
     }
 }
+
+/*
+void kprintf(Module *mod, BasicBlock *bb, const char *format, ...)
+{
+    Function *func_printf = mod->getFunction("printf");
+    if (!func_printf) {
+        PointerType *Pty = PointerType::get(IntegerType::get(mod->getContext(), 8), 0);
+        FunctionType *FuncTy9 = FunctionType::get(IntegerType::get(mod->getContext(), 32), true);
+
+        func_printf = Function::Create(FuncTy9, GlobalValue::ExternalLinkage, "printf", mod);
+        func_printf->setCallingConv(CallingConv::C);
+
+        AttrListPtr func_printf_PAL;
+        func_printf->setAttributes(func_printf_PAL);
+    }
+
+    IRBuilder <> builder(mod->getContext());
+    builder.SetInsertPoint(bb);
+
+    Value *str = builder.CreateGlobalStringPtr(format);
+    std::vector <Value *> int32_call_params;
+    int32_call_params.push_back(str);
+
+    va_list ap;
+    va_start(ap, format);
+
+    char *str_ptr = va_arg(ap, char*);
+    Value *format_ptr = builder.CreateGlobalStringPtr(str_ptr);
+    int32_call_params.push_back(format_ptr);
+
+    std::vector<llvm::Value*> extra;
+    do {
+        llvm::Value *op = va_arg(ap, llvm::Value*);
+        if (op) {
+            int32_call_params.push_back(op);
+        } else {
+            break;
+        }
+    } while (1);
+    va_end(ap);
+
+    CallInst * int32_call = CallInst::Create(func_printf, int32_call_params, "call", bb);
+}
+#define oprintf(...) kprintf(__VA_ARGS__)
+#define llvm_printf(...) oprintf(mod, bb, __VA_ARGS__, NULL)
+
+llvm_printf("Output: 0x%08X %f %d\n", 0x12345678, 3.1415926, 12345);
+*/
