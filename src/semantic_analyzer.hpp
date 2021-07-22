@@ -36,6 +36,8 @@ struct Table {
 
     const Symbol& get_symbol(const std::string& in_name);
 
+    Table* get_child(const std::string& in_name);
+
     void remove_last_child();
 
     void add_symbol(const std::string& in_name, const SymbolType in_type, const AstNode* in_data);

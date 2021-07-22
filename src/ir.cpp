@@ -55,6 +55,15 @@ void LlvmIrGenerator::generateFuncProto(const AstFuncProto& in_func_proto, AstFu
     llvm::Function* function = llvm::Function::Create(functionType, linkageType, std::string(in_func_proto.name), code_module);
     function->setCallingConv(llvm::CallingConv::C);
 
+    // set name to every parameters
+    int i = 0;
+    auto args = function->args();
+    auto it = args.begin();
+
+    for(; it != args.end(); it++, i++) {
+        it->setName(std::string(nodeParams.at(i)->param_decl.name));
+    }
+    
     // Add to symbols
     if (in_function) {
         in_function->function = function;
@@ -227,8 +236,25 @@ llvm::Value* LlvmIrGenerator::generateSymbolExpr(const AstSymbol& in_symbol) {
         return nullptr;
     }
     case SymbolType::VAR: {
-        return builder->CreateLoad(in_symbol.data->var_def.llvm_value);
+        if (in_symbol.data->node_type == AstNodeType::AstVarDef)
+            return builder->CreateLoad(in_symbol.data->var_def.llvm_value);
+        // is a function parameter
+        const AstNode* func_node = in_symbol.data;
+        while (func_node->parent) {
+            func_node = func_node->parent;
+            if (func_node->node_type == AstNodeType::AstFuncDef) {
+                auto llvm_func = func_node->function_def.function;
+                auto args = llvm_func->args();
+                for(auto it = args.begin(); it != args.end(); it++) {
+                    std::string name = it->getName().data();
+                    if (name == in_symbol.data->param_decl.name) {
+                        return it;
+                    }
+                }
+            }
+        }
     }
+    LL_FALLTHROUGH
     default: 
         UNREACHEABLE;
     }

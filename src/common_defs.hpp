@@ -11,10 +11,10 @@
 
 #ifdef LL_VISUALSTUDIO
 #define __func__ __FUNCTION__
+#endif
+
 #ifdef _DEBUG
 #define LL_DEBUG
-#undef _DEBUG
-#endif
 #endif
 
 #define LL_NODISCARD    [[nodiscard]]

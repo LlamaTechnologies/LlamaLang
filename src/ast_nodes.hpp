@@ -22,7 +22,6 @@ struct AstDirective;
 struct AstType;
 struct AstFuncDef;
 struct AstFuncProto;
-struct AstParamDecl;
 struct AstBlock;
 struct AstSourceCode;
 
@@ -58,11 +57,6 @@ struct AstFuncProto {
     AstNode*                return_type;
 };
 
-struct AstParamDecl {
-    AstNode*            type;
-    std::string_view    name;
-};
-
 struct AstBlock {
     std::vector<AstNode*> statements;
 
@@ -75,6 +69,8 @@ struct AstVarDef {
     AstNode*                type;
     AstNode*                initializer;
 };
+
+typedef AstVarDef AstParamDecl;
 
 enum class SymbolType {
     FUNC,

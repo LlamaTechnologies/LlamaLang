@@ -298,6 +298,8 @@ AstNode* Parser::parse_param_decl() noexcept {
     type_node->parent = param_decl_node;
     param_decl_node->param_decl.name = lexer.get_token_value(name_token);
     param_decl_node->param_decl.type = type_node;
+    param_decl_node->param_decl.llvm_value = nullptr;
+    param_decl_node->param_decl.initializer = nullptr;
     return param_decl_node;
 }
 
@@ -966,11 +968,13 @@ AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexce
     assert(len2 == len1);
 
     va_end(ap);
+    va_end(ap2);
 
     Error error(ERROR_TYPE::ERROR,
         token.start_line,
         token.start_column,
         lexer.file_name, msg);
+
     return nullptr;
 }
 

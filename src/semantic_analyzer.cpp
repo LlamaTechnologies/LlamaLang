@@ -23,9 +23,19 @@ bool Table::has_symbol(const std::string& in_name) {
     return symbols.find(in_name) != symbols.end();
 }
 
-const Symbol& Table::get_symbol(const std::string& in_name) {
+Table* Table::get_child(const std::string& in_name) {
 #ifdef LL_DEBUG
     if (has_child(in_name))
+#endif
+        return children_scopes.at(in_name);
+#ifdef LL_DEBUG
+    UNREACHEABLE;
+#endif
+}
+
+const Symbol& Table::get_symbol(const std::string& in_name) {
+#ifdef LL_DEBUG
+    if (has_symbol(in_name))
 #endif
         return symbols.at(in_name);
 #ifdef LL_DEBUG
@@ -64,11 +74,20 @@ bool SemanticAnalyzer::analizeFuncProto(const AstNode* in_proto_node) {
     symbol_table->add_symbol(str_name, SymbolType::FUNC, in_proto_node);
     symbol_table = symbol_table->create_child(std::string(func_proto.name));
 
-    return true;
+    bool has_no_error = true;
+    for (AstNode* param : func_proto.params) {
+        bool param_ok = analizeVarDef(param, false);
+        has_no_error = has_no_error && param_ok;
+    }
+
+    symbol_table = symbol_table->parent;
+    return has_no_error;
 }
 
 bool SemanticAnalyzer::analizeFuncBlock(const AstBlock& in_func_block, AstFuncDef& in_function) {
     auto ret_type = in_function.proto->function_proto.return_type;
+
+    symbol_table = symbol_table->get_child(std::string(in_function.proto->function_proto.name));
 
     size_t errors_before = errors.size();
     bool has_ret_type = ret_type->ast_type.type_id != AstTypeId::Void;
@@ -94,14 +113,17 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock& in_func_block, AstFuncDe
 
     size_t errors_after = errors.size();
 
+    if (symbol_table->parent)
+        symbol_table = symbol_table->parent;
+
     return errors_before == errors_after;
 }
 
 bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_global) {
     assert(in_node != nullptr);
-    assert(in_node->node_type == AstNodeType::AstVarDef);
+    assert((in_node->node_type == AstNodeType::AstVarDef) || (in_node->node_type == AstNodeType::AstParamDecl));
 
-    const AstVarDef& var_def = in_node->var_def;
+    const AstVarDef& var_def = in_node->node_type == AstNodeType::AstVarDef ? in_node->var_def : in_node->param_decl;
     auto var_name = std::string(var_def.name);
 
     if (is_global) {
@@ -186,6 +208,10 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
         case AstNodeType::AstUnaryExpr: {
             auto unary_expr = in_expr->unary_expr;
             auto type_node = get_expr_type(unary_expr.expr);
+
+            if (!type_node) {
+                return false;
+            }
 
             // Overloading operators is not supported
             if (type_node->ast_type.type_id == AstTypeId::Struct) {
@@ -272,6 +298,7 @@ void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in
     assert(len2 == len1);
 
     va_end(ap);
+    va_end(ap2);
 
     Error error(ERROR_TYPE::ERROR,
         in_node->line,
@@ -369,6 +396,9 @@ const AstNode* SemanticAnalyzer::get_expr_type(const AstNode* expr) {
         }
         if (var_node->node_type == AstNodeType::AstVarDef) {
             return var_node->var_def.type;
+        }
+        if (var_node->node_type == AstNodeType::AstParamDecl) {
+            return var_node->param_decl.type;
         }
         if (var_node->node_type == AstNodeType::AstFuncDef) {
             return var_node->function_def.proto->function_proto.return_type;

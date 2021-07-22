@@ -1179,7 +1179,6 @@ void Lexer::invalid_char_error(uint8_t c) noexcept {
 
 void Lexer::tokenize_error(const char* format, ...) noexcept {
     state = TokenizerState::Error;
-
     
     va_list ap, ap2;
     va_start(ap, format);
@@ -1195,6 +1194,7 @@ void Lexer::tokenize_error(const char* format, ...) noexcept {
     assert(len2 == len1);
 
     va_end(ap);
+    va_end(ap2);
 
     Error error(ERROR_TYPE::ERROR,
         curr_line,
