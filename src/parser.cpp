@@ -962,19 +962,19 @@ AstNode* Parser::parse_error(const Token& token, const char* format, ...) noexce
     assert(len1 >= 0);
 
     std::string msg;
-    msg.reserve(len1);
+    msg.reserve(len1 + 1);
 
-    int len2 = snprintf(msg.data(), len1, format, ap2);
+    int len2 = snprintf(msg.data(), msg.capacity(), format, ap2);
+    assert(len2 >= 0);
     assert(len2 == len1);
-
-    va_end(ap);
-    va_end(ap2);
-
+    
     Error error(ERROR_TYPE::ERROR,
         token.start_line,
         token.start_column,
         lexer.file_name, msg);
 
+    va_end(ap);
+    va_end(ap2);
     return nullptr;
 }
 

@@ -104,7 +104,7 @@ union {
 
 struct AstFuncCallExpr {
     std::string_view        fn_name;
-    AstNode*                fn_ref;
+    mutable const AstNode*  fn_ref;
     std::vector<AstNode*>   params;
 };
 

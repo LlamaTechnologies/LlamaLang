@@ -1183,18 +1183,16 @@ void Lexer::tokenize_error(const char* format, ...) noexcept {
     va_list ap, ap2;
     va_start(ap, format);
     va_copy(ap2, ap);
-    
+
     int len1 = snprintf(nullptr, 0, format, ap);
     assert(len1 >= 0);
 
     std::string msg;
-    msg.reserve(len1);
+    msg.reserve(len1 + 1);
 
-    int len2 = snprintf(msg.data(), len1, format, ap2);
+    int len2 = snprintf(msg.data(), msg.capacity(), format, ap2);
+    assert(len2 >= 0);
     assert(len2 == len1);
-
-    va_end(ap);
-    va_end(ap2);
 
     Error error(ERROR_TYPE::ERROR,
         curr_line,
@@ -1202,6 +1200,9 @@ void Lexer::tokenize_error(const char* format, ...) noexcept {
         file_name, msg);
 
     errors.push_back(error);
+
+    va_end(ap2);
+    va_end(ap);
 }
 
 void Lexer::handle_string_escape(uint8_t c) noexcept {

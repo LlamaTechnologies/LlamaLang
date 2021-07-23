@@ -506,3 +506,94 @@ TEST(SemanticExpressions, FunctionRet) {
     ASSERT_EQ(is_valid, true);
     ASSERT_EQ(errors.size(), 0L);
 }
+
+//==================================================================================
+//          SEMANTIC FUNCTION CALLS
+//==================================================================================
+
+TEST(SemanticExpressions, FunctionCallNoParam) {
+     // given: variable definition
+    auto void_type_node = get_type_node("void");
+
+    // given: function proto -> fn my_func() void
+    auto function_proto_node = new AstNode(AstNodeType::AstFuncProto, 0, 0, "");
+    function_proto_node->function_proto.name = "my_func";
+    function_proto_node->function_proto.return_type = void_type_node;
+
+    // given: function block
+    auto function_block_node = new AstNode(AstNodeType::AstBlock, 0, 0, "");
+
+    // given: function
+    auto function_node = new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    function_node->function_def.proto = function_proto_node;
+    function_node->function_def.block = function_block_node;
+
+    auto function_call_node = new AstNode(AstNodeType::AstFuncCallExpr, 0, 0, "");
+    function_call_node->func_call.fn_name = "my_func";
+    function_call_node->func_call.fn_ref = nullptr;
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
+    bool is_valid_block = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
+    bool is_valid_call  = analizer.analizeExpr(function_call_node);
+
+    // then:
+    ASSERT_EQ(is_valid_proto, true);
+    ASSERT_EQ(is_valid_block, true);
+    ASSERT_EQ(is_valid_call, true);
+    ASSERT_EQ(errors.size(), 0L);
+}
+
+TEST(SemanticExpressions, FunctionCallWithParams) {
+     // given: types
+    auto void_type_node = get_type_node("void");
+    auto i32_type_node = get_type_node("i32");
+
+    // given: arg -> constant integer
+    auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
+    const_value_node->const_value.type = ConstValueType::INT;
+
+    // given: param -> param1 i32
+    auto param_node = new AstNode(AstNodeType::AstParamDecl, 0, 0, "");
+    param_node->param_decl.name = "param1";
+    param_node->param_decl.type = i32_type_node;
+    param_node->param_decl.initializer = nullptr;
+
+    // given: function proto -> fn my_func(param1 i32) void
+    auto function_proto_node = new AstNode(AstNodeType::AstFuncProto, 0, 0, "");
+    function_proto_node->function_proto.name = "my_func";
+    function_proto_node->function_proto.return_type = void_type_node;
+    function_proto_node->function_proto.params.push_back(param_node);
+
+    // given: function block
+    auto function_block_node = new AstNode(AstNodeType::AstBlock, 0, 0, "");
+
+    // given: function
+    auto function_node = new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
+    function_node->function_def.proto = function_proto_node;
+    function_node->function_def.block = function_block_node;
+
+    auto function_call_node = new AstNode(AstNodeType::AstFuncCallExpr, 0, 0, "");
+    function_call_node->func_call.fn_name = "my_func";
+    function_call_node->func_call.fn_ref = nullptr;
+    function_call_node->func_call.params.push_back(const_value_node);
+
+    // given: analizer
+    std::vector<Error> errors;
+    SemanticAnalyzer analizer(errors);
+
+    // when: call to analize_expr 
+    bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
+    bool is_valid_block = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
+    bool is_valid_call  = analizer.analizeExpr(function_call_node);
+
+    // then:
+    ASSERT_EQ(is_valid_proto, true);
+    ASSERT_EQ(is_valid_block, true);
+    ASSERT_EQ(is_valid_call, true);
+    ASSERT_EQ(errors.size(), 0L);
+}

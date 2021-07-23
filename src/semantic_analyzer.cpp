@@ -3,6 +3,7 @@
 #include "ast_nodes.hpp"
 #include "Types.hpp"
 #include "common_defs.hpp"
+#include <stdlib.h>
 #include <stdarg.h>
 
 static bool is_ret_stmnt(const AstNode* stmnt);
@@ -234,7 +235,41 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
             return analizeExpr(unary_expr.expr);
         }
         case AstNodeType::AstFuncCallExpr: {
-            return resolve_function_variable(std::string(in_expr->func_call.fn_name), in_expr) != nullptr;
+            auto& fn_call = in_expr->func_call;
+            SymbolType symbol_type;
+            fn_call.fn_ref = resolve_function_variable(std::string(fn_call.fn_name), in_expr, &symbol_type);
+
+            if (symbol_type != SymbolType::FUNC) {
+                add_semantic_error(in_expr, ERROR_SYMBOL_NOT_A_FN, fn_call.fn_name);
+                return false;
+            }
+
+            if (!fn_call.fn_ref) {
+                add_semantic_error(in_expr, ERROR_UNDECLARED_FN, fn_call.fn_name);
+                return false;
+            }
+
+            auto& fn_proto = fn_call.fn_ref->function_proto;
+            if (fn_call.params.size() != fn_proto.params.size()) {
+                auto params_size = fn_proto.params.size();
+                auto args_size = fn_call.params.size();
+
+                // BUG(pablo96): len1 != len2
+                add_semantic_error(in_expr, ERROR_ARGUMENT_COUNT_MISMATCH, params_size, args_size);
+                return false;
+            }
+
+            auto err_size_before = errors.size();
+
+            size_t i = 0;
+            for (auto arg : fn_call.params) {
+                auto arg_type =  get_expr_type(arg);
+                auto param = fn_proto.params.at(i);
+                check_type_compat(param->param_decl.type, arg_type, in_expr);
+            }
+
+            auto err_size_after = errors.size();
+            return err_size_after == err_size_before;
         }
         case AstNodeType::AstSymbol: {
             auto name = std::string(in_expr->symbol.cached_name);
@@ -292,13 +327,11 @@ void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in
     assert(len1 >= 0);
 
     std::string msg;
-    msg.reserve(len1);
+    msg.reserve(len1 + 1);
 
-    int len2 = snprintf(msg.data(), len1, in_msg, ap2);
-    assert(len2 == len1);
-
-    va_end(ap);
-    va_end(ap2);
+    int len2 = snprintf(msg.data(), msg.capacity(), in_msg, ap2);
+    assert(len2 >= 0);
+    //assert(len2 == len1);
 
     Error error(ERROR_TYPE::ERROR,
         in_node->line,
@@ -306,6 +339,9 @@ void SemanticAnalyzer::add_semantic_error(const AstNode* in_node, const char* in
         in_node->file_name, msg);
     
     errors.push_back(error);
+
+    va_end(ap);
+    va_end(ap2);
 }
 
 bool SemanticAnalyzer::check_type_compat(const AstNode* type_node0, const AstNode* type_node1, const AstNode* expr_node) {
