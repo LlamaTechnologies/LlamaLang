@@ -205,26 +205,90 @@ llvm::Value* LlvmIrGenerator::generateUnaryExpr(const AstUnaryExpr& in_unary_exp
 
 llvm::Value* LlvmIrGenerator::generateBinaryExpr(const AstBinaryExpr& in_binary_expr) {
     switch(in_binary_expr.bin_op) {
-        case BinaryExprType::ASSIGN:
-            return nullptr;
-        case BinaryExprType::BIT_AND:
-        case BinaryExprType::BIT_XOR:
-        case BinaryExprType::LSHIFT:
-        case BinaryExprType::RSHIFT:
-            return nullptr;
-        case BinaryExprType::EQUALS:
-        case BinaryExprType::NOT_EQUALS:
-        case BinaryExprType::GREATER:
-        case BinaryExprType::GREATER_OR_EQUALS:
-        case BinaryExprType::LESS:
-        case BinaryExprType::LESS_OR_EQUALS:
-            return nullptr;
-        case BinaryExprType::ADD:
-        case BinaryExprType::SUB:
-        case BinaryExprType::MUL:
-        case BinaryExprType::DIV:
-        case BinaryExprType::MOD:
-            return nullptr;
+        case BinaryExprType::ASSIGN: {
+            auto l_expr_llvm_value = in_binary_expr.left_expr->symbol.data->var_def.llvm_value;
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateStore(r_expr_llvm_value, l_expr_llvm_value);
+        }
+        case BinaryExprType::BIT_AND: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateAnd(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::BIT_XOR: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateOr(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::LSHIFT: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateShl(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::RSHIFT: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateLShr(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        // TODO(pablo96): support fp operations
+        case BinaryExprType::EQUALS: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateICmpEQ(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::NOT_EQUALS: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateICmpNE(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        // TODO(pablo96): support unsigned operations
+        case BinaryExprType::GREATER: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateICmpSGT(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::GREATER_OR_EQUALS:  {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateICmpSGE(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::LESS: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateICmpSLT(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::LESS_OR_EQUALS: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateICmpSLE(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        // TODO(pablo96): support fp operations
+        case BinaryExprType::ADD: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateAdd(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::SUB:{
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateSub(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::MUL: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateMul(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        // TODO(pablo96): support fp operations and unsigned operations
+        case BinaryExprType::DIV: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateSDiv(l_expr_llvm_value, r_expr_llvm_value);
+        }
+        case BinaryExprType::MOD: {
+            auto l_expr_llvm_value = generateExpr(in_binary_expr.left_expr);
+            auto r_expr_llvm_value = generateExpr(in_binary_expr.right_expr);
+            return builder->CreateSRem(l_expr_llvm_value, r_expr_llvm_value);
+        }
         default:
             UNREACHEABLE;
     }
@@ -261,7 +325,15 @@ llvm::Value* LlvmIrGenerator::generateSymbolExpr(const AstSymbol& in_symbol) {
 }
 
 llvm::Value* LlvmIrGenerator::generateFuncCallExpr(const AstFuncCallExpr& in_call_expr) {
-    return nullptr;
+    auto llvm_fn = code_module->getFunction(in_call_expr.fn_name);
+    
+    std::vector<llvm::Value*> args;
+    for (auto arg_node : in_call_expr.params) {
+        auto arg_value = generateExpr(arg_node);
+        args.push_back(arg_value);
+    }
+
+    return builder->CreateCall(llvm_fn, args);
 }
 
 void LlvmIrGenerator::flush() {
