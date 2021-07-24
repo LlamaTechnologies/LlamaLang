@@ -3,15 +3,25 @@
 #include <llvm/IR/Verifier.h>
 #include "console.hpp"
 #include "lexer.hpp"
+#include "common_defs.hpp"
 
 static llvm::Constant* getConstantDefaultValue(const AstType& in_type, llvm::Type* in_llvm_type);
 
 static const char* GetDataLayout() {
+#ifdef LL_VISUALSTUDIO
     return "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128";
+#else
+    return "e-m:e-i64:64-f80:128-n8:16:32:64-S128";
+#endif
 }
 
 static const char * GetTargetTriple() {
+#ifdef LL_VISUALSTUDIO
     return "x86_64-pc-windows-msvc19.28.29913";
+#else
+    return "x86_64-pc-linux-gnu";
+#endif
+
 }
 
 LlvmIrGenerator::LlvmIrGenerator(const std::string& _output_directory, const std::string& _executable_name) 
@@ -54,15 +64,6 @@ void LlvmIrGenerator::generateFuncProto(const AstFuncProto& in_func_proto, AstFu
     // Create the function
     llvm::Function* function = llvm::Function::Create(functionType, linkageType, std::string(in_func_proto.name), code_module);
     function->setCallingConv(llvm::CallingConv::C);
-
-    // set name to every parameters
-    int i = 0;
-    auto args = function->args();
-    auto it = args.begin();
-
-    for(; it != args.end(); it++, i++) {
-        it->setName(std::string(nodeParams.at(i)->param_decl.name));
-    }
     
     // Add to symbols
     if (in_function) {
@@ -75,6 +76,17 @@ bool LlvmIrGenerator::generateFuncBlock(const AstBlock& in_func_block, AstFuncDe
     // Create a new basic block to start insertion into.
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(context, "entry", in_function.function);
     builder->SetInsertPoint(BB);
+
+    // Store params in local variables to avoid problems
+    int i = 0;
+    auto args = in_function.function->args();
+    auto it = args.begin();
+
+    for(; it != args.end(); it++, i++) {
+        auto var = builder->CreateAlloca(it->getType());
+        builder->CreateStore(it, var);
+        in_function.proto->function_proto.params.at(i)->param_decl.llvm_value = var;
+    }
 
     // Genereate body and finish the function with the return value
     for (auto stmnt : in_func_block.statements) {
@@ -302,21 +314,8 @@ llvm::Value* LlvmIrGenerator::generateSymbolExpr(const AstSymbol& in_symbol) {
     case SymbolType::VAR: {
         if (in_symbol.data->node_type == AstNodeType::AstVarDef)
             return builder->CreateLoad(in_symbol.data->var_def.llvm_value);
-        // is a function parameter
-        const AstNode* func_node = in_symbol.data;
-        while (func_node->parent) {
-            func_node = func_node->parent;
-            if (func_node->node_type == AstNodeType::AstFuncDef) {
-                auto llvm_func = func_node->function_def.function;
-                auto args = llvm_func->args();
-                for(auto it = args.begin(); it != args.end(); it++) {
-                    std::string name = it->getName().data();
-                    if (name == in_symbol.data->param_decl.name) {
-                        return it;
-                    }
-                }
-            }
-        }
+        if (in_symbol.data->node_type == AstNodeType::AstParamDecl)
+            return builder->CreateLoad(in_symbol.data->param_decl.llvm_value);
     }
     LL_FALLTHROUGH
     default: 
@@ -337,7 +336,7 @@ llvm::Value* LlvmIrGenerator::generateFuncCallExpr(const AstFuncCallExpr& in_cal
 }
 
 void LlvmIrGenerator::flush() {
-#ifndef LT_TESTS
+#ifndef LL_TESTS
 #ifdef _DEBUG
     console::WriteLine();
     code_module->dump();
