@@ -177,7 +177,7 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef& in_var_def, const bool is_
         if (assignStmntNode) {
             auto& assignStmnt = assignStmntNode->binary_expr;
             assert(assignStmnt.bin_op == BinaryExprType::ASSIGN);
-            //generateBinaryExpr(assignStmnt);
+            generateBinaryExpr(assignStmnt);
         }
     }
 }

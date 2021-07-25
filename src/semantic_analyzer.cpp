@@ -147,6 +147,10 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode* in_node, const bool is_globa
     symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
 
     if (var_def.initializer) {
+        bool is_valid_init = analizeExpr(var_def.initializer);
+        if (!is_valid_init)
+            return false;
+        
         auto expr_type = get_expr_type(var_def.initializer);
         if (!check_type_compat(var_def.type, expr_type, in_node)) {
             symbol_table->remove_last_symbol();
@@ -263,6 +267,10 @@ bool SemanticAnalyzer::analizeExpr(const AstNode* in_expr) {
 
             size_t i = 0;
             for (auto arg : fn_call.params) {
+                bool is_valid_arg = analizeExpr(arg);
+                if (!is_ret_stmnt) 
+                    continue;
+
                 auto arg_type =  get_expr_type(arg);
                 auto param = fn_proto.params.at(i);
                 check_type_compat(param->param_decl.type, arg_type, in_expr);
