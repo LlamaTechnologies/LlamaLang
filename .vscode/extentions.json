@@ -1,0 +1,14 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "xaver.clang-format",
+        "gruntfuggly.todo-tree",
+        "jbockle.jbockle-format-files",
+        
+        "hoovercj.vscode-power-mode",
+        "pkief.material-icon-theme",
+        "github.github-vscode-theme"
+    ]
+}

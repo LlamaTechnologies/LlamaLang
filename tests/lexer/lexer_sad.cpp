@@ -1,34 +1,35 @@
-#include <gtest/gtest.h>
 #include "../../src/lexer.hpp"
 
-TEST(LexerSadIdentifierTests, IdentifierNumOnlyTest) {
-    std::vector<Error> errors;
-    Lexer lexer("1542", "NumOnlyTest", errors);
-    lexer.tokenize();
+#include <gtest/gtest.h>
 
-    ASSERT_EQ(errors.size(), 0L);
-    ASSERT_NE(lexer.get_next_token().id, TokenId::IDENTIFIER);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+TEST(LexerSadIdentifierTests, IdentifierNumOnlyTest) {
+  std::vector<Error> errors;
+  Lexer lexer("1542", "NumOnlyTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(lexer.get_next_token().id, TokenId::IDENTIFIER);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerSadIdentifierTests, IdentifierNumPrefixTest) {
-    std::vector<Error> errors;
-    Lexer lexer("1dentifier", "NumPrefixTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("1dentifier", "NumPrefixTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 1L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 1L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerSadIdentifierTests, IdentifierInvalidCharPrefixTest) {
-    std::vector<Error> errors;
-    Lexer lexer("$identifier", "InvalidCharPrefixTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("$identifier", "InvalidCharPrefixTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 1L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 1L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 //==================================================================================
@@ -36,43 +37,43 @@ TEST(LexerSadIdentifierTests, IdentifierInvalidCharPrefixTest) {
 //==================================================================================
 
 TEST(LexerSadKeywordsTests, KeywordFnUpperCaseTest) {
-    std::vector<Error> errors;
-    Lexer lexer("FN", "KeywordFnUpperCaseTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("FN", "KeywordFnUpperCaseTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerSadKeywordsTests, KeywordRetUpperCaseTest) {
-    std::vector<Error> errors;
-    Lexer lexer("RET", "KeywordRetUpperCaseTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("RET", "KeywordRetUpperCaseTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerSadKeywordsTests, KeywordAndUpperCaseTest) {
-    std::vector<Error> errors;
-    Lexer lexer("AND", "KeywordAndUpperCaseTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("AND", "KeywordAndUpperCaseTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerSadKeywordsTests, KeywordOrUpperCaseTest) {
-    std::vector<Error> errors;
-    Lexer lexer("OR", "KeywordOrUpperCaseTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("OR", "KeywordOrUpperCaseTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 0L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::IDENTIFIER);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 //==================================================================================
@@ -87,7 +88,7 @@ TEST(LexerHappyOperatorsTests, ForbiddenOperatorsTest) {
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 0L);
-    
+
     // Multiple hashes
     ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
     // Multiple percents
@@ -146,33 +147,33 @@ TEST(LexerHappyOperatorsTests, ForbiddenOperatorsTest) {
 //==================================================================================
 
 TEST(LexerHappyIntegerTests, IntegerContiguousUnderscoreSeparatorTest) {
-    std::vector<Error> errors;
-    Lexer lexer("54__15", "ContiguousUnderscoreSeparatorTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("54__15", "ContiguousUnderscoreSeparatorTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 1L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 1L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerHappyIntegerTests, IntegerUnexpectedCharTest) {
-    std::vector<Error> errors;
-    Lexer lexer("54$15", "UnexpectedCharTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("54$15", "UnexpectedCharTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 1L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 1L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerSadIntegerTests, IntegerFollowedByIdTest) {
-    std::vector<Error> errors;
-    Lexer lexer("5_415_identifier", "FollowedByIdTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("5_415_identifier", "FollowedByIdTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 1L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 1L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 /*
@@ -198,22 +199,21 @@ TEST(LexerSadIntegerTests, IntegerSignSpecInvalidTypeSpecTest) {
 //==================================================================================
 
 TEST(LexerSadStringCharTests, EmptyCharTest) {
-    std::vector<Error> errors;
-    Lexer lexer("\'\'", "EmptyStringTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer("\'\'", "EmptyStringTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 1L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 1L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
 TEST(LexerSadStringCharTests, MultilineStringTest) {
-    std::vector<Error> errors;
-    Lexer lexer(" \"Hello world for...\n1st time!\" ", "MultilineStringTest", errors);
-    lexer.tokenize();
+  std::vector<Error> errors;
+  Lexer lexer(" \"Hello world for...\n1st time!\" ", "MultilineStringTest", errors);
+  lexer.tokenize();
 
-    ASSERT_EQ(errors.size(), 1L);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
-    ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+  ASSERT_EQ(errors.size(), 1L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ERROR);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
-

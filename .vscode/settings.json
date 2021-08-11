@@ -64,6 +64,26 @@
         "typeinfo": "cpp",
         "variant": "cpp"
     },
+    "cmake.configureOnOpen": true,
+    "cmake.buildDirectory": "${workspaceFolder}/project",
+    "cmake.generator": "Visual Studio 16 2019",
+    "cmake.platform": "x64",
+    "[cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "clang-format.executable": "clang-format",
+    "clang-format.fallbackStyle": "LLVM",
+    "clang-format.language.cpp.enable": true,
+    "formatFiles.extensionsToInclude": "cpp,hpp",
+    "formatFiles.excludedFolders": [
+        ".vscode",
+        ".git",
+        "bin",
+        "extern",
+        "project",
+        "scripts",
+        "wiki"
+    ],
     "workbench.preferredDarkColorTheme": "GitHub Dark Default",
     "workbench.preferredLightColorTheme": "GitHub Light Default",
     "workbench.iconTheme": "material-icon-theme"

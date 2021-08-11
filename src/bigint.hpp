@@ -7,16 +7,17 @@
 
 #pragma once
 #include "common_defs.hpp"
-#include <stdint.h>
+
 #include <stddef.h> //size_t
+#include <stdint.h>
 
 struct BigInt {
-    size_t digit_count;
-    union {
-        uint64_t digit;
-        uint64_t *digits; // Least significant digit first
-    } data;
-    bool is_negative;
+  size_t digit_count;
+  union {
+    uint64_t digit;
+    uint64_t *digits; // Least significant digit first
+  } data;
+  bool is_negative;
 };
 
 struct Buf;
@@ -28,11 +29,11 @@ void bigint_init_bigint(BigInt *dest, const BigInt *src);
 void bigint_deinit(BigInt *bi);
 
 static inline const uint64_t *bigint_ptr(const BigInt *bigint) {
-    if (bigint->digit_count == 1) {
-        return &bigint->data.digit;
-    } else {
-        return bigint->data.digits;
-    }
+  if (bigint->digit_count == 1) {
+    return &bigint->data.digit;
+  } else {
+    return bigint->data.digits;
+  }
 }
 
 void bigint_add(BigInt *dest, const BigInt *op1, const BigInt *op2);
@@ -42,12 +43,13 @@ void bigint_shl(BigInt *dest, const BigInt *op1, const BigInt *op2);
 
 void bigint_negate(BigInt *dest, const BigInt *op);
 
-enum Cmp {
-    CmpLT,
-    CmpGT,
-    CmpEQ,
+enum Cmp
+{
+  CmpLT,
+  CmpGT,
+  CmpEQ,
 };
 
-Cmp bigint_cmp(const BigInt* op1, const BigInt* op2);
+Cmp bigint_cmp(const BigInt *op1, const BigInt *op2);
 
-bool operator==(const BigInt& val1, const BigInt& val2);
+bool operator==(const BigInt &val1, const BigInt &val2);
