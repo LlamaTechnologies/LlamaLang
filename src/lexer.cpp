@@ -325,19 +325,23 @@ void Lexer::tokenize() noexcept {
       case 'b':
         radix = 2;
         state = TokenizerState::NumberNoUnderscore;
+        curr_token.int_lit.base = INT_BASE::BINARY;
         break;
       case 'o':
         radix = 8;
         state = TokenizerState::NumberNoUnderscore;
+        curr_token.int_lit.base = INT_BASE::OCTAL;
         break;
       case 'x':
         radix = 16;
         state = TokenizerState::NumberNoUnderscore;
+        curr_token.int_lit.base = INT_BASE::HEXADECIMAL;
         break;
       default:
         // reinterpret as normal number
         cursor_pos--;
         state = TokenizerState::Number;
+        curr_token.int_lit.base = INT_BASE::DECIMAL;
         continue;
       }
       break;
@@ -610,6 +614,30 @@ void Lexer::tokenize() noexcept {
         set_token_id(TokenId::MINUS_MINUS);
         end_token();
         state = TokenizerState::Start;
+        break;
+      case '0':
+        // negative number
+        state = TokenizerState::Zero;
+        set_token_id(TokenId::INT_LIT);
+        is_trailing_underscore = false;
+        radix = 10;
+        curr_token.int_lit.is_negative = true;
+        curr_token.int_lit.number[curr_token.int_lit.digits_count] = '-';
+        curr_token.int_lit.digits_count++;
+        curr_token.int_lit.number[curr_token.int_lit.digits_count] = c;
+        curr_token.int_lit.digits_count++;
+        break;
+      case DIGIT_NON_ZERO:
+        // negative number
+        state = TokenizerState::Number;
+        set_token_id(TokenId::INT_LIT);
+        is_trailing_underscore = false;
+        radix = 10;
+        curr_token.int_lit.is_negative = true;
+        curr_token.int_lit.number[curr_token.int_lit.digits_count] = '-';
+        curr_token.int_lit.digits_count++;
+        curr_token.int_lit.number[curr_token.int_lit.digits_count] = c;
+        curr_token.int_lit.digits_count++;
         break;
       default:
         // just a -

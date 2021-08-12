@@ -32,6 +32,8 @@ bool Driver::setup(const char **argv, const int argc) {
   if (!get_tool_chain()) {
     return false;
   }
+
+  return true;
 }
 
 bool Driver::run() {
@@ -62,6 +64,8 @@ bool Driver::run() {
   if (lld_exit_code < 0) {
     return false;
   }
+
+  return true;
 }
 
 bool Driver::get_tool_chain() {
@@ -77,6 +81,7 @@ bool Driver::get_tool_chain() {
       return false;
     }
   }
+  return true;
 }
 
 bool Driver::verify_file_path() {
@@ -98,6 +103,8 @@ bool Driver::verify_file_path() {
     console::WriteLine("file '" + this->file_path.string() + "' is not a llama lang file!");
     return false;
   }
+
+  return true;
 }
 
 bool Driver::parse_args(const char **argv, const int argc) {

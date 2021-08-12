@@ -80,8 +80,9 @@ typedef uint32_t Char;
 
 enum class INT_BASE
 {
+  BINARY,
+  OCTAL,
   DECIMAL,
-  OCATAL,
   HEXADECIMAL
 };
 

@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/src/**",
-                "E:\\LLVM_Lib\\include"
+                "E:\\LLVM_Lib\\include",
+                "${workspaceFolder}/extern/googletest/googlemock/include/**",
+                "${workspaceFolder}/extern/googletest/googletest/include/**"
             ],
             "defines": [
                 "_DEBUG",
@@ -13,9 +15,9 @@
             ],
             "cStandard": "c17",
             "cppStandard": "c++20",
-
             "intelliSenseMode": "windows-clang-x64",
-            "compilerPath": "E:/LLVM/bin/clang++.exe"
+            "compilerPath": "E:/LLVM/bin/clang++.exe",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

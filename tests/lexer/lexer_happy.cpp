@@ -223,7 +223,7 @@ TEST(LexerHappyIntegerTests, IntegerDigitOnlyTest) {
 
 TEST(LexerHappyIntegerTests, IntegerDigitOnlyZeroPrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("05415", "DigitOnlyZeroPrefixTest", errors);
+  Lexer lexer("0o5415", "DigitOnlyZeroPrefixTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -231,7 +231,7 @@ TEST(LexerHappyIntegerTests, IntegerDigitOnlyZeroPrefixTest) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(int_token.id, TokenId::INT_LIT);
   ASSERT_EQ(strcmp(int_token.int_lit.number, "05415"), 0);
-  ASSERT_EQ(int_token.int_lit.base, INT_BASE::OCATAL);
+  ASSERT_EQ(int_token.int_lit.base, INT_BASE::OCTAL);
   ASSERT_EQ(int_token.int_lit.is_negative, false);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
@@ -545,7 +545,7 @@ TEST(LexerHappyFloatTests, FloatNegativeCompleteNegativeExponentTest) {
   std::vector<Error> errors;
   Lexer lexer("-1.6e-19", "FloatNegativeCompleteNegativeExponentTest", errors);
   lexer.tokenize();
-  auto minusToken = lexer.get_next_token();
+
   auto float_token = lexer.get_next_token();
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(float_token.id, TokenId::FLOAT_LIT);

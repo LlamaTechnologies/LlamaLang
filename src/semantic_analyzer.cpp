@@ -259,8 +259,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
 
     size_t i = 0;
     for (auto arg : fn_call.params) {
-      bool is_valid_arg = analizeExpr(arg);
-      if (!is_ret_stmnt)
+      if (!analizeExpr(arg))
         continue;
 
       auto arg_type = get_expr_type(arg);

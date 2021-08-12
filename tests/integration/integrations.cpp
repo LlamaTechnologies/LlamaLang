@@ -15,17 +15,8 @@ TEST(Integrations, FromCompiler) {
                             "\tret f\n"
                             "}\n";
 
-  std::vector<Error> errors;
+  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  Lexer lexer(source_code, source_name, errors);
-  lexer.tokenize();
-
-  Parser parser(lexer, errors);
-  auto source_code_node = parser.parse();
-
-  bool error_code = compiler::compile(output_path, executable_name, source_code_node, errors);
-
-  ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(error_code, 0);
 }
 
@@ -46,17 +37,8 @@ TEST(Integrations, MultipleFuncDefinitions) {
                             "\tret f\n"
                             "}\n";
 
-  std::vector<Error> errors;
+  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  Lexer lexer(source_code, source_name, errors);
-  lexer.tokenize();
-
-  Parser parser(lexer, errors);
-  auto source_code_node = parser.parse();
-
-  bool error_code = compiler::compile(output_path, executable_name, source_code_node, errors);
-
-  ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(error_code, 0);
 }
 
@@ -78,17 +60,8 @@ TEST(Integrations, FuncCalls) {
                             "\tret f\n"
                             "}\n";
 
-  std::vector<Error> errors;
+  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  Lexer lexer(source_code, source_name, errors);
-  lexer.tokenize();
-
-  Parser parser(lexer, errors);
-  auto source_code_node = parser.parse();
-
-  bool error_code = compiler::compile(output_path, executable_name, source_code_node, errors);
-
-  ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(error_code, 0);
 }
 
@@ -111,17 +84,8 @@ TEST(Integrations, FuncCallsWithAritmeticsArgs) {
                             "\tret f\n"
                             "}\n";
 
-  std::vector<Error> errors;
+  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  Lexer lexer(source_code, source_name, errors);
-  lexer.tokenize();
-
-  Parser parser(lexer, errors);
-  auto source_code_node = parser.parse();
-
-  bool error_code = compiler::compile(output_path, executable_name, source_code_node, errors);
-
-  ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(error_code, 0);
 }
 
@@ -143,17 +107,8 @@ TEST(Integrations, FuncCallsInAritmeticsArgs) {
                             "\tret f\n"
                             "}\n";
 
-  std::vector<Error> errors;
+  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  Lexer lexer(source_code, source_name, errors);
-  lexer.tokenize();
-
-  Parser parser(lexer, errors);
-  auto source_code_node = parser.parse();
-
-  bool error_code = compiler::compile(output_path, executable_name, source_code_node, errors);
-
-  ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(error_code, 0);
 }
 
@@ -174,16 +129,7 @@ TEST(Integrations, RetComplexExpretion) {
                             "\tret 85 + getX(5)\n"
                             "}\n";
 
-  std::vector<Error> errors;
+  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  Lexer lexer(source_code, source_name, errors);
-  lexer.tokenize();
-
-  Parser parser(lexer, errors);
-  auto source_code_node = parser.parse();
-
-  bool error_code = compiler::compile(output_path, executable_name, source_code_node, errors);
-
-  ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(error_code, 0);
 }

@@ -208,12 +208,9 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   auto neg_int_node = init_node->binary_expr.right_expr;
   ASSERT_NE(neg_int_node, nullptr);
   ASSERT_EQ(neg_int_node->parent, init_node);
-  ASSERT_EQ(neg_int_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(neg_int_node->unary_expr.op, UnaryExprType::NEG);
-  ASSERT_NE(neg_int_node->unary_expr.expr, nullptr);
-  ASSERT_EQ(neg_int_node->unary_expr.expr->parent, neg_int_node);
-  ASSERT_EQ(neg_int_node->unary_expr.expr->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(neg_int_node->unary_expr.expr->const_value.type, ConstValueType::INT);
+  ASSERT_EQ(neg_int_node->node_type, AstNodeType::AstConstValue);
+  ASSERT_EQ(neg_int_node->const_value.type, ConstValueType::INT);
+  ASSERT_EQ(neg_int_node->const_value.is_negative, true);
 }
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {

@@ -177,14 +177,9 @@ TEST(ParserHappyParseUnaryExprTests, NegativeIntTest) {
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::NEG);
-
-  auto expr_node = value_node->unary_expr.expr;
-  ASSERT_NE(expr_node, nullptr);
-  ASSERT_EQ(expr_node->parent, value_node);
-  ASSERT_EQ(expr_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(expr_node->const_value.type, ConstValueType::INT);
+  ASSERT_EQ(value_node->parent, nullptr);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
+  ASSERT_EQ(value_node->const_value.type, ConstValueType::INT);
   ASSERT_NE(value_node->const_value.number, nullptr);
   ASSERT_EQ(strcmp(value_node->const_value.number, "-12547"), 0);
   ASSERT_EQ(value_node->const_value.is_negative, true);
