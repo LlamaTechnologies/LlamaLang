@@ -24,6 +24,9 @@ compiler.cpp
 
 console.hpp
 
+driver.hpp
+driver.cpp
+
 error.hpp
 error.cpp
 
