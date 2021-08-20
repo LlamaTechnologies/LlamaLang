@@ -22,24 +22,6 @@ TEST(SemanticTypes, BoolVoid) {
   ASSERT_EQ(errors.size(), 0L);
 }
 
-TEST(SemanticTypes, StructsUnsuported) {
-  std::vector<Error> errors;
-  auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
-
-  auto node_type_0 = new AstNode(AstNodeType::AstType, 0, 0, "");
-  node_type_0->ast_type.type_id = AstTypeId::Struct;
-  node_type_0->ast_type.type_info = new TypeInfo();
-  node_type_0->ast_type.type_info->bit_size = 1;
-  auto node_type_1 = new AstNode(AstNodeType::AstType, 0, 0, "");
-  node_type_1->ast_type.type_id = AstTypeId::Struct;
-  node_type_1->ast_type.type_info = new TypeInfo();
-  node_type_1->ast_type.type_info->bit_size = 1;
-
-  SemanticAnalyzer analizer(errors);
-
-  ASSERT_DEATH(analizer.check_type_compat(node_type_0, node_type_1, node_expr), "");
-}
-
 TEST(SemanticTypes, Pointer) {
   std::vector<Error> errors;
   auto node_expr = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
@@ -60,6 +42,10 @@ TEST(SemanticTypes, Pointer) {
   analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+
+  delete node_expr;
+  delete node_type_0;
+  delete node_type_1;
 }
 
 TEST(SemanticTypes, Array) {
@@ -82,6 +68,10 @@ TEST(SemanticTypes, Array) {
   analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+
+  delete node_expr;
+  delete node_type_0;
+  delete node_type_1;
 }
 
 TEST(SemanticTypes, Integer) {
@@ -95,6 +85,10 @@ TEST(SemanticTypes, Integer) {
   analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+
+  delete node_expr;
+  delete node_type_0;
+  delete node_type_1;
 }
 
 TEST(SemanticTypes, Float) {
@@ -108,6 +102,10 @@ TEST(SemanticTypes, Float) {
   analizer.check_type_compat(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+
+  delete node_expr;
+  delete node_type_0;
+  delete node_type_1;
 }
 
 //==================================================================================
@@ -134,6 +132,9 @@ TEST(SemanticVariableDefinitions, GlobalVariable) {
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  // clean:
+  delete var_def_node;
 }
 
 TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
@@ -152,6 +153,9 @@ TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  // clean:
+  delete var_def_node;
 }
 
 //==================================================================================
@@ -169,6 +173,9 @@ TEST(SemanticExpressions, ConstantValue) {
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  // clean:
+  delete const_value_node;
 }
 
 TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
@@ -195,6 +202,10 @@ TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
   ASSERT_EQ(symbol_node->symbol.type, SymbolType::VAR);
+
+  // clean:
+  delete var_def_node;
+  delete symbol_node;
 }
 
 TEST(SemanticExpressions, UnaryExprBool) {
@@ -207,19 +218,23 @@ TEST(SemanticExpressions, UnaryExprBool) {
   auto unary_epxr_node = new AstNode(AstNodeType::AstUnaryExpr, 0, 0, "");
   unary_epxr_node->unary_expr.op = UnaryExprType::NOT;
   unary_epxr_node->unary_expr.expr = const_value_node;
+  const_value_node->parent = unary_epxr_node;
 
   // given: analizer
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  // with: a bool expresion
+  // with: a bool constant
   // with: a unary operator valid for the expr type
   bool is_valid = analizer.analizeExpr(unary_epxr_node);
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  // clean:
+  delete unary_epxr_node;
 }
 
 TEST(SemanticExpressions, UnaryExprNumber) {
@@ -245,6 +260,9 @@ TEST(SemanticExpressions, UnaryExprNumber) {
   // then:
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  // clean:
+  delete unary_epxr_node;
 }
 
 TEST(SemanticExpressions, UnaryExprNumberBitwiseOp) {
@@ -270,6 +288,8 @@ TEST(SemanticExpressions, UnaryExprNumberBitwiseOp) {
   // then:
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  delete unary_epxr_node;
 }
 
 TEST(SemanticExpressions, BinaryExprBitShift) {
@@ -284,6 +304,7 @@ TEST(SemanticExpressions, BinaryExprBitShift) {
   binary_epxr_node->binary_expr.bin_op = BinaryExprType::LSHIFT;
   binary_epxr_node->binary_expr.left_expr = const_value_node;
   binary_epxr_node->binary_expr.right_expr = const_value_node;
+  const_value_node->parent = binary_epxr_node;
 
   // given: analizer
   std::vector<Error> errors;
@@ -297,6 +318,8 @@ TEST(SemanticExpressions, BinaryExprBitShift) {
   // then:
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  delete binary_epxr_node;
 }
 
 TEST(SemanticExpressions, BinaryExprBoolOperator) {
@@ -335,6 +358,9 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
   ASSERT_EQ(is_valid_var_def, true);
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  delete binary_epxr_node;
+  delete var_def_node;
 }
 
 TEST(SemanticExpressions, BinaryExprAssignOperator) {
@@ -373,6 +399,9 @@ TEST(SemanticExpressions, BinaryExprAssignOperator) {
   ASSERT_EQ(is_valid_var_def, true);
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(is_valid, true);
+
+  delete binary_epxr_node;
+  delete var_def_node;
 }
 
 //==================================================================================
@@ -428,6 +457,8 @@ TEST(SemanticExpressions, FunctionNoRet) {
   ASSERT_EQ(is_valid_proto, true);
   ASSERT_EQ(is_valid, true);
   ASSERT_EQ(errors.size(), 0L);
+
+  delete function_node;
 }
 
 TEST(SemanticExpressions, FunctionRet) {
@@ -441,6 +472,8 @@ TEST(SemanticExpressions, FunctionRet) {
   // given: l_expr -> symbol node
   auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
   symbol_node->symbol.cached_name = std::string_view(var_name.data(), var_name.size());
+  
+  auto symbol_node_ret = new AstNode(*symbol_node);
 
   // given: r_expr -> constant integer
   auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
@@ -455,7 +488,7 @@ TEST(SemanticExpressions, FunctionRet) {
   // given: unary expr -> ret my_var
   auto ret_stmnt_node = new AstNode(AstNodeType::AstUnaryExpr, 0, 0, "");
   ret_stmnt_node->unary_expr.op = UnaryExprType::RET;
-  ret_stmnt_node->unary_expr.expr = symbol_node;
+  ret_stmnt_node->unary_expr.expr = symbol_node_ret;
 
   // given: function proto -> fn my_func() i32
   auto function_proto_node = new AstNode(AstNodeType::AstFuncProto, 0, 0, "");
@@ -485,6 +518,10 @@ TEST(SemanticExpressions, FunctionRet) {
   ASSERT_EQ(is_valid_proto, true);
   ASSERT_EQ(is_valid, true);
   ASSERT_EQ(errors.size(), 0L);
+
+  // clean:
+  delete function_node;
+  delete i32_type_node;
 }
 
 //==================================================================================
@@ -526,6 +563,11 @@ TEST(SemanticExpressions, FunctionCallNoParam) {
   ASSERT_EQ(is_valid_block, true);
   ASSERT_EQ(is_valid_call, true);
   ASSERT_EQ(errors.size(), 0L);
+
+  // clean:
+  delete function_node;
+  delete function_call_node;
+  delete void_type_node;
 }
 
 TEST(SemanticExpressions, FunctionCallWithParams) {
@@ -576,4 +618,10 @@ TEST(SemanticExpressions, FunctionCallWithParams) {
   ASSERT_EQ(is_valid_block, true);
   ASSERT_EQ(is_valid_call, true);
   ASSERT_EQ(errors.size(), 0L);
+
+  // clean:
+  delete function_node;
+  delete function_call_node;
+  delete void_type_node;
+  delete i32_type_node;
 }

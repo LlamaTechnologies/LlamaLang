@@ -11,12 +11,32 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "_WIN32"
             ],
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "windows-clang-x64",
             "compilerPath": "E:/LLVM/bin/clang++.exe",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "UbuntuWSL",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "E:\\LLVM_Lib\\include",
+                "${workspaceFolder}/extern/googletest/googlemock/include/**",
+                "${workspaceFolder}/extern/googletest/googletest/include/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "compilerPath": "/usr/bin/clang++",
             "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],

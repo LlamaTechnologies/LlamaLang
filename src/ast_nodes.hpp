@@ -48,28 +48,36 @@ struct AstDirective {
 };
 
 struct AstFuncDef {
-  AstNode *proto;
-  AstNode *block;
+  AstNode *proto = nullptr;
+  AstNode *block = nullptr;
   llvm::Function *function = nullptr;
+
+  virtual ~AstFuncDef();
 };
 
 struct AstFuncProto {
   std::string_view name;
   std::vector<AstNode *> params;
-  AstNode *return_type;
+  AstNode *return_type = nullptr;
+
+  virtual ~AstFuncProto();
 };
 
 struct AstBlock {
   std::vector<AstNode *> statements;
 
   AstBlock() : statements(std::vector<AstNode *>()) {}
+
+  virtual ~AstBlock();
 };
 
 struct AstVarDef {
   mutable llvm::Value *llvm_value;
   std::string_view name;
-  AstNode *type;
-  AstNode *initializer;
+  AstNode *type = nullptr;
+  AstNode *initializer = nullptr;
+
+  virtual ~AstVarDef();
 };
 
 typedef AstVarDef AstParamDecl;
@@ -82,7 +90,7 @@ enum class SymbolType
 
 struct AstSymbol {
   mutable SymbolType type;
-  mutable const AstNode *data; // resolved ast node
+  mutable const AstNode *data; // resolved ast node (DO NOT OWN IT)
   const Token *token;
   std::string_view cached_name;
 };
@@ -99,23 +107,20 @@ struct AstConstValue {
   union {
     bool boolean;
     uint32_t unicode_char;
-    const char *number;
+    const char *number = nullptr;
   };
-  ConstValueType type;
-  bool is_negative;
+  ConstValueType type = ConstValueType::BOOL;
+  bool is_negative = false;
 
-  virtual ~AstConstValue() {
-    if (number) {
-      delete[] number;
-      number = nullptr;
-    }
-  }
+  virtual ~AstConstValue();
 };
 
 struct AstFuncCallExpr {
   std::string_view fn_name;
   mutable const AstNode *fn_ref;
   std::vector<AstNode *> params;
+
+  virtual ~AstFuncCallExpr();
 };
 
 enum class BinaryExprType
@@ -139,9 +144,11 @@ enum class BinaryExprType
 };
 
 struct AstBinaryExpr {
-  AstNode *left_expr;
+  AstNode *left_expr = nullptr;
   BinaryExprType bin_op;
-  AstNode *right_expr;
+  AstNode *right_expr = nullptr;
+
+  virtual ~AstBinaryExpr();
 };
 
 // IMPORTANT: do not change order of labels!
@@ -159,11 +166,15 @@ const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept;
 
 struct AstUnaryExpr {
   UnaryExprType op;
-  AstNode *expr;
+  AstNode *expr = nullptr;
+
+  virtual ~AstUnaryExpr();
 };
 
 struct AstSourceCode {
   std::vector<AstNode *> children;
+
+  virtual ~AstSourceCode();
 };
 
 enum class AstTypeId
@@ -185,11 +196,13 @@ struct TypeInfo {
 };
 
 struct AstType {
-  AstTypeId type_id;   // Pointer Array Integer FloatingPoint
-  AstNode *child_type; // Not null if type == (pointer | array)
-  TypeInfo *type_info; // null if type == (pointer | array)
+  AstTypeId type_id;             // Pointer Array Integer FloatingPoint
+  AstNode *child_type = nullptr; // Not null if type == (pointer | array)
+  TypeInfo *type_info = nullptr; // null if type == (pointer | array)
 
   AstType() : type_id(AstTypeId::Void), child_type(nullptr), type_info(nullptr) {}
+
+  virtual ~AstType();
 };
 
 // ast nodes enum
@@ -212,10 +225,10 @@ enum class AstNodeType
 
 // base ast node
 struct AstNode {
-  AstNode *parent;
+  AstNode *parent = nullptr;
   size_t line;
   size_t column;
-  AstNodeType node_type;
+  AstNodeType node_type = AstNodeType::AstSourceCode;
   std::string file_name;
 
   // actual node
@@ -239,13 +252,5 @@ struct AstNode {
   AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column, std::string in_file_name)
       : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type), file_name(in_file_name) {}
 
-  virtual ~AstNode() {
-    if (node_type == AstNodeType::AstBlock) {
-      for (auto node : block.statements) { delete node; }
-    } else if (node_type == AstNodeType::AstSourceCode) {
-      for (auto node : source_code.children) { delete node; }
-    } else if (node_type == AstNodeType::AstFuncCallExpr) {
-      for (auto node : func_call.params) { delete node; }
-    }
-  }
+  virtual ~AstNode() {}
 };

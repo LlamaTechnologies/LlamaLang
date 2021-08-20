@@ -158,7 +158,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
 bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
   switch (in_expr->node_type) {
   case AstNodeType::AstBinaryExpr: {
-    auto bin_expr = in_expr->binary_expr;
+    const AstBinaryExpr &bin_expr = in_expr->binary_expr;
     switch (bin_expr.bin_op) {
     case BinaryExprType::LSHIFT:
     case BinaryExprType::RSHIFT: {
@@ -203,7 +203,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     }
   }
   case AstNodeType::AstUnaryExpr: {
-    auto unary_expr = in_expr->unary_expr;
+    const AstUnaryExpr& unary_expr = in_expr->unary_expr;
     auto type_node = get_expr_type(unary_expr.expr);
 
     if (!type_node) {
@@ -213,13 +213,13 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     // Overloading operators is not supported
     if (type_node->ast_type.type_id == AstTypeId::Struct) {
       auto operator_symbol = get_unary_op_symbol(unary_expr.op);
-      add_semantic_error(in_expr, ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR, operator_symbol);
+      add_semantic_error(in_expr, ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR, operator_symbol.c_str());
       return false;
     }
     // If it is a boolean expr only the NOT operator is valid
     if (type_node->ast_type.type_id == AstTypeId::Bool && unary_expr.op != UnaryExprType::NOT) {
       auto operator_symbol = get_unary_op_symbol(unary_expr.op);
-      add_semantic_error(in_expr, ERROR_UNSUPORTED_OP_BOOL_EXPR, operator_symbol);
+      add_semantic_error(in_expr, ERROR_UNSUPORTED_OP_BOOL_EXPR, operator_symbol.c_str());
       return false;
     }
     // If it is not boolean expr the NOT operator is invalid
@@ -231,7 +231,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     return analizeExpr(unary_expr.expr);
   }
   case AstNodeType::AstFuncCallExpr: {
-    auto &fn_call = in_expr->func_call;
+    const AstFuncCallExpr &fn_call = in_expr->func_call;
     SymbolType symbol_type;
     fn_call.fn_ref = resolve_function_variable(std::string(fn_call.fn_name), in_expr, &symbol_type);
 
@@ -311,7 +311,7 @@ const AstNode *SemanticAnalyzer::resolve_function_variable(const std::string &in
     curr_table = curr_table->parent;
   } while (curr_table);
 
-  add_semantic_error(in_parent_node, ERROR_UNKNOWN_SYMBOL, in_name);
+  add_semantic_error(in_parent_node, ERROR_UNKNOWN_SYMBOL, in_name.c_str());
 
   return nullptr;
 }
@@ -378,6 +378,8 @@ bool SemanticAnalyzer::check_type_compat(const AstNode *type_node0, const AstNod
 }
 
 const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
+  assert(expr != nullptr);
+
   switch (expr->node_type) {
   case AstNodeType::AstBinaryExpr: {
     auto bin_expr = expr->binary_expr;

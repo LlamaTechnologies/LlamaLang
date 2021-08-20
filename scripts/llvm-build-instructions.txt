@@ -1,5 +1,10 @@
-1) check if python3 is installed
-python --version
+1) Dependencies.
+WINDOWS:
+cmake
+python3
+
+LINUX(ubuntu):
+sudo apt install build-essential libncurses5-dev python3 cmake -y
 
 2) move to llvm source code
 cd .../llvm-project-llvmorg-11.0.1/llvm
@@ -8,7 +13,11 @@ cd .../llvm-project-llvmorg-11.0.1/llvm
 mkdir mybuilddir
 
 4) build project files. NOTE: you can change the install prefix to where you want the lib installed
+WINDOWS:
 cmake .. -DCMAKE_INSTALL_PREFIX="E:\\LLVM_Lib" -DLLVM_ENABLE_EXPENSIVE_CHECKS=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_WARNINGS=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_TESTS=OFF -DLLVM_USE_CRT_DEBUG=MDd -DCMAKE_BUILD_TYPE=Debug
+
+LINUX:
+cmake .. -DLLVM_ENABLE_EXPENSIVE_CHECKS=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_WARNINGS=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_TESTS=OFF -DLLVM_USE_CRT_DEBUG=MDd -DCMAKE_BUILD_TYPE=Debug
 
 5) build the source code
 cmake --build .

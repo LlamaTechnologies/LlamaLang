@@ -1,5 +1,6 @@
 #include "driver.hpp"
 
+#include "common_defs.hpp"
 #include "compiler.hpp"
 #include "console.hpp"
 #include "error.hpp"
@@ -10,6 +11,7 @@
 
 static std::string read_file(std::ifstream &in_file);
 static std::string get_current_dir();
+static char **split_string(const std::string &in_str, const char in_separator);
 static std::string get_path_to_program_by_name(const std::string &in_name);
 static int run_process(const std::string &in_program_path, std::string &in_program_args);
 
@@ -150,11 +152,12 @@ bool Driver::parse_args(const char **argv, const int argc) {
   return true;
 }
 
-#ifdef _WIN32
+#ifdef LL_WIN32
   #include <Windows.h>
   #include <direct.h>
   #define GetCurrentDir _getcwd
 #else
+  #include <sys/wait.h>
   #include <unistd.h>
   #define GetCurrentDir getcwd
 #endif
@@ -183,6 +186,43 @@ std::string get_current_dir() {
   return current_working_dir;
 }
 
+#ifdef LL_LINUX
+std::string get_path_to_program_by_name(const std::string &in_name) {
+  std::string path_var = std::string(getenv("PATH"));
+
+  return path_var;
+}
+
+int run_process(const std::string &in_program_path, std::string &in_program_args) {
+  pid_t pid = fork();
+  int wstatus;
+
+  if (pid == 0) {
+    char **argv = split_string(in_program_args, ' ');
+    // replace current process(child) to the desired program.
+    // it is no return unless an error ocurred.
+    auto error_code = execve(in_program_path.c_str(), argv, NULL);
+    if (error_code == -1) {
+      // Handle error
+      return -1;
+    }
+  }
+
+  int error = waitpid(pid, &wstatus, 0);
+  if (error < 0) {
+    // handle error
+    return -1;
+  }
+
+  if (!WIFEXITED(wstatus)) {
+    return -1;
+  }
+
+  return WEXITSTATUS(wstatus);
+}
+#endif
+
+#ifdef LL_WIN32
 std::string get_path_to_program_by_name(const std::string &in_name) {
   const unsigned int nBufferLength = MAX_PATH;
 
@@ -238,4 +278,17 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
   CloseHandle(handle);
 
   return process_exit_code;
+}
+#endif
+
+char **split_string(const std::string &in_str, const char in_separator) {
+  char *strings = (char*) malloc(in_str.size());
+
+  for (size_t i = 0; i < in_str.size(); ++i) {
+    char *c = &strings[i];
+    if (*c == in_separator) {
+      *c = 0;
+    }
+  }
+  return (char **)strings;
 }

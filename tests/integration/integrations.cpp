@@ -69,7 +69,7 @@ TEST(Integrations, FuncCallsWithAritmeticsArgs) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "//#module MyProgram\n"
+  const char *source_code = "//#module MyProgram\n"  
                             "//#load \"MyProgram.llang\"\n"
                             "\n"
                             "f i32 = 0\n"

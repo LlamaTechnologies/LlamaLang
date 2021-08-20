@@ -23,6 +23,8 @@ TEST(ParserHappyParseValueTests, IdentifierTest) {
   ASSERT_NE(value_node->symbol.token, nullptr);
   ASSERT_EQ(value_node->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->symbol.cached_name, "myVar");
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseValueTests, FloatTest) {
@@ -37,6 +39,8 @@ TEST(ParserHappyParseValueTests, FloatTest) {
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseValueTests, IntTest) {
@@ -52,6 +56,8 @@ TEST(ParserHappyParseValueTests, IntTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::INT);
   ASSERT_EQ(strcmp(value_node->const_value.number, "12547"), 0);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseValueTests, UnicodeCharTest) {
@@ -67,6 +73,8 @@ TEST(ParserHappyParseValueTests, UnicodeCharTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::CHAR);
   ASSERT_EQ(value_node->const_value.unicode_char, 'g');
+
+  delete value_node;
 }
 
 //==================================================================================
@@ -86,6 +94,8 @@ TEST(ParserHappyParseUnaryExprTests, PreIncIdentifierTest) {
   ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::INC);
   ASSERT_EQ(value_node->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
@@ -101,6 +111,8 @@ TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
   ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::INC);
   ASSERT_EQ(value_node->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
@@ -121,6 +133,8 @@ TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
   ASSERT_EQ(func_call->node_type, AstNodeType::AstFuncCallExpr);
   ASSERT_EQ(func_call->func_call.fn_name, "myFunc");
   ASSERT_EQ(func_call->func_call.params.size(), 0L);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, IdentifierTest) {
@@ -136,6 +150,8 @@ TEST(ParserHappyParseUnaryExprTests, IdentifierTest) {
   ASSERT_NE(value_node->symbol.token, nullptr);
   ASSERT_EQ(value_node->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->symbol.cached_name, "myVar");
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, FloatTest) {
@@ -150,6 +166,8 @@ TEST(ParserHappyParseUnaryExprTests, FloatTest) {
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, IntTest) {
@@ -165,6 +183,8 @@ TEST(ParserHappyParseUnaryExprTests, IntTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::INT);
   ASSERT_EQ(strcmp(value_node->const_value.number, "12547"), 0);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, NegativeIntTest) {
@@ -183,6 +203,8 @@ TEST(ParserHappyParseUnaryExprTests, NegativeIntTest) {
   ASSERT_NE(value_node->const_value.number, nullptr);
   ASSERT_EQ(strcmp(value_node->const_value.number, "-12547"), 0);
   ASSERT_EQ(value_node->const_value.is_negative, true);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, ExplicitPositiveIntTest) {
@@ -198,6 +220,8 @@ TEST(ParserHappyParseUnaryExprTests, ExplicitPositiveIntTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::INT);
   ASSERT_EQ(strcmp(value_node->const_value.number, "12547"), 0);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseUnaryExprTests, UnicodeCharTest) {
@@ -213,6 +237,8 @@ TEST(ParserHappyParseUnaryExprTests, UnicodeCharTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::CHAR);
   ASSERT_EQ(value_node->const_value.unicode_char, 'g');
+
+  delete value_node;
 }
 
 //==================================================================================
@@ -236,6 +262,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
   ASSERT_EQ(value_node->binary_expr.left_expr->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
@@ -260,6 +288,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
   ASSERT_EQ(func_call->node_type, AstNodeType::AstFuncCallExpr);
   ASSERT_EQ(func_call->func_call.fn_name, "myFunc");
   ASSERT_EQ(func_call->func_call.params.size(), 0L);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
@@ -279,6 +309,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
   ASSERT_EQ(value_node->binary_expr.left_expr->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierTest) {
@@ -296,6 +328,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, MulNumberIdentifierTest) {
@@ -318,6 +352,8 @@ TEST(ParserHappyParseMulExprTests, MulNumberIdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(value_node->binary_expr.left_expr->const_value.type, ConstValueType::INT);
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
@@ -340,6 +376,8 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->binary_expr.left_expr->const_value.type, ConstValueType::INT);
   ASSERT_EQ(value_node->binary_expr.right_expr->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
@@ -376,6 +414,8 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
   ASSERT_EQ(bin_exp2_op2->parent, bin_exp_op1);
   ASSERT_EQ(bin_exp2_op2->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(bin_exp2_op2->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, IdentifierTest) {
@@ -391,6 +431,8 @@ TEST(ParserHappyParseMulExprTests, IdentifierTest) {
   ASSERT_NE(value_node->symbol.token, nullptr);
   ASSERT_EQ(value_node->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->symbol.cached_name, "myVar");
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, FloatTest) {
@@ -405,6 +447,8 @@ TEST(ParserHappyParseMulExprTests, FloatTest) {
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, IntTest) {
@@ -420,6 +464,8 @@ TEST(ParserHappyParseMulExprTests, IntTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::INT);
   ASSERT_EQ(strcmp(value_node->const_value.number, "12547"), 0);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseMulExprTests, UnicodeCharTest) {
@@ -435,6 +481,8 @@ TEST(ParserHappyParseMulExprTests, UnicodeCharTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::CHAR);
   ASSERT_EQ(value_node->const_value.unicode_char, 'g');
+
+  delete value_node;
 }
 
 //==================================================================================
@@ -472,6 +520,8 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierAndIncTest) {
   ASSERT_EQ(bin_exp_right->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(bin_exp_right->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(bin_exp_right->symbol.cached_name, "myVar2");
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
@@ -494,6 +544,8 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(value_node->binary_expr.left_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, AddIdentifierNumberTest) {
@@ -518,6 +570,8 @@ TEST(ParserHappyParseAddExprTests, AddIdentifierNumberTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->binary_expr.right_expr->const_value.type, ConstValueType::INT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, Add2NumbersTest) {
@@ -540,6 +594,8 @@ TEST(ParserHappyParseAddExprTests, Add2NumbersTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->binary_expr.left_expr->const_value.type, ConstValueType::FLOAT);
   ASSERT_EQ(value_node->binary_expr.right_expr->const_value.type, ConstValueType::INT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, Add2NumberAndCharTest) {
@@ -574,6 +630,8 @@ TEST(ParserHappyParseAddExprTests, Add2NumberAndCharTest) {
   ASSERT_EQ(bin_op2->parent, value_node);
   ASSERT_EQ(bin_op2->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(bin_op2->const_value.type, ConstValueType::CHAR);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, FullAlgebraicTest) {
@@ -619,6 +677,8 @@ TEST(ParserHappyParseAddExprTests, FullAlgebraicTest) {
   ASSERT_EQ(intMulInt->binary_expr.right_expr->parent, intMulInt);
   ASSERT_EQ(intMulInt->binary_expr.left_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(intMulInt->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
@@ -641,6 +701,8 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
@@ -665,6 +727,8 @@ TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
@@ -687,6 +751,8 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->binary_expr.left_expr->const_value.type, ConstValueType::INT);
   ASSERT_EQ(value_node->binary_expr.right_expr->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
@@ -723,6 +789,8 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
   ASSERT_EQ(bin_exp2_op2->parent, bin_exp_op1);
   ASSERT_EQ(bin_exp2_op2->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(bin_exp2_op2->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, IdentifierTest) {
@@ -739,6 +807,8 @@ TEST(ParserHappyParseAddExprTests, IdentifierTest) {
   ASSERT_NE(value_node->symbol.token, nullptr);
   ASSERT_EQ(value_node->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->symbol.cached_name, "myVar");
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, FloatTest) {
@@ -753,6 +823,8 @@ TEST(ParserHappyParseAddExprTests, FloatTest) {
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, IntTest) {
@@ -768,6 +840,8 @@ TEST(ParserHappyParseAddExprTests, IntTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::INT);
   ASSERT_EQ(strcmp(value_node->const_value.number, "12547"), 0);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseAddExprTests, UnicodeCharTest) {
@@ -783,6 +857,8 @@ TEST(ParserHappyParseAddExprTests, UnicodeCharTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::CHAR);
   ASSERT_EQ(value_node->const_value.unicode_char, 'g');
+
+  delete value_node;
 }
 
 //==================================================================================
@@ -809,6 +885,8 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(value_node->binary_expr.left_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
@@ -841,6 +919,8 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
   ASSERT_EQ(identComp->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(identComp->binary_expr.left_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(identComp->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, FullAlgebraicCompareTest) {
@@ -895,6 +975,8 @@ TEST(ParserHappyParseCompExprTests, FullAlgebraicCompareTest) {
   ASSERT_EQ(intMulInt->binary_expr.right_expr->parent, intMulInt);
   ASSERT_EQ(intMulInt->binary_expr.left_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(intMulInt->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Add2IdentifierAndIncTest) {
@@ -921,6 +1003,8 @@ TEST(ParserHappyParseCompExprTests, Add2IdentifierAndIncTest) {
   ASSERT_EQ(bin_exp_op1->unary_expr.expr->parent, bin_exp_op1);
   ASSERT_EQ(bin_exp_op1->unary_expr.expr->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(bin_exp_op1->unary_expr.expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Add2IdentifierTest) {
@@ -942,6 +1026,8 @@ TEST(ParserHappyParseCompExprTests, Add2IdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
   ASSERT_EQ(value_node->binary_expr.left_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, AddIdentifierNumberTest) {
@@ -965,6 +1051,8 @@ TEST(ParserHappyParseCompExprTests, AddIdentifierNumberTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->binary_expr.right_expr->const_value.type, ConstValueType::INT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Add2NumbersTest) {
@@ -989,6 +1077,8 @@ TEST(ParserHappyParseCompExprTests, Add2NumbersTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->binary_expr.right_expr->const_value.type, ConstValueType::INT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Add2NumberAndCharTest) {
@@ -1023,6 +1113,8 @@ TEST(ParserHappyParseCompExprTests, Add2NumberAndCharTest) {
   ASSERT_EQ(bin_op2->parent, value_node);
   ASSERT_EQ(bin_op2->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(bin_op2->const_value.type, ConstValueType::CHAR);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, FullAlgebraicTest) {
@@ -1068,6 +1160,8 @@ TEST(ParserHappyParseCompExprTests, FullAlgebraicTest) {
   ASSERT_EQ(intMulInt->binary_expr.right_expr->parent, intMulInt);
   ASSERT_EQ(intMulInt->binary_expr.left_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(intMulInt->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Mul2IdentifierTest) {
@@ -1083,6 +1177,8 @@ TEST(ParserHappyParseCompExprTests, Mul2IdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::MUL);
   ASSERT_EQ(value_node->binary_expr.left_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, MulNumberIdentifierTest) {
@@ -1103,6 +1199,8 @@ TEST(ParserHappyParseCompExprTests, MulNumberIdentifierTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
   ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Mul2NumbersTest) {
@@ -1125,6 +1223,8 @@ TEST(ParserHappyParseCompExprTests, Mul2NumbersTest) {
   ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->binary_expr.left_expr->const_value.type, ConstValueType::INT);
   ASSERT_EQ(value_node->binary_expr.right_expr->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, Mul2NumbersAndCharTest) {
@@ -1161,6 +1261,8 @@ TEST(ParserHappyParseCompExprTests, Mul2NumbersAndCharTest) {
   ASSERT_EQ(bin_exp2_op2->parent, bin_exp_op1);
   ASSERT_EQ(bin_exp2_op2->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(bin_exp2_op2->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, IdentifierTest) {
@@ -1176,6 +1278,8 @@ TEST(ParserHappyParseCompExprTests, IdentifierTest) {
   ASSERT_NE(value_node->symbol.token, nullptr);
   ASSERT_EQ(value_node->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(value_node->symbol.cached_name, "myVar");
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, FloatTest) {
@@ -1190,6 +1294,8 @@ TEST(ParserHappyParseCompExprTests, FloatTest) {
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::FLOAT);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, IntTest) {
@@ -1205,6 +1311,8 @@ TEST(ParserHappyParseCompExprTests, IntTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::INT);
   ASSERT_EQ(strcmp(value_node->const_value.number, "12547"), 0);
+
+  delete value_node;
 }
 
 TEST(ParserHappyParseCompExprTests, UnicodeCharTest) {
@@ -1220,6 +1328,8 @@ TEST(ParserHappyParseCompExprTests, UnicodeCharTest) {
   ASSERT_EQ(value_node->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(value_node->const_value.type, ConstValueType::CHAR);
   ASSERT_EQ(value_node->const_value.unicode_char, 'g');
+
+  delete value_node;
 }
 
 //==================================================================================
@@ -1255,6 +1365,8 @@ TEST(ParserHappyParseExprTests, CompGroupedTest) {
   ASSERT_EQ(sum_node->binary_expr.right_expr->node_type, AstNodeType::AstConstValue);
   ASSERT_EQ(sum_node->binary_expr.left_expr->symbol.token->id, TokenId::IDENTIFIER);
   ASSERT_EQ(sum_node->binary_expr.right_expr->const_value.type, ConstValueType::INT);
+
+  delete value_node;
 }
 
 //==================================================================================

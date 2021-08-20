@@ -1,5 +1,17 @@
 #pragma once
 
+// define platforms
+
+#ifdef _WIN32
+  #define LL_WIN32
+#elif defined(__unix__)
+  #ifdef __linux__
+    #define LL_LINUX
+  #else
+    #define LL_MACOS
+  #endif
+#endif
+
 // define compillers
 #ifdef __GNUG__
   #define LL_GCC
