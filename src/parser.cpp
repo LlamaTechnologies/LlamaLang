@@ -434,26 +434,14 @@ AstNode *Parser::parse_vardef_stmnt() noexcept {
 
   const Token &assign_token = lexer.get_next_token();
   if (assign_token.id == TokenId::ASSIGN) {
-    auto identifier_node = new AstNode(AstNodeType::AstSymbol, token_symbol_name.start_line,
-                                       token_symbol_name.start_column, lexer.file_name);
-    identifier_node->symbol.token = &token_symbol_name;
-    identifier_node->symbol.cached_name = lexer.get_token_value(token_symbol_name);
     auto expr = parse_expr();
     if (!expr) {
       // TODO(pablo96): handle error in unary_expr => sync parsing
       return nullptr;
     }
 
-    AstNode *assign_node =
-      new AstNode(AstNodeType::AstBinaryExpr, assign_token.start_line, assign_token.start_column, lexer.file_name);
-    expr->parent = assign_node;
-    identifier_node->parent = assign_node;
-    assign_node->binary_expr.bin_op = get_binary_op(assign_token);
-    assign_node->binary_expr.left_expr = identifier_node;
-    assign_node->binary_expr.right_expr = expr;
-
-    assign_node->parent = var_def_node;
-    var_def_node->var_def.initializer = assign_node;
+    expr->parent = var_def_node;
+    var_def_node->var_def.initializer = expr;
   } else {
     lexer.get_back();
     var_def_node->var_def.initializer = nullptr;

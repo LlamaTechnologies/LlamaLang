@@ -10,6 +10,7 @@
 
 static bool is_ret_stmnt(const AstNode *stmnt);
 static const AstNode *get_best_type(const AstNode *type_node0, const AstNode *type_node1);
+static void set_type_info(const AstNode *expr_node, const AstNode *type_node);
 
 Table *Table::create_child(const std::string &in_name) {
   auto child = new Table(in_name, this);
@@ -126,15 +127,16 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
       add_semantic_error(in_node, ERROR_GLOBAL_NEED_INITIALIZER, var_def.name);
       return false;
     }
-
     global_symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
 
-    auto expr_type = get_expr_type(var_def.initializer);
+
+    const AstNode *expr_type = get_expr_type(var_def.initializer);
     if (!check_type_compat(var_def.type, expr_type, in_node)) {
       global_symbol_table->remove_last_symbol();
       return false;
     }
-
+    
+    set_type_info(var_def.initializer, var_def.type);
     return true;
   }
 
@@ -150,6 +152,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
       symbol_table->remove_last_symbol();
       return false;
     }
+    set_type_info(var_def.initializer, expr_type);
   }
 
   return true;
@@ -203,7 +206,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     }
   }
   case AstNodeType::AstUnaryExpr: {
-    const AstUnaryExpr& unary_expr = in_expr->unary_expr;
+    const AstUnaryExpr &unary_expr = in_expr->unary_expr;
     auto type_node = get_expr_type(unary_expr.expr);
 
     if (!type_node) {
@@ -482,4 +485,22 @@ const AstNode *get_best_type(const AstNode *type_node0, const AstNode *type_node
   }
 
   return type0.type_info->bit_size > type1.type_info->bit_size ? type_node0 : type_node1;
+}
+
+void set_type_info(const AstNode *expr_node, const AstNode *type_node) {
+  assert(expr_node != nullptr);
+  assert(expr_node->node_type != AstNodeType::AstType);
+  assert(type_node != nullptr);
+  assert(type_node->node_type == AstNodeType::AstType);
+
+  switch (expr_node->node_type) {
+  case AstNodeType::AstConstValue:
+    if (type_node->ast_type.type_id == AstTypeId::Array || type_node->ast_type.type_id == AstTypeId::Pointer ||
+        type_node->ast_type.type_id == AstTypeId::Struct || type_node->ast_type.type_id == AstTypeId::Void)
+      LL_UNREACHEABLE;
+    expr_node->const_value.bit_size = type_node->ast_type.type_info->bit_size;
+    return;
+  default:
+    return;
+  }
 }

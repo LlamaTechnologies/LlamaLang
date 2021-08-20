@@ -86,7 +86,9 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xtree": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "*.def": "cpp",
+        "*.inc": "cpp"
     },
     "cmake.configureOnOpen": true,
     "cmake.buildDirectory": "${workspaceFolder}/project",

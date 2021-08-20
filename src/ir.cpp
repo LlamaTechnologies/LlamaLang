@@ -154,13 +154,10 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef &in_var_def, const bool is_
     auto globalVar = code_module->getNamedGlobal(name);
     in_var_def.llvm_value = globalVar;
 
-    auto assignStmntNode = in_var_def.initializer;
     llvm::Constant *init_value;
-
-    if (assignStmntNode) {
-      auto &assignStmnt = assignStmntNode->binary_expr;
-      assert(assignStmnt.bin_op == BinaryExprType::ASSIGN);
-      init_value = translateConstant(assignStmnt.right_expr->const_value);
+    if (in_var_def.initializer) {
+      assert(in_var_def.initializer->node_type == AstNodeType::AstConstValue);
+      init_value = translateConstant(in_var_def.initializer->const_value);
     } else {
       init_value = getConstantDefaultValue(in_var_def.type->ast_type, type);
     }
@@ -390,7 +387,29 @@ llvm::Constant *LlvmIrGenerator::translateConstant(const AstConstValue &in_const
   case ConstValueType::BOOL:
     return in_const.boolean ? llvm::ConstantInt::getTrue(context) : llvm::ConstantInt::getFalse(context);
   case ConstValueType::INT: {
-    auto llvm_ty = llvm::Type::getInt128Ty(context);
+    llvm::IntegerType *llvm_ty = nullptr;
+    switch (in_const.bit_size) {
+    case 1:
+      return strcmp(in_const.number, "0") == 0 ? llvm::ConstantInt::getFalse(context)
+                                               : llvm::ConstantInt::getTrue(context);
+    case 8:
+      llvm_ty = llvm::Type::getInt8Ty(context);
+      break;
+    case 16:
+      llvm_ty = llvm::Type::getInt16Ty(context);
+      break;
+    case 32:
+      llvm_ty = llvm::Type::getInt32Ty(context);
+      break;
+    case 64:
+      llvm_ty = llvm::Type::getInt64Ty(context);
+      break;
+    case 128:
+      llvm_ty = llvm::Type::getInt128Ty(context);
+      break;
+    default:
+      LL_UNREACHEABLE;
+    }
     return llvm::ConstantInt::get(llvm_ty, in_const.number, 10);
   }
   case ConstValueType::FLOAT: {

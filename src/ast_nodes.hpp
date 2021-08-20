@@ -110,6 +110,7 @@ struct AstConstValue {
     const char *number = nullptr;
   };
   ConstValueType type = ConstValueType::BOOL;
+  mutable uint8_t bit_size = 1;
   bool is_negative = false;
 
   virtual ~AstConstValue();

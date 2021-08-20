@@ -215,18 +215,9 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   auto init_node = value_node->var_def.initializer;
   ASSERT_NE(init_node, nullptr);
   ASSERT_EQ(init_node->parent, value_node);
-  ASSERT_EQ(init_node->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
-  ASSERT_NE(init_node->binary_expr.left_expr, nullptr);
-  ASSERT_EQ(init_node->binary_expr.left_expr->parent, init_node);
-  ASSERT_EQ(init_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
-
-  auto neg_int_node = init_node->binary_expr.right_expr;
-  ASSERT_NE(neg_int_node, nullptr);
-  ASSERT_EQ(neg_int_node->parent, init_node);
-  ASSERT_EQ(neg_int_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(neg_int_node->const_value.type, ConstValueType::INT);
-  ASSERT_EQ(neg_int_node->const_value.is_negative, true);
+  ASSERT_EQ(init_node->node_type, AstNodeType::AstConstValue);
+  ASSERT_EQ(init_node->const_value.type, ConstValueType::INT);
+  ASSERT_EQ(init_node->const_value.is_negative, true);
 
   delete value_node;
 }
@@ -258,23 +249,13 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
   ASSERT_NE(init_node, nullptr);
   ASSERT_EQ(init_node->parent, value_node);
   ASSERT_EQ(init_node->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
+  ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ADD);
   ASSERT_NE(init_node->binary_expr.left_expr, nullptr);
   ASSERT_NE(init_node->binary_expr.right_expr, nullptr);
   ASSERT_EQ(init_node->binary_expr.left_expr->parent, init_node);
   ASSERT_EQ(init_node->binary_expr.right_expr->parent, init_node);
-  ASSERT_EQ(init_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
-  ASSERT_EQ(init_node->binary_expr.right_expr->node_type, AstNodeType::AstBinaryExpr);
-
-  auto add_node = init_node->binary_expr.right_expr;
-  ASSERT_NE(add_node, nullptr);
-  ASSERT_EQ(add_node->binary_expr.bin_op, BinaryExprType::ADD);
-  ASSERT_NE(add_node->binary_expr.left_expr, nullptr);
-  ASSERT_NE(add_node->binary_expr.right_expr, nullptr);
-  ASSERT_EQ(add_node->binary_expr.left_expr->parent, add_node);
-  ASSERT_EQ(add_node->binary_expr.right_expr->parent, add_node);
-  ASSERT_EQ(add_node->binary_expr.left_expr->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(add_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
+  ASSERT_EQ(init_node->binary_expr.left_expr->node_type, AstNodeType::AstConstValue);
+  ASSERT_EQ(init_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
 
   delete value_node;
 }

@@ -15,9 +15,9 @@ TEST(Integrations, FromCompiler) {
                             "\tret f\n"
                             "}\n";
 
-  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  ASSERT_EQ(error_code, 0);
+  ASSERT_EQ(has_no_errors, true);
 }
 
 TEST(Integrations, MultipleFuncDefinitions) {
@@ -27,7 +27,7 @@ TEST(Integrations, MultipleFuncDefinitions) {
   const char *source_code = "//#module MyProgram\n"
                             "//#load \"MyProgram.llang\"\n"
                             "\n"
-                            "f i32 = 0\n"
+                            "f i32 = -645\n"
                             "\n"
                             "fn getX(x i32) i32 {\n"
                             "\tret x\n"
@@ -37,9 +37,9 @@ TEST(Integrations, MultipleFuncDefinitions) {
                             "\tret f\n"
                             "}\n";
 
-  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  ASSERT_EQ(error_code, 0);
+  ASSERT_EQ(has_no_errors, true);
 }
 
 TEST(Integrations, FuncCalls) {
@@ -49,7 +49,7 @@ TEST(Integrations, FuncCalls) {
   const char *source_code = "//#module MyProgram\n"
                             "//#load \"MyProgram.llang\"\n"
                             "\n"
-                            "f i32 = 0\n"
+                            "f i32 = 1447\n"
                             "\n"
                             "fn getX(x i32) i32 {\n"
                             "\tret x\n"
@@ -60,16 +60,16 @@ TEST(Integrations, FuncCalls) {
                             "\tret f\n"
                             "}\n";
 
-  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  ASSERT_EQ(error_code, 0);
+  ASSERT_EQ(has_no_errors, true);
 }
 
 TEST(Integrations, FuncCallsWithAritmeticsArgs) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "//#module MyProgram\n"  
+  const char *source_code = "//#module MyProgram\n"
                             "//#load \"MyProgram.llang\"\n"
                             "\n"
                             "f i32 = 0\n"
@@ -84,9 +84,9 @@ TEST(Integrations, FuncCallsWithAritmeticsArgs) {
                             "\tret f\n"
                             "}\n";
 
-  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  ASSERT_EQ(error_code, 0);
+  ASSERT_EQ(has_no_errors, true);
 }
 
 TEST(Integrations, FuncCallsInAritmeticsArgs) {
@@ -107,12 +107,12 @@ TEST(Integrations, FuncCallsInAritmeticsArgs) {
                             "\tret f\n"
                             "}\n";
 
-  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  ASSERT_EQ(error_code, 0);
+  ASSERT_EQ(has_no_errors, true);
 }
 
-TEST(Integrations, RetComplexExpretion) {
+TEST(Integrations, RetComplexExpression) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
@@ -129,7 +129,7 @@ TEST(Integrations, RetComplexExpretion) {
                             "\tret 85 + getX(5)\n"
                             "}\n";
 
-  bool error_code = compiler::compile(output_path, executable_name, source_code, source_name);
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
 
-  ASSERT_EQ(error_code, 0);
+  ASSERT_EQ(has_no_errors, true);
 }
