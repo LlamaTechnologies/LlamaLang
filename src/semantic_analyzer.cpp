@@ -92,9 +92,13 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock &in_func_block, AstFuncDe
   for (auto stmnt : in_func_block.statements) {
     if (is_ret_stmnt(stmnt)) {
       has_ret_stmnt = true;
-      analizeExpr(stmnt);
+      if (!analizeExpr(stmnt))
+        continue;
+
       auto expr_type = get_expr_type(stmnt->unary_expr.expr);
-      check_type_compat(expr_type, ret_type, stmnt);
+      if (check_type_compat(expr_type, ret_type, stmnt))
+        set_type_info(stmnt->unary_expr.expr, ret_type);
+
     } else if (stmnt->node_type == AstNodeType::AstVarDef) {
       analizeVarDef(stmnt, false);
     } else {
@@ -129,13 +133,12 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
     }
     global_symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
 
-
     const AstNode *expr_type = get_expr_type(var_def.initializer);
     if (!check_type_compat(var_def.type, expr_type, in_node)) {
       global_symbol_table->remove_last_symbol();
       return false;
     }
-    
+
     set_type_info(var_def.initializer, var_def.type);
     return true;
   }
@@ -152,7 +155,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
       symbol_table->remove_last_symbol();
       return false;
     }
-    set_type_info(var_def.initializer, expr_type);
+    set_type_info(var_def.initializer, var_def.type);
   }
 
   return true;
@@ -176,7 +179,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       }
 
       // now we depend on left expr beeing ok
-      return get_expr_type(bin_expr.left_expr);
+      return get_expr_type(bin_expr.left_expr) != nullptr;
     }
     case BinaryExprType::EQUALS:
     case BinaryExprType::NOT_EQUALS:
@@ -199,7 +202,20 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       auto r_expr_type_node = get_expr_type(bin_expr.right_expr);
 
       // We check they have compatible types
-      return check_type_compat(l_expr_type_node, r_expr_type_node, in_expr);
+      if (!check_type_compat(l_expr_type_node, r_expr_type_node, in_expr))
+        return false;
+
+      if (bin_expr.left_expr->node_type != AstNodeType::AstConstValue ||
+          bin_expr.right_expr->node_type != AstNodeType::AstConstValue) {
+        if (bin_expr.left_expr->node_type == AstNodeType::AstConstValue) {
+          const AstNode *l_const_value = bin_expr.left_expr;
+          set_type_info(l_const_value, r_expr_type_node);
+        } else if (bin_expr.right_expr->node_type == AstNodeType::AstConstValue) {
+          const AstNode *r_const_value = bin_expr.right_expr;
+          set_type_info(r_const_value, l_expr_type_node);
+        }
+      }
+      return true;
     }
     default:
       LL_UNREACHEABLE;
@@ -248,10 +264,10 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       return false;
     }
 
-    auto &fn_proto = fn_call.fn_ref->function_proto;
-    if (fn_call.params.size() != fn_proto.params.size()) {
+    const AstFuncProto &fn_proto = fn_call.fn_ref->function_proto;
+    if (fn_call.args.size() != fn_proto.params.size()) {
       auto params_size = fn_proto.params.size();
-      auto args_size = fn_call.params.size();
+      auto args_size = fn_call.args.size();
 
       // BUG(pablo96): len1 != len2
       add_semantic_error(in_expr, ERROR_ARGUMENT_COUNT_MISMATCH, params_size, args_size);
@@ -261,13 +277,19 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     auto err_size_before = errors.size();
 
     size_t i = 0;
-    for (auto arg : fn_call.params) {
+    for (auto arg : fn_call.args) {
       if (!analizeExpr(arg))
         continue;
 
-      auto arg_type = get_expr_type(arg);
       auto param = fn_proto.params.at(i);
-      check_type_compat(param->param_decl.type, arg_type, in_expr);
+      auto param_type = param->param_decl.type;
+      auto arg_type = get_expr_type(arg);
+
+      bool is_compat = check_type_compat(param_type, arg_type, in_expr);
+
+      if (is_compat && arg->node_type == AstNodeType::AstConstValue) {
+        set_type_info(arg, param_type);
+      }
     }
 
     auto err_size_after = errors.size();
@@ -385,7 +407,7 @@ const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
 
   switch (expr->node_type) {
   case AstNodeType::AstBinaryExpr: {
-    auto bin_expr = expr->binary_expr;
+    auto &bin_expr = expr->binary_expr;
     switch (bin_expr.bin_op) {
     case BinaryExprType::EQUALS:
     case BinaryExprType::NOT_EQUALS:
@@ -404,7 +426,7 @@ const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
     LL_UNREACHEABLE;
   }
   case AstNodeType::AstUnaryExpr: {
-    auto unary_expr = expr->unary_expr;
+    auto &unary_expr = expr->unary_expr;
     switch (unary_expr.op) {
     case UnaryExprType::NOT:
       return get_type_node("bool");
@@ -417,11 +439,11 @@ const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
     return get_expr_type(func_node);
   }
   case AstNodeType::AstFuncDef: {
-    auto proto_node = expr->function_def.proto->function_proto;
+    auto &proto_node = expr->function_def.proto->function_proto;
     return proto_node.return_type;
   }
   case AstNodeType::AstFuncProto: {
-    auto proto_node = expr->function_proto;
+    auto &proto_node = expr->function_proto;
     return proto_node.return_type;
   }
   case AstNodeType::AstSymbol: {
@@ -446,7 +468,7 @@ const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
     LL_UNREACHEABLE;
   }
   case AstNodeType::AstConstValue: {
-    auto const_value = expr->const_value;
+    auto &const_value = expr->const_value;
     switch (const_value.type) {
     case ConstValueType::BOOL:
       return get_type_node("bool");

@@ -1,11 +1,13 @@
 #include "ir.hpp"
 
+#include "ast_nodes.hpp"
 #include "common_defs.hpp"
 #include "console.hpp"
 #include "lexer.hpp"
 
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Verifier.h>
+#include <stdarg.h>
 
 static llvm::Constant *getConstantDefaultValue(const AstType &in_type, llvm::Type *in_llvm_type);
 
@@ -164,15 +166,11 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef &in_var_def, const bool is_
 
     globalVar->setInitializer(init_value);
   } else {
-    auto *varInst = builder->CreateAlloca(type, nullptr, name);
-    in_var_def.llvm_value = varInst;
+    in_var_def.llvm_value = builder->CreateAlloca(type, nullptr, name);
 
-    auto assignStmntNode = in_var_def.initializer;
-
-    if (assignStmntNode) {
-      auto &assignStmnt = assignStmntNode->binary_expr;
-      assert(assignStmnt.bin_op == BinaryExprType::ASSIGN);
-      generateBinaryExpr(assignStmnt);
+    if (in_var_def.initializer) {
+      llvm::Value *init_value = generateExpr(in_var_def.initializer);
+      builder->CreateStore(init_value, in_var_def.llvm_value);
     }
   }
 }
@@ -322,7 +320,7 @@ llvm::Value *LlvmIrGenerator::generateFuncCallExpr(const AstFuncCallExpr &in_cal
   auto llvm_fn = code_module->getFunction(std::string(in_call_expr.fn_name));
 
   std::vector<llvm::Value *> args;
-  for (auto arg_node : in_call_expr.params) {
+  for (auto arg_node : in_call_expr.args) {
     auto arg_value = generateExpr(arg_node);
     args.push_back(arg_value);
   }
@@ -439,50 +437,40 @@ llvm::Constant *getConstantDefaultValue(const AstType &in_type, llvm::Type *in_l
   }
 }
 
-/*
-void kprintf(Module *mod, BasicBlock *bb, const char *format, ...)
-{
-    Function *func_printf = mod->getFunction("printf");
-    if (!func_printf) {
-        PointerType *Pty = PointerType::get(IntegerType::get(mod->getContext(), 8), 0);
-        FunctionType *FuncTy9 = FunctionType::get(IntegerType::get(mod->getContext(), 32), true);
+llvm::Value *LlvmIrGenerator::generateCallAndDeclPrintf(const char *format, ...) {
+  llvm::Function *func_printf = code_module->getFunction("printf");
+  if (!func_printf) {
+    llvm::PointerType *Pty = llvm::PointerType::get(llvm::IntegerType::get(context, 8), 0);
+    llvm::FunctionType *FuncTy9 = llvm::FunctionType::get(llvm::IntegerType::get(context, 32), true);
 
-        func_printf = Function::Create(FuncTy9, GlobalValue::ExternalLinkage, "printf", mod);
-        func_printf->setCallingConv(CallingConv::C);
+    func_printf = llvm::Function::Create(FuncTy9, llvm::GlobalValue::ExternalLinkage, "printf", code_module);
+    func_printf->setCallingConv(llvm::CallingConv::C);
 
-        AttrListPtr func_printf_PAL;
-        func_printf->setAttributes(func_printf_PAL);
+    llvm::AttributeList func_printf_PAL;
+    func_printf->setAttributes(func_printf_PAL);
+  }
+
+  llvm::Value *str = builder->CreateGlobalStringPtr(format);
+  std::vector<llvm::Value *> int32_call_params;
+  int32_call_params.push_back(str);
+
+  va_list ap;
+  va_start(ap, format);
+
+  char *str_ptr = va_arg(ap, char *);
+  llvm::Value *format_ptr = builder->CreateGlobalStringPtr(str_ptr);
+  int32_call_params.push_back(format_ptr);
+
+  std::vector<llvm::Value *> extra;
+  do {
+    llvm::Value *op = va_arg(ap, llvm::Value *);
+    if (op) {
+      int32_call_params.push_back(op);
+    } else {
+      break;
     }
+  } while (1);
+  va_end(ap);
 
-    IRBuilder <> builder(mod->getContext());
-    builder.SetInsertPoint(bb);
-
-    Value *str = builder.CreateGlobalStringPtr(format);
-    std::vector <Value *> int32_call_params;
-    int32_call_params.push_back(str);
-
-    va_list ap;
-    va_start(ap, format);
-
-    char *str_ptr = va_arg(ap, char*);
-    Value *format_ptr = builder.CreateGlobalStringPtr(str_ptr);
-    int32_call_params.push_back(format_ptr);
-
-    std::vector<llvm::Value*> extra;
-    do {
-        llvm::Value *op = va_arg(ap, llvm::Value*);
-        if (op) {
-            int32_call_params.push_back(op);
-        } else {
-            break;
-        }
-    } while (1);
-    va_end(ap);
-
-    CallInst * int32_call = CallInst::Create(func_printf, int32_call_params, "call", bb);
+  return builder->CreateCall(func_printf, int32_call_params);
 }
-#define oprintf(...) kprintf(__VA_ARGS__)
-#define llvm_printf(...) oprintf(mod, bb, __VA_ARGS__, NULL)
-
-llvm_printf("Output: 0x%08X %f %d\n", 0x12345678, 3.1415926, 12345);
-*/

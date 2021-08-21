@@ -60,11 +60,11 @@ AstVarDef::~AstVarDef() {
 }
 
 AstFuncCallExpr::~AstFuncCallExpr() {
-  if (!params.empty()) {
-    for (AstNode *&param : params) {
-      if (param) {
-        delete param;
-        param = nullptr;
+  if (!args.empty()) {
+    for (AstNode *&arg : args) {
+      if (arg) {
+        delete arg;
+        arg = nullptr;
       }
     }
   }

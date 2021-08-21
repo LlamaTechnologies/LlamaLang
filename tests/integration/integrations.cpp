@@ -20,14 +20,30 @@ TEST(Integrations, FromCompiler) {
   ASSERT_EQ(has_no_errors, true);
 }
 
+TEST(Integrations, RetComplexExpression) {
+  const char *output_path = "";
+  const char *executable_name = "MyProgram";
+  const char *source_name = "MyProgram.llang";
+  const char *source_code = "f i32 = 0\n"
+                            "\n"
+                            "fn getX(x i32) i32 {\n"
+                            "\tret x\n"
+                            "}\n"
+                            "\n"
+                            "fn myProgramInit() i32 {\n"
+                            "\tret 85 + getX(5)\n"
+                            "}\n";
+
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
+
+  ASSERT_EQ(has_no_errors, true);
+}
+
 TEST(Integrations, MultipleFuncDefinitions) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "//#module MyProgram\n"
-                            "//#load \"MyProgram.llang\"\n"
-                            "\n"
-                            "f i32 = -645\n"
+  const char *source_code = "f i32 = -645\n"
                             "\n"
                             "fn getX(x i32) i32 {\n"
                             "\tret x\n"
@@ -69,10 +85,7 @@ TEST(Integrations, FuncCallsWithAritmeticsArgs) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "//#module MyProgram\n"
-                            "//#load \"MyProgram.llang\"\n"
-                            "\n"
-                            "f i32 = 0\n"
+  const char *source_code = "f i32 = 0\n"
                             "\n"
                             "fn getX(x i32) i32 {\n"
                             "\tret x\n"
@@ -93,10 +106,7 @@ TEST(Integrations, FuncCallsInAritmeticsArgs) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "//#module MyProgram\n"
-                            "//#load \"MyProgram.llang\"\n"
-                            "\n"
-                            "f i32 = 0\n"
+  const char *source_code = "f i32 = 0\n"
                             "\n"
                             "fn getX(x i32) i32 {\n"
                             "\tret x\n"
@@ -105,28 +115,6 @@ TEST(Integrations, FuncCallsInAritmeticsArgs) {
                             "fn myProgramInit() i32 {\n"
                             "\tf = 85 + getX(5)\n"
                             "\tret f\n"
-                            "}\n";
-
-  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
-
-  ASSERT_EQ(has_no_errors, true);
-}
-
-TEST(Integrations, RetComplexExpression) {
-  const char *output_path = "";
-  const char *executable_name = "MyProgram";
-  const char *source_name = "MyProgram.llang";
-  const char *source_code = "//#module MyProgram\n"
-                            "//#load \"MyProgram.llang\"\n"
-                            "\n"
-                            "f i32 = 0\n"
-                            "\n"
-                            "fn getX(x i32) i32 {\n"
-                            "\tret x\n"
-                            "}\n"
-                            "\n"
-                            "fn myProgramInit() i32 {\n"
-                            "\tret 85 + getX(5)\n"
                             "}\n";
 
   bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);

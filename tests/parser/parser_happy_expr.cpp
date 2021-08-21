@@ -132,7 +132,7 @@ TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
   ASSERT_EQ(func_call->parent, value_node);
   ASSERT_EQ(func_call->node_type, AstNodeType::AstFuncCallExpr);
   ASSERT_EQ(func_call->func_call.fn_name, "myFunc");
-  ASSERT_EQ(func_call->func_call.params.size(), 0L);
+  ASSERT_EQ(func_call->func_call.args.size(), 0L);
 
   delete value_node;
 }
@@ -287,7 +287,7 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
   ASSERT_EQ(func_call->parent, value_node);
   ASSERT_EQ(func_call->node_type, AstNodeType::AstFuncCallExpr);
   ASSERT_EQ(func_call->func_call.fn_name, "myFunc");
-  ASSERT_EQ(func_call->func_call.params.size(), 0L);
+  ASSERT_EQ(func_call->func_call.args.size(), 0L);
 
   delete value_node;
 }

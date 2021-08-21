@@ -1,6 +1,8 @@
 #include "../../src/Types.hpp"
 #include "../../src/ast_nodes.hpp"
 #include "../../src/error.hpp"
+#include "../../src/lexer.hpp"
+#include "../../src/parser.hpp"
 #include "../../src/semantic_analyzer.hpp"
 
 #include <gtest/gtest.h>
@@ -461,67 +463,56 @@ TEST(SemanticExpressions, FunctionNoRet) {
   delete function_node;
 }
 
-TEST(SemanticExpressions, FunctionRet) {
-  // given: variable definition
-  auto i32_type_node = get_type_node("i32");
+TEST(SemanticExpressions, FunctionRetConstant) {
+  // given: code
+  const char *source_name = "function_ret.llama";
+  const char *source_code = "fn function_ret() i32 {\n"
+                            "\tret 5\n"
+                            "}\n";
 
-  auto var_def_node = new AstNode(AstNodeType::AstVarDef, 0, 0, "");
-  var_def_node->var_def.type = i32_type_node;
-  auto var_name = var_def_node->var_def.name = "my_var";
+  // given: lexer
+  std::vector<Error> errors;
+  Lexer lexer(source_code, source_name, errors);
+  lexer.tokenize();
 
-  // given: l_expr -> symbol node
-  auto symbol_node = new AstNode(AstNodeType::AstSymbol, 0, 0, "");
-  symbol_node->symbol.cached_name = std::string_view(var_name.data(), var_name.size());
-  
-  auto symbol_node_ret = new AstNode(*symbol_node);
-
-  // given: r_expr -> constant integer
-  auto const_value_node = new AstNode(AstNodeType::AstConstValue, 0, 0, "");
-  const_value_node->const_value.type = ConstValueType::INT;
-
-  // given: binary expr -> my_var = SOME_INT
-  auto binary_epxr_node = new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
-  binary_epxr_node->binary_expr.bin_op = BinaryExprType::ASSIGN;
-  binary_epxr_node->binary_expr.left_expr = symbol_node;
-  binary_epxr_node->binary_expr.right_expr = const_value_node;
-
-  // given: unary expr -> ret my_var
-  auto ret_stmnt_node = new AstNode(AstNodeType::AstUnaryExpr, 0, 0, "");
-  ret_stmnt_node->unary_expr.op = UnaryExprType::RET;
-  ret_stmnt_node->unary_expr.expr = symbol_node_ret;
-
-  // given: function proto -> fn my_func() i32
-  auto function_proto_node = new AstNode(AstNodeType::AstFuncProto, 0, 0, "");
-  function_proto_node->function_proto.name = "my_func";
-  function_proto_node->function_proto.return_type = i32_type_node;
-
-  // given: function block
-  auto function_block_node = new AstNode(AstNodeType::AstBlock, 0, 0, "");
-  function_block_node->block.statements.push_back(var_def_node);
-  function_block_node->block.statements.push_back(binary_epxr_node);
-  function_block_node->block.statements.push_back(ret_stmnt_node);
-
-  // given: function
-  auto function_node = new AstNode(AstNodeType::AstBinaryExpr, 0, 0, "");
-  function_node->function_def.proto = function_proto_node;
-  function_node->function_def.block = function_block_node;
+  // given: parser
+  Parser parser(lexer, errors);
+  auto function_def_node = parser.parse_function_def();
+  ASSERT_NE(function_def_node, nullptr);
 
   // given: analizer
-  std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
-  bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
+  bool is_valid_proto = analizer.analizeFuncProto(function_def_node->function_def.proto);
+  bool is_valid =
+    analizer.analizeFuncBlock(function_def_node->function_def.block->block, function_def_node->function_def);
 
   // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(function_def_node->node_type, AstNodeType::AstFuncDef);
+  ASSERT_NE(function_def_node->function_def.proto, nullptr);
+  ASSERT_NE(function_def_node->function_def.block, nullptr);
+
+  const AstNode *block_node = function_def_node->function_def.block;
+  ASSERT_EQ(block_node->block.statements.size(), 1);
+
   ASSERT_EQ(is_valid_proto, true);
   ASSERT_EQ(is_valid, true);
-  ASSERT_EQ(errors.size(), 0L);
+
+  const AstNode *ret_node = block_node->block.statements[0];
+  ASSERT_NE(ret_node, nullptr);
+  ASSERT_EQ(ret_node->node_type, AstNodeType::AstUnaryExpr);
+  ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
+
+  const AstNode *const_value_node = ret_node->unary_expr.expr;
+  ASSERT_NE(const_value_node, nullptr);
+  ASSERT_EQ(const_value_node->node_type, AstNodeType::AstConstValue);
+  ASSERT_EQ(const_value_node->const_value.is_negative, false);
+  ASSERT_EQ(const_value_node->const_value.bit_size, 32);
 
   // clean:
-  delete function_node;
-  delete i32_type_node;
+  delete function_def_node;
 }
 
 //==================================================================================
@@ -602,7 +593,7 @@ TEST(SemanticExpressions, FunctionCallWithParams) {
   auto function_call_node = new AstNode(AstNodeType::AstFuncCallExpr, 0, 0, "");
   function_call_node->func_call.fn_name = "my_func";
   function_call_node->func_call.fn_ref = nullptr;
-  function_call_node->func_call.params.push_back(const_value_node);
+  function_call_node->func_call.args.push_back(const_value_node);
 
   // given: analizer
   std::vector<Error> errors;

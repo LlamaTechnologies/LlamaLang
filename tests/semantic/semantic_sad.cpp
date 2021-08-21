@@ -525,7 +525,7 @@ TEST(SemanticExpressions, FunctionCallParamsCountMismatch) {
   auto function_call_node = new AstNode(AstNodeType::AstFuncCallExpr, 0, 0, "");
   function_call_node->func_call.fn_name = "my_func";
   function_call_node->func_call.fn_ref = nullptr;
-  function_call_node->func_call.params.push_back(const_value_node);
+  function_call_node->func_call.args.push_back(const_value_node);
 
   // given: analizer
   std::vector<Error> errors;
@@ -575,7 +575,7 @@ TEST(SemanticExpressions, FunctionCallParamsTypeMismatch) {
   auto function_call_node = new AstNode(AstNodeType::AstFuncCallExpr, 0, 0, "");
   function_call_node->func_call.fn_name = "my_func";
   function_call_node->func_call.fn_ref = nullptr;
-  function_call_node->func_call.params.push_back(const_value_node);
+  function_call_node->func_call.args.push_back(const_value_node);
 
   // given: analizer
   std::vector<Error> errors;

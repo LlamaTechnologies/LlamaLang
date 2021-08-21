@@ -119,7 +119,7 @@ struct AstConstValue {
 struct AstFuncCallExpr {
   std::string_view fn_name;
   mutable const AstNode *fn_ref;
-  std::vector<AstNode *> params;
+  std::vector<AstNode *> args;
 
   virtual ~AstFuncCallExpr();
 };

@@ -926,7 +926,7 @@ AstNode *Parser::parse_function_call() noexcept {
       continue;
     }
     expr->parent = func_call_node;
-    func_call_node->func_call.params.push_back(expr);
+    func_call_node->func_call.args.push_back(expr);
   }
 
   return func_call_node;
