@@ -123,6 +123,8 @@ ipch/
 *.s
 # astyle backup
 *.orig
+# llvm bit code
+*.bc
 
 bin/*
 
