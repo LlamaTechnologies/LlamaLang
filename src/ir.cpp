@@ -363,7 +363,7 @@ void LlvmIrGenerator::flush() {
 #endif
 
   std::error_code error_code;
-  auto llvm_output_file = llvm::raw_fd_ostream(output_directory + output_file_name + ".bc", error_code);
+  auto llvm_output_file = llvm::raw_fd_ostream(output_directory + "\\" + output_file_name + ".bc", error_code);
 
   llvm::WriteBitcodeToFile(*code_module, llvm_output_file);
 

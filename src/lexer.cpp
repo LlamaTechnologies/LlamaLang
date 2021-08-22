@@ -1165,6 +1165,7 @@ bool is_reserved_char(uint8_t c) {
   case WHITESPACE:
   case '(':
   case ')':
+  case ',':
     return true;
   default:
     return false;

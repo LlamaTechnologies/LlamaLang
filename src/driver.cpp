@@ -15,10 +15,11 @@ static char **split_string(const std::string &in_str, const char in_separator);
 static std::string get_path_to_program_by_name(const std::string &in_name);
 static int run_process(const std::string &in_program_path, std::string &in_program_args);
 
-#define LL_FILE_EXTENTION ".llang"
+#define LL_FILE_EXTENSION ".llama"
 #define ARG_SRC_FILE "-s"
 #define ARG_OUT_NAME "-o"
 #define ARG_OUT_DIR "-O"
+#define BITCODE_FILE_EXTENSION ".bc"
 
 Driver::Driver() : current_dir(get_current_dir()) {}
 
@@ -53,26 +54,26 @@ bool Driver::run() {
     return false;
   }
 
-  // TODO(pablo96): generate exe|lib|dll output
-
-  std::string llc_args = "";
-  int llc_exit_code = run_process(this->llc_path, llc_args);
-  if (llc_exit_code < 0) {
-    return false;
-  }
-
-  std::string lld_args = "";
+  std::string file_full_path = this->output_dir + "\\" + this->output_name;
+  std::string lld_args = "lld-link.exe /subsystem:console /entry:main " + file_full_path + BITCODE_FILE_EXTENSION;
   int lld_exit_code = run_process(this->lld_path, lld_args);
   if (lld_exit_code < 0) {
+    console::WriteLine("error with lld");
     return false;
   }
 
   return true;
 }
 
+#ifdef LL_WIN32
+  #define LLD_NAME "lld-link"
+#elif defined(LL_LINUX)
+  #define LLD_NAME "ld.lld"
+#endif
+
 bool Driver::get_tool_chain() {
   this->llc_path = get_path_to_program_by_name("llc");
-  this->lld_path = get_path_to_program_by_name("lld");
+  this->lld_path = get_path_to_program_by_name(LLD_NAME);
   {
     if (this->llc_path.size() == 0) {
       console::WriteLine("llc not found. please install llvm toolchain.");
@@ -101,7 +102,7 @@ bool Driver::verify_file_path() {
     return false;
   }
 
-  if (this->file_path.extension() != LL_FILE_EXTENTION) {
+  if (this->file_path.extension() != LL_FILE_EXTENSION) {
     console::WriteLine("file '" + this->file_path.string() + "' is not a llama lang file!");
     return false;
   }
@@ -129,6 +130,10 @@ bool Driver::parse_args(const char **argv, const int argc) {
 
   if (this->output_dir.empty()) {
     this->output_dir = current_dir;
+  }
+
+  if (this->output_name.empty()) {
+    this->output_name = "llama_program";
   }
 
   // if not source file provided then search for build file
@@ -226,19 +231,34 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
 std::string get_path_to_program_by_name(const std::string &in_name) {
   const unsigned int nBufferLength = MAX_PATH;
 
-  std::string buffer;
-  buffer.reserve(nBufferLength);
-
+  char *buffer = new char[nBufferLength];
   DWORD writenChars = SearchPathA(NULL, // null to make it search on the registry
-                                  in_name.c_str(), ".exe", nBufferLength, buffer.data(), nullptr);
+                                  in_name.c_str(), ".exe", nBufferLength, buffer, nullptr);
 
   if (writenChars <= 0) {
     return "";
   }
+  auto ret_val = std::string(buffer);
+  delete[] buffer;
+  return ret_val;
+}
 
-  buffer.resize(writenChars);
-  buffer.shrink_to_fit();
-  return buffer;
+void handle_error() { 
+  LPVOID lpMsgBuf = nullptr;
+  DWORD error_code = GetLastError();
+
+  DWORD no_error =
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+                   error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char*)&lpMsgBuf, 0, NULL);
+
+  if (!no_error) {
+    console::WriteLine("error formatting msg");
+  }
+
+  if (lpMsgBuf) {
+    console::WriteLine((char *)lpMsgBuf);
+    LocalFree(lpMsgBuf);
+  }
 }
 
 int run_process(const std::string &in_program_path, std::string &in_program_args) {
@@ -251,18 +271,20 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
                               nullptr, // default security attributes for thread
                               false, 0, nullptr, nullptr, &start_info, &process_info);
 
+  auto handle = process_info.hProcess;
   if (is_ok == false) {
-    // handle error
+    handle_error();
+    CloseHandle(handle);
     return -1;
   }
 
-  auto handle = process_info.hProcess;
 
   // lock until process finish
   DWORD wait_status = WaitForSingleObject(handle, INFINITE);
 
   if (wait_status == WAIT_FAILED) {
-    // handle error
+    handle_error();
+    CloseHandle(handle);
     return -1;
   }
 
@@ -271,7 +293,8 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
   is_ok = GetExitCodeProcess(handle, &process_exit_code);
 
   if (is_ok == false) {
-    // handle error
+    handle_error();
+    CloseHandle(handle);
     return -1;
   }
 

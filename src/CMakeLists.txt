@@ -60,6 +60,7 @@ add_library(${LIB_NAME} STATIC ${LLAMALANG_SRC})
 
 # target name label
 set_target_properties(${EXEC_NAME} PROPERTIES PROJECT_LABEL ${EXEC_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "llama")
 
 # target name label
 set_target_properties(${LIB_NAME} PROPERTIES PROJECT_LABEL ${LIB_NAME})
@@ -100,6 +101,6 @@ if (MSVC)
         set_property(TARGET ${LIB_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
         set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Release>>DLL")
         set_property(TARGET ${EXEC_NAME} PROPERTY MSVC_RUNTIME_LIBRARY  "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/tests/resources")
-        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_COMMAND_ARGUMENTS "-s MyProgram_Main.llang")
+        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/Debug")
+        set_property(TARGET ${EXEC_NAME} PROPERTY VS_DEBUGGER_COMMAND_ARGUMENTS "-s ../examples/TestSimple.llama")
 endif()
