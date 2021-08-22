@@ -55,7 +55,16 @@ bool Driver::run() {
   }
 
   std::string file_full_path = this->output_dir + "\\" + this->output_name;
-  std::string lld_args = "lld-link.exe /subsystem:console /entry:main " + file_full_path + BITCODE_FILE_EXTENSION;
+  std::string lld_args = "lld-link.exe "
+                         "-defaultlib:libcmtd "
+                         "-libpath:\"C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.19041.0\\ucrt\\x64\" "
+                         "-libpath:\"C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.19041.0\\ucrt\\x64\" "
+                         "-libpath:\"C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.19041.0\\um\\x64\" "
+                         "-libpath:\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30133\\lib\\onecore\\x64\" "
+                         "psapi.lib shell32.lib ole32.lib uuid.lib advapi32.lib kernel32.lib user32.lib gdi32.lib winspool.lib oleaut32.lib comdlg32.lib "
+                         "/nologo /subsystem:console /entry:main /machine:x64 " +
+      file_full_path +
+      BITCODE_FILE_EXTENSION;
   int lld_exit_code = run_process(this->lld_path, lld_args);
   if (lld_exit_code < 0) {
     console::WriteLine("error with lld");

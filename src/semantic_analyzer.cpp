@@ -370,16 +370,17 @@ void SemanticAnalyzer::add_semantic_error(const AstNode *in_node, const char *in
   int len1 = snprintf(nullptr, 0, in_msg, ap);
   assert(len1 >= 0);
 
-  std::string msg;
-  msg.reserve(len1 + 1);
+  const int CAPACITY = len1 + 1;
+  char *msg = new char[CAPACITY];
 
-  int len2 = snprintf(msg.data(), msg.capacity(), in_msg, ap2);
+  int len2 = snprintf(msg, CAPACITY, in_msg, ap2);
   assert(len2 >= 0);
   // assert(len2 == len1);
 
   Error error(ERROR_TYPE::ERROR, in_node->line, in_node->column, in_node->file_name, msg);
-
   errors.push_back(error);
+  
+  delete[] msg;
 
   va_end(ap);
   va_end(ap2);

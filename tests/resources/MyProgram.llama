@@ -1,0 +1,32 @@
+#load MyProgram
+
+/*****
+ * Multiline comment
+***
+*/
+
+// The parameter of this function shadows the global variable
+fn myFunction(f int32) int64 {
+    x int32;
+    y int32 = 8l + 10b
+    c int32 = 100l;
+
+    // truncate c to int8
+    b int8 = c
+    
+    // zero extend b to int32
+    c = b;
+
+    // should truncate this value!
+    u uint64 = 0x1FFFFFFFFFFFFFFFF
+
+    // should truncate this value!
+    ub uint8 = 0x8AEFub
+
+    x = y
+    y = f
+    f = c * (x + y) % 62.0f
+
+    // Returns the modified parameter value
+    ret f
+}

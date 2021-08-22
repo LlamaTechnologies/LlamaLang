@@ -16,6 +16,7 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   lexer.tokenize();
 
   if (!errors.empty()) {
+    console::WriteLine("LEXER");
     printErrors(errors);
     return false;
   }
@@ -24,6 +25,7 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   auto source_code_node = parser.parse();
 
   if (!errors.empty()) {
+    console::WriteLine("PARSER");
     printErrors(errors);
     return false;
   }
@@ -70,6 +72,7 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
 
 
   if (!errors.empty()) {
+    console::WriteLine("SEMANTIC/IR");
     printErrors(errors);
     return false;
   }

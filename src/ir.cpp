@@ -22,7 +22,7 @@ static const char *GetDataLayout() {
 
 static const char *GetTargetTriple() {
 #ifdef LL_VISUALSTUDIO
-  return "x86_64-pc-windows-msvc19.28.29913";
+  return "x86_64-pc-windows-msvc";
 #else
   return "x86_64-pc-linux-gnu";
 #endif
