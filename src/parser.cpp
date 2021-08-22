@@ -61,7 +61,8 @@ AstNode *Parser::parse_source_code() noexcept {
     }
 
     switch (token.id) {
-    case TokenId::FN: {
+    case TokenId::FN:
+    case TokenId::EXTERN: {
       lexer.get_back(); // token
       node = parse_function_def();
       if (!node) {
@@ -104,10 +105,12 @@ AstNode *Parser::parse_source_code() noexcept {
 
     // handle EOS (end of statement)
     const Token &semicolon_token = lexer.get_next_token();
+    const Token &prev_semi_token = lexer.get_previous_token();
     if (semicolon_token.id != TokenId::SEMI) {
-      if (token.id != TokenId::_EOF && !is_new_line_between(token.end_pos, semicolon_token.start_pos)) {
+      if (semicolon_token.id != TokenId::_EOF &&
+          !is_new_line_between(prev_semi_token.end_pos, semicolon_token.start_pos)) {
         // statement wrong ending
-        parse_error(token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(token));
+        parse_error(prev_semi_token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(prev_semi_token));
         delete node;
         continue;
       }
@@ -131,7 +134,7 @@ AstNode *Parser::parse_source_code() noexcept {
  */
 AstNode *Parser::parse_function_def() noexcept {
   const Token &fn_token = lexer.get_next_token();
-  if (fn_token.id != TokenId::FN) {
+  if (fn_token.id != TokenId::FN && fn_token.id != TokenId::EXTERN) {
     // Bad prediction
     LL_UNREACHEABLE;
   }
@@ -146,7 +149,11 @@ AstNode *Parser::parse_function_def() noexcept {
   const Token &l_curly_token = lexer.get_next_token();
   if (l_curly_token.id != TokenId::L_CURLY) {
     // just a function declaration (prototype)
+    lexer.get_back();
     return func_prot_node;
+  }
+  if (func_prot_node->function_proto.is_extern) {
+    parse_error(l_curly_token, ERROR_EXTERN_FN_HAS_BODY);
   }
 
   lexer.get_back();
@@ -169,19 +176,32 @@ AstNode *Parser::parse_function_def() noexcept {
 /*
  * Parses a function prototype
  * functionProto
- *   : 'fn' IDENTIFIER '(' (parameterDecl (',' parameterDecl)*)? ')' type_name
+ *   : 'extern? 'fn' IDENTIFIER '(' (parameterDecl (',' parameterDecl)*)? ')' type_name
  *   ;
  */
 AstNode *Parser::parse_function_proto() noexcept {
-  const Token &fn_token = lexer.get_next_token();
+  const Token &first_token = lexer.get_next_token();
 
-  if (fn_token.id != TokenId::FN) {
+  if (first_token.id != TokenId::EXTERN && first_token.id != TokenId::FN) {
     // Bad prediction
     LL_UNREACHEABLE;
   }
 
+  const Token &fn_token = first_token.id == TokenId::EXTERN ? lexer.get_next_token() : first_token;
+  if (fn_token.id != TokenId::FN && first_token.id == TokenId::EXTERN) {
+    parse_error(fn_token, ERROR_UNEXPECTED_EXTERN, lexer.get_token_value(fn_token));
+    return nullptr;
+  }
+
   auto func_prot_node =
     new AstNode(AstNodeType::AstFuncProto, fn_token.start_line, fn_token.start_column, lexer.file_name);
+
+  // set function as extern
+  {
+    if (first_token.id == TokenId::EXTERN) {
+      func_prot_node->function_proto.is_extern = true;
+    }
+  }
 
   // function name
   {

@@ -7,6 +7,7 @@
 enum class TokenId
 {
   HASH,      // #
+  EXTERN,    // extern
   FN,        // fn
   RET,       // ret
   L_PAREN,   // (

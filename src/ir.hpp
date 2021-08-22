@@ -32,7 +32,8 @@ public:
   void flush();
 
 private:
-  llvm::Value *generateCallAndDeclPrintf(const char *format, ...);
+  llvm::Value *generatePrintfCall(const char *format, const std::vector<llvm::Value *> &args);
+  llvm::Value *generatePrintfDeclaration();
   llvm::Type *translateType(const AstType &in_type);
   llvm::Constant *translateConstant(const AstConstValue &in_const);
 };

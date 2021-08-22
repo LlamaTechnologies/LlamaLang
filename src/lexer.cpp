@@ -1049,6 +1049,7 @@ void Lexer::end_token_check_is_keyword() noexcept {
   is_keyword();
 
   switch (curr_token.id) {
+  case TokenId::EXTERN:
   case TokenId::FN:
   case TokenId::RET:
   case TokenId::AND:
@@ -1123,7 +1124,8 @@ void Lexer::handle_string_escape(uint8_t c) noexcept {
   }
 }
 
-static std::unordered_map<std::string_view, TokenId> keywords = { { "fn", TokenId::FN },
+static std::unordered_map<std::string_view, TokenId> keywords = { { "extern", TokenId::EXTERN },
+                                                                  { "fn", TokenId::FN },
                                                                   { "ret", TokenId::RET },
                                                                   { "and", TokenId::AND },
                                                                   { "or", TokenId::OR } };

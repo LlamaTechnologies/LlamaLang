@@ -56,6 +56,7 @@ struct AstFuncDef {
 };
 
 struct AstFuncProto {
+  bool is_extern = false;
   std::string_view name;
   std::vector<AstNode *> params;
   AstNode *return_type = nullptr;
