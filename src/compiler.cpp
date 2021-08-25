@@ -1,9 +1,12 @@
 #include "compiler.hpp"
 
+#include "console.hpp"
 #include "ir.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "semantic_analyzer.hpp"
+
+static void printErrors(const std::vector<Error> &errors);
 
 bool compiler::compile(const std::string &in_output_directory, const std::string &in_executable_name,
                        const std::string &in_source_code, const std::string &in_source_name) {
@@ -12,8 +15,20 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   Lexer lexer(in_source_code, in_source_name, errors);
   lexer.tokenize();
 
+  if (!errors.empty()) {
+    console::WriteLine("LEXER");
+    printErrors(errors);
+    return false;
+  }
+
   Parser parser(lexer, errors);
   auto source_code_node = parser.parse();
+
+  if (!errors.empty()) {
+    console::WriteLine("PARSER");
+    printErrors(errors);
+    return false;
+  }
 
   LlvmIrGenerator generator(in_output_directory, in_executable_name);
   SemanticAnalyzer analyzer(errors);
@@ -55,8 +70,23 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
     }
   }
 
+
+  if (!errors.empty()) {
+    console::WriteLine("SEMANTIC/IR");
+    printErrors(errors);
+    return false;
+  }
+
   // generate IR output
   generator.flush();
 
   return has_no_errors;
+}
+
+void printErrors(const std::vector<Error> &errors) {
+  for (const Error &error : errors) { 
+      std::string str;
+      to_string(error, str);
+      console::WriteLine(str);
+  }
 }

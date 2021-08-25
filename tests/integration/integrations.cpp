@@ -62,10 +62,7 @@ TEST(Integrations, FuncCalls) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "//#module MyProgram\n"
-                            "//#load \"MyProgram.llang\"\n"
-                            "\n"
-                            "f i32 = 1447\n"
+  const char *source_code = "f i32 = 1447\n"
                             "\n"
                             "fn getX(x i32) i32 {\n"
                             "\tret x\n"
@@ -115,6 +112,32 @@ TEST(Integrations, FuncCallsInAritmeticsArgs) {
                             "fn myProgramInit() i32 {\n"
                             "\tf = 85 + getX(5)\n"
                             "\tret f\n"
+                            "}\n";
+
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
+
+  ASSERT_EQ(has_no_errors, true);
+}
+
+TEST(Integrations, PrintfDecl) {
+  const char *output_path = "";
+  const char *executable_name = "MyProgram";
+  const char *source_name = "MyProgram.llang";
+  const char *source_code = "extern fn printf() void\n";
+
+  bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);
+
+  ASSERT_EQ(has_no_errors, true);
+}
+
+TEST(Integrations, PrintfCall) {
+  const char *output_path = "";
+  const char *executable_name = "MyProgram";
+  const char *source_name = "MyProgram.llang";
+  const char *source_code = "extern fn printf() void\n"
+                            "\n"
+                            "fn myProgramInit() void {\n"
+                            "\tprintf(5)\n"
                             "}\n";
 
   bool has_no_errors = compiler::compile(output_path, executable_name, source_code, source_name);

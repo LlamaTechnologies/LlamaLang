@@ -96,6 +96,12 @@
     "cmake.configureSettings": {
         "LLVM_DIR": "/usr/lib/cmake/llvm"
     },
+    "cmake.debugConfig": {
+        "args": [
+            "-s",
+            "examples/TestPrint.llama"
+        ]
+    },
     "[cpp]": {
         "editor.defaultFormatter": "xaver.clang-format"
     },

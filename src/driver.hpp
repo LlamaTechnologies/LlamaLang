@@ -3,7 +3,6 @@
 #include <filesystem>
 
 class Driver {
-  std::string llc_path;
   std::string lld_path;
 
   std::string current_dir;

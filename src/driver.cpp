@@ -11,14 +11,16 @@
 
 static std::string read_file(std::ifstream &in_file);
 static std::string get_current_dir();
-static char **split_string(const std::string &in_str, const char in_separator);
+static std::vector<char *> *split_string(const std::string &in_str, const char in_separator);
 static std::string get_path_to_program_by_name(const std::string &in_name);
-static int run_process(const std::string &in_program_path, std::string &in_program_args);
+static int run_process(const std::string &in_program_path, const std::string &in_program_args);
 
-#define LL_FILE_EXTENTION ".llang"
+#define LL_FILE_EXTENSION ".llama"
 #define ARG_SRC_FILE "-s"
 #define ARG_OUT_NAME "-o"
 #define ARG_OUT_DIR "-O"
+#define BITCODE_FILE_EXTENSION ".bc"
+#define EXE_EXTENSION ".exe"
 
 Driver::Driver() : current_dir(get_current_dir()) {}
 
@@ -53,31 +55,32 @@ bool Driver::run() {
     return false;
   }
 
-  // TODO(pablo96): generate exe|lib|dll output
+  std::string file_full_path = this->output_dir + "/" + this->output_name;
+  auto file_out = file_full_path + ".a";
+  auto file_in = file_full_path + BITCODE_FILE_EXTENSION;
+  std::string lld_args = this->lld_path + " " + file_in +  " -o " + file_out;
 
-  std::string llc_args = "";
-  int llc_exit_code = run_process(this->llc_path, llc_args);
-  if (llc_exit_code < 0) {
-    return false;
-  }
+  console::WriteLine(lld_args);
 
-  std::string lld_args = "";
   int lld_exit_code = run_process(this->lld_path, lld_args);
   if (lld_exit_code < 0) {
+    console::WriteLine("error with lld");
     return false;
   }
 
+  console::WriteLine("Compiled Successfuly: " + file_out);
   return true;
 }
 
+#ifdef LL_WIN32
+  #define LLD_NAME "link"
+#elif defined(LL_LINUX)
+  #define LLD_NAME "clang"
+#endif
+
 bool Driver::get_tool_chain() {
-  this->llc_path = get_path_to_program_by_name("llc");
-  this->lld_path = get_path_to_program_by_name("lld");
+  this->lld_path = LLD_NAME; // get_path_to_program_by_name(LLD_NAME);
   {
-    if (this->llc_path.size() == 0) {
-      console::WriteLine("llc not found. please install llvm toolchain.");
-      return false;
-    }
     if (this->lld_path.size() == 0) {
       console::WriteLine("lld not found. please install llvm toolchain.");
       return false;
@@ -101,7 +104,7 @@ bool Driver::verify_file_path() {
     return false;
   }
 
-  if (this->file_path.extension() != LL_FILE_EXTENTION) {
+  if (this->file_path.extension() != LL_FILE_EXTENSION) {
     console::WriteLine("file '" + this->file_path.string() + "' is not a llama lang file!");
     return false;
   }
@@ -129,6 +132,10 @@ bool Driver::parse_args(const char **argv, const int argc) {
 
   if (this->output_dir.empty()) {
     this->output_dir = current_dir;
+  }
+
+  if (this->output_name.empty()) {
+    this->output_name = "llama_program";
   }
 
   // if not source file provided then search for build file
@@ -188,37 +195,33 @@ std::string get_current_dir() {
 
 #ifdef LL_LINUX
 std::string get_path_to_program_by_name(const std::string &in_name) {
-  std::string path_var = std::string(getenv("PATH"));
+  FILE *fp;
+  char path[1035];
 
-  return path_var;
+  /* Open the command for reading. */
+  fp = popen(std::string("/bin/which " + in_name).data(), "r");
+  if (fp == NULL) {
+    printf("Failed to run command\n");
+    return "";
+  }
+
+  /* Read the output a line at a time - output it. */
+  if (fgets(path, sizeof(path), fp) != NULL) {
+    printf("%s", path);
+    pclose(fp);
+    auto str = std::string(path);
+    auto index = str.find_last_of('\n');
+    if (index != str.npos)
+      str.erase(index);
+    return str;
+  }
+
+  pclose(fp);
+  return "";
 }
 
-int run_process(const std::string &in_program_path, std::string &in_program_args) {
-  pid_t pid = fork();
-  int wstatus;
-
-  if (pid == 0) {
-    char **argv = split_string(in_program_args, ' ');
-    // replace current process(child) to the desired program.
-    // it is no return unless an error ocurred.
-    auto error_code = execve(in_program_path.c_str(), argv, NULL);
-    if (error_code == -1) {
-      // Handle error
-      return -1;
-    }
-  }
-
-  int error = waitpid(pid, &wstatus, 0);
-  if (error < 0) {
-    // handle error
-    return -1;
-  }
-
-  if (!WIFEXITED(wstatus)) {
-    return -1;
-  }
-
-  return WEXITSTATUS(wstatus);
+int run_process(const std::string &in_program_path, const std::string &in_program_args) {
+  return system(in_program_args.c_str());
 }
 #endif
 
@@ -226,19 +229,34 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
 std::string get_path_to_program_by_name(const std::string &in_name) {
   const unsigned int nBufferLength = MAX_PATH;
 
-  std::string buffer;
-  buffer.reserve(nBufferLength);
-
+  char *buffer = new char[nBufferLength];
   DWORD writenChars = SearchPathA(NULL, // null to make it search on the registry
-                                  in_name.c_str(), ".exe", nBufferLength, buffer.data(), nullptr);
+                                  in_name.c_str(), ".exe", nBufferLength, buffer, nullptr);
 
   if (writenChars <= 0) {
     return "";
   }
+  auto ret_val = std::string(buffer);
+  delete[] buffer;
+  return ret_val;
+}
 
-  buffer.resize(writenChars);
-  buffer.shrink_to_fit();
-  return buffer;
+void handle_error() {
+  LPVOID lpMsgBuf = nullptr;
+  DWORD error_code = GetLastError();
+
+  DWORD no_error =
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+                   error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *)&lpMsgBuf, 0, NULL);
+
+  if (!no_error) {
+    console::WriteLine("error formatting msg");
+  }
+
+  if (lpMsgBuf) {
+    console::WriteLine((char *)lpMsgBuf);
+    LocalFree(lpMsgBuf);
+  }
 }
 
 int run_process(const std::string &in_program_path, std::string &in_program_args) {
@@ -251,18 +269,19 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
                               nullptr, // default security attributes for thread
                               false, 0, nullptr, nullptr, &start_info, &process_info);
 
+  auto handle = process_info.hProcess;
   if (is_ok == false) {
-    // handle error
+    handle_error();
+    CloseHandle(handle);
     return -1;
   }
-
-  auto handle = process_info.hProcess;
 
   // lock until process finish
   DWORD wait_status = WaitForSingleObject(handle, INFINITE);
 
   if (wait_status == WAIT_FAILED) {
-    // handle error
+    handle_error();
+    CloseHandle(handle);
     return -1;
   }
 
@@ -271,7 +290,8 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
   is_ok = GetExitCodeProcess(handle, &process_exit_code);
 
   if (is_ok == false) {
-    // handle error
+    handle_error();
+    CloseHandle(handle);
     return -1;
   }
 
@@ -281,14 +301,20 @@ int run_process(const std::string &in_program_path, std::string &in_program_args
 }
 #endif
 
-char **split_string(const std::string &in_str, const char in_separator) {
-  char *strings = (char*) malloc(in_str.size());
+std::vector<char *> *split_string(const std::string &in_str, const char in_separator) {
+  auto strings = new std::vector<char *>();
 
+  size_t last_null = 0;
   for (size_t i = 0; i < in_str.size(); ++i) {
-    char *c = &strings[i];
-    if (*c == in_separator) {
-      *c = 0;
+    char c = in_str[i];
+    if (c == in_separator) {
+      char *str_c = new char[i + 1];
+      std::string str = in_str.substr(last_null + 1, i);
+      last_null = i;
+      memcpy(str_c, str.data(), str.size());
+      strings->push_back(str_c);
     }
   }
-  return (char **)strings;
+  strings->push_back(NULL);
+  return strings;
 }

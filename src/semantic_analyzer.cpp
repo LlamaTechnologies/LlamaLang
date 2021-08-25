@@ -251,6 +251,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
   }
   case AstNodeType::AstFuncCallExpr: {
     const AstFuncCallExpr &fn_call = in_expr->func_call;
+
     SymbolType symbol_type;
     fn_call.fn_ref = resolve_function_variable(std::string(fn_call.fn_name), in_expr, &symbol_type);
 
@@ -262,6 +263,22 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     if (!fn_call.fn_ref) {
       add_semantic_error(in_expr, ERROR_UNDECLARED_FN, fn_call.fn_name);
       return false;
+    }
+
+    // TODO(pablo96): temporal solution to printf!
+    if (fn_call.fn_name == "printf") {
+      for (auto arg : fn_call.args) {
+        if (!analizeExpr(arg))
+          continue;
+
+        auto arg_type = get_expr_type(arg);
+
+        if (arg->node_type == AstNodeType::AstConstValue) {
+          arg_type->ast_type.type_info->bit_size = 32;
+          set_type_info(arg, arg_type);
+        }
+      }
+      return true;
     }
 
     const AstFuncProto &fn_proto = fn_call.fn_ref->function_proto;
@@ -278,8 +295,10 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
 
     size_t i = 0;
     for (auto arg : fn_call.args) {
-      if (!analizeExpr(arg))
+      if (!analizeExpr(arg)) {
+        i++;
         continue;
+      }
 
       auto param = fn_proto.params.at(i);
       auto param_type = param->param_decl.type;
@@ -290,6 +309,8 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       if (is_compat && arg->node_type == AstNodeType::AstConstValue) {
         set_type_info(arg, param_type);
       }
+
+      i++;
     }
 
     auto err_size_after = errors.size();
@@ -349,16 +370,17 @@ void SemanticAnalyzer::add_semantic_error(const AstNode *in_node, const char *in
   int len1 = snprintf(nullptr, 0, in_msg, ap);
   assert(len1 >= 0);
 
-  std::string msg;
-  msg.reserve(len1 + 1);
+  const int CAPACITY = len1 + 1;
+  char *msg = new char[CAPACITY];
 
-  int len2 = snprintf(msg.data(), msg.capacity(), in_msg, ap2);
+  int len2 = snprintf(msg, CAPACITY, in_msg, ap2);
   assert(len2 >= 0);
   // assert(len2 == len1);
 
   Error error(ERROR_TYPE::ERROR, in_node->line, in_node->column, in_node->file_name, msg);
-
   errors.push_back(error);
+  
+  delete[] msg;
 
   va_end(ap);
   va_end(ap2);
