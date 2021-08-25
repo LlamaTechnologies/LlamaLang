@@ -168,9 +168,9 @@ struct Token {
 
 typedef std::vector<std::string> Console;
 
-class Lexer {
-  enum class TokenizerState;
+enum class TokenizerState;
 
+class Lexer {
   size_t cursor_pos;
   size_t curr_line;
   size_t curr_column;
@@ -197,7 +197,13 @@ private:
   std::vector<Error> &errors;
 
 public:
+  /**
+   * Open a file and tokenize it
+   **/
   Lexer(const std::string &_file_name, std::vector<Error> &_errors);
+  /**
+   * Tokenize the '_src_file' string
+   **/
   Lexer(const std::string &_src_file, const std::string &_file_name, std::vector<Error> &_errors);
   void tokenize() noexcept;
 
@@ -216,53 +222,13 @@ public:
   friend Console print_tokens(Lexer &lexer);
 
 private:
-  void begin_token(const TokenId id) noexcept;
-  void set_token_id(const TokenId id) noexcept;
-  void end_token() noexcept;
-  void end_token_check_is_keyword() noexcept;
-  void reset_line() noexcept;
-  void is_keyword() noexcept;
-  void invalid_char_error(uint8_t c) noexcept;
-  void tokenize_error(const char *format, ...) noexcept;
-  void handle_string_escape(uint8_t c) noexcept;
-
-  enum class TokenizerState
-  {
-    Start,
-    Symbol,
-    Zero,                            // "0", which might lead to "0x"
-    Number,                          // "123", "0x123"
-    NumberNoUnderscore,              // "12_", "0x12_" next char must be digit
-    NumberDot,                       //
-    FloatFraction,                   // "123.456", "0x123.456"
-    FloatFractionNoUnderscore,       // "123.45_", "0x123.45_"
-    FloatExponentUnsigned,           // "123.456e", "123e", "0x123p"
-    FloatExponentNumber,             // "123.456e7", "123.456e+7", "123.456e-7"
-    FloatExponentNumberNoUnderscore, // "123.456e7_", "123.456e+7_", "123.456e-7_"
-    String,                          //
-    StringEscape,                    // saw \ inside a string
-    StringEscapeUnicodeStart,        // saw u inside string_escape
-    CharCode,                        // saw x in string_escape or began the unicode escape
-    CharLiteral,                     //
-    CharLiteralUnicode,              // unicode char
-    CharLiteralEnd,                  //
-    SawStar,                         //
-    SawSlash,                        //
-    SawPercent,                      //
-    SawPlus,                         //
-    SawDash,                         //
-    SawNot,
-    SawVerticalBar,
-    SawAmpersand,
-    SawLess,
-    SawGreater,
-    SawSignOrTypeSpec,
-    DocComment,        //
-    SawStarDocComment, // * in multiline comment may lead to end comment
-    LineComment,       //
-    SawEq,             //
-    Error,             //
-  };
+  friend void begin_token(Lexer &, const TokenId id) noexcept;
+  friend void end_token(Lexer &) noexcept;
+  friend void end_token_check_is_keyword(Lexer &) noexcept;
+  friend void reset_line(Lexer &) noexcept;
+  friend void invalid_char_error(Lexer &, uint8_t c) noexcept;
+  friend void tokenize_error(Lexer &, const char *format, ...) noexcept;
+  friend void handle_string_escape(Lexer &, uint8_t c) noexcept;
 };
 
 Console print_tokens(Lexer &lexer);

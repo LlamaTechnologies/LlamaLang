@@ -35,13 +35,54 @@ ALPHA:              \
   case DIGIT:       \
   case '_'
 
-static uint32_t get_digit_value(uint8_t c);
-static const char *get_escape_shorthand(uint8_t c);
-static bool is_symbol_char(uint8_t c);
-static bool is_reserved_char(uint8_t c);
-static bool is_float_specifier(uint8_t c);
-static bool is_sign_or_type_specifier(uint8_t c);
-static bool is_exponent_signifier(uint8_t c, int radix);
+static void set_token_id(Token &, const TokenId id) noexcept;
+static void is_keyword(Token &, std::string_view) noexcept;
+
+enum class TokenizerState
+{
+  Start,
+  Symbol,                          // [a-zA-Z_][a-zA-Z_0-9]*
+  Zero,                            // "0", which might lead to "0x"
+  Number,                          // "123", "0x123"
+  NumberNoUnderscore,              // "12_", "0x12_" next char must be digit
+  NumberDot,                       // . inside a number
+  FloatFraction,                   // "123.456", "0x123.456"
+  FloatFractionNoUnderscore,       // "123.45_", "0x123.45_"
+  FloatExponentUnsigned,           // "123.456e", "123e", "0x123p"
+  FloatExponentNumber,             // "123.456e7", "123.456e+7", "123.456e-7"
+  FloatExponentNumberNoUnderscore, // "123.456e7_", "123.456e+7_", "123.456e-7_"
+  String,                          //
+  StringEscape,                    // saw \ inside a string
+  StringEscapeUnicodeStart,        // saw u inside string_escape
+  CharCode,                        // saw x in string_escape or began the unicode escape
+  CharLiteral,                     // saw '
+  CharLiteralUnicode,              // is 'uXXXX'
+  CharLiteralEnd,                  // saw ' after '
+  SawEq,                           // saw =
+  SawStar,                         // saw *
+  SawSlash,                        // saw /
+  SawPercent,                      // saw %
+  SawPlus,                         // saw +
+  SawDash,                         // saw -
+  SawNot,                          // saw !
+  SawVerticalBar,                  // saw |
+  SawAmpersand,                    // saw &
+  SawLess,                         // saw <
+  SawGreater,                      // saw >
+  SawSignOrTypeSpec,               // saw [ubwl]
+  DocComment,                      // inside /* */
+  SawStarDocComment,               // * in multiline comment may lead to end comment
+  LineComment,                     // inside // \n
+  Error,                           //
+};
+
+static uint32_t get_digit_value(uint8_t);
+static const char *get_escape_shorthand(uint8_t);
+static bool is_symbol_char(uint8_t);
+static bool is_reserved_char(uint8_t);
+static bool is_float_specifier(uint8_t);
+static bool is_sign_or_type_specifier(uint8_t);
+static bool is_exponent_signifier(uint8_t, int);
 
 Lexer::Lexer(const std::string &_file_name, std::vector<Error> &_errors)
     : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX), curr_line(0L), curr_column(0L),
@@ -85,7 +126,7 @@ void Lexer::tokenize() noexcept {
         // we faund a symbol
       case SYMBOL_START:
         state = TokenizerState::Symbol;
-        begin_token(TokenId::IDENTIFIER);
+        begin_token(*this, TokenId::IDENTIFIER);
         break;
         // we found a 0 so we have to tokenize a
         // octal: 0o[0-7]...
@@ -94,7 +135,7 @@ void Lexer::tokenize() noexcept {
         // trailing 0 decimal: 0[1-9]...
       case '0':
         state = TokenizerState::Zero;
-        begin_token(TokenId::INT_LIT);
+        begin_token(*this, TokenId::INT_LIT);
         is_trailing_underscore = false;
         radix = 10;
         curr_token.int_lit.number[curr_token.int_lit.digits_count] = c;
@@ -102,7 +143,7 @@ void Lexer::tokenize() noexcept {
         break;
       case DIGIT_NON_ZERO:
         state = TokenizerState::Number;
-        begin_token(TokenId::INT_LIT);
+        begin_token(*this, TokenId::INT_LIT);
         is_trailing_underscore = false;
         radix = 10;
         curr_token.int_lit.number[curr_token.int_lit.digits_count] = c;
@@ -110,19 +151,19 @@ void Lexer::tokenize() noexcept {
         break;
         // we found the beginning of a string literal
       case '"':
-        begin_token(TokenId::STRING);
+        begin_token(*this, TokenId::STRING);
         state = TokenizerState::String;
         break;
         // we found the beginning of a char literal
       case '\'':
-        begin_token(TokenId::UNICODE_CHAR);
+        begin_token(*this, TokenId::UNICODE_CHAR);
         state = TokenizerState::CharLiteral;
         break;
         // we found
         // ASSIGN =
         // EQUALS ==
       case '=':
-        begin_token(TokenId::ASSIGN);
+        begin_token(*this, TokenId::ASSIGN);
         state = TokenizerState::SawEq;
         break;
         // we found
@@ -131,14 +172,14 @@ void Lexer::tokenize() noexcept {
         // the beginning of a DOC comment
         // the beginning of a line comment
       case '/':
-        begin_token(TokenId::DIV);
+        begin_token(*this, TokenId::DIV);
         state = TokenizerState::SawSlash;
         break;
         // we found
         // MUL
         // *=
       case '*':
-        begin_token(TokenId::MUL);
+        begin_token(*this, TokenId::MUL);
         state = TokenizerState::SawStar;
         break;
         // we found
@@ -146,7 +187,7 @@ void Lexer::tokenize() noexcept {
         // +=
         // ++
       case '+':
-        begin_token(TokenId::PLUS);
+        begin_token(*this, TokenId::PLUS);
         state = TokenizerState::SawPlus;
         break;
         // we found
@@ -154,89 +195,89 @@ void Lexer::tokenize() noexcept {
         // -=
         // --
       case '-':
-        begin_token(TokenId::MINUS);
+        begin_token(*this, TokenId::MINUS);
         state = TokenizerState::SawDash;
         break;
         // we found
         // MOD
         // %=
       case '%':
-        begin_token(TokenId::MOD);
+        begin_token(*this, TokenId::MOD);
         state = TokenizerState::SawPercent;
         break;
         // we found a hash
       case '#':
-        begin_token(TokenId::HASH);
-        end_token();
+        begin_token(*this, TokenId::HASH);
+        end_token(*this);
         break;
         // we found a semicolon
       case ';':
-        begin_token(TokenId::SEMI);
+        begin_token(*this, TokenId::SEMI);
 
-        end_token();
+        end_token(*this);
         break;
       case '(':
-        begin_token(TokenId::L_PAREN);
-        end_token();
+        begin_token(*this, TokenId::L_PAREN);
+        end_token(*this);
         break;
       case ')':
-        begin_token(TokenId::R_PAREN);
-        end_token();
+        begin_token(*this, TokenId::R_PAREN);
+        end_token(*this);
         break;
       case '{':
-        begin_token(TokenId::L_CURLY);
-        end_token();
+        begin_token(*this, TokenId::L_CURLY);
+        end_token(*this);
         break;
       case '}':
-        begin_token(TokenId::R_CURLY);
-        end_token();
+        begin_token(*this, TokenId::R_CURLY);
+        end_token(*this);
         break;
       case '[':
-        begin_token(TokenId::L_BRACKET);
-        end_token();
+        begin_token(*this, TokenId::L_BRACKET);
+        end_token(*this);
         break;
       case ']':
-        begin_token(TokenId::R_BRACKET);
-        end_token();
+        begin_token(*this, TokenId::R_BRACKET);
+        end_token(*this);
         break;
       case '.':
-        begin_token(TokenId::FLOAT_LIT);
+        begin_token(*this, TokenId::FLOAT_LIT);
         state = TokenizerState::NumberDot;
         break;
       case '!':
-        begin_token(TokenId::NOT);
+        begin_token(*this, TokenId::NOT);
         state = TokenizerState::SawNot;
         break;
       case '|':
-        begin_token(TokenId::BIT_OR);
+        begin_token(*this, TokenId::BIT_OR);
         state = TokenizerState::SawVerticalBar;
         break;
       case '&':
-        begin_token(TokenId::BIT_AND);
+        begin_token(*this, TokenId::BIT_AND);
         state = TokenizerState::SawAmpersand;
         break;
       case '~':
-        begin_token(TokenId::BIT_NOT);
-        end_token();
+        begin_token(*this, TokenId::BIT_NOT);
+        end_token(*this);
         break;
       case ',':
-        begin_token(TokenId::COMMA);
-        end_token();
+        begin_token(*this, TokenId::COMMA);
+        end_token(*this);
         break;
       case '^':
-        begin_token(TokenId::BIT_XOR);
-        end_token();
+        begin_token(*this, TokenId::BIT_XOR);
+        end_token(*this);
         break;
       case '<':
-        begin_token(TokenId::LESS);
+        begin_token(*this, TokenId::LESS);
         state = TokenizerState::SawLess;
         break;
       case '>':
-        begin_token(TokenId::GREATER);
+        begin_token(*this, TokenId::GREATER);
         state = TokenizerState::SawGreater;
         break;
       default:
-        tokenize_error("Unidentified character in symbol %c", c);
+        tokenize_error(*this, "Unidentified character in symbol %c", c);
         is_invalid_token = true;
         state = TokenizerState::Symbol;
         break;
@@ -252,10 +293,10 @@ void Lexer::tokenize() noexcept {
 
         if (is_invalid_token) {
           is_invalid_token = false;
-          set_token_id(TokenId::ERROR);
-          end_token();
+          set_token_id(curr_token, TokenId::ERROR);
+          end_token(*this);
         } else {
-          end_token_check_is_keyword();
+          end_token_check_is_keyword(*this);
         }
 
         state = TokenizerState::Start;
@@ -271,19 +312,19 @@ void Lexer::tokenize() noexcept {
         break;
         // doc comment /* */
       case '*':
-        set_token_id(TokenId::DOC_COMMENT);
+        set_token_id(curr_token, TokenId::DOC_COMMENT);
         state = TokenizerState::DocComment;
         break;
         // DIV_ASSIGN /=
       case '=':
-        set_token_id(TokenId::DIV_ASSIGN);
-        end_token();
+        set_token_id(curr_token, TokenId::DIV_ASSIGN);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
         // DIV
       default:
         cursor_pos -= 1;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -301,7 +342,7 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::SawStarDocComment:
       switch (c) {
       case '/':
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       default:
@@ -349,7 +390,7 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::NumberNoUnderscore:
       // cant have two undersocores in a number
       if (c == '_') {
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
         state = TokenizerState::NumberNoUnderscore;
         is_invalid_token = true;
         break;
@@ -372,7 +413,7 @@ void Lexer::tokenize() noexcept {
       if (c == '.') {
         // _. not allowed
         if (is_trailing_underscore) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
           break;
         }
         state = TokenizerState::NumberDot;
@@ -382,17 +423,17 @@ void Lexer::tokenize() noexcept {
       if (is_exponent_signifier(c, radix)) {
         // _[eEpP] not allowed
         if (is_trailing_underscore) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
           break;
         }
         // only accept hex and dec numbers to have exp
         if (radix != 16 && radix != 10) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
         }
         state = TokenizerState::FloatExponentUnsigned;
         radix = 10; // exponent is always base 10
         assert(curr_token.id == TokenId::INT_LIT);
-        set_token_id(TokenId::FLOAT_LIT);
+        set_token_id(curr_token, TokenId::FLOAT_LIT);
 
         break;
       }
@@ -402,12 +443,12 @@ void Lexer::tokenize() noexcept {
           state = TokenizerState::SawSignOrTypeSpec;
           break;
         } else if (is_trailing_underscore) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
           is_invalid_token = true;
           state = TokenizerState::Symbol;
           break;
         } else if (is_symbol_char(c) || (!isxdigit(c) && !is_reserved_char(c))) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
           is_invalid_token = true;
           state = TokenizerState::Symbol;
           break;
@@ -418,10 +459,10 @@ void Lexer::tokenize() noexcept {
 
           if (is_invalid_token) {
             is_invalid_token = false;
-            set_token_id(TokenId::ERROR);
+            set_token_id(curr_token, TokenId::ERROR);
           }
 
-          end_token();
+          end_token(*this);
           continue;
         }
       }
@@ -431,13 +472,13 @@ void Lexer::tokenize() noexcept {
     }
     case TokenizerState::SawSignOrTypeSpec:
       if (is_sign_or_type_specifier(c)) {
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       } else {
         // not my char
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -445,26 +486,26 @@ void Lexer::tokenize() noexcept {
       // two points '..' means something else?
       if (c == '.') {
         cursor_pos -= 2;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
       if (radix != 16 && radix != 10) {
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       } else if (is_float_specifier(c)) {
-        set_token_id(TokenId::FLOAT_LIT);
-        end_token();
+        set_token_id(curr_token, TokenId::FLOAT_LIT);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       cursor_pos--;
       state = TokenizerState::FloatFractionNoUnderscore;
-      set_token_id(TokenId::FLOAT_LIT);
+      set_token_id(curr_token, TokenId::FLOAT_LIT);
       continue;
     }
     case TokenizerState::FloatFractionNoUnderscore:
       if (c == '_') {
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       } else if (get_digit_value(c) < radix) {
         is_trailing_underscore = false;
         state = TokenizerState::FloatFraction;
@@ -478,7 +519,7 @@ void Lexer::tokenize() noexcept {
       }
       if (is_exponent_signifier(c, radix)) {
         if (is_trailing_underscore) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
           break;
         }
         state = TokenizerState::FloatExponentUnsigned;
@@ -488,23 +529,23 @@ void Lexer::tokenize() noexcept {
       uint32_t digit_value = get_digit_value(c);
       if (digit_value >= radix) {
         if (is_trailing_underscore) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
           break;
         }
 
         if (is_float_specifier(c)) {
-          end_token();
+          end_token(*this);
           state = TokenizerState::Start;
           break;
         }
 
         if (is_symbol_char(c)) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
         }
 
         // not my char
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -529,7 +570,7 @@ void Lexer::tokenize() noexcept {
       break;
     case TokenizerState::FloatExponentNumberNoUnderscore:
       if (c == '_') {
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       } else if (get_digit_value(c) < radix) {
         is_trailing_underscore = false;
         state = TokenizerState::FloatExponentNumber;
@@ -544,22 +585,22 @@ void Lexer::tokenize() noexcept {
       uint32_t digit_value = get_digit_value(c);
       if (digit_value >= radix) {
         if (is_trailing_underscore) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
           break;
         }
 
         if (is_float_specifier(c)) {
-          end_token();
+          end_token(*this);
           state = TokenizerState::Start;
           break;
         }
 
         if (is_symbol_char(c)) {
-          invalid_char_error(c);
+          invalid_char_error(*this, c);
         }
         // not my char
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -571,14 +612,14 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::SawEq:
       switch (c) {
       case '=':
-        set_token_id(TokenId::EQUALS);
-        end_token();
+        set_token_id(curr_token, TokenId::EQUALS);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       default:
         // assign
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -586,19 +627,19 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::SawPlus:
       switch (c) {
       case '=':
-        set_token_id(TokenId::PLUS_ASSIGN);
-        end_token();
+        set_token_id(curr_token, TokenId::PLUS_ASSIGN);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       case '+':
-        set_token_id(TokenId::PLUS_PLUS);
-        end_token();
+        set_token_id(curr_token, TokenId::PLUS_PLUS);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       default:
         // just a +
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -606,19 +647,19 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::SawDash:
       switch (c) {
       case '=':
-        set_token_id(TokenId::MINUS_ASSIGN);
-        end_token();
+        set_token_id(curr_token, TokenId::MINUS_ASSIGN);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       case '-':
-        set_token_id(TokenId::MINUS_MINUS);
-        end_token();
+        set_token_id(curr_token, TokenId::MINUS_MINUS);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       case '0':
         // negative number
         state = TokenizerState::Zero;
-        set_token_id(TokenId::INT_LIT);
+        set_token_id(curr_token, TokenId::INT_LIT);
         is_trailing_underscore = false;
         radix = 10;
         curr_token.int_lit.is_negative = true;
@@ -630,7 +671,7 @@ void Lexer::tokenize() noexcept {
       case DIGIT_NON_ZERO:
         // negative number
         state = TokenizerState::Number;
-        set_token_id(TokenId::INT_LIT);
+        set_token_id(curr_token, TokenId::INT_LIT);
         is_trailing_underscore = false;
         radix = 10;
         curr_token.int_lit.is_negative = true;
@@ -642,7 +683,7 @@ void Lexer::tokenize() noexcept {
       default:
         // just a -
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -650,14 +691,14 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::SawStar:
       switch (c) {
       case '=':
-        set_token_id(TokenId::MUL_ASSIGN);
-        end_token();
+        set_token_id(curr_token, TokenId::MUL_ASSIGN);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       default:
         // just a *
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -665,14 +706,14 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::SawPercent:
       switch (c) {
       case '=':
-        set_token_id(TokenId::MOD_ASSIGN);
-        end_token();
+        set_token_id(curr_token, TokenId::MOD_ASSIGN);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       default:
         // just a %
         cursor_pos--;
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         continue;
       }
@@ -682,13 +723,13 @@ void Lexer::tokenize() noexcept {
       case '"':
         if (is_invalid_token) {
           is_invalid_token = false;
-          set_token_id(TokenId::ERROR);
+          set_token_id(curr_token, TokenId::ERROR);
         }
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       case '\n':
-        tokenize_error("newline not allowed in string literal");
+        tokenize_error(*this, "newline not allowed in string literal");
         is_invalid_token = true;
         state = TokenizerState::String;
         break;
@@ -701,16 +742,16 @@ void Lexer::tokenize() noexcept {
       break;
     case TokenizerState::CharLiteral:
       if (c == '\'') {
-        tokenize_error("expected character");
-        set_token_id(TokenId::ERROR);
-        end_token();
+        tokenize_error(*this, "expected character");
+        set_token_id(curr_token, TokenId::ERROR);
+        end_token(*this);
         state = TokenizerState::Start;
       } else if (c == '\\') {
         state = TokenizerState::StringEscape;
       } else if ((c >= 0x80 && c <= 0xbf) || c >= 0xf8) {
         // 10xxxxxx
         // 11111xxx
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       } else if (c >= 0xc0 && c <= 0xdf) {
         // 110xxxxx
         curr_token.char_lit = c & 0x1f;
@@ -733,7 +774,7 @@ void Lexer::tokenize() noexcept {
       break;
     case TokenizerState::CharLiteralUnicode:
       if (c <= 0x7f || c >= 0xc0) {
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       }
       curr_token.char_lit <<= 6;
       curr_token.char_lit += c & 0x3f;
@@ -745,11 +786,11 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::CharLiteralEnd:
       switch (c) {
       case '\'':
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       default:
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       }
       break;
     case TokenizerState::StringEscape:
@@ -765,25 +806,25 @@ void Lexer::tokenize() noexcept {
         state = TokenizerState::StringEscapeUnicodeStart;
         break;
       case 'n':
-        handle_string_escape('\n');
+        handle_string_escape(*this, '\n');
         break;
       case 'r':
-        handle_string_escape('\r');
+        handle_string_escape(*this, '\r');
         break;
       case '\\':
-        handle_string_escape('\\');
+        handle_string_escape(*this, '\\');
         break;
       case 't':
-        handle_string_escape('\t');
+        handle_string_escape(*this, '\t');
         break;
       case '\'':
-        handle_string_escape('\'');
+        handle_string_escape(*this, '\'');
         break;
       case '"':
-        handle_string_escape('\"');
+        handle_string_escape(*this, '\"');
         break;
       default:
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       }
       break;
     case TokenizerState::StringEscapeUnicodeStart:
@@ -796,17 +837,17 @@ void Lexer::tokenize() noexcept {
         unicode = true;
         break;
       default:
-        invalid_char_error(c);
+        invalid_char_error(*this, c);
       }
       break;
     case TokenizerState::CharCode: {
       if (unicode && c == '}') {
         if (char_code_index == 0) {
-          tokenize_error("empty unicode escape sequence");
+          tokenize_error(*this, "empty unicode escape sequence");
           break;
         }
         if (char_code > 0x10ffff) {
-          tokenize_error("unicode value out of range: %x", char_code);
+          tokenize_error(*this, "unicode value out of range: %x", char_code);
           break;
         }
         if (curr_token.id == TokenId::UNICODE_CHAR) {
@@ -814,28 +855,28 @@ void Lexer::tokenize() noexcept {
           state = TokenizerState::CharLiteralEnd;
         } else if (char_code <= 0x7f) {
           // 00000000 00000000 00000000 0xxxxxxx
-          handle_string_escape((uint8_t)char_code);
+          handle_string_escape(*this, (uint8_t)char_code);
         } else if (char_code <= 0x7ff) {
           // 00000000 00000000 00000xxx xx000000
-          handle_string_escape((uint8_t)(0xc0 | (char_code >> 6)));
+          handle_string_escape(*this, (uint8_t)(0xc0 | (char_code >> 6)));
           // 00000000 00000000 00000000 00xxxxxx
-          handle_string_escape((uint8_t)(0x80 | (char_code & 0x3f)));
+          handle_string_escape(*this, (uint8_t)(0x80 | (char_code & 0x3f)));
         } else if (char_code <= 0xffff) {
           // 00000000 00000000 xxxx0000 00000000
-          handle_string_escape((uint8_t)(0xe0 | (char_code >> 12)));
+          handle_string_escape(*this, (uint8_t)(0xe0 | (char_code >> 12)));
           // 00000000 00000000 0000xxxx xx000000
-          handle_string_escape((uint8_t)(0x80 | ((char_code >> 6) & 0x3f)));
+          handle_string_escape(*this, (uint8_t)(0x80 | ((char_code >> 6) & 0x3f)));
           // 00000000 00000000 00000000 00xxxxxx
-          handle_string_escape((uint8_t)(0x80 | (char_code & 0x3f)));
+          handle_string_escape(*this, (uint8_t)(0x80 | (char_code & 0x3f)));
         } else if (char_code <= 0x10ffff) {
           // 00000000 000xxx00 00000000 00000000
-          handle_string_escape((uint8_t)(0xf0 | (char_code >> 18)));
+          handle_string_escape(*this, (uint8_t)(0xf0 | (char_code >> 18)));
           // 00000000 000000xx xxxx0000 00000000
-          handle_string_escape((uint8_t)(0x80 | ((char_code >> 12) & 0x3f)));
+          handle_string_escape(*this, (uint8_t)(0x80 | ((char_code >> 12) & 0x3f)));
           // 00000000 00000000 0000xxxx xx000000
-          handle_string_escape((uint8_t)(0x80 | ((char_code >> 6) & 0x3f)));
+          handle_string_escape(*this, (uint8_t)(0x80 | ((char_code >> 6) & 0x3f)));
           // 00000000 00000000 00000000 00xxxxxx
-          handle_string_escape((uint8_t)(0x80 | (char_code & 0x3f)));
+          handle_string_escape(*this, (uint8_t)(0x80 | (char_code & 0x3f)));
         } else {
           LL_UNREACHEABLE;
         }
@@ -844,7 +885,7 @@ void Lexer::tokenize() noexcept {
 
       uint32_t digit_value = get_digit_value(c);
       if (digit_value >= radix) {
-        tokenize_error("invalid digit: '%c'", c);
+        tokenize_error(*this, "invalid digit: '%c'", c);
         break;
       }
       char_code *= radix;
@@ -853,80 +894,80 @@ void Lexer::tokenize() noexcept {
 
       if (!unicode && char_code_index >= 2) {
         assert(char_code <= 255);
-        handle_string_escape((uint8_t)char_code);
+        handle_string_escape(*this, (uint8_t)char_code);
       }
     } break;
     case TokenizerState::SawNot:
       if (c == '=') {
-        set_token_id(TokenId::NOT_EQUALS);
-        end_token();
+        set_token_id(curr_token, TokenId::NOT_EQUALS);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       // just a !
       cursor_pos--;
-      end_token();
+      end_token(*this);
       state = TokenizerState::Start;
       continue;
     case TokenizerState::SawVerticalBar:
       if (c == '|') {
-        set_token_id(TokenId::OR);
-        end_token();
+        set_token_id(curr_token, TokenId::OR);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       // just a |
       cursor_pos--;
-      end_token();
+      end_token(*this);
       state = TokenizerState::Start;
       continue;
     case TokenizerState::SawAmpersand:
       if (c == '&') {
-        set_token_id(TokenId::AND);
+        set_token_id(curr_token, TokenId::AND);
 
-        end_token();
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       // just a &
       cursor_pos--;
-      end_token();
+      end_token(*this);
       state = TokenizerState::Start;
       continue;
     case TokenizerState::SawLess:
       if (c == '<') {
-        set_token_id(TokenId::LSHIFT);
-        end_token();
+        set_token_id(curr_token, TokenId::LSHIFT);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       if (c == '=') {
-        set_token_id(TokenId::LESS_OR_EQUALS);
-        end_token();
+        set_token_id(curr_token, TokenId::LESS_OR_EQUALS);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       // just a <
       cursor_pos--;
-      end_token();
+      end_token(*this);
       state = TokenizerState::Start;
       continue;
     case TokenizerState::SawGreater:
       if (c == '>') {
-        set_token_id(TokenId::RSHIFT);
-        end_token();
+        set_token_id(curr_token, TokenId::RSHIFT);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       if (c == '=') {
-        set_token_id(TokenId::GREATER_OR_EQUALS);
-        end_token();
+        set_token_id(curr_token, TokenId::GREATER_OR_EQUALS);
+        end_token(*this);
         state = TokenizerState::Start;
         break;
       }
       // just a >
       cursor_pos--;
-      end_token();
+      end_token(*this);
       state = TokenizerState::Start;
       continue;
     // If error just get to the next token
@@ -940,7 +981,7 @@ void Lexer::tokenize() noexcept {
 
     // Handle end of line
     if (c == '\n')
-      reset_line();
+      reset_line(*this);
     // else we just move a column
     else
       curr_column++;
@@ -956,22 +997,22 @@ void Lexer::tokenize() noexcept {
   case TokenizerState::Symbol:
     if (is_invalid_token) {
       is_invalid_token = false;
-      set_token_id(TokenId::ERROR);
-      end_token();
+      set_token_id(curr_token, TokenId::ERROR);
+      end_token(*this);
     } else {
-      end_token_check_is_keyword();
+      end_token_check_is_keyword(*this);
     }
     break;
   case TokenizerState::Zero:
   case TokenizerState::Number:
     if (is_invalid_token) {
       is_invalid_token = false;
-      set_token_id(TokenId::ERROR);
+      set_token_id(curr_token, TokenId::ERROR);
     }
-    end_token();
+    end_token(*this);
     break;
   case TokenizerState::NumberDot:
-    set_token_id(TokenId::FLOAT_LIT);
+    set_token_id(curr_token, TokenId::FLOAT_LIT);
     LL_FALLTHROUGH
   case TokenizerState::SawSignOrTypeSpec:
   case TokenizerState::FloatFraction:
@@ -987,23 +1028,23 @@ void Lexer::tokenize() noexcept {
   case TokenizerState::SawDash:
   case TokenizerState::SawEq:
   case TokenizerState::DocComment:
-    end_token();
+    end_token(*this);
     break;
   case TokenizerState::String:
-    tokenize_error("unterminated string literal");
+    tokenize_error(*this, "unterminated string literal");
     break;
   case TokenizerState::CharLiteral:
-    tokenize_error("unterminated Unicode point literal");
+    tokenize_error(*this, "unterminated Unicode point literal");
     break;
   case TokenizerState::SawStarDocComment:
-    tokenize_error("unexpected EOF");
+    tokenize_error(*this, "unexpected EOF");
     break;
   default:
     LL_UNREACHEABLE;
   }
 
-  begin_token(TokenId::_EOF);
-  end_token();
+  begin_token(*this, TokenId::_EOF);
+  end_token(*this);
 }
 
 const bool Lexer::has_tokens() const noexcept { return tokens_vec.size() - (curr_index + 1) != 0; }
@@ -1019,76 +1060,76 @@ std::string_view Lexer::get_token_value(const Token &token) const noexcept {
   return std::string_view(source.data() + token.start_pos, len);
 }
 
-void Lexer::begin_token(const TokenId id) noexcept {
-  curr_token = Token();
-  curr_token.id = id;
-  curr_token.start_line = curr_line;
-  curr_token.start_column = curr_column;
-  curr_token.start_pos = cursor_pos;
-  curr_token.file_name = file_name;
+void begin_token(Lexer &in_lexer, const TokenId id) noexcept {
+  in_lexer.curr_token = Token();
+  in_lexer.curr_token.id = id;
+  in_lexer.curr_token.start_line = in_lexer.curr_line;
+  in_lexer.curr_token.start_column = in_lexer.curr_column;
+  in_lexer.curr_token.start_pos = in_lexer.cursor_pos;
+  in_lexer.curr_token.file_name = in_lexer.file_name;
 }
 
-void Lexer::set_token_id(const TokenId id) noexcept { curr_token.id = id; }
+void set_token_id(Token &in_token, const TokenId id) noexcept { in_token.id = id; }
 
-void Lexer::end_token() noexcept {
-  curr_token.end_pos = cursor_pos;
+void end_token(Lexer &in_lexer) noexcept {
+  in_lexer.curr_token.end_pos = in_lexer.cursor_pos;
 
-  switch (curr_token.id) {
+  switch (in_lexer.curr_token.id) {
   case TokenId::DOC_COMMENT:
-    comments_vec.push_back(curr_token);
+    in_lexer.comments_vec.push_back(in_lexer.curr_token);
     break;
   default:
-    tokens_vec.push_back(curr_token);
+    in_lexer.tokens_vec.push_back(in_lexer.curr_token);
     break;
   }
 }
 
-void Lexer::end_token_check_is_keyword() noexcept {
-  curr_token.end_pos = cursor_pos;
+void end_token_check_is_keyword(Lexer &in_lexer) noexcept {
+  in_lexer.curr_token.end_pos = in_lexer.cursor_pos;
 
-  is_keyword();
+  is_keyword(in_lexer.curr_token, in_lexer.get_token_value(in_lexer.curr_token));
 
-  switch (curr_token.id) {
+  switch (in_lexer.curr_token.id) {
   case TokenId::EXTERN:
   case TokenId::FN:
   case TokenId::RET:
   case TokenId::AND:
   case TokenId::OR:
   case TokenId::IDENTIFIER:
-    tokens_vec.push_back(curr_token);
+    in_lexer.tokens_vec.push_back(in_lexer.curr_token);
     break;
   default:
     LL_UNREACHEABLE;
   }
 }
 
-void Lexer::reset_line() noexcept {
-  curr_line++;
-  curr_column = 0;
+void reset_line(Lexer &in_lexer) noexcept {
+  in_lexer.curr_line++;
+  in_lexer.curr_column = 0;
 }
 
-void Lexer::invalid_char_error(uint8_t c) noexcept {
+void invalid_char_error(Lexer &in_lexer, uint8_t c) noexcept {
   if (c == '\r') {
-    tokenize_error("invalid carriage return, only '\\n' line endings are supported");
+    tokenize_error(in_lexer, "invalid carriage return, only '\\n' line endings are supported");
     return;
   }
 
   const char *sh = get_escape_shorthand(c);
   if (sh) {
-    tokenize_error("invalid character: '%s'", sh);
+    tokenize_error(in_lexer, "invalid character: '%s'", sh);
     return;
   }
 
   if (isprint(c)) {
-    tokenize_error("invalid character: '%c'", c);
+    tokenize_error(in_lexer, "invalid character: '%c'", c);
     return;
   }
 
-  tokenize_error("invalid character: '\\x%02x'", c);
+  tokenize_error(in_lexer, "invalid character: '\\x%02x'", c);
 }
 
-void Lexer::tokenize_error(const char *format, ...) noexcept {
-  state = TokenizerState::Error;
+void tokenize_error(Lexer &in_lexer, const char *format, ...) noexcept {
+  in_lexer.state = TokenizerState::Error;
 
   va_list ap, ap2;
   va_start(ap, format);
@@ -1104,21 +1145,21 @@ void Lexer::tokenize_error(const char *format, ...) noexcept {
   assert(len2 >= 0);
   assert(len2 == len1);
 
-  Error error(ERROR_TYPE::ERROR, curr_line, curr_column, file_name, msg);
+  Error error(ERROR_TYPE::ERROR, in_lexer.curr_line, in_lexer.curr_column, in_lexer.file_name, msg);
 
-  errors.push_back(error);
+  in_lexer.errors.push_back(error);
 
   va_end(ap2);
   va_end(ap);
 }
 
-void Lexer::handle_string_escape(uint8_t c) noexcept {
-  if (curr_token.id == TokenId::UNICODE_CHAR) {
-    curr_token.char_lit = c;
+void handle_string_escape(Lexer &in_lexer, uint8_t c) noexcept {
+  if (in_lexer.curr_token.id == TokenId::UNICODE_CHAR) {
+    in_lexer.curr_token.char_lit = c;
 
-    state = TokenizerState::CharLiteralEnd;
-  } else if (curr_token.id == TokenId::STRING) {
-    state = TokenizerState::String;
+    in_lexer.state = TokenizerState::CharLiteralEnd;
+  } else if (in_lexer.curr_token.id == TokenId::STRING) {
+    in_lexer.state = TokenizerState::String;
   } else {
     LL_UNREACHEABLE;
   }
@@ -1130,11 +1171,10 @@ static std::unordered_map<std::string_view, TokenId> keywords = { { "extern", To
                                                                   { "and", TokenId::AND },
                                                                   { "or", TokenId::OR } };
 
-void Lexer::is_keyword() noexcept {
-  auto len = curr_token.end_pos - curr_token.start_pos + 1;
-  auto value = std::string_view(source.data() + curr_token.start_pos, len);
+void is_keyword(Token &in_token, std::string_view value) noexcept {
+  auto len = in_token.end_pos - in_token.start_pos + 1;
   if (keywords.find(value) != keywords.end()) {
-    set_token_id(keywords.at(value));
+    set_token_id(in_token, keywords.at(value));
   }
 }
 
