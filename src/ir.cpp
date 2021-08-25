@@ -337,7 +337,7 @@ llvm::Value *LlvmIrGenerator::generateFuncCallExpr(const AstFuncCallExpr &in_cal
       auto arg_value = generateExpr(arg_node);
       args.push_back(arg_value);
     }
-    return generatePrintfCall("%d", args);
+    return generatePrintfCall("%d\n", args);
   }
 
   auto llvm_fn = code_module->getFunction(std::string(in_call_expr.fn_name));
@@ -363,7 +363,7 @@ void LlvmIrGenerator::flush() {
 #endif
 
   std::error_code error_code;
-  auto llvm_output_file = llvm::raw_fd_ostream(output_directory + "\\" + output_file_name + ".bc", error_code);
+  auto llvm_output_file = llvm::raw_fd_ostream(output_directory + "/" + output_file_name + ".bc", error_code);
 
   llvm::WriteBitcodeToFile(*code_module, llvm_output_file);
 
