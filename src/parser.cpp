@@ -16,6 +16,7 @@ static bool is_type_start_token(const Token &token) noexcept;
 static bool is_expr_token(const Token &token) noexcept;
 static bool is_symbol_start_char(const char _char) noexcept;
 static bool is_whitespace_char(const char _char) noexcept;
+static bool get_directive_type(DirectiveType &, std::string_view in_directive_name);
 
 //  ('=='|'!=' | '!' | '>=' | '<=' | '<' | '>')
 #define COMPARATIVE_OPERATOR                                                                       \
@@ -124,6 +125,52 @@ AstNode *Parser::parse_source_code() noexcept {
   }
 
   return source_code_node;
+}
+
+/*
+ * Parses a directive
+ * directive
+ *   : # 'load' string
+ *   | # 'main'
+ *   | # 'run' call
+ *   | # 'compile'
+ *   | # 'fn_type' type
+ *   ;
+ */
+AstNode *Parser::parse_directive() noexcept {
+  const Token &hash_token = lexer.get_next_token();
+  if (hash_token.id != TokenId::HASH) {
+    LL_UNREACHEABLE;
+  }
+
+  const Token &identifier_token = lexer.get_next_token();
+  std::string_view dir_name = lexer.get_token_value(identifier_token);
+
+  if (hash_token.id != TokenId::IDENTIFIER) {
+    parse_error(hash_token, ERROR_UNEXPECTED_HASH, std::string(dir_name).c_str());
+    return nullptr;
+  }
+
+  AstNode *directive_node =
+    new AstNode(AstNodeType::AstDirective, hash_token.start_line, hash_token.start_column, lexer.file_name);
+
+  DirectiveType dir_type;
+  if (get_directive_type(dir_type, dir_name)) {
+    delete directive_node;
+    parse_error(identifier_token, ERROR_UNKNOWN_DIRECTIVE, std::string(dir_name).c_str());
+    return nullptr;
+  }
+
+  directive_node->directive.directive_type = dir_type;
+
+  switch (dir_type) {
+  case DirectiveType::LOAD:
+    // TODO(pablo96): implement load directive
+    break;
+  default:
+    LL_UNREACHEABLE; // unimplemented directive
+  }
+  return nullptr;
 }
 
 /*
@@ -1128,6 +1175,19 @@ bool is_whitespace_char(const char _char) noexcept {
   default:
     return false;
   }
+}
+
+const std::unordered_map<std::string_view, DirectiveType> directives = { { "load", DirectiveType::LOAD },
+                                                                         { "main", DirectiveType::MAIN },
+                                                                         { "run", DirectiveType::RUN },
+                                                                         { "compile", DirectiveType::COMPILE },
+                                                                         { "fn_type", DirectiveType::FN_TYPE } };
+bool get_directive_type(DirectiveType &dir_type, std::string_view in_directive_name) {
+  bool exists = directives.find(in_directive_name) != directives.end();
+  if (exists) {
+    dir_type = directives.at(in_directive_name);
+  }
+  return exists;
 }
 
 bool match(const Token *token, ...) noexcept {

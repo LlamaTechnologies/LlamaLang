@@ -3,7 +3,9 @@
 #include "../../src/lexer.hpp"
 #include "../../src/parser.hpp"
 
-#include <gtest/gtest.h>
+#define LL_INTEGRATIONS_TESTS 0
+#if (LL_INTEGRATIONS_TESTS == 1)
+  #include <gtest/gtest.h>
 
 TEST(Integrations, FromCompiler) {
   const char *output_path = "";
@@ -144,3 +146,4 @@ TEST(Integrations, PrintfCall) {
 
   ASSERT_EQ(has_no_errors, true);
 }
+#endif // LL_INTEGRATIONS_TESTS

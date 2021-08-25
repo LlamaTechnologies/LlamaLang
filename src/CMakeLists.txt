@@ -48,6 +48,9 @@ semantic_analyzer.cpp
 
 semantic_error_msgs.hpp
 
+src_code_repository.hpp
+src_code_repository.cpp
+
 types.hpp
 types.cpp
 )

@@ -1,9 +1,9 @@
 #include "ast_nodes.hpp"
 
-static std::vector<const char *> directives_keywords = { "run", "load", "compile_only" };
+static std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
 
 const std::string get_directive_type_name(const DirectiveType directive_type) noexcept {
-  assert(directive_type <= DirectiveType::CompTimeOnly);
+  assert(directive_type <= DirectiveType::FN_TYPE);
   return directives_keywords.at((size_t)directive_type);
 }
 

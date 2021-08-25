@@ -35,16 +35,21 @@ struct AstUnaryExpr;
 // IMPORTANT: do not change order of labels!
 enum class DirectiveType
 {
-  Run,
-  Load,
-  CompTimeOnly
+  LOAD,    // load file (first directive in the file)
+  MAIN,    // set entry point (1 per executable)
+  RUN,     // run fn at compile-time
+  COMPILE, // symbol is safe for use in compile-time
+  FN_TYPE  // check function time at compile time
 };
 
 const std::string get_directive_type_name(const DirectiveType) noexcept;
 
 struct AstDirective {
-  DirectiveType directive_type;
-  std::string_view argument;
+  DirectiveType directive_type = DirectiveType::COMPILE;
+  union argument {
+    std::string_view str = {};
+    AstNode *ast_node;
+  };
 };
 
 struct AstFuncDef {

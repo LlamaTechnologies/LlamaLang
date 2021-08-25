@@ -8,3 +8,5 @@ static const char *ERROR_EXPECTED_CLOSING_BRAKET_BEFORE = "expected clossing bra
 static const char *ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER = "expected new line or semicolor ';' after '%s'";
 static const char *ERROR_UNEXPECTED_EXTERN = "extern only goes behind a 'fn' token, received token '%s'";
 static const char *ERROR_EXTERN_FN_HAS_BODY = "extern function declaration should not have a body.";
+static const char *ERROR_UNEXPECTED_HASH = "unexpected # before '%s'";
+static const char *ERROR_UNKNOWN_DIRECTIVE = "unknown directive '%s'";
