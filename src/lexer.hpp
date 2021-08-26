@@ -117,7 +117,7 @@ struct Token {
   size_t end_pos;
   size_t start_line;
   size_t start_column;
-  std::string file_name;
+  std::string_view file_name;
 
   union {
     Char char_lit;
@@ -125,7 +125,9 @@ struct Token {
     IntToken int_lit;
   };
 
-  Token() : id(TokenId::_EOF), start_pos(0L), end_pos(0L), start_line(0), start_column(0), file_name(""), int_lit() {}
+  Token(const std::string &in_file_name)
+      : id(TokenId::_EOF), start_pos(0L), end_pos(0L), start_line(0), start_column(0), file_name(in_file_name),
+        int_lit() {}
 
   ~Token() {}
 

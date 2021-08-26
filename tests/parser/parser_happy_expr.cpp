@@ -14,8 +14,8 @@ TEST(ParserHappyParseValueTests, IdentifierTest) {
   Lexer lexer("myVar", "IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_primary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_primary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -32,8 +32,8 @@ TEST(ParserHappyParseValueTests, FloatTest) {
   Lexer lexer("12_547.12f", "FloatTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_primary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_primary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -48,8 +48,8 @@ TEST(ParserHappyParseValueTests, IntTest) {
   Lexer lexer("12_547", "IntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_primary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_primary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -65,8 +65,8 @@ TEST(ParserHappyParseValueTests, UnicodeCharTest) {
   Lexer lexer("\'g\'", "UnicodeCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_primary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_primary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -86,8 +86,8 @@ TEST(ParserHappyParseUnaryExprTests, PreIncIdentifierTest) {
   Lexer lexer("++myVar", "PreIncIdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
@@ -103,8 +103,8 @@ TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
   Lexer lexer("myVar++", "PostIncIdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
@@ -120,8 +120,8 @@ TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
   Lexer lexer("++myFunc()", "PreIncFuncCallTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
@@ -142,8 +142,8 @@ TEST(ParserHappyParseUnaryExprTests, IdentifierTest) {
   Lexer lexer("myVar", "IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
@@ -159,8 +159,8 @@ TEST(ParserHappyParseUnaryExprTests, FloatTest) {
   Lexer lexer("12_547.12f", "FloatTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -175,8 +175,8 @@ TEST(ParserHappyParseUnaryExprTests, IntTest) {
   Lexer lexer("12_547", "IntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -192,8 +192,8 @@ TEST(ParserHappyParseUnaryExprTests, NegativeIntTest) {
   Lexer lexer("-12_547", "NegativeIntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -212,8 +212,8 @@ TEST(ParserHappyParseUnaryExprTests, ExplicitPositiveIntTest) {
   Lexer lexer("+12_547", "ExplicitPositiveIntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -229,8 +229,8 @@ TEST(ParserHappyParseUnaryExprTests, UnicodeCharTest) {
   Lexer lexer("\'g\'", "UnicodeCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_unary_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_unary_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -250,8 +250,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
   Lexer lexer("myVar-- * myVar2", "Mul2IdentifierAndDecTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -271,8 +271,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
   Lexer lexer("myVar-- * myFunc()", "Mul2IdentifierAndFuncCallTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -297,8 +297,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
   Lexer lexer("++myVar * myVar2", "Mul2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -318,8 +318,8 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierTest) {
   Lexer lexer("myVar * myVar2", "Mul2IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -337,8 +337,8 @@ TEST(ParserHappyParseMulExprTests, MulNumberIdentifierTest) {
   Lexer lexer("25 * myVar2", "MulNumberIdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -361,8 +361,8 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
   Lexer lexer("25 * 21.5f", "Mul2NumbersTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -385,8 +385,8 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
   Lexer lexer("25 * 21.5f / 'g'", "Mul2NumbersAndCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -423,8 +423,8 @@ TEST(ParserHappyParseMulExprTests, IdentifierTest) {
   Lexer lexer("myVar", "IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
@@ -440,8 +440,8 @@ TEST(ParserHappyParseMulExprTests, FloatTest) {
   Lexer lexer("12_547.12f", "FloatTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -456,8 +456,8 @@ TEST(ParserHappyParseMulExprTests, IntTest) {
   Lexer lexer("12_547", "IntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -473,8 +473,8 @@ TEST(ParserHappyParseMulExprTests, UnicodeCharTest) {
   Lexer lexer("\'g\'", "UnicodeCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_term_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_term_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -493,8 +493,8 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierAndIncTest) {
   Lexer lexer("myVar++ + myVar2", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -529,8 +529,8 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
   Lexer lexer("myVar + myVar2", "Add2IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -553,8 +553,8 @@ TEST(ParserHappyParseAddExprTests, AddIdentifierNumberTest) {
   Lexer lexer("myVar + 25", "AddIdentifierNumberTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -579,8 +579,8 @@ TEST(ParserHappyParseAddExprTests, Add2NumbersTest) {
   Lexer lexer(".25f + 25", "Add2NumbersTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -603,8 +603,8 @@ TEST(ParserHappyParseAddExprTests, Add2NumberAndCharTest) {
   Lexer lexer(".25f + 25 - 'g'", "Add2NumberAndCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -639,8 +639,8 @@ TEST(ParserHappyParseAddExprTests, FullAlgebraicTest) {
   Lexer lexer(".25f + 25 * 14 - 'g' % 15", "FullAlgebraicTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -686,8 +686,8 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
   Lexer lexer("myVar * myVar2", "Mul2IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -710,8 +710,8 @@ TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
   Lexer lexer("25 * myVar2", "MulNumberIdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -736,8 +736,8 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
   Lexer lexer("25 * 21.5f", "Mul2NumbersTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -760,8 +760,8 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
   Lexer lexer("25 * 21.5f / 'g'", "Mul2NumbersAndCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -798,8 +798,8 @@ TEST(ParserHappyParseAddExprTests, IdentifierTest) {
   Lexer lexer("myVar", "IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -816,8 +816,8 @@ TEST(ParserHappyParseAddExprTests, FloatTest) {
   Lexer lexer("12_547.12f", "FloatTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -832,8 +832,8 @@ TEST(ParserHappyParseAddExprTests, IntTest) {
   Lexer lexer("12_547", "IntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -849,8 +849,8 @@ TEST(ParserHappyParseAddExprTests, UnicodeCharTest) {
   Lexer lexer("\'g\'", "UnicodeCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -870,8 +870,8 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierTest) {
   Lexer lexer("myVar == myVar2", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -894,8 +894,8 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
   Lexer lexer("myVar == myVar2 >= 45", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -928,8 +928,8 @@ TEST(ParserHappyParseCompExprTests, FullAlgebraicCompareTest) {
   Lexer lexer(".25f + 25 * 14 - 'g' % 15 == 3", "FullAlgebraicCompareTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -984,8 +984,8 @@ TEST(ParserHappyParseCompExprTests, Add2IdentifierAndIncTest) {
   Lexer lexer("myVar++ + myVar2", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1012,8 +1012,8 @@ TEST(ParserHappyParseCompExprTests, Add2IdentifierTest) {
   Lexer lexer("myVar + myVar2", "Add2IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -1035,8 +1035,8 @@ TEST(ParserHappyParseCompExprTests, AddIdentifierNumberTest) {
   Lexer lexer("myVar + 25", "AddIdentifierNumberTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -1060,8 +1060,8 @@ TEST(ParserHappyParseCompExprTests, Add2NumbersTest) {
   Lexer lexer(".25f + 25", "Add2NumbersTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1086,8 +1086,8 @@ TEST(ParserHappyParseCompExprTests, Add2NumberAndCharTest) {
   Lexer lexer(".25f + 25 - 'g'", "Add2NumberAndCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1122,8 +1122,8 @@ TEST(ParserHappyParseCompExprTests, FullAlgebraicTest) {
   Lexer lexer(".25f + 25 * 14 - 'g' % 15", "FullAlgebraicTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1169,8 +1169,8 @@ TEST(ParserHappyParseCompExprTests, Mul2IdentifierTest) {
   Lexer lexer("myVar * myVar2", "Mul2IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -1186,8 +1186,8 @@ TEST(ParserHappyParseCompExprTests, MulNumberIdentifierTest) {
   Lexer lexer("25 * myVar2", "MulNumberIdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1208,8 +1208,8 @@ TEST(ParserHappyParseCompExprTests, Mul2NumbersTest) {
   Lexer lexer("25 * 21.5f", "Mul2NumbersTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1232,8 +1232,8 @@ TEST(ParserHappyParseCompExprTests, Mul2NumbersAndCharTest) {
   Lexer lexer("25 * 21.5f / 'g'", "Mul2NumbersAndCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1270,8 +1270,8 @@ TEST(ParserHappyParseCompExprTests, IdentifierTest) {
   Lexer lexer("myVar", "IdentifierTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstSymbol);
@@ -1287,8 +1287,8 @@ TEST(ParserHappyParseCompExprTests, FloatTest) {
   Lexer lexer("12_547.12f", "FloatTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1303,8 +1303,8 @@ TEST(ParserHappyParseCompExprTests, IntTest) {
   Lexer lexer("12_547", "IntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1320,8 +1320,8 @@ TEST(ParserHappyParseCompExprTests, UnicodeCharTest) {
   Lexer lexer("\'g\'", "UnicodeCharTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_comp_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_comp_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1341,8 +1341,8 @@ TEST(ParserHappyParseExprTests, CompGroupedTest) {
   Lexer lexer("(myVar == (myVar2 + 5))", "CompGroupedTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_expr();
+  Parser parser(errors);
+  auto value_node = parser.parse_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1374,19 +1374,19 @@ TEST(ParserHappyParseExprTests, CompGroupedTest) {
 //==================================================================================
 
 TEST(ParserHappyUtilTests, MatchFuncTest) {
-  Token token;
+  Token token("");
   token.id = TokenId::FN;
   ASSERT_EQ(match(&token, TokenId::AND, TokenId::_EOF, TokenId::FN, TokenId(size_t(TokenId::_EOF) + 1)), true);
 }
 
 TEST(ParserHappyUtilTests, MatchMacroTest) {
-  Token token;
+  Token token("");
   token.id = TokenId::FN;
   ASSERT_EQ(MATCH(&token, TokenId::AND, TokenId::_EOF, TokenId::FN), true);
 }
 
 TEST(ParserHappyUtilTests, MatchMacroNoMatchTest) {
-  Token token;
+  Token token("");
   token.id = TokenId::FN;
   ASSERT_EQ(MATCH(&token, TokenId::AND, TokenId::_EOF, TokenId::OR), false);
 }

@@ -32,16 +32,16 @@ static bool get_directive_type(DirectiveType &, std::string_view in_directive_na
   TokenId::LSHIFT : case TokenId::RSHIFT : case TokenId::BIT_AND : case TokenId::BIT_XOR : case TokenId::BIT_NOT \
       : case TokenId::BIT_OR
 
-Parser::Parser(const Lexer &in_lexer, std::vector<Error> &in_error_vec) : lexer(in_lexer), error_vec(in_error_vec) {}
+Parser::Parser(std::vector<Error> &in_error_vec) : error_vec(in_error_vec) {}
 
-AstNode *Parser::parse() noexcept { return parse_source_code(); }
+AstNode *Parser::parse(const Lexer &lexer) noexcept { return parse_source_code(lexer); }
 /*
  * Parses any posible statement in llamacode
  * sourceFile
  *   : (functionProto | functionDef | varDef eos)* _EOF
  *   ;
  */
-AstNode *Parser::parse_source_code() noexcept {
+AstNode *Parser::parse_source_code(const Lexer &lexer) noexcept {
   if (!lexer.has_tokens()) {
     // TODO: handle empty source_code
     return nullptr;
@@ -51,7 +51,7 @@ AstNode *Parser::parse_source_code() noexcept {
   lexer.get_back();
 
   AstNode *source_code_node =
-    new AstNode(AstNodeType::AstSourceCode, first_token.start_line, first_token.start_column, lexer.file_name);
+    new AstNode(AstNodeType::AstSourceCode, first_token.start_line, first_token.start_column, first_token.file_name);
 
   for (;;) {
     AstNode *node = nullptr;
@@ -65,7 +65,7 @@ AstNode *Parser::parse_source_code() noexcept {
     case TokenId::FN:
     case TokenId::EXTERN: {
       lexer.get_back(); // token
-      node = parse_function_def();
+      node = parse_function_def(lexer);
       if (!node) {
         // TODO: handle error
         continue;
@@ -84,14 +84,14 @@ AstNode *Parser::parse_source_code() noexcept {
         continue;
       }
 
-      if (is_new_line_between(token.end_pos, next_token.start_pos)) {
+      if (is_new_line_between(lexer, token.end_pos, next_token.start_pos)) {
         // ignore statement of type
         // IDENTIFIER\n
         continue;
       }
 
       lexer.get_back(); // token
-      node = parse_vardef_stmnt();
+      node = parse_vardef_stmnt(lexer);
       if (!node) {
         // TODO: handle error
         continue;
@@ -109,7 +109,7 @@ AstNode *Parser::parse_source_code() noexcept {
     const Token &prev_semi_token = lexer.get_previous_token();
     if (semicolon_token.id != TokenId::SEMI) {
       if (semicolon_token.id != TokenId::_EOF &&
-          !is_new_line_between(prev_semi_token.end_pos, semicolon_token.start_pos)) {
+          !is_new_line_between(lexer, prev_semi_token.end_pos, semicolon_token.start_pos)) {
         // statement wrong ending
         parse_error(prev_semi_token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(prev_semi_token));
         delete node;
@@ -137,7 +137,7 @@ AstNode *Parser::parse_source_code() noexcept {
  *   | # 'fn_type' type
  *   ;
  */
-AstNode *Parser::parse_directive() noexcept {
+AstNode *Parser::parse_directive(const Lexer &lexer) noexcept {
   const Token &hash_token = lexer.get_next_token();
   if (hash_token.id != TokenId::HASH) {
     LL_UNREACHEABLE;
@@ -152,7 +152,7 @@ AstNode *Parser::parse_directive() noexcept {
   }
 
   AstNode *directive_node =
-    new AstNode(AstNodeType::AstDirective, hash_token.start_line, hash_token.start_column, lexer.file_name);
+    new AstNode(AstNodeType::AstDirective, hash_token.start_line, hash_token.start_column, hash_token.file_name);
 
   DirectiveType dir_type;
   if (get_directive_type(dir_type, dir_name)) {
@@ -179,7 +179,7 @@ AstNode *Parser::parse_directive() noexcept {
  *   : functionProto block
  *   ;
  */
-AstNode *Parser::parse_function_def() noexcept {
+AstNode *Parser::parse_function_def(const Lexer &lexer) noexcept {
   const Token &fn_token = lexer.get_next_token();
   if (fn_token.id != TokenId::FN && fn_token.id != TokenId::EXTERN) {
     // Bad prediction
@@ -187,7 +187,7 @@ AstNode *Parser::parse_function_def() noexcept {
   }
 
   lexer.get_back();
-  auto func_prot_node = parse_function_proto();
+  auto func_prot_node = parse_function_proto(lexer);
   if (!func_prot_node) {
     // TODO(pablo96): handle error
     return nullptr;
@@ -204,14 +204,14 @@ AstNode *Parser::parse_function_def() noexcept {
   }
 
   lexer.get_back();
-  auto block_node = parse_block();
+  auto block_node = parse_block(lexer);
   if (!block_node) {
     // TODO(pablo96): handle error
     delete func_prot_node;
     return nullptr;
   }
 
-  auto func_node = new AstNode(AstNodeType::AstFuncDef, fn_token.start_line, fn_token.start_column, lexer.file_name);
+  auto func_node = new AstNode(AstNodeType::AstFuncDef, fn_token.start_line, fn_token.start_column, fn_token.file_name);
   func_prot_node->parent = func_node;
   block_node->parent = func_node;
   func_node->function_def.proto = func_prot_node;
@@ -226,7 +226,7 @@ AstNode *Parser::parse_function_def() noexcept {
  *   : 'extern? 'fn' IDENTIFIER '(' (parameterDecl (',' parameterDecl)*)? ')' type_name
  *   ;
  */
-AstNode *Parser::parse_function_proto() noexcept {
+AstNode *Parser::parse_function_proto(const Lexer &lexer) noexcept {
   const Token &first_token = lexer.get_next_token();
 
   if (first_token.id != TokenId::EXTERN && first_token.id != TokenId::FN) {
@@ -241,7 +241,7 @@ AstNode *Parser::parse_function_proto() noexcept {
   }
 
   auto func_prot_node =
-    new AstNode(AstNodeType::AstFuncProto, fn_token.start_line, fn_token.start_column, lexer.file_name);
+    new AstNode(AstNodeType::AstFuncProto, fn_token.start_line, fn_token.start_column, fn_token.file_name);
 
   // set function as extern
   {
@@ -289,7 +289,7 @@ AstNode *Parser::parse_function_proto() noexcept {
       }
 
       lexer.get_back();
-      auto param_node = parse_param_decl();
+      auto param_node = parse_param_decl(lexer);
       if (!param_node) {
         // TODO(pablo96): handle error
         delete func_prot_node;
@@ -313,7 +313,7 @@ AstNode *Parser::parse_function_proto() noexcept {
     }
 
     lexer.get_back();
-    ret_type_node = parse_type();
+    ret_type_node = parse_type(lexer);
     if (!ret_type_node) {
       // TODO(pablo96): handle error
       delete func_prot_node;
@@ -333,7 +333,7 @@ AstNode *Parser::parse_function_proto() noexcept {
  *   : IDENTIFIER type_name
  *   ;
  */
-AstNode *Parser::parse_param_decl() noexcept {
+AstNode *Parser::parse_param_decl(const Lexer &lexer) noexcept {
   const Token &name_token = lexer.get_next_token();
 
   if (name_token.id != TokenId::IDENTIFIER) {
@@ -341,7 +341,7 @@ AstNode *Parser::parse_param_decl() noexcept {
     LL_UNREACHEABLE;
   }
 
-  AstNode *type_node = parse_type();
+  AstNode *type_node = parse_type(lexer);
 
   if (!type_node) {
     // TODO(pablo96): handle error | wrong expression expected type name
@@ -349,7 +349,7 @@ AstNode *Parser::parse_param_decl() noexcept {
   }
 
   AstNode *param_decl_node =
-    new AstNode(AstNodeType::AstParamDecl, name_token.start_line, name_token.start_column, lexer.file_name);
+    new AstNode(AstNodeType::AstParamDecl, name_token.start_line, name_token.start_column, name_token.file_name);
   type_node->parent = param_decl_node;
   param_decl_node->param_decl.name = lexer.get_token_value(name_token);
   param_decl_node->param_decl.type = type_node;
@@ -364,7 +364,7 @@ AstNode *Parser::parse_param_decl() noexcept {
  *   : '{' (statement eos)* '}'
  *   ;
  */
-AstNode *Parser::parse_block() noexcept {
+AstNode *Parser::parse_block(const Lexer &lexer) noexcept {
   const Token &l_curly_token = lexer.get_next_token();
   if (l_curly_token.id != TokenId::L_CURLY) {
     // bad_prediction
@@ -372,7 +372,7 @@ AstNode *Parser::parse_block() noexcept {
   }
 
   AstNode *block_node =
-    new AstNode(AstNodeType::AstBlock, l_curly_token.start_line, l_curly_token.start_column, lexer.file_name);
+    new AstNode(AstNodeType::AstBlock, l_curly_token.start_line, l_curly_token.start_column, l_curly_token.file_name);
 
   for (;;) {
     const Token &token = lexer.get_next_token();
@@ -389,7 +389,7 @@ AstNode *Parser::parse_block() noexcept {
     }
 
     lexer.get_back();
-    AstNode *stmnt = parse_statement();
+    AstNode *stmnt = parse_statement(lexer);
     if (!stmnt) {
       // TODO(pablo96): handle error in statement parsing
       delete block_node;
@@ -398,7 +398,7 @@ AstNode *Parser::parse_block() noexcept {
 
     const Token &semicolon_token = lexer.get_next_token();
     if (semicolon_token.id != TokenId::SEMI) {
-      bool has_new_line = is_new_line_between(token.end_pos, semicolon_token.start_pos);
+      bool has_new_line = is_new_line_between(lexer, token.end_pos, semicolon_token.start_pos);
       // checking for r_curly allows for '{stmnt}' as block
       if (semicolon_token.id != TokenId::R_CURLY && !has_new_line) {
         // statement wrong ending
@@ -430,7 +430,7 @@ AstNode *Parser::parse_block() noexcept {
  *   | emptyStmt
  *   ;
  */
-AstNode *Parser::parse_statement() noexcept {
+AstNode *Parser::parse_statement(const Lexer &lexer) noexcept {
   const Token &token = lexer.get_next_token();
   switch (token.id) {
   case TokenId::IDENTIFIER: {
@@ -440,7 +440,7 @@ AstNode *Parser::parse_statement() noexcept {
         lexer.get_back();
         lexer.get_back(); // second_token
         lexer.get_back(); // token
-        return parse_assign_stmnt();
+        return parse_assign_stmnt(lexer);
       }
       // is '==' expression
       lexer.get_back();
@@ -448,23 +448,23 @@ AstNode *Parser::parse_statement() noexcept {
     } else if (is_type_start_token(second_token)) {
       lexer.get_back(); // second_token
       lexer.get_back(); // token
-      return parse_vardef_stmnt();
+      return parse_vardef_stmnt(lexer);
     }
 stmnt_expr:
     lexer.get_back(); // second_token
     lexer.get_back(); // token
-    return parse_expr();
+    return parse_expr(lexer);
   }
   case TokenId::RET:
     lexer.get_back();
-    return parse_ret_stmnt();
+    return parse_ret_stmnt(lexer);
   case TokenId::L_CURLY:
     // TODO(pablo96): parse block
     return nullptr;
   case TokenId::SEMI:
     // empty_statement
     // consume the token and predict again
-    return parse_statement();
+    return parse_statement(lexer);
   case TokenId::_EOF:
     return nullptr;
   default:
@@ -478,7 +478,7 @@ stmnt_expr:
  *   : IDENTIFIER type_name ('=' expression)?
  *   ;
  */
-AstNode *Parser::parse_vardef_stmnt() noexcept {
+AstNode *Parser::parse_vardef_stmnt(const Lexer &lexer) noexcept {
   const Token &token_symbol_name = lexer.get_next_token();
 
   if (token_symbol_name.id != TokenId::IDENTIFIER) {
@@ -486,22 +486,22 @@ AstNode *Parser::parse_vardef_stmnt() noexcept {
     LL_UNREACHEABLE;
   }
 
-  AstNode *type_node = parse_type();
+  AstNode *type_node = parse_type(lexer);
 
   if (!type_node) {
     // TODO(pablo96): handle error | wrong expression expected type name
     return nullptr;
   }
 
-  AstNode *var_def_node =
-    new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line, token_symbol_name.start_column, lexer.file_name);
+  AstNode *var_def_node = new AstNode(AstNodeType::AstVarDef, token_symbol_name.start_line,
+                                      token_symbol_name.start_column, token_symbol_name.file_name);
   type_node->parent = var_def_node;
   var_def_node->var_def.name = lexer.get_token_value(token_symbol_name);
   var_def_node->var_def.type = type_node;
 
   const Token &assign_token = lexer.get_next_token();
   if (assign_token.id == TokenId::ASSIGN) {
-    auto expr = parse_expr();
+    auto expr = parse_expr(lexer);
     if (!expr) {
       // TODO(pablo96): handle error in unary_expr => sync parsing
       return nullptr;
@@ -524,11 +524,11 @@ AstNode *Parser::parse_vardef_stmnt() noexcept {
  *   | IDENTIFIER
  *   ;
  */
-AstNode *Parser::parse_type() noexcept {
+AstNode *Parser::parse_type(const Lexer &lexer) noexcept {
   const Token &token = lexer.get_next_token();
   if (token.id == TokenId::MUL) {
     // POINTER TYPE
-    AstNode *type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, lexer.file_name);
+    AstNode *type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, token.file_name);
     type_node->ast_type.type_id = AstTypeId::Pointer;
     const Token &next_token = lexer.get_next_token();
     if (!is_type_start_token(next_token)) {
@@ -538,7 +538,7 @@ AstNode *Parser::parse_type() noexcept {
       return nullptr;
     }
     lexer.get_back();
-    auto data_tye_node = parse_type();
+    auto data_tye_node = parse_type(lexer);
     data_tye_node->parent = type_node;
     type_node->ast_type.child_type = data_tye_node;
 
@@ -551,7 +551,7 @@ AstNode *Parser::parse_type() noexcept {
       lexer.get_back();
       return nullptr;
     }
-    AstNode *type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, lexer.file_name);
+    AstNode *type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, token.file_name);
     type_node->ast_type.type_id = AstTypeId::Array;
 
     const Token &next_token = lexer.get_next_token();
@@ -562,13 +562,13 @@ AstNode *Parser::parse_type() noexcept {
       return nullptr;
     }
     lexer.get_back();
-    auto data_tye_node = parse_type();
+    auto data_tye_node = parse_type(lexer);
     data_tye_node->parent = type_node;
     type_node->ast_type.child_type = data_tye_node;
 
     return type_node;
   } else if (token.id == TokenId::IDENTIFIER) {
-    AstNode *type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, lexer.file_name);
+    AstNode *type_node = new AstNode(AstNodeType::AstType, token.start_line, token.start_column, token.file_name);
     type_node->ast_type.type_id = get_type_id(lexer.get_token_value(token), &type_node->ast_type.type_info);
 
     return type_node;
@@ -588,8 +588,8 @@ AstNode *Parser::parse_type() noexcept {
  *   : IDENTIFIER assign_op expression
  *   ;
  */
-AstNode *Parser::parse_assign_stmnt() noexcept {
-  auto identifier_node = parse_primary_expr();
+AstNode *Parser::parse_assign_stmnt(const Lexer &lexer) noexcept {
+  auto identifier_node = parse_primary_expr(lexer);
   if (!identifier_node) {
     // TODO(pablo96): error in unary_expr => sync parsing
     return nullptr;
@@ -597,12 +597,12 @@ AstNode *Parser::parse_assign_stmnt() noexcept {
 
   const Token &token = lexer.get_next_token();
   if (token.id == TokenId::ASSIGN) {
-    auto expr = parse_expr();
+    auto expr = parse_expr(lexer);
     if (!expr) {
       // TODO(pablo96): error in unary_expr => sync parsing
       return nullptr;
     }
-    AstNode *node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
+    AstNode *node = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, token.file_name);
     expr->parent = node;
     identifier_node->parent = node;
     node->binary_expr.bin_op = get_binary_op(token);
@@ -621,20 +621,20 @@ AstNode *Parser::parse_assign_stmnt() noexcept {
  *   | 'ret' expression?
  *   ;
  */
-AstNode *Parser::parse_ret_stmnt() noexcept {
+AstNode *Parser::parse_ret_stmnt(const Lexer &lexer) noexcept {
   const Token &token = lexer.get_next_token();
   if (token.id != TokenId::RET) {
     // Prediction error
     LL_UNREACHEABLE;
   }
 
-  AstNode *node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column, lexer.file_name);
+  AstNode *node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column, token.file_name);
   node->unary_expr.op = get_unary_op(token);
 
   if (is_expr_token(lexer.get_next_token())) {
     lexer.get_back();
 
-    auto expr = parse_expr();
+    auto expr = parse_expr(lexer);
     if (!expr) {
       // TODO(pablo96): error in unary_expr => sync parsing
       return nullptr;
@@ -659,9 +659,9 @@ AstNode *Parser::parse_ret_stmnt() noexcept {
  *   | compExpr
  *   ;
  */
-AstNode *Parser::parse_expr() noexcept {
+AstNode *Parser::parse_expr(const Lexer &lexer) noexcept {
   if (lexer.get_next_token().id == TokenId::L_PAREN) {
-    auto expression = parse_expr();
+    auto expression = parse_expr(lexer);
     if (lexer.get_next_token().id != TokenId::R_PAREN) {
       const Token &prev_token = lexer.get_previous_token();
       parse_error(prev_token, ERROR_EXPECTED_R_PAREN_AFTER, lexer.get_token_value(prev_token));
@@ -671,7 +671,7 @@ AstNode *Parser::parse_expr() noexcept {
   }
   // Was not a ')'
   lexer.get_back();
-  return parse_comp_expr();
+  return parse_comp_expr(lexer);
 }
 
 /*
@@ -681,14 +681,14 @@ AstNode *Parser::parse_expr() noexcept {
  *   | algebraicExpr
  *   ;
  */
-AstNode *Parser::parse_comp_expr() noexcept {
-  auto root_node = parse_algebraic_expr();
+AstNode *Parser::parse_comp_expr(const Lexer &lexer) noexcept {
+  auto root_node = parse_algebraic_expr(lexer);
   if (!root_node) {
     // TODO(pablo96): error in primary expr => sync parsing
     return nullptr;
   }
 
-  do {
+  while (true) {
     const Token &token = lexer.get_next_token();
 
     if (!MATCH(&token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER, TokenId::GREATER_OR_EQUALS,
@@ -698,14 +698,14 @@ AstNode *Parser::parse_comp_expr() noexcept {
       break;
     }
 
-    AstNode *unary_expr = parse_algebraic_expr();
+    AstNode *unary_expr = parse_algebraic_expr(lexer);
     if (!unary_expr) {
       // TODO(pablo96): error in unary_expr => sync parsing
       break;
     }
 
     // create binary node
-    auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
+    auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, token.file_name);
     unary_expr->parent = binary_expr;
     root_node->parent = binary_expr;
     binary_expr->binary_expr.left_expr = root_node;
@@ -714,7 +714,7 @@ AstNode *Parser::parse_comp_expr() noexcept {
 
     // set the new node as root.
     root_node = binary_expr;
-  } while (true);
+  }
 
   return root_node;
 }
@@ -725,8 +725,8 @@ AstNode *Parser::parse_comp_expr() noexcept {
  *   : termExpr ('+' | '-' | '|') termExpr
  *   | termExpr
  */
-AstNode *Parser::parse_algebraic_expr() noexcept {
-  auto root_node = parse_term_expr();
+AstNode *Parser::parse_algebraic_expr(const Lexer &lexer) noexcept {
+  auto root_node = parse_term_expr(lexer);
   if (!root_node) {
     // TODO(pablo96): error in primary expr => sync parsing
     return nullptr;
@@ -740,14 +740,14 @@ AstNode *Parser::parse_algebraic_expr() noexcept {
       break;
     }
 
-    auto term_expr = parse_term_expr();
+    auto term_expr = parse_term_expr(lexer);
     if (!term_expr) {
       // TODO(pablo96): error in term_expr => sync parsing
       break;
     }
 
     // create binary node
-    auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
+    auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, token.file_name);
     term_expr->parent = binary_expr;
     root_node->parent = binary_expr;
     binary_expr->binary_expr.left_expr = root_node;
@@ -767,8 +767,8 @@ AstNode *Parser::parse_algebraic_expr() noexcept {
  *   : primaryExpr ('*' | '/' | '%' | '<<' | '>>' | '&' | '^') primaryExpr
  *   | primaryExpr
  */
-AstNode *Parser::parse_term_expr() noexcept {
-  auto root_node = parse_unary_expr();
+AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
+  auto root_node = parse_unary_expr(lexer);
 
   if (!root_node) {
     // TODO(pablo96): error in primary expr => sync parsing
@@ -784,14 +784,14 @@ AstNode *Parser::parse_term_expr() noexcept {
       break;
     }
 
-    auto symbol_token = parse_unary_expr();
+    auto symbol_token = parse_unary_expr(lexer);
     if (!symbol_token) {
       // TODO(pablo96): error in primary expr => sync parsing
       break;
     }
 
     // create binary node
-    auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, lexer.file_name);
+    auto binary_expr = new AstNode(AstNodeType::AstBinaryExpr, token.start_line, token.start_column, token.file_name);
     symbol_token->parent = binary_expr;
     root_node->parent = binary_expr;
     binary_expr->binary_expr.left_expr = root_node;
@@ -813,7 +813,7 @@ AstNode *Parser::parse_term_expr() noexcept {
  *   | primaryExpr
  *   ;
  */
-AstNode *Parser::parse_unary_expr() noexcept {
+AstNode *Parser::parse_unary_expr(const Lexer &lexer) noexcept {
 consume_plus:
   const Token &unary_op_token = lexer.get_next_token();
   if (unary_op_token.id == TokenId::PLUS) {
@@ -833,9 +833,9 @@ consume_plus:
     if (unary_op_token.id == TokenId::MINUS)
       lexer.get_back();
 
-    AstNode *node =
-      new AstNode(AstNodeType::AstUnaryExpr, unary_op_token.start_line, unary_op_token.start_column, lexer.file_name);
-    AstNode *primary_expr = parse_primary_expr();
+    AstNode *node = new AstNode(AstNodeType::AstUnaryExpr, unary_op_token.start_line, unary_op_token.start_column,
+                                unary_op_token.file_name);
+    AstNode *primary_expr = parse_primary_expr(lexer);
     if (!primary_expr) {
       // TODO(pablo96): error in algebraic_expr => sync parsing
       // if this happens to be
@@ -851,7 +851,7 @@ consume_plus:
   }
 
   lexer.get_back();
-  AstNode *primary_expr = parse_primary_expr();
+  AstNode *primary_expr = parse_primary_expr(lexer);
   if (!primary_expr) {
     // TODO(pablo96): error in algebraic_expr => sync parsing
     return nullptr;
@@ -860,7 +860,7 @@ consume_plus:
   const Token &token = lexer.get_next_token();
   // primary_expr op
   if (MATCH(&token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
-    AstNode *node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column, lexer.file_name);
+    AstNode *node = new AstNode(AstNodeType::AstUnaryExpr, token.start_line, token.start_column, token.file_name);
     primary_expr->parent = node;
     node->unary_expr.expr = primary_expr;
     node->unary_expr.op = get_unary_op(token);
@@ -881,7 +881,7 @@ consume_plus:
  *   | INT_LIT
  *   | UNICODE_CHAR
  */
-AstNode *Parser::parse_primary_expr() noexcept {
+AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
   const Token &token = lexer.get_next_token();
 
   if (token.id == TokenId::_EOF) {
@@ -893,7 +893,7 @@ AstNode *Parser::parse_primary_expr() noexcept {
   if (token.id == TokenId::L_PAREN) {
     // group expression
     lexer.get_back();
-    return parse_expr();
+    return parse_expr(lexer);
   }
 
   if (token.id == TokenId::IDENTIFIER) {
@@ -902,12 +902,12 @@ AstNode *Parser::parse_primary_expr() noexcept {
     if (next_token.id == TokenId::L_PAREN) {
       lexer.get_back(); // LPAREN
       lexer.get_back(); // IDENTIFIER
-      return parse_function_call();
+      return parse_function_call(lexer);
     }
     // else
     lexer.get_back();
 
-    AstNode *symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column, lexer.file_name);
+    AstNode *symbol_node = new AstNode(AstNodeType::AstSymbol, token.start_line, token.start_column, token.file_name);
     symbol_node->symbol.token = &token;
     symbol_node->symbol.cached_name = lexer.get_token_value(token);
     return symbol_node;
@@ -919,7 +919,7 @@ AstNode *Parser::parse_primary_expr() noexcept {
 
   if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
     AstNode *const_value_node =
-      new AstNode(AstNodeType::AstConstValue, token.start_line, token.start_column, lexer.file_name);
+      new AstNode(AstNodeType::AstConstValue, token.start_line, token.start_column, token.file_name);
     switch (number_token.id) {
     case TokenId::INT_LIT: {
       const_value_node->const_value.type = ConstValueType::INT;
@@ -951,7 +951,7 @@ AstNode *Parser::parse_primary_expr() noexcept {
  *   : IDENTIFIER '(' (expression (, expression))? ')'
  *   ;
  */
-AstNode *Parser::parse_function_call() noexcept {
+AstNode *Parser::parse_function_call(const Lexer &lexer) noexcept {
   const Token &name_token = lexer.get_next_token();
   if (name_token.id != TokenId::IDENTIFIER) {
     // bad prediction
@@ -965,7 +965,7 @@ AstNode *Parser::parse_function_call() noexcept {
   }
 
   AstNode *func_call_node =
-    new AstNode(AstNodeType::AstFuncCallExpr, name_token.start_line, name_token.start_column, lexer.file_name);
+    new AstNode(AstNodeType::AstFuncCallExpr, name_token.start_line, name_token.start_column, name_token.file_name);
   func_call_node->func_call.fn_name = lexer.get_token_value(name_token);
 
   // arguments
@@ -987,7 +987,7 @@ AstNode *Parser::parse_function_call() noexcept {
     }
 
     lexer.get_back();
-    auto expr = parse_expr();
+    auto expr = parse_expr(lexer);
     if (!expr) {
       // TODO(pablo96): handle error | find a comma or rparen
       continue;
@@ -1014,14 +1014,14 @@ AstNode *Parser::parse_error(const Token &token, const char *format, ...) noexce
   assert(len2 >= 0);
   assert(len2 == len1);
 
-  Error error(ERROR_TYPE::ERROR, token.start_line, token.start_column, lexer.file_name, msg);
+  Error error(ERROR_TYPE::ERROR, token.start_line, token.start_column, token.file_name, msg);
 
   va_end(ap);
   va_end(ap2);
   return nullptr;
 }
 
-bool Parser::is_new_line_between(const size_t start_pos, const size_t end_pos) {
+bool Parser::is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos) {
   auto start_it = lexer.source.data();
   auto len = end_pos - start_pos;
   auto str_view = std::string_view(start_it + start_pos, len);

@@ -13,8 +13,8 @@ TEST(ParserHappyStmntTests, RetStmnt) {
   Lexer lexer("ret myVar * (5 + 8)", "Ret stmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_ret_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_ret_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -31,8 +31,8 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
   Lexer lexer("ret ", "RetEmptyStmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_ret_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_ret_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -52,8 +52,8 @@ TEST(ParserHappyStmntTests, AssignStmntTest) {
   Lexer lexer("myVar = 5 * (6 + 9)", "AssignStmntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_assign_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_assign_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -76,8 +76,8 @@ TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
   Lexer lexer("i32", "TypeNameIsPrimitiveParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
+  Parser parser(errors);
+  auto value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -96,8 +96,8 @@ TEST(ParserHappyStmntTests, TypeNameParse) {
   Lexer lexer("MyType", "TypeNameParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
+  Parser parser(errors);
+  auto value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -116,8 +116,8 @@ TEST(ParserHappyStmntTests, TypeArrayParse) {
   Lexer lexer("[]MyType", "TypeArrayParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
+  Parser parser(errors);
+  auto value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -140,8 +140,8 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
   Lexer lexer("*MyType", "TypePointerParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
+  Parser parser(errors);
+  auto value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -168,8 +168,8 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
   Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -194,8 +194,8 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   Lexer lexer("myVar i32 = -65", "VarDefSimpleTypeInitializerParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -227,8 +227,8 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
   Lexer lexer("myVar i32 = 65 + PI", "VarDefSimpleTypeInitializerAddParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -265,8 +265,8 @@ TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
   Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
@@ -295,8 +295,8 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
   Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
@@ -329,8 +329,8 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto value_node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
@@ -354,8 +354,8 @@ TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
   Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto value_node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
@@ -384,8 +384,8 @@ TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
   Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto value_node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
@@ -414,8 +414,8 @@ TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
   Lexer lexer("myVar = 5 * (6 + 9)", "AssignStmntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto value_node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
@@ -433,8 +433,8 @@ TEST(ParserHappyStmntTests, StatementRetStmnt) {
   Lexer lexer("ret myVar * (5 + 8)", "Ret stmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto value_node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
@@ -450,8 +450,8 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
   Lexer lexer("ret ", "RetEmptyStmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto value_node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
@@ -470,8 +470,8 @@ TEST(ParserHappyStmntTests, BlockEmptyTest) {
   Lexer lexer("{}", "BlockEmptyTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -486,8 +486,8 @@ TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
   Lexer lexer("{myVar i32\nret myvar}", "BlockNoSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -521,8 +521,8 @@ TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
   Lexer lexer("{ myVar i32\nret myvar }", "BlockSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -556,8 +556,8 @@ TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
   Lexer lexer("{\n\tmyVar i32\n\tret myvar\n}", "BlockNewlinesNearCurliesTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -591,8 +591,8 @@ TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
   Lexer lexer("{ \n  \t myVar i32   \n  \t  ret myvar  \n   }", "BlockSpacesBetweenNewlinesTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -630,8 +630,8 @@ TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
   Lexer lexer("fn myFunc() void", "FuncProtoEmptyParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -653,8 +653,8 @@ TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
   Lexer lexer("fn myFunc(param1 i32) void", "FuncProtoSingleParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -687,8 +687,8 @@ TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
   Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32", "FuncProtoMultiParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -722,8 +722,8 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
   Lexer lexer("fn\nmyFunc\n(param1 i32\n, param1 i32,\n param1\ni32)\ni32", "FuncProtoMultiLineTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -761,8 +761,8 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
   Lexer lexer("fn myFunc() void {}", "FuncDefNoParamsVoidBlockTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -794,8 +794,8 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
   Lexer lexer("fn myFunc(param1 i32) i32 {}", "FuncDefSingleParamsVoidBlockTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -838,8 +838,8 @@ TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
   Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "FuncDefMultiParamsVoidBlockTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -883,8 +883,8 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
   Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "FuncDefNoParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -931,8 +931,8 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
   Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "FuncDefSingleParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -991,8 +991,8 @@ TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
   Lexer lexer("myFunc()", "FuncCallNoParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1008,8 +1008,8 @@ TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
   Lexer lexer("myFunc(5)", "FuncCall1ParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1031,8 +1031,8 @@ TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
   Lexer lexer("85 + myFunc(5)", "FuncCall1ParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1069,8 +1069,8 @@ TEST(ParserHappyStmntTests, FuncCallNestedTest) {
   Lexer lexer("myFunc(myFunc2(5))", "FuncCallNestedTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1099,8 +1099,8 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
   Lexer lexer("myFunc(myVar, myFunc2(5))", "FuncCallMultiParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  AstNode *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -1151,8 +1151,8 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
   Lexer lexer(source_code, "FullProgramNoNewLineEnd", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *source_code_node = parser.parse();
+  Parser parser(errors);
+  AstNode *source_code_node = parser.parse(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(source_code_node, nullptr);

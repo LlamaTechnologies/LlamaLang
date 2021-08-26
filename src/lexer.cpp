@@ -86,8 +86,8 @@ static bool is_exponent_signifier(uint8_t, int);
 
 Lexer::Lexer(const std::string &_file_name, std::vector<Error> &_errors)
     : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX), curr_line(0L), curr_column(0L),
-      state(TokenizerState::Start), radix(10), is_trailing_underscore(false), is_invalid_token(false), curr_token(),
-      tokens_vec(), comments_vec() {
+      state(TokenizerState::Start), radix(10), is_trailing_underscore(false), is_invalid_token(false),
+      curr_token(file_name), tokens_vec(), comments_vec() {
   // open file
   auto file = std::ifstream(file_name);
   if (file.is_open() && file.good()) {
@@ -109,7 +109,7 @@ Lexer::Lexer(const std::string &_file_name, std::vector<Error> &_errors)
 Lexer::Lexer(const std::string &_src_file, const std::string &_file_name, std::vector<Error> &_errors)
     : file_name(_file_name), source(_src_file), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX), curr_line(0L),
       curr_column(0L), state(TokenizerState::Start), radix(10), is_trailing_underscore(false), is_invalid_token(false),
-      curr_token(), tokens_vec(), comments_vec() {}
+      curr_token(file_name), tokens_vec(), comments_vec() {}
 
 // IMPORTANT!: should not be called more than once after the constructor.
 void Lexer::tokenize() noexcept {
@@ -1061,7 +1061,7 @@ std::string_view Lexer::get_token_value(const Token &token) const noexcept {
 }
 
 void begin_token(Lexer &in_lexer, const TokenId id) noexcept {
-  in_lexer.curr_token = Token();
+  in_lexer.curr_token = Token(in_lexer.file_name);
   in_lexer.curr_token.id = id;
   in_lexer.curr_token.start_line = in_lexer.curr_line;
   in_lexer.curr_token.start_column = in_lexer.curr_column;

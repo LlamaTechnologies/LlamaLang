@@ -476,8 +476,8 @@ TEST(SemanticExpressions, FunctionRetConstant) {
   lexer.tokenize();
 
   // given: parser
-  Parser parser(lexer, errors);
-  auto function_def_node = parser.parse_function_def();
+  Parser parser(errors);
+  auto function_def_node = parser.parse_function_def(lexer);
   ASSERT_NE(function_def_node, nullptr);
 
   // given: analizer

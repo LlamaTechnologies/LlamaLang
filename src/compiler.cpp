@@ -21,8 +21,8 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
     return false;
   }
 
-  Parser parser(lexer, errors);
-  auto source_code_node = parser.parse();
+  Parser parser(errors);
+  auto source_code_node = parser.parse(lexer);
 
   if (!errors.empty()) {
     console::WriteLine("PARSER");
@@ -70,7 +70,6 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
     }
   }
 
-
   if (!errors.empty()) {
     console::WriteLine("SEMANTIC/IR");
     printErrors(errors);
@@ -84,9 +83,9 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
 }
 
 void printErrors(const std::vector<Error> &errors) {
-  for (const Error &error : errors) { 
-      std::string str;
-      to_string(error, str);
-      console::WriteLine(str);
+  for (const Error &error : errors) {
+    std::string str;
+    to_string(error, str);
+    console::WriteLine(str);
   }
 }
