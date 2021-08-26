@@ -202,7 +202,7 @@ public:
   /**
    * Open a file and tokenize it
    **/
-  Lexer(const std::string &_file_name, std::vector<Error> &_errors);
+  Lexer(const std::string_view &_file_name, std::vector<Error> &_errors);
   /**
    * Tokenize the '_src_file' string
    **/

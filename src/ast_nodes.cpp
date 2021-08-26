@@ -1,5 +1,7 @@
 #include "ast_nodes.hpp"
 
+#include "lexer.hpp"
+
 static std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
 
 const std::string get_directive_type_name(const DirectiveType directive_type) noexcept {
@@ -104,6 +106,10 @@ AstSourceCode::~AstSourceCode() {
         child = nullptr;
       }
     }
+  }
+
+  if (lexer) {
+    delete lexer;
   }
 }
 

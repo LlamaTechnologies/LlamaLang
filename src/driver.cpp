@@ -4,23 +4,20 @@
 #include "compiler.hpp"
 #include "console.hpp"
 #include "error.hpp"
+#include "file_utils.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
 #include <system_error>
 
-static std::string read_file(std::ifstream &in_file);
 static std::string get_current_dir();
 static std::vector<char *> *split_string(const std::string &in_str, const char in_separator);
 static std::string get_path_to_program_by_name(const std::string &in_name);
 static int run_process(const std::string &in_program_path, const std::string &in_program_args);
 
-#define LL_FILE_EXTENSION ".llama"
 #define ARG_SRC_FILE "-s"
 #define ARG_OUT_NAME "-o"
 #define ARG_OUT_DIR "-O"
-#define BITCODE_FILE_EXTENSION ".bc"
-#define EXE_EXTENSION ".exe"
 
 Driver::Driver() : current_dir(get_current_dir()) {}
 
@@ -58,7 +55,7 @@ bool Driver::run() {
   std::string file_full_path = this->output_dir + "/" + this->output_name;
   auto file_out = file_full_path + ".a";
   auto file_in = file_full_path + BITCODE_FILE_EXTENSION;
-  std::string lld_args = this->lld_path + " " + file_in +  " -o " + file_out;
+  std::string lld_args = this->lld_path + " " + file_in + " -o " + file_out;
 
   console::WriteLine(lld_args);
 
@@ -90,26 +87,8 @@ bool Driver::get_tool_chain() {
 }
 
 bool Driver::verify_file_path() {
-  std::error_code error_code;
-  // TODO(pablo96): handle error_code
-  bool path_exists = std::filesystem::exists(this->file_path, error_code);
-  if (!path_exists) {
-    console::WriteLine("file '" + this->file_path.string() + "' does not exists!");
-    return false;
-  }
-
-  bool is_file = std::filesystem::is_regular_file(this->file_path, error_code);
-  if (!is_file) {
-    console::WriteLine("file '" + this->file_path.string() + "' is not a file!");
-    return false;
-  }
-
-  if (this->file_path.extension() != LL_FILE_EXTENSION) {
-    console::WriteLine("file '" + this->file_path.string() + "' is not a llama lang file!");
-    return false;
-  }
-
-  return true;
+  FILE_PATH_STATUS status = ::verify_file_path(this->file_path);
+  return status == FILE_PATH_STATUS::OK;
 }
 
 bool Driver::parse_args(const char **argv, const int argc) {
@@ -153,7 +132,7 @@ bool Driver::parse_args(const char **argv, const int argc) {
   }
 
   std::error_code error_code;
-  this->file_path = std::filesystem::absolute(std::filesystem::path(source_name), error_code);
+  this->file_path = resolve_path(source_name, error_code);
   // TODO(pablo96): handle error_code
 
   return true;
@@ -168,23 +147,6 @@ bool Driver::parse_args(const char **argv, const int argc) {
   #include <unistd.h>
   #define GetCurrentDir getcwd
 #endif
-
-std::string read_file(std::ifstream &in_file) {
-  std::string file_content;
-
-  in_file.seekg(0, std::ios::end);
-
-  file_content.reserve(in_file.tellg());
-
-  in_file.seekg(0, std::ios::beg);
-
-  // store content in this.source
-  file_content.assign((std::istreambuf_iterator<char>(in_file)), std::istreambuf_iterator<char>());
-
-  in_file.close();
-
-  return file_content;
-}
 
 std::string get_current_dir() {
   char buff[FILENAME_MAX]; // create string buffer to hold path

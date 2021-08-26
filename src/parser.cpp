@@ -4,6 +4,7 @@
 #include "ast_nodes.hpp"
 #include "lexer.hpp"
 #include "parse_error_msgs.hpp"
+#include "src_code_repository.hpp"
 
 #include <cassert>
 #include <stdarg.h>
@@ -62,6 +63,14 @@ AstNode *Parser::parse_source_code(const Lexer &lexer) noexcept {
     }
 
     switch (token.id) {
+    case TokenId::HASH: {
+      lexer.get_back(); // token
+      node = parse_directive(lexer);
+      if (!node) {
+        // TODO: handle error
+        continue;
+      }
+    } break;
     case TokenId::FN:
     case TokenId::EXTERN: {
       lexer.get_back(); // token
@@ -144,10 +153,10 @@ AstNode *Parser::parse_directive(const Lexer &lexer) noexcept {
   }
 
   const Token &identifier_token = lexer.get_next_token();
-  std::string_view dir_name = lexer.get_token_value(identifier_token);
+  std::string_view identifier_value = lexer.get_token_value(identifier_token);
 
   if (hash_token.id != TokenId::IDENTIFIER) {
-    parse_error(hash_token, ERROR_UNEXPECTED_HASH, std::string(dir_name).c_str());
+    parse_error(hash_token, ERROR_UNEXPECTED_HASH, std::string(identifier_value).c_str());
     return nullptr;
   }
 
@@ -155,22 +164,44 @@ AstNode *Parser::parse_directive(const Lexer &lexer) noexcept {
     new AstNode(AstNodeType::AstDirective, hash_token.start_line, hash_token.start_column, hash_token.file_name);
 
   DirectiveType dir_type;
-  if (get_directive_type(dir_type, dir_name)) {
+  if (get_directive_type(dir_type, identifier_value)) {
     delete directive_node;
-    parse_error(identifier_token, ERROR_UNKNOWN_DIRECTIVE, std::string(dir_name).c_str());
+    parse_error(identifier_token, ERROR_UNKNOWN_DIRECTIVE, std::string(identifier_value).c_str());
     return nullptr;
   }
 
   directive_node->directive.directive_type = dir_type;
 
   switch (dir_type) {
-  case DirectiveType::LOAD:
+  case DirectiveType::LOAD: {
     // TODO(pablo96): implement load directive
-    break;
+    const auto &file_name = identifier_value;
+    directive_node->directive.argument.str = file_name;
+
+    size_t errors_before = error_vec.size();
+
+    // create new lexer and tokenize.
+    auto loaded_file_lexer = new Lexer(file_name, error_vec);
+    loaded_file_lexer->tokenize();
+
+    // there were errors in lexing.
+    if (errors_before > error_vec.size()) {
+      // TODO(pablo96): error handling
+      delete directive_node;
+      return nullptr;
+    };
+
+    // parse source code.
+    AstNode *src_code_node = parse(*loaded_file_lexer);
+    src_code_node->source_code.lexer = loaded_file_lexer;
+
+    // add parsed source code to the repository.
+    RepositorySrcCode::get().add_source_code(file_name, src_code_node);
+  } break;
   default:
     LL_UNREACHEABLE; // unimplemented directive
   }
-  return nullptr;
+  return directive_node;
 }
 
 /*

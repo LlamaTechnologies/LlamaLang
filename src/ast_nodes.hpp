@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+class Lexer;
+
 namespace llvm {
 class Function;
 class Value;
@@ -46,10 +48,10 @@ const std::string get_directive_type_name(const DirectiveType) noexcept;
 
 struct AstDirective {
   DirectiveType directive_type = DirectiveType::COMPILE;
-  union argument {
+  union {
     std::string_view str = {};
     AstNode *ast_node;
-  };
+  } argument;
 };
 
 struct AstFuncDef {
@@ -179,6 +181,7 @@ struct AstUnaryExpr {
 };
 
 struct AstSourceCode {
+  const Lexer *lexer = nullptr;
   std::vector<AstNode *> children;
 
   virtual ~AstSourceCode();

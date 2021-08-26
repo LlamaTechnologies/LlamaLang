@@ -30,6 +30,9 @@ driver.cpp
 error.hpp
 error.cpp
 
+file_utils.hpp
+file_utils.cpp
+
 ir.hpp
 ir.cpp
 

@@ -1,6 +1,7 @@
 #include "lexer.hpp"
 
 #include "common_defs.hpp"
+#include "file_utils.hpp"
 
 #include <cassert>
 #include <cstdarg>
@@ -84,26 +85,20 @@ static bool is_float_specifier(uint8_t);
 static bool is_sign_or_type_specifier(uint8_t);
 static bool is_exponent_signifier(uint8_t, int);
 
-Lexer::Lexer(const std::string &_file_name, std::vector<Error> &_errors)
+Lexer::Lexer(const std::string_view &_file_name, std::vector<Error> &_errors)
     : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX), curr_line(0L), curr_column(0L),
       state(TokenizerState::Start), radix(10), is_trailing_underscore(false), is_invalid_token(false),
       curr_token(file_name), tokens_vec(), comments_vec() {
   // open file
-  auto file = std::ifstream(file_name);
-  if (file.is_open() && file.good()) {
-    // go to end of file
-    file.seekg(0, std::ios::end);
-
-    // Reserve memory
-    source.reserve(file.tellg());
-
-    // reset file cursor
-    file.seekg(0, std::ios::beg);
-
-    // store content in this.source
-    source.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  std::error_code error_code;
+  auto path = resolve_path(this->file_name, error_code);
+  if (error_code.value() == 0) {
+    auto status = verify_file_path(path);
+    if (status == FILE_PATH_STATUS::OK) {
+      auto file = std::ifstream(path.string());
+      this->source = read_file(file);
+    }
   }
-  file.close();
 }
 
 Lexer::Lexer(const std::string &_src_file, const std::string &_file_name, std::vector<Error> &_errors)

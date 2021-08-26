@@ -13,10 +13,12 @@
 class Parser;
 
 struct RepositorySrcCode {
+  static RepositorySrcCode &get();
   bool has_file(std::string_view in_file_name);
   AstNode *get_source_code(std::string_view in_file_name);
 
 private:
+  explicit RepositorySrcCode() = default;
   friend class Parser;
 
   void add_source_code(const std::string_view in_file_name, AstNode *in_source_code);

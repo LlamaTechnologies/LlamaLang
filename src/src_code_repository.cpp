@@ -1,5 +1,13 @@
 #include "src_code_repository.hpp"
 
+RepositorySrcCode *repository = nullptr;
+RepositorySrcCode &RepositorySrcCode::get() {
+  if (!repository) {
+    repository = new RepositorySrcCode();
+  }
+  return *repository;
+}
+
 bool RepositorySrcCode::has_file(std::string_view in_file_name) {
   return this->src_codes.find(in_file_name) != this->src_codes.end();
 }
