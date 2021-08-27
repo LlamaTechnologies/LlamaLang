@@ -12,47 +12,6 @@ static bool is_ret_stmnt(const AstNode *stmnt);
 static const AstNode *get_best_type(const AstNode *type_node0, const AstNode *type_node1);
 static void set_type_info(const AstNode *expr_node, const AstNode *type_node);
 
-Table *Table::create_child(const std::string &in_name) {
-  auto child = new Table(in_name, this);
-  last_child_key = in_name;
-  children_scopes.emplace(in_name, child);
-  return child;
-}
-
-bool Table::has_child(const std::string &in_name) { return children_scopes.find(in_name) != children_scopes.end(); }
-
-bool Table::has_symbol(const std::string &in_name) { return symbols.find(in_name) != symbols.end(); }
-
-Table *Table::get_child(const std::string &in_name) {
-#ifdef LL_DEBUG
-  if (has_child(in_name))
-#endif
-    return children_scopes.at(in_name);
-#ifdef LL_DEBUG
-  LL_UNREACHEABLE;
-#endif
-}
-
-const Symbol &Table::get_symbol(const std::string &in_name) {
-#ifdef LL_DEBUG
-  if (has_symbol(in_name))
-#endif
-    return symbols.at(in_name);
-#ifdef LL_DEBUG
-  LL_UNREACHEABLE;
-#endif
-}
-
-void Table::remove_last_child() { children_scopes.erase(last_child_key); }
-
-void Table::add_symbol(const std::string &in_name, const SymbolType in_type, const AstNode *in_data) {
-  Symbol symbol = Symbol(in_name, in_type, in_data);
-  last_symbol_key = in_name;
-  symbols.emplace(in_name, symbol);
-}
-
-void Table::remove_last_symbol() { symbols.erase(last_symbol_key); }
-
 bool SemanticAnalyzer::analizeFuncProto(const AstNode *in_proto_node) {
   assert(in_proto_node != nullptr);
   assert(in_proto_node->node_type == AstNodeType::AstFuncProto);
@@ -379,7 +338,7 @@ void SemanticAnalyzer::add_semantic_error(const AstNode *in_node, const char *in
 
   Error error(ERROR_TYPE::ERROR, in_node->line, in_node->column, in_node->file_name, msg);
   errors.push_back(error);
-  
+
   delete[] msg;
 
   va_end(ap);

@@ -46,6 +46,9 @@ parse_error_msgs.hpp
 parser.hpp
 parser.cpp
 
+scope.hpp
+scope.cpp
+
 semantic_analyzer.hpp
 semantic_analyzer.cpp
 
