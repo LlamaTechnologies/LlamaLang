@@ -19,7 +19,16 @@ class SemanticAnalyzer {
 public:
   SemanticAnalyzer(std::vector<Error> &in_errors) : errors(in_errors) {}
 
-  /* Returns true. */
+  /* Returns true if:
+   * - global variable has initializer.
+   * - initializer expr is compatible with variable's type.
+   * - variable is not shadowing another in the same scope.
+   */
+  bool analizeVarDef(const AstNode *in_node, const bool is_global);
+
+  /* TEMP: Returns true.
+   * NOTE: Here we will check fn_type
+   */
   bool analizeFuncProto(const AstNode *in_func_proto);
 
   /* Returns true if:
@@ -29,29 +38,29 @@ public:
   bool analizeFuncBlock(const AstBlock &in_func_block, AstFuncDef &in_function);
 
   /* Returns true if:
-   * - global variable has initializer.
-   * - initializer expr is compatible with variable's type.
-   * - variable is not shadowing another in the same scope.
-   */
-  bool analizeVarDef(const AstNode *in_node, const bool is_global);
-
-  /* Returns true if:
    * - all refered variables had been defined
    * - all constants types are valid to be in the same operation
    */
   bool analizeExpr(const AstNode *in_expr);
 
-  /* Returns true if:
-   * - types are the same type_id
-   * - if pointers types have the same sub type_id
-   */
-  bool check_type_compat(const AstNode *type_node0, const AstNode *type_node1, const AstNode *expr_node);
-
-private:
-  const AstNode *get_expr_type(const AstNode *expr);
-
-  const AstNode *resolve_function_variable(const std::string &in_name, const AstNode *in_parent_node,
-                                           SymbolType *out_symbol_type = nullptr);
-
-  void add_semantic_error(const AstNode *in_node, const char *in_msg, ...);
+  bool check_and_set_type(const AstNode *in_node, const AstNode *l_type_node, const AstNode *expr_node);
 };
+
+/* Returns true if:
+ * - types are the same type_id
+ * - types are the same bit size
+ * - both integers are signed or uinsigned
+ * - pointers|arrays types have the same sub type_id
+ */
+bool check_types(std::vector<Error> &errors, const AstNode *type_node0, const AstNode *type_node1,
+                 const AstNode *expr_node);
+
+/* Returns a node representing the expression type */
+const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_table, const AstNode *expr);
+
+/* Returns a node representing the variable or the function found by the name */
+const AstNode *resolve_function_variable(std::vector<Error> &errors, const Table *symbol_table,
+                                         const std::string &in_name, const AstNode *in_parent_node,
+                                         SymbolType *out_symbol_type = nullptr);
+
+void add_semantic_error(std::vector<Error> &errors, const AstNode *in_node, const char *in_msg, ...);

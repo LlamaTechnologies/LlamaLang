@@ -19,7 +19,7 @@ TEST(SemanticTypes, BoolVoid) {
   auto node_type_1 = get_type_node("bool");
 
   SemanticAnalyzer analizer(errors);
-  analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
 }
@@ -41,7 +41,7 @@ TEST(SemanticTypes, Pointer) {
   node_type_1->ast_type.child_type = node_child_type_1;
 
   SemanticAnalyzer analizer(errors);
-  analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
 
@@ -67,7 +67,7 @@ TEST(SemanticTypes, Array) {
   node_type_1->ast_type.child_type = node_child_type_1;
 
   SemanticAnalyzer analizer(errors);
-  analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
 
@@ -84,7 +84,7 @@ TEST(SemanticTypes, Integer) {
   auto node_type_1 = get_type_node("i32");
 
   SemanticAnalyzer analizer(errors);
-  analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
 
@@ -101,7 +101,7 @@ TEST(SemanticTypes, Float) {
   auto node_type_1 = get_type_node("f32");
 
   SemanticAnalyzer analizer(errors);
-  analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
 

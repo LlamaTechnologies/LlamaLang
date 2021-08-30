@@ -9,28 +9,26 @@ Table *Table::create_child(const std::string &in_name) {
   return child;
 }
 
-bool Table::has_child(const std::string &in_name) { return children_scopes.find(in_name) != children_scopes.end(); }
+bool Table::has_child(const std::string &in_name) const {
+  return children_scopes.find(in_name) != children_scopes.end();
+}
 
-bool Table::has_symbol(const std::string &in_name) { return symbols.find(in_name) != symbols.end(); }
+bool Table::has_symbol(const std::string &in_name) const { return symbols.find(in_name) != symbols.end(); }
 
 Table *Table::get_child(const std::string &in_name) {
 #ifdef LL_DEBUG
   if (has_child(in_name))
 #endif
     return children_scopes.at(in_name);
-#ifdef LL_DEBUG
   LL_UNREACHEABLE;
-#endif
 }
 
-const Symbol &Table::get_symbol(const std::string &in_name) {
+const Symbol &Table::get_symbol(const std::string &in_name) const {
 #ifdef LL_DEBUG
   if (has_symbol(in_name))
 #endif
     return symbols.at(in_name);
-#ifdef LL_DEBUG
   LL_UNREACHEABLE;
-#endif
 }
 
 void Table::remove_last_child() { children_scopes.erase(last_child_key); }

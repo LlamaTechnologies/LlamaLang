@@ -35,4 +35,14 @@
 [[noreturn]] void panic(const char *format, ...);
 
 #define LL_UNREACHEABLE \
-  panic("Unreachable at %s:%d in %s. This is a bug in the compiler.", __FILE__, __LINE__, __func__)
+  panic("Unreachable at %s:%d in %s :: This is a bug in the compiler.", __FILE__, __LINE__, __func__)
+
+#define LL_SUNREACHEABLE(msg) panic("Unreachable at %s:%d in %s :: %s", __FILE__, __LINE__, __func__, msg)
+
+#ifdef LL_DEBUG
+  #define LL_ASSERT(condition) static_cast<bool>(condition) ? void(0) : LL_UNREACHEABLE
+  #define LL_SASSERT(condition, msg) static_cast<bool>(condition) ? void(0) : LL_UNREACHEABLE(msg)
+#else
+  #define LL_ASSERT(condition)
+  #define LL_SASSERT(condition, msg)
+#endif

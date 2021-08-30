@@ -17,7 +17,7 @@ TEST(SemanticTypes, DistinctTypes) {
   auto node_type_1 = get_type_node("i32");
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  bool is_valid = analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_EQ(is_valid, false);
@@ -40,7 +40,7 @@ TEST(SemanticTypes, PointerDistinctTypes) {
   node_type_1->ast_type.child_type = node_child_type_1;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  bool is_valid = analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_EQ(is_valid, false);
@@ -63,7 +63,7 @@ TEST(SemanticTypes, ArrayDistinctTypes) {
   node_type_1->ast_type.child_type = node_child_type_1;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.check_type_compat(node_type_0, node_type_1, node_expr);
+  bool is_valid = analizer.check_types(node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_EQ(is_valid, false);

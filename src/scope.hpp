@@ -24,7 +24,7 @@ struct Symbol {
 
 /**
  * Table (a.k.a Symbols Table):
- * NOTE: This could be a scope for blocks
+ * NOTE: This could be a scope|block
  **/
 struct Table {
   using SymbolMap = std::unordered_map<std::string, Symbol>;
@@ -37,11 +37,11 @@ struct Table {
 
   Table *create_child(const std::string &in_name);
 
-  bool has_child(const std::string &in_name);
+  bool has_child(const std::string &in_name) const;
 
-  bool has_symbol(const std::string &in_name);
+  bool has_symbol(const std::string &in_name) const;
 
-  const Symbol &get_symbol(const std::string &in_name);
+  const Symbol &get_symbol(const std::string &in_name) const;
 
   Table *get_child(const std::string &in_name);
 

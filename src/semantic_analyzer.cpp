@@ -8,33 +8,94 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-static bool is_ret_stmnt(const AstNode *stmnt);
-static const AstNode *get_best_type(const AstNode *type_node0, const AstNode *type_node1);
+//----- PRE DECLARATIONS - UTIL FUNCTIONS -----
+
+#define IS_RET_STATEMENT(node) node->node_type == AstNodeType::AstUnaryExpr && node->unary_expr.op == UnaryExprType::RET
+
+static bool analize_param(std::vector<Error> &errors, Table *symbol_table, const AstNode *in_node);
 static void set_type_info(const AstNode *expr_node, const AstNode *type_node);
 
+//----- START PRIMARY CHECK FUNCTIONS -----
+
+bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_global) {
+  LL_ASSERT(in_node != nullptr);
+  LL_ASSERT((in_node->node_type == AstNodeType::AstVarDef) || (in_node->node_type == AstNodeType::AstParamDecl));
+
+  const AstVarDef &var_def = in_node->node_type == AstNodeType::AstVarDef ? in_node->var_def : in_node->param_decl;
+  auto var_name = std::string(var_def.name);
+
+  if (is_global) {
+    // global variable needs initializer!
+    if (!var_def.initializer) {
+      add_semantic_error(errors, in_node, ERROR_GLOBAL_NEED_INITIALIZER, var_def.name);
+      return false;
+    }
+
+    // you can not assign expressions to globals!
+    if (var_def.initializer->node_type != AstNodeType::AstConstValue) {
+      add_semantic_error(errors, in_node, ERROR_GLOBAL_INITIALIZER_NO_CONST, var_def.name);
+      return false;
+    }
+
+    global_symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
+
+    if (!check_and_set_type(in_node, var_def.type, var_def.initializer)) {
+      global_symbol_table->remove_last_symbol();
+      return false;
+    }
+    return true;
+  }
+
+  // local variable declaration
+  symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
+
+  // variable declaration and definition
+  if (var_def.initializer) {
+    bool is_valid_init = analizeExpr(var_def.initializer);
+    if (!is_valid_init)
+      return false;
+
+    if (!check_and_set_type(in_node, var_def.type, var_def.initializer)) {
+      symbol_table->remove_last_symbol();
+      return false;
+    }
+    return true;
+  }
+
+  // just a unitialized variable
+  return true;
+}
+
 bool SemanticAnalyzer::analizeFuncProto(const AstNode *in_proto_node) {
-  assert(in_proto_node != nullptr);
-  assert(in_proto_node->node_type == AstNodeType::AstFuncProto);
+  LL_ASSERT(in_proto_node != nullptr);
+  LL_ASSERT(in_proto_node->node_type == AstNodeType::AstFuncProto);
 
   const AstFuncProto &func_proto = in_proto_node->function_proto;
   auto ret_type = func_proto.return_type;
 
+  // we dont support structs yet
   if (ret_type->ast_type.type_id == AstTypeId::Struct) {
-    add_semantic_error(ret_type, ERROR_STRUCTS_UNSUPORTED);
+    add_semantic_error(errors, ret_type, ERROR_STRUCTS_UNSUPORTED);
     return false;
   }
 
   auto str_name = std::string(func_proto.name);
 
+  // add function to the symbol table
   symbol_table->add_symbol(str_name, SymbolType::FUNC, in_proto_node);
+  // create the function's symbol table
   symbol_table = symbol_table->create_child(std::string(func_proto.name));
 
+  // check every param to not have any default value
+  // and add them to the function's symbol table
   bool has_no_error = true;
   for (AstNode *param : func_proto.params) {
-    bool param_ok = analizeVarDef(param, false);
+    bool param_ok = analize_param(errors, symbol_table, param);
     has_no_error = has_no_error && param_ok;
   }
 
+  LL_ASSERT(symbol_table->parent != nullptr);
+  // set symbol table to previous table
   symbol_table = symbol_table->parent;
   return has_no_error;
 }
@@ -42,22 +103,29 @@ bool SemanticAnalyzer::analizeFuncProto(const AstNode *in_proto_node) {
 bool SemanticAnalyzer::analizeFuncBlock(const AstBlock &in_func_block, AstFuncDef &in_function) {
   auto ret_type = in_function.proto->function_proto.return_type;
 
+  // set function's symbol table as current table
   symbol_table = symbol_table->get_child(std::string(in_function.proto->function_proto.name));
 
   size_t errors_before = errors.size();
+
+  // gather:
+  // - ret stmnt required
+  // - ret stmnt type
+
   bool has_ret_type = ret_type->ast_type.type_id != AstTypeId::Void;
   bool has_ret_stmnt = false;
 
+  // check every statement in the function
   for (auto stmnt : in_func_block.statements) {
-    if (is_ret_stmnt(stmnt)) {
+    if (IS_RET_STATEMENT(stmnt)) {
       has_ret_stmnt = true;
+
       if (!analizeExpr(stmnt))
         continue;
 
-      auto expr_type = get_expr_type(stmnt->unary_expr.expr);
-      if (check_type_compat(expr_type, ret_type, stmnt))
-        set_type_info(stmnt->unary_expr.expr, ret_type);
-
+      // if ret stmnt is ok
+      // then check if return type is the same as the one in the prototype
+      check_and_set_type(stmnt, ret_type, stmnt->unary_expr.expr);
     } else if (stmnt->node_type == AstNodeType::AstVarDef) {
       analizeVarDef(stmnt, false);
     } else {
@@ -67,79 +135,43 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock &in_func_block, AstFuncDe
 
   // if the function should return a type and it doesnt then report it;
   if (has_ret_type && !has_ret_stmnt) {
-    add_semantic_error(in_function.proto, ERROR_REQUIRE_RET_STMNT);
+    add_semantic_error(errors, in_function.proto, ERROR_REQUIRE_RET_STMNT);
   }
 
+  // if the function has no parent is a bug in the compiler
+  // at least global scope should be the parent of the function
+  LL_ASSERT(symbol_table->parent == nullptr);
+
+  symbol_table = symbol_table->parent;
+
   size_t errors_after = errors.size();
-
-  if (symbol_table->parent)
-    symbol_table = symbol_table->parent;
-
   return errors_before == errors_after;
 }
 
-bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_global) {
-  assert(in_node != nullptr);
-  assert((in_node->node_type == AstNodeType::AstVarDef) || (in_node->node_type == AstNodeType::AstParamDecl));
-
-  const AstVarDef &var_def = in_node->node_type == AstNodeType::AstVarDef ? in_node->var_def : in_node->param_decl;
-  auto var_name = std::string(var_def.name);
-
-  if (is_global) {
-    if (!var_def.initializer) {
-      add_semantic_error(in_node, ERROR_GLOBAL_NEED_INITIALIZER, var_def.name);
-      return false;
-    }
-    global_symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
-
-    const AstNode *expr_type = get_expr_type(var_def.initializer);
-    if (!check_type_compat(var_def.type, expr_type, in_node)) {
-      global_symbol_table->remove_last_symbol();
-      return false;
-    }
-
-    set_type_info(var_def.initializer, var_def.type);
-    return true;
-  }
-
-  symbol_table->add_symbol(var_name, SymbolType::VAR, in_node);
-
-  if (var_def.initializer) {
-    bool is_valid_init = analizeExpr(var_def.initializer);
-    if (!is_valid_init)
-      return false;
-
-    auto expr_type = get_expr_type(var_def.initializer);
-    if (!check_type_compat(var_def.type, expr_type, in_node)) {
-      symbol_table->remove_last_symbol();
-      return false;
-    }
-    set_type_info(var_def.initializer, var_def.type);
-  }
-
-  return true;
-}
+//----- END PRIMARY CHECK FUNCTIONS -------
 
 bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
   switch (in_expr->node_type) {
   case AstNodeType::AstBinaryExpr: {
     const AstBinaryExpr &bin_expr = in_expr->binary_expr;
     switch (bin_expr.bin_op) {
+    // BITWISE OPERATORS
     case BinaryExprType::LSHIFT:
     case BinaryExprType::RSHIFT: {
       if (!analizeExpr(bin_expr.left_expr) || !analizeExpr(bin_expr.right_expr))
         return false;
 
       // right value should be an integer
-      auto r_expr_type_node = get_expr_type(bin_expr.right_expr);
+      auto r_expr_type_node = get_expr_type(errors, symbol_table, bin_expr.right_expr);
       if (r_expr_type_node->ast_type.type_id != AstTypeId::Integer) {
-        add_semantic_error(in_expr, ERROR_BIT_SHIFT_LEFT_EXPR_NO_INT);
+        add_semantic_error(errors, in_expr, ERROR_BIT_SHIFT_LEFT_EXPR_NO_INT);
         return false;
       }
 
       // now we depend on left expr beeing ok
-      return get_expr_type(bin_expr.left_expr) != nullptr;
+      return get_expr_type(errors, symbol_table, bin_expr.left_expr) != nullptr;
     }
+    // BOOLEAN OPERATORS
     case BinaryExprType::EQUALS:
     case BinaryExprType::NOT_EQUALS:
     case BinaryExprType::GREATER_OR_EQUALS:
@@ -148,6 +180,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     case BinaryExprType::LESS:
       // We just check their expressions are good
       return analizeExpr(bin_expr.left_expr) && analizeExpr(bin_expr.right_expr);
+    // BINARY OPERATORS
     case BinaryExprType::ADD:
     case BinaryExprType::SUB:
     case BinaryExprType::MUL:
@@ -157,15 +190,17 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       if (!analizeExpr(bin_expr.left_expr) || !analizeExpr(bin_expr.right_expr))
         return false;
 
-      auto l_expr_type_node = get_expr_type(bin_expr.left_expr);
-      auto r_expr_type_node = get_expr_type(bin_expr.right_expr);
+      auto l_expr_type_node = get_expr_type(errors, symbol_table, bin_expr.left_expr);
+      auto r_expr_type_node = get_expr_type(errors, symbol_table, bin_expr.right_expr);
 
       // We check they have compatible types
-      if (!check_type_compat(l_expr_type_node, r_expr_type_node, in_expr))
+      if (!check_types(errors, l_expr_type_node, r_expr_type_node, in_expr))
         return false;
 
-      if (bin_expr.left_expr->node_type != AstNodeType::AstConstValue ||
-          bin_expr.right_expr->node_type != AstNodeType::AstConstValue) {
+      // if one of them is not a const value
+      // we check if the other is
+      if (!(bin_expr.left_expr->node_type != AstNodeType::AstConstValue &&
+            bin_expr.right_expr->node_type != AstNodeType::AstConstValue)) {
         if (bin_expr.left_expr->node_type == AstNodeType::AstConstValue) {
           const AstNode *l_const_value = bin_expr.left_expr;
           set_type_info(l_const_value, r_expr_type_node);
@@ -182,7 +217,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
   }
   case AstNodeType::AstUnaryExpr: {
     const AstUnaryExpr &unary_expr = in_expr->unary_expr;
-    auto type_node = get_expr_type(unary_expr.expr);
+    auto type_node = get_expr_type(errors, symbol_table, unary_expr.expr);
 
     if (!type_node) {
       return false;
@@ -191,18 +226,18 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     // Overloading operators is not supported
     if (type_node->ast_type.type_id == AstTypeId::Struct) {
       auto operator_symbol = get_unary_op_symbol(unary_expr.op);
-      add_semantic_error(in_expr, ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR, operator_symbol.c_str());
+      add_semantic_error(errors, in_expr, ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR, operator_symbol.c_str());
       return false;
     }
     // If it is a boolean expr only the NOT operator is valid
     if (type_node->ast_type.type_id == AstTypeId::Bool && unary_expr.op != UnaryExprType::NOT) {
       auto operator_symbol = get_unary_op_symbol(unary_expr.op);
-      add_semantic_error(in_expr, ERROR_UNSUPORTED_OP_BOOL_EXPR, operator_symbol.c_str());
+      add_semantic_error(errors, in_expr, ERROR_UNSUPORTED_OP_BOOL_EXPR, operator_symbol.c_str());
       return false;
     }
     // If it is not boolean expr the NOT operator is invalid
     if (type_node->ast_type.type_id != AstTypeId::Bool && unary_expr.op == UnaryExprType::NOT) {
-      add_semantic_error(in_expr, ERROR_UNSUPORTED_OP_NOT_BOOL_EXPR);
+      add_semantic_error(errors, in_expr, ERROR_UNSUPORTED_OP_NOT_BOOL_EXPR);
       return false;
     }
 
@@ -212,15 +247,16 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     const AstFuncCallExpr &fn_call = in_expr->func_call;
 
     SymbolType symbol_type;
-    fn_call.fn_ref = resolve_function_variable(std::string(fn_call.fn_name), in_expr, &symbol_type);
+    fn_call.fn_ref =
+      resolve_function_variable(errors, symbol_table, std::string(fn_call.fn_name), in_expr, &symbol_type);
 
     if (symbol_type != SymbolType::FUNC) {
-      add_semantic_error(in_expr, ERROR_SYMBOL_NOT_A_FN, fn_call.fn_name);
+      add_semantic_error(errors, in_expr, ERROR_SYMBOL_NOT_A_FN, fn_call.fn_name);
       return false;
     }
 
     if (!fn_call.fn_ref) {
-      add_semantic_error(in_expr, ERROR_UNDECLARED_FN, fn_call.fn_name);
+      add_semantic_error(errors, in_expr, ERROR_UNDECLARED_FN, fn_call.fn_name);
       return false;
     }
 
@@ -230,7 +266,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
         if (!analizeExpr(arg))
           continue;
 
-        auto arg_type = get_expr_type(arg);
+        auto arg_type = get_expr_type(errors, symbol_table, arg);
 
         if (arg->node_type == AstNodeType::AstConstValue) {
           arg_type->ast_type.type_info->bit_size = 32;
@@ -246,7 +282,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       auto args_size = fn_call.args.size();
 
       // BUG(pablo96): len1 != len2
-      add_semantic_error(in_expr, ERROR_ARGUMENT_COUNT_MISMATCH, params_size, args_size);
+      add_semantic_error(errors, in_expr, ERROR_ARGUMENT_COUNT_MISMATCH, params_size, args_size);
       return false;
     }
 
@@ -261,9 +297,9 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
 
       auto param = fn_proto.params.at(i);
       auto param_type = param->param_decl.type;
-      auto arg_type = get_expr_type(arg);
+      auto arg_type = get_expr_type(errors, symbol_table, arg);
 
-      bool is_compat = check_type_compat(param_type, arg_type, in_expr);
+      bool is_compat = check_types(errors, param_type, arg_type, in_expr);
 
       if (is_compat && arg->node_type == AstNodeType::AstConstValue) {
         set_type_info(arg, param_type);
@@ -277,7 +313,8 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
   }
   case AstNodeType::AstSymbol: {
     auto name = std::string(in_expr->symbol.cached_name);
-    auto data = in_expr->symbol.data = resolve_function_variable(name, in_expr, &in_expr->symbol.type);
+    auto data = in_expr->symbol.data =
+      resolve_function_variable(errors, symbol_table, name, in_expr, &in_expr->symbol.type);
     return data != nullptr;
   }
   case AstNodeType::AstConstValue: {
@@ -297,8 +334,20 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
   return false;
 }
 
-const AstNode *SemanticAnalyzer::resolve_function_variable(const std::string &in_name, const AstNode *in_parent_node,
-                                                           SymbolType *out_symbol_type) {
+bool SemanticAnalyzer::check_and_set_type(const AstNode *in_node, const AstNode *l_type_node,
+                                          const AstNode *expr_node) {
+  const AstNode *expr_type = get_expr_type(errors, symbol_table, expr_node);
+  if (!check_types(errors, l_type_node, expr_type, in_node)) {
+    return false;
+  }
+
+  set_type_info(expr_node, l_type_node);
+  return true;
+}
+
+const AstNode *resolve_function_variable(std::vector<Error> &errors, const Table *symbol_table,
+                                         const std::string &in_name, const AstNode *in_parent_node,
+                                         SymbolType *out_symbol_type) {
   auto curr_table = symbol_table;
   do {
     if (curr_table->has_child(in_name)) {
@@ -316,80 +365,78 @@ const AstNode *SemanticAnalyzer::resolve_function_variable(const std::string &in
     curr_table = curr_table->parent;
   } while (curr_table);
 
-  add_semantic_error(in_parent_node, ERROR_UNKNOWN_SYMBOL, in_name.c_str());
+  add_semantic_error(errors, in_parent_node, ERROR_UNKNOWN_SYMBOL, in_name.c_str());
 
   return nullptr;
 }
 
-void SemanticAnalyzer::add_semantic_error(const AstNode *in_node, const char *in_msg, ...) {
-  va_list ap, ap2;
-  va_start(ap, in_msg);
-  va_copy(ap2, ap);
-
-  int len1 = snprintf(nullptr, 0, in_msg, ap);
-  assert(len1 >= 0);
-
-  const int CAPACITY = len1 + 1;
-  char *msg = new char[CAPACITY];
-
-  int len2 = snprintf(msg, CAPACITY, in_msg, ap2);
-  assert(len2 >= 0);
-  // assert(len2 == len1);
-
-  Error error(ERROR_TYPE::ERROR, in_node->line, in_node->column, in_node->file_name, msg);
-  errors.push_back(error);
-
-  delete[] msg;
-
-  va_end(ap);
-  va_end(ap2);
-}
-
-bool SemanticAnalyzer::check_type_compat(const AstNode *type_node0, const AstNode *type_node1,
-                                         const AstNode *expr_node) {
-  assert(type_node0 != nullptr);
-  assert(type_node1 != nullptr);
-  assert(type_node0->node_type == AstNodeType::AstType);
-  assert(type_node1->node_type == AstNodeType::AstType);
-  assert(expr_node->node_type != AstNodeType::AstType);
+bool check_types(std::vector<Error> &errors, const AstNode *type_node0, const AstNode *type_node1,
+                 const AstNode *expr_node) {
+  LL_ASSERT(type_node0 != nullptr);
+  LL_ASSERT(type_node1 != nullptr);
+  LL_ASSERT(type_node0->node_type == AstNodeType::AstType);
+  LL_ASSERT(type_node1->node_type == AstNodeType::AstType);
+  LL_ASSERT(expr_node->node_type != AstNodeType::AstType);
 
   const AstType &type0 = type_node0->ast_type;
   const AstType &type1 = type_node1->ast_type;
 
-  if (type1.type_id == type0.type_id) {
-    if (type1.type_id == AstTypeId::Pointer || type1.type_id == AstTypeId::Array)
-      return check_type_compat(type0.child_type, type1.child_type, expr_node);
+  if (type0.type_id == type1.type_id) {
+    // check arrays or pointers
+    if (type0.type_id == AstTypeId::Pointer || type0.type_id == AstTypeId::Array)
+      return check_types(errors, type0.child_type, type1.child_type, expr_node);
+
+    // check complex types
     if (type0.type_id == AstTypeId::Struct)
       // NOTE: Structs No Supported
       // TODO: Add support for structs
       LL_UNREACHEABLE;
-    return true;
+
+    if (type0.type_id == AstTypeId::Integer) {
+      bool same_size = type0.type_info->bit_size == type1.type_info->bit_size;
+
+      if (!same_size) {
+        add_semantic_error(errors, expr_node, ERROR_TYPES_SIZE_MISMATCH);
+        return false;
+      }
+
+      bool same_sign = type0.type_info->is_signed & type1.type_info->is_signed;
+
+      if (!same_sign) {
+        add_semantic_error(errors, expr_node, ERROR_INTEGERS_SIGN_MISMATCH);
+        return false;
+      }
+
+      return true;
+    }
+
+    if (type0.type_id == AstTypeId::FloatingPoint) {
+      bool are_same = type0.type_info->bit_size == type1.type_info->bit_size;
+
+      if (!are_same) {
+        add_semantic_error(errors, expr_node, ERROR_TYPES_SIZE_MISMATCH);
+        return false;
+      }
+
+      return true;
+    }
   }
 
   // incompatible types
-  // void | bool
-  // int  | bool
-  // int  | void
-  // int  | float
-  // int  | pointer
-  // int  | array
-  // float| bool
-  // float| void
-  // float| array
-  // float| pointer
-  // array| pointer
-  add_semantic_error(expr_node, ERROR_TYPES_MISMATCH);
+  add_semantic_error(errors, expr_node, ERROR_TYPES_MISMATCH);
 
   return false;
 }
 
-const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
-  assert(expr != nullptr);
+const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_table, const AstNode *expr) {
+  LL_ASSERT(symbol_table != nullptr);
+  LL_ASSERT(expr != nullptr);
 
   switch (expr->node_type) {
   case AstNodeType::AstBinaryExpr: {
-    auto &bin_expr = expr->binary_expr;
+    const AstBinaryExpr &bin_expr = expr->binary_expr;
     switch (bin_expr.bin_op) {
+    // BOOLEAN OPERATORS
     case BinaryExprType::EQUALS:
     case BinaryExprType::NOT_EQUALS:
     case BinaryExprType::GREATER:
@@ -397,56 +444,82 @@ const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
     case BinaryExprType::GREATER_OR_EQUALS:
     case BinaryExprType::LESS_OR_EQUALS:
       return get_type_node("bool");
-    default:
-      auto type0 = get_expr_type(bin_expr.left_expr);
-      auto type1 = get_expr_type(bin_expr.right_expr);
-      if (check_type_compat(type0, type1, expr))
-        return get_best_type(type0, type1);
-      return nullptr;
-    }
-    LL_UNREACHEABLE;
-  }
+    case BinaryExprType::LSHIFT:
+    case BinaryExprType::RSHIFT:
+      return get_expr_type(errors, symbol_table, bin_expr.left_expr);
+    default: {
+      auto typeL = get_expr_type(errors, symbol_table, bin_expr.left_expr);
+      auto typeR = get_expr_type(errors, symbol_table, bin_expr.right_expr);
+
+      // if are null then an error happened
+      if (typeL == nullptr || typeR == nullptr)
+        return nullptr;
+
+      // if only one of them is a constant
+      if ((bin_expr.left_expr->node_type != AstNodeType::AstConstValue) !=
+          (bin_expr.right_expr->node_type != AstNodeType::AstConstValue)) {
+        // if they are not compatibles
+        if (typeL->ast_type.type_id != typeR->ast_type.type_id) {
+          return nullptr;
+        }
+
+        // if they are numbers
+        LL_ASSERT(typeL->ast_type.type_id == AstTypeId::Integer || typeL->ast_type.type_id == AstTypeId::FloatingPoint);
+
+        return bin_expr.left_expr->node_type == AstNodeType::AstConstValue ? typeR : typeL;
+      }
+
+      // if they are not the same return nullptr
+      if (typeL != typeR)
+        return nullptr;
+
+      // else return any of them
+      return typeL;
+    } // default
+    } // switch
+  }   // BinaryExpr
   case AstNodeType::AstUnaryExpr: {
-    auto &unary_expr = expr->unary_expr;
-    switch (unary_expr.op) {
-    case UnaryExprType::NOT:
+    const AstUnaryExpr &unary_expr = expr->unary_expr;
+
+    if (unary_expr.op == UnaryExprType::NOT)
       return get_type_node("bool");
-    default:
-      return get_expr_type(unary_expr.expr);
-    }
+
+    return get_expr_type(errors, symbol_table, unary_expr.expr);
   }
   case AstNodeType::AstFuncCallExpr: {
-    auto func_node = resolve_function_variable(std::string(expr->func_call.fn_name), expr);
-    return get_expr_type(func_node);
+    const AstNode **func_node = &expr->func_call.fn_ref;
+    if (!*func_node)
+      *func_node = resolve_function_variable(errors, symbol_table, std::string(expr->func_call.fn_name), expr);
+
+    return get_expr_type(errors, symbol_table, *func_node);
   }
   case AstNodeType::AstFuncDef: {
-    auto &proto_node = expr->function_def.proto->function_proto;
-    return proto_node.return_type;
+    return expr->function_def.proto->function_proto.return_type;
   }
   case AstNodeType::AstFuncProto: {
-    auto &proto_node = expr->function_proto;
-    return proto_node.return_type;
+    return expr->function_proto.return_type;
   }
   case AstNodeType::AstSymbol: {
     // TODO(pablo96): should make it posible to resolve function names as func pointers
-    auto name = std::string(expr->symbol.cached_name);
-    auto var_node = resolve_function_variable(name, expr);
+    std::string name = std::string(expr->symbol.cached_name);
+
+    const AstNode *var_node = resolve_function_variable(errors, symbol_table, name, expr);
     if (!var_node) {
       return nullptr;
     }
-    if (var_node->node_type == AstNodeType::AstVarDef) {
+
+    switch (var_node->node_type) {
+    case AstNodeType::AstVarDef:
       return var_node->var_def.type;
-    }
-    if (var_node->node_type == AstNodeType::AstParamDecl) {
+    case AstNodeType::AstParamDecl:
       return var_node->param_decl.type;
-    }
-    if (var_node->node_type == AstNodeType::AstFuncDef) {
+    case AstNodeType::AstFuncDef:
       return var_node->function_def.proto->function_proto.return_type;
-    }
-    if (var_node->node_type == AstNodeType::AstFuncProto) {
+    case AstNodeType::AstFuncProto:
       return var_node->function_proto.return_type;
-    }
-    LL_UNREACHEABLE;
+    default:
+      LL_UNREACHEABLE;
+    } // var_node type switch
   }
   case AstNodeType::AstConstValue: {
     auto &const_value = expr->const_value;
@@ -463,38 +536,42 @@ const AstNode *SemanticAnalyzer::get_expr_type(const AstNode *expr) {
       return get_type_node("u32");
     default:
       LL_UNREACHEABLE;
-    }
+    } // constant type switch
   }
   default:
     LL_UNREACHEABLE;
-  }
+  } // node type switch
 }
 
-bool is_ret_stmnt(const AstNode *stmnt) {
-  return stmnt->node_type == AstNodeType::AstUnaryExpr && stmnt->unary_expr.op == UnaryExprType::RET;
-}
+void add_semantic_error(std::vector<Error> &errors, const AstNode *in_node, const char *in_msg, ...) {
+  va_list ap, ap2;
+  va_start(ap, in_msg);
+  va_copy(ap2, ap);
 
-const AstNode *get_best_type(const AstNode *type_node0, const AstNode *type_node1) {
-  assert(type_node0 != nullptr);
-  assert(type_node1 != nullptr);
-  assert(type_node0->node_type == AstNodeType::AstType);
-  assert(type_node1->node_type == AstNodeType::AstType);
+  int len1 = snprintf(nullptr, 0, in_msg, ap);
+  LL_ASSERT(len1 >= 0);
 
-  const AstType &type0 = type_node0->ast_type;
-  const AstType &type1 = type_node1->ast_type;
+  const int CAPACITY = len1 + 1;
+  char *msg = new char[CAPACITY];
 
-  if (type1.type_id == AstTypeId::Pointer || type1.type_id == AstTypeId::Array) {
-    return get_best_type(type0.child_type, type1.child_type);
-  }
+  int len2 = snprintf(msg, CAPACITY, in_msg, ap2);
+  LL_ASSERT(len2 >= 0);
+  // assert(len2 == len1);
 
-  return type0.type_info->bit_size > type1.type_info->bit_size ? type_node0 : type_node1;
+  Error error(ERROR_TYPE::ERROR, in_node->line, in_node->column, in_node->file_name, msg);
+  errors.push_back(error);
+
+  delete[] msg;
+
+  va_end(ap);
+  va_end(ap2);
 }
 
 void set_type_info(const AstNode *expr_node, const AstNode *type_node) {
-  assert(expr_node != nullptr);
-  assert(expr_node->node_type != AstNodeType::AstType);
-  assert(type_node != nullptr);
-  assert(type_node->node_type == AstNodeType::AstType);
+  LL_ASSERT(expr_node != nullptr);
+  LL_ASSERT(expr_node->node_type != AstNodeType::AstType);
+  LL_ASSERT(type_node != nullptr);
+  LL_ASSERT(type_node->node_type == AstNodeType::AstType);
 
   switch (expr_node->node_type) {
   case AstNodeType::AstConstValue:
@@ -506,4 +583,22 @@ void set_type_info(const AstNode *expr_node, const AstNode *type_node) {
   default:
     return;
   }
+}
+
+bool analize_param(std::vector<Error> &errors, Table *symbol_table, const AstNode *in_node) {
+  LL_ASSERT(symbol_table != nullptr);
+  LL_ASSERT(in_node != nullptr);
+  LL_ASSERT(in_node->node_type != AstNodeType::AstParamDecl);
+
+  // add param as local variable
+  symbol_table->add_symbol(std::string(in_node->param_decl.name), SymbolType::VAR, in_node);
+
+  // variable declaration and definition
+  if (in_node->param_decl.initializer) {
+    add_semantic_error(errors, in_node, ERROR_UNSUPPORTED_PARAM_INITIALIZER);
+    return false;
+  }
+
+  // just a unitialized variable
+  return true;
 }
