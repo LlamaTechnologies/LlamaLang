@@ -18,10 +18,10 @@ TEST(SemanticTypes, BoolVoid) {
   auto node_type_0 = get_type_node("bool");
   auto node_type_1 = get_type_node("bool");
 
-  SemanticAnalyzer analizer(errors);
-  analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+  ASSERT_TRUE(is_ok);
 }
 
 TEST(SemanticTypes, Pointer) {
@@ -40,10 +40,10 @@ TEST(SemanticTypes, Pointer) {
   node_type_1->ast_type.type_id = AstTypeId::Pointer;
   node_type_1->ast_type.child_type = node_child_type_1;
 
-  SemanticAnalyzer analizer(errors);
-  analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+  ASSERT_TRUE(is_ok);
 
   delete node_expr;
   delete node_type_0;
@@ -66,10 +66,10 @@ TEST(SemanticTypes, Array) {
   node_type_1->ast_type.type_id = AstTypeId::Array;
   node_type_1->ast_type.child_type = node_child_type_1;
 
-  SemanticAnalyzer analizer(errors);
-  analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+  ASSERT_TRUE(is_ok);
 
   delete node_expr;
   delete node_type_0;
@@ -83,10 +83,10 @@ TEST(SemanticTypes, Integer) {
   auto node_type_0 = get_type_node("i32");
   auto node_type_1 = get_type_node("i32");
 
-  SemanticAnalyzer analizer(errors);
-  analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+  ASSERT_TRUE(is_ok);
 
   delete node_expr;
   delete node_type_0;
@@ -100,10 +100,10 @@ TEST(SemanticTypes, Float) {
   auto node_type_0 = get_type_node("f32");
   auto node_type_1 = get_type_node("f32");
 
-  SemanticAnalyzer analizer(errors);
-  analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 0L);
+  ASSERT_TRUE(is_ok);
 
   delete node_expr;
   delete node_type_0;
@@ -133,7 +133,7 @@ TEST(SemanticVariableDefinitions, GlobalVariable) {
   bool is_valid = analizer.analizeVarDef(var_def_node, is_global);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   // clean:
   delete var_def_node;
@@ -154,7 +154,7 @@ TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
   bool is_valid = analizer.analizeVarDef(var_def_node, is_global);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   // clean:
   delete var_def_node;
@@ -174,7 +174,7 @@ TEST(SemanticExpressions, ConstantValue) {
   bool is_valid = analizer.analizeExpr(const_value_node);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   // clean:
   delete const_value_node;
@@ -202,7 +202,7 @@ TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
   ASSERT_EQ(symbol_node->symbol.type, SymbolType::VAR);
 
   // clean:
@@ -233,7 +233,7 @@ TEST(SemanticExpressions, UnaryExprBool) {
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   // clean:
   delete unary_epxr_node;
@@ -261,7 +261,7 @@ TEST(SemanticExpressions, UnaryExprNumber) {
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   // clean:
   delete unary_epxr_node;
@@ -289,7 +289,7 @@ TEST(SemanticExpressions, UnaryExprNumberBitwiseOp) {
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   delete unary_epxr_node;
 }
@@ -319,7 +319,7 @@ TEST(SemanticExpressions, BinaryExprBitShift) {
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   delete binary_epxr_node;
 }
@@ -357,9 +357,9 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
   bool is_valid = analizer.analizeExpr(binary_epxr_node);
 
   // then:
-  ASSERT_EQ(is_valid_var_def, true);
+  ASSERT_TRUE(is_valid_var_def);
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   delete binary_epxr_node;
   delete var_def_node;
@@ -398,9 +398,9 @@ TEST(SemanticExpressions, BinaryExprAssignOperator) {
   bool is_valid = analizer.analizeExpr(binary_epxr_node);
 
   // then:
-  ASSERT_EQ(is_valid_var_def, true);
+  ASSERT_TRUE(is_valid_var_def);
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid);
 
   delete binary_epxr_node;
   delete var_def_node;
@@ -456,8 +456,8 @@ TEST(SemanticExpressions, FunctionNoRet) {
   bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
 
   // then:
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid);
   ASSERT_EQ(errors.size(), 0L);
 
   delete function_node;
@@ -497,8 +497,8 @@ TEST(SemanticExpressions, FunctionRetConstant) {
   const AstNode *block_node = function_def_node->function_def.block;
   ASSERT_EQ(block_node->block.statements.size(), 1);
 
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid, true);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid);
 
   const AstNode *ret_node = block_node->block.statements[0];
   ASSERT_NE(ret_node, nullptr);
@@ -550,9 +550,9 @@ TEST(SemanticExpressions, FunctionCallNoParam) {
   bool is_valid_call = analizer.analizeExpr(function_call_node);
 
   // then:
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid_block, true);
-  ASSERT_EQ(is_valid_call, true);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_block);
+  ASSERT_TRUE(is_valid_call);
   ASSERT_EQ(errors.size(), 0L);
 
   // clean:
@@ -605,9 +605,9 @@ TEST(SemanticExpressions, FunctionCallWithParams) {
   bool is_valid_call = analizer.analizeExpr(function_call_node);
 
   // then:
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid_block, true);
-  ASSERT_EQ(is_valid_call, true);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_block);
+  ASSERT_TRUE(is_valid_call);
   ASSERT_EQ(errors.size(), 0L);
 
   // clean:

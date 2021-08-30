@@ -16,11 +16,10 @@ TEST(SemanticTypes, DistinctTypes) {
   auto node_type_0 = get_type_node("bool");
   auto node_type_1 = get_type_node("i32");
 
-  SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_ok);
 }
 
 TEST(SemanticTypes, PointerDistinctTypes) {
@@ -39,11 +38,10 @@ TEST(SemanticTypes, PointerDistinctTypes) {
   node_type_1->ast_type.type_id = AstTypeId::Pointer;
   node_type_1->ast_type.child_type = node_child_type_1;
 
-  SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_ok);
 }
 
 TEST(SemanticTypes, ArrayDistinctTypes) {
@@ -62,11 +60,10 @@ TEST(SemanticTypes, ArrayDistinctTypes) {
   node_type_1->ast_type.type_id = AstTypeId::Array;
   node_type_1->ast_type.child_type = node_child_type_1;
 
-  SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.check_types(node_type_0, node_type_1, node_expr);
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_ok);
 }
 
 //==================================================================================
@@ -88,7 +85,7 @@ TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
   bool is_valid = analizer.analizeVarDef(var_def_node, is_global);
 
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
@@ -111,7 +108,7 @@ TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
   bool is_valid = analizer.analizeVarDef(var_def_node, is_global);
 
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 //==================================================================================
@@ -144,7 +141,7 @@ TEST(SemanticExpressions, ResolveUnknownVariableSymbol) {
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticExpressions, UnaryExprBoolWrongOp) {
@@ -169,7 +166,7 @@ TEST(SemanticExpressions, UnaryExprBoolWrongOp) {
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticExpressions, UnaryExprNumberWrongOp) {
@@ -195,7 +192,7 @@ TEST(SemanticExpressions, UnaryExprNumberWrongOp) {
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticExpressions, BinaryExprBitShiftNoIntRExpr) {
@@ -221,7 +218,7 @@ TEST(SemanticExpressions, BinaryExprBitShiftNoIntRExpr) {
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticExpressions, BinaryExprBitShiftUnknownSymbol) {
@@ -250,7 +247,7 @@ TEST(SemanticExpressions, BinaryExprBitShiftUnknownSymbol) {
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
@@ -279,7 +276,7 @@ TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
@@ -317,7 +314,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
   // then:
   ASSERT_EQ(is_valid_var_def, true);
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
@@ -346,7 +343,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_FALSE(is_valid);
 }
 
 //==================================================================================
@@ -394,8 +391,8 @@ TEST(SemanticExpressions, FunctionInvalidStmnt) {
   bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
 
   // then:
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_FALSE(is_valid);
   ASSERT_GT(errors.size(), 0L);
 }
 
@@ -445,8 +442,8 @@ TEST(SemanticExpressions, FunctionNoReqRet) {
   bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
 
   // then:
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid, false);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_FALSE(is_valid);
   ASSERT_GT(errors.size(), 0L);
 }
 
@@ -467,7 +464,7 @@ TEST(SemanticExpressions, FunctionCallUndeclaredFn) {
   bool is_valid_call = analizer.analizeExpr(function_call_node);
 
   // then:
-  ASSERT_EQ(is_valid_call, false);
+  ASSERT_FALSE(is_valid_call);
   ASSERT_GT(errors.size(), 0L);
 }
 
@@ -496,8 +493,8 @@ TEST(SemanticExpressions, FunctionCallSymbolNotAFn) {
   bool is_valid_call = analizer.analizeExpr(function_call_node);
 
   // then:
-  ASSERT_EQ(is_valid_var, true);
-  ASSERT_EQ(is_valid_call, false);
+  ASSERT_TRUE(is_valid_var);
+  ASSERT_FALSE(is_valid_call);
   ASSERT_GT(errors.size(), 0L);
 }
 
@@ -537,9 +534,9 @@ TEST(SemanticExpressions, FunctionCallParamsCountMismatch) {
   bool is_valid_call = analizer.analizeExpr(function_call_node);
 
   // then:
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid_block, true);
-  ASSERT_EQ(is_valid_call, false);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_block);
+  ASSERT_FALSE(is_valid_call);
   ASSERT_GT(errors.size(), 0L);
 }
 
@@ -587,8 +584,8 @@ TEST(SemanticExpressions, FunctionCallParamsTypeMismatch) {
   bool is_valid_call = analizer.analizeExpr(function_call_node);
 
   // then:
-  ASSERT_EQ(is_valid_proto, true);
-  ASSERT_EQ(is_valid_block, true);
-  ASSERT_EQ(is_valid_call, false);
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_block);
+  ASSERT_FALSE(is_valid_call);
   ASSERT_GT(errors.size(), 0L);
 }
