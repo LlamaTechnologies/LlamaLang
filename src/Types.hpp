@@ -23,5 +23,5 @@ struct TypesRepository {
   bool register_type(std::string_view in_name) noexcept;
 
 private:
-  std::unordered_map<std::string_view, const AstType> typesIds;
+  std::unordered_map<std::string_view, const AstType> types_id;
 };

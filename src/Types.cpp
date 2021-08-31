@@ -5,7 +5,7 @@ static TypesRepository *repository = nullptr;
 TypesRepository &TypesRepository::get() {
   if (!repository) {
     repository = new TypesRepository();
-    repository->typesIds = { { "i8", { AstTypeId::INTEGER, "i8", 8, true } },
+    repository->types_id = { { "i8", { AstTypeId::INTEGER, "i8", 8, true } },
                              { "i16", { AstTypeId::INTEGER, "i16", 16, true } },
                              { "i32", { AstTypeId::INTEGER, "i32", 32, true } },
                              { "i64", { AstTypeId::INTEGER, "i64", 64, true } },
@@ -26,17 +26,17 @@ TypesRepository &TypesRepository::get() {
 }
 
 const AstTypeId TypesRepository::get_type_id(std::string_view in_name) noexcept {
-  if (typesIds.find(in_name) == typesIds.end()) {
+  if (types_id.find(in_name) == types_id.end()) {
     return AstTypeId::UNKNOWN;
   }
-  return typesIds[in_name].type_id;
+  return types_id[in_name].type_id;
 }
 
 AstNode *TypesRepository::get_type_node(std::string_view in_name) noexcept {
-  if (typesIds.find(in_name) == typesIds.end()) {
+  if (types_id.find(in_name) == types_id.end()) {
     return nullptr;
   }
-  return AstNode::CreatePredefType(typesIds[in_name]);
+  return AstNode::CreatePredefType(types_id[in_name]);
 }
 
 bool TypesRepository::register_type(std::string_view in_name) noexcept { return true; }

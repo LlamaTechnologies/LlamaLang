@@ -189,13 +189,13 @@ int run_process(const std::string &in_program_path, const std::string &in_progra
 
 #ifdef LL_WIN32
 std::string get_path_to_program_by_name(const std::string &in_name) {
-  const unsigned int nBufferLength = MAX_PATH;
+  const unsigned int n_buffer_len = MAX_PATH;
 
-  char *buffer = new char[nBufferLength];
-  DWORD writenChars = SearchPathA(NULL, // null to make it search on the registry
-                                  in_name.c_str(), ".exe", nBufferLength, buffer, nullptr);
+  char *buffer = new char[n_buffer_len];
+  DWORD writen_chars = SearchPathA(NULL, // null to make it search on the registry
+                                   in_name.c_str(), ".exe", n_buffer_len, buffer, nullptr);
 
-  if (writenChars <= 0) {
+  if (writen_chars <= 0) {
     return "";
   }
   auto ret_val = std::string(buffer);
@@ -204,20 +204,20 @@ std::string get_path_to_program_by_name(const std::string &in_name) {
 }
 
 void handle_error() {
-  LPVOID lpMsgBuf = nullptr;
+  LPVOID lp_msg_buf = nullptr;
   DWORD error_code = GetLastError();
 
   DWORD no_error =
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
-                   error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *)&lpMsgBuf, 0, NULL);
+                   error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *)&lp_msg_buf, 0, NULL);
 
   if (!no_error) {
     console::write_line("error formatting msg");
   }
 
-  if (lpMsgBuf) {
-    console::write_line((char *)lpMsgBuf);
-    LocalFree(lpMsgBuf);
+  if (lp_msg_buf) {
+    console::write_line((char *)lp_msg_buf);
+    LocalFree(lp_msg_buf);
   }
 }
 

@@ -53,26 +53,26 @@ void LlvmIrGenerator::gen_fn_proto(const AstFnProto &in_func_proto, AstFnDef *in
   }
 
   // Function return type
-  llvm::Type *returnType = _translate_type(in_func_proto.return_type->ast_type);
+  llvm::Type *ret_type = _translate_type(in_func_proto.return_type->ast_type);
 
   // Function parameters
-  auto nodeParams = in_func_proto.params;
+  auto node_params = in_func_proto.params;
   std::vector<llvm::Type *> parameters;
-  for (auto param : nodeParams) {
+  for (auto param : node_params) {
     auto type = _translate_type(param->param_decl.type->ast_type);
     parameters.push_back(type);
   }
 
   // Function type
-  llvm::FunctionType *functionType = parameters.size() ? llvm::FunctionType::get(returnType, parameters, false)
-                                                       : llvm::FunctionType::get(returnType, false);
+  llvm::FunctionType *fn_type =
+    parameters.size() ? llvm::FunctionType::get(ret_type, parameters, false) : llvm::FunctionType::get(ret_type, false);
 
   // Function linkage type
-  llvm::Function::LinkageTypes linkageType = llvm::Function::LinkageTypes::LinkOnceODRLinkage;
+  llvm::Function::LinkageTypes linkage_type = llvm::Function::LinkageTypes::LinkOnceODRLinkage;
 
   // Create the function
   llvm::Function *function =
-    llvm::Function::Create(functionType, linkageType, std::string(in_func_proto.name), code_module);
+    llvm::Function::Create(fn_type, linkage_type, std::string(in_func_proto.name), code_module);
   function->setCallingConv(llvm::CallingConv::C);
 
   // Add to symbols
@@ -167,8 +167,8 @@ void LlvmIrGenerator::gen_var_def(const AstVarDef &in_var_def, const bool is_glo
 
   if (is_global) {
     code_module->getOrInsertGlobal(name, type);
-    auto globalVar = code_module->getNamedGlobal(name);
-    in_var_def.llvm_value = globalVar;
+    auto global_var = code_module->getNamedGlobal(name);
+    in_var_def.llvm_value = global_var;
 
     llvm::Constant *init_value;
     if (in_var_def.initializer) {
@@ -178,7 +178,7 @@ void LlvmIrGenerator::gen_var_def(const AstVarDef &in_var_def, const bool is_glo
       init_value = getConstantDefaultValue(in_var_def.type->ast_type, type);
     }
 
-    globalVar->setInitializer(init_value);
+    global_var->setInitializer(init_value);
   } else {
     in_var_def.llvm_value = builder->CreateAlloca(type, nullptr, name);
 
@@ -194,8 +194,8 @@ llvm::Value *LlvmIrGenerator::gen_unary_expr(const AstUnaryExpr &in_unary_expr) 
   switch (in_unary_expr.op) {
   case UnaryExprType::RET: {
     if (in_unary_expr.expr) {
-      auto retval = gen_expr(in_unary_expr.expr);
-      return builder->CreateRet(retval);
+      auto ret_val = gen_expr(in_unary_expr.expr);
+      return builder->CreateRet(ret_val);
     }
     return builder->CreateRetVoid();
   }
@@ -469,9 +469,9 @@ llvm::Value *LlvmIrGenerator::_gen_printf_decl() {
   llvm::Type *pty = llvm::PointerType::get(llvm::Type::getInt8Ty(context), 0);
   params.push_back(pty);
 
-  llvm::FunctionType *FuncTy9 = llvm::FunctionType::get(llvm::IntegerType::getInt32Ty(context), params, true);
+  llvm::FunctionType *fn_type = llvm::FunctionType::get(llvm::IntegerType::getInt32Ty(context), params, true);
 
-  auto func_printf = llvm::Function::Create(FuncTy9, llvm::GlobalValue::ExternalLinkage, "printf", code_module);
+  auto func_printf = llvm::Function::Create(fn_type, llvm::GlobalValue::ExternalLinkage, "printf", code_module);
   func_printf->setCallingConv(llvm::CallingConv::C);
 
   return func_printf;

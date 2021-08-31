@@ -511,34 +511,34 @@ const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
     case BinaryExprType::RSHIFT:
       return get_expr_type(errors, symbol_table, bin_expr.left_expr);
     default: {
-      auto typeL = get_expr_type(errors, symbol_table, bin_expr.left_expr);
-      auto typeR = get_expr_type(errors, symbol_table, bin_expr.right_expr);
+      auto type_left = get_expr_type(errors, symbol_table, bin_expr.left_expr);
+      auto type_right = get_expr_type(errors, symbol_table, bin_expr.right_expr);
 
       // if are null then an error happened
-      if (typeL == nullptr || typeR == nullptr)
+      if (type_left == nullptr || type_right == nullptr)
         return nullptr;
 
       // if only one of them is a constant
       if ((bin_expr.left_expr->node_type != AstNodeType::AST_CONST_VALUE) !=
           (bin_expr.right_expr->node_type != AstNodeType::AST_CONST_VALUE)) {
         // if they are not compatibles
-        if (typeL->ast_type.type_id != typeR->ast_type.type_id) {
+        if (type_left->ast_type.type_id != type_right->ast_type.type_id) {
           return nullptr;
         }
 
         // if they are numbers
-        LL_ASSERT(typeL->ast_type.type_id == AstTypeId::INTEGER ||
-                  typeL->ast_type.type_id == AstTypeId::FLOATING_POINT);
+        LL_ASSERT(type_left->ast_type.type_id == AstTypeId::INTEGER ||
+                  type_left->ast_type.type_id == AstTypeId::FLOATING_POINT);
 
-        return bin_expr.left_expr->node_type == AstNodeType::AST_CONST_VALUE ? typeR : typeL;
+        return bin_expr.left_expr->node_type == AstNodeType::AST_CONST_VALUE ? type_right : type_left;
       }
 
       // if they are not the same return nullptr
-      if (typeL != typeR)
+      if (type_left != type_right)
         return nullptr;
 
       // else return any of them
-      return typeL;
+      return type_left;
     } // default
     } // switch
   }   // BinaryExpr
