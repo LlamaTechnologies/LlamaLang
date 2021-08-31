@@ -88,7 +88,8 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "*.def": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "cerrno": "cpp"
     },
     "cmake.configureOnOpen": true,
     "cmake.buildDirectory": "${workspaceFolder}/project",

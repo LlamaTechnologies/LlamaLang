@@ -4,6 +4,8 @@ methods snake_case
 
 private methods _snake_case
 
+static cpp functions _snake_case
+
 variables snake_case
 
 member variables snake_case
@@ -29,3 +31,5 @@ everything that wont be modified should be declared 'const'
 minimize the use of exceptions. always use the version without exceptions in std lib
 
 constexpr instead of #define
+
+every build should have no warnings!

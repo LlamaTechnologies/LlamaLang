@@ -2,6 +2,8 @@
 #include "error.hpp"
 
 #include <string.h>
+#include <string>
+#include <string_view>
 #include <vector>
 
 enum class TokenId
@@ -87,28 +89,22 @@ enum class INT_BASE
   HEXADECIMAL
 };
 
-#define MAX_NUMBER_DIGITS 40
+constexpr const size_t MAX_NUMBER_DIGITS = 40;
 
 struct IntToken {
-  char *number;
+  char number[MAX_NUMBER_DIGITS];
   size_t digits_count;
   INT_BASE base;
   bool is_negative;
 
-  IntToken() : digits_count(0), base(INT_BASE::DECIMAL), is_negative(false) {
-    number = new char[MAX_NUMBER_DIGITS];
-    memset(number, 0, MAX_NUMBER_DIGITS);
-  }
+  IntToken() : digits_count(0), base(INT_BASE::DECIMAL), is_negative(false) { memset(number, 0, MAX_NUMBER_DIGITS); }
 };
 
 struct FloatToken {
-  char *number;
+  char number[MAX_NUMBER_DIGITS];
   size_t digits_count;
 
-  FloatToken() : digits_count(0) {
-    number = new char[MAX_NUMBER_DIGITS];
-    memset(number, 0, MAX_NUMBER_DIGITS);
-  }
+  FloatToken() : digits_count(0) { memset(number, 0, MAX_NUMBER_DIGITS); }
 };
 
 struct Token {
@@ -129,15 +125,12 @@ struct Token {
       : id(TokenId::_EOF), start_pos(0L), end_pos(0L), start_line(0), start_column(0), file_name(in_file_name),
         int_lit() {}
 
-  ~Token() {}
+  virtual ~Token() {}
 
   Token(const Token &other)
       : id(other.id), start_pos(other.start_pos), end_pos(other.end_pos), start_line(other.start_line),
         start_column(other.start_column), file_name(other.file_name) {
     switch (id) {
-    case TokenId::INT_LIT:
-      int_lit = other.int_lit;
-      break;
     case TokenId::FLOAT_LIT:
       float_lit = other.float_lit;
       break;
@@ -145,6 +138,7 @@ struct Token {
       char_lit = other.char_lit;
       break;
     default:
+      int_lit = other.int_lit;
       break;
     }
   }
@@ -160,7 +154,18 @@ struct Token {
     start_pos = other.start_pos;
     end_pos = other.end_pos;
     file_name = other.file_name;
-    int_lit = other.int_lit;
+
+    switch (id) {
+    case TokenId::FLOAT_LIT:
+      float_lit = other.float_lit;
+      break;
+    case TokenId::UNICODE_CHAR:
+      char_lit = other.char_lit;
+      break;
+    default:
+      int_lit = other.int_lit;
+      break;
+    }
 
     return *this;
   }
@@ -173,9 +178,21 @@ typedef std::vector<std::string> Console;
 enum class TokenizerState;
 
 class Lexer {
+  Token current_token;
+  TokenizerState state;
+
+public:
+  std::string file_name;
+  std::string source;
+
+private:
+  std::vector<Token> tokens_vec;
+  std::vector<Token> comments_vec;
+  std::vector<Error> &errors;
+
   size_t cursor_pos;
-  size_t curr_line;
-  size_t curr_column;
+  size_t current_line;
+  size_t current_column;
   mutable size_t curr_index; // used to consume tokens
 
   size_t char_code_index;      // char_code char counter
@@ -186,17 +203,7 @@ class Lexer {
   bool is_trailing_underscore; // used to interpret number_number
   bool is_invalid_token;       // used to finish tokenizing a error tokens
 
-  TokenizerState state;
-  Token curr_token;
-
-public:
-  std::string file_name;
-  std::string source;
-
-private:
-  std::vector<Token> tokens_vec;
-  std::vector<Token> comments_vec;
-  std::vector<Error> &errors;
+  bool _padding; // not used, it is to have a clear visual of the struct size
 
 public:
   /**
@@ -224,13 +231,13 @@ public:
   friend Console print_tokens(Lexer &lexer);
 
 private:
-  friend void begin_token(Lexer &, const TokenId id) noexcept;
-  friend void end_token(Lexer &) noexcept;
-  friend void end_token_check_is_keyword(Lexer &) noexcept;
-  friend void reset_line(Lexer &) noexcept;
-  friend void invalid_char_error(Lexer &, uint8_t c) noexcept;
-  friend void tokenize_error(Lexer &, const char *format, ...) noexcept;
-  friend void handle_string_escape(Lexer &, uint8_t c) noexcept;
+  friend void _begin_token(Lexer &, const TokenId id) noexcept;
+  friend void _end_token(Lexer &) noexcept;
+  friend void _end_token_check_is_keyword(Lexer &) noexcept;
+  friend void _reset_line(Lexer &) noexcept;
+  friend void _invalid_char_error(Lexer &, uint8_t c) noexcept;
+  friend void _tokenize_error(Lexer &, const char *format, ...) noexcept;
+  friend void _handle_string_escape(Lexer &, uint8_t c) noexcept;
 };
 
 Console print_tokens(Lexer &lexer);
