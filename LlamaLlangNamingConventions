@@ -25,3 +25,5 @@ enums should be enum class
 everything that wont be modified should be declared 'const'
 
 minimize the use of exceptions. always use the version without exceptions in std lib
+
+constexpr instead of #define

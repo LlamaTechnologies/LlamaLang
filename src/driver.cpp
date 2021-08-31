@@ -15,9 +15,9 @@ static std::vector<char *> *split_string(const std::string &in_str, const char i
 static std::string get_path_to_program_by_name(const std::string &in_name);
 static int run_process(const std::string &in_program_path, const std::string &in_program_args);
 
-#define ARG_SRC_FILE "-s"
-#define ARG_OUT_NAME "-o"
-#define ARG_OUT_DIR "-O"
+constexpr const char *ARG_SRC_FILE = "-s";
+constexpr const char *ARG_OUT_NAME = "-o";
+constexpr const char *ARG_OUT_DIR = "-O";
 
 Driver::Driver() : current_dir(get_current_dir()) {}
 
