@@ -33,3 +33,5 @@ minimize the use of exceptions. always use the version without exceptions in std
 constexpr instead of #define
 
 every build should have no warnings!
+
+annotate with noexcept always and LL_NODISCARD as needed

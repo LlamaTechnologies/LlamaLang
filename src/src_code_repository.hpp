@@ -14,14 +14,15 @@ class Parser;
 
 struct RepositorySrcCode {
   static RepositorySrcCode &get();
-  bool has_file(std::string_view in_file_name);
+
+  bool has_file(std::string_view in_file_name) const;
   AstNode *get_source_code(std::string_view in_file_name);
 
 private:
   explicit RepositorySrcCode() = default;
   friend class Parser;
 
-  void add_source_code(const std::string_view in_file_name, AstNode *in_source_code);
+  void _add_source_code(const std::string_view in_file_name, AstNode *in_source_code);
 
 private:
   std::unordered_map<std::string_view, AstNode *> src_codes;

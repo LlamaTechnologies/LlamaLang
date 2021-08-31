@@ -31,7 +31,7 @@ struct Table {
   using TableMap = std::unordered_map<std::string, Table *>;
 
   Table *parent;
-  std::string name;
+  const std::string name;
 
   Table(const std::string &in_name, Table *in_parent) : parent(in_parent), name(in_name) {}
 
@@ -52,8 +52,8 @@ struct Table {
   void remove_last_symbol();
 
 private:
-  TableMap children_scopes;
-  SymbolMap symbols;
   std::string last_symbol_key;
   std::string last_child_key;
+  TableMap children_scopes;
+  SymbolMap symbols;
 };

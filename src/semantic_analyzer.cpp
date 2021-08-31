@@ -13,8 +13,8 @@
 #define IS_RET_STATEMENT(node) \
   node->node_type == AstNodeType::AST_UNARY_EXPR && node->unary_expr.op == UnaryExprType::RET
 
-static bool analize_param(std::vector<Error> &errors, Table *symbol_table, const AstNode *in_node);
-static void set_type_info(const AstNode *expr_node, const AstNode *type_node);
+static bool _analize_param(std::vector<Error> &errors, Table *symbol_table, const AstNode *in_node);
+static void _set_type_info(const AstNode *expr_node, const AstNode *type_node);
 
 //----- START PRIMARY CHECK FUNCTIONS -----
 
@@ -47,7 +47,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
       return false;
     }
 
-    set_type_info(var_def.initializer, var_def.type);
+    _set_type_info(var_def.initializer, var_def.type);
     return true;
   }
 
@@ -67,7 +67,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
       return false;
     }
 
-    set_type_info(var_def.initializer, var_def.type);
+    _set_type_info(var_def.initializer, var_def.type);
     return true;
   }
 
@@ -99,7 +99,7 @@ bool SemanticAnalyzer::analizeFuncProto(const AstNode *in_proto_node) {
   // and add them to the function's symbol table
   bool has_no_error = true;
   for (AstNode *param : func_proto.params) {
-    bool param_ok = analize_param(errors, symbol_table, param);
+    bool param_ok = _analize_param(errors, symbol_table, param);
     has_no_error = has_no_error && param_ok;
   }
 
@@ -216,10 +216,10 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       if (l_is_const != r_is_const) {
         if (bin_expr.left_expr->node_type == AstNodeType::AST_CONST_VALUE) {
           const AstNode *l_const_value = bin_expr.left_expr;
-          set_type_info(l_const_value, r_expr_type_node);
+          _set_type_info(l_const_value, r_expr_type_node);
         } else if (bin_expr.right_expr->node_type == AstNodeType::AST_CONST_VALUE) {
           const AstNode *r_const_value = bin_expr.right_expr;
-          set_type_info(r_const_value, l_expr_type_node);
+          _set_type_info(r_const_value, l_expr_type_node);
         }
       } else // if both are NOT a constant check their types
         if (!check_compatible_types(errors, l_expr_type_node, r_expr_type_node, in_expr)) {
@@ -285,7 +285,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
         if (!analizeExpr(arg))
           continue;
 
-        set_type_info(arg, get_type_node("i32"));
+        _set_type_info(arg, TypesRepository::get().get_type_node("i32"));
       }
       return true;
     }
@@ -316,7 +316,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       bool is_compat = check_types(errors, param_type, arg_type, in_expr);
 
       if (is_compat && arg->node_type == AstNodeType::AST_CONST_VALUE) {
-        set_type_info(arg, param_type);
+        _set_type_info(arg, param_type);
       }
 
       i++;
@@ -355,7 +355,7 @@ bool SemanticAnalyzer::check_and_set_type(const AstNode *in_node, const AstNode 
     return false;
   }
 
-  set_type_info(expr_node, l_type_node);
+  _set_type_info(expr_node, l_type_node);
   return true;
 }
 
@@ -493,6 +493,8 @@ const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
   LL_ASSERT(symbol_table != nullptr);
   LL_ASSERT(expr != nullptr);
 
+  TypesRepository types_repository = TypesRepository::get();
+
   switch (expr->node_type) {
   case AstNodeType::AST_BINARY_EXPR: {
     const AstBinaryExpr &bin_expr = expr->binary_expr;
@@ -504,7 +506,7 @@ const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
     case BinaryExprType::LESS:
     case BinaryExprType::GREATER_OR_EQUALS:
     case BinaryExprType::LESS_OR_EQUALS:
-      return get_type_node("bool");
+      return types_repository.get_type_node("bool");
     case BinaryExprType::LSHIFT:
     case BinaryExprType::RSHIFT:
       return get_expr_type(errors, symbol_table, bin_expr.left_expr);
@@ -525,7 +527,8 @@ const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
         }
 
         // if they are numbers
-        LL_ASSERT(typeL->ast_type.type_id == AstTypeId::INTEGER || typeL->ast_type.type_id == AstTypeId::FLOATING_POINT);
+        LL_ASSERT(typeL->ast_type.type_id == AstTypeId::INTEGER ||
+                  typeL->ast_type.type_id == AstTypeId::FLOATING_POINT);
 
         return bin_expr.left_expr->node_type == AstNodeType::AST_CONST_VALUE ? typeR : typeL;
       }
@@ -543,7 +546,7 @@ const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
     const AstUnaryExpr &unary_expr = expr->unary_expr;
 
     if (unary_expr.op == UnaryExprType::NOT)
-      return get_type_node("bool");
+      return types_repository.get_type_node("bool");
 
     return get_expr_type(errors, symbol_table, unary_expr.expr);
   }
@@ -586,15 +589,15 @@ const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
     auto &const_value = expr->const_value;
     switch (const_value.type) {
     case ConstValueType::BOOL:
-      return get_type_node("bool");
+      return types_repository.get_type_node("bool");
     case ConstValueType::FLOAT:
-      return get_type_node("f128");
+      return types_repository.get_type_node("f128");
     case ConstValueType::INT:
       if (const_value.is_negative)
-        return get_type_node("i128");
-      return get_type_node("u128");
+        return types_repository.get_type_node("i128");
+      return types_repository.get_type_node("u128");
     case ConstValueType::CHAR:
-      return get_type_node("u32");
+      return types_repository.get_type_node("u32");
     default:
       LL_UNREACHEABLE;
     } // constant type switch
@@ -628,7 +631,7 @@ void add_semantic_error(std::vector<Error> &errors, const AstNode *in_node, cons
   va_end(ap2);
 }
 
-void set_type_info(const AstNode *expr_node, const AstNode *type_node) {
+void _set_type_info(const AstNode *expr_node, const AstNode *type_node) {
   LL_ASSERT(expr_node != nullptr);
   LL_ASSERT(expr_node->node_type != AstNodeType::AST_TYPE);
   LL_ASSERT(type_node != nullptr);
@@ -646,7 +649,7 @@ void set_type_info(const AstNode *expr_node, const AstNode *type_node) {
   }
 }
 
-bool analize_param(std::vector<Error> &errors, Table *symbol_table, const AstNode *in_node) {
+bool _analize_param(std::vector<Error> &errors, Table *symbol_table, const AstNode *in_node) {
   LL_ASSERT(symbol_table != nullptr);
   LL_ASSERT(in_node != nullptr);
   LL_ASSERT(in_node->node_type != AstNodeType::AST_PARAM_DECL);

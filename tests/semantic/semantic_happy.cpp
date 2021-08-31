@@ -13,10 +13,12 @@
 
 TEST(SemanticTypes, BoolBool) {
   std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
+
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
-  auto node_type_0 = get_type_node("bool");
-  auto node_type_1 = get_type_node("bool");
+  auto node_type_0 = types_repository.get_type_node("bool");
+  auto node_type_1 = types_repository.get_type_node("bool");
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
@@ -26,15 +28,17 @@ TEST(SemanticTypes, BoolBool) {
 
 TEST(SemanticTypes, Pointer) {
   std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
+
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
-  auto node_child_type_0 = get_type_node("i32");
+  auto node_child_type_0 = types_repository.get_type_node("i32");
 
   auto node_type_0 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
   node_type_0->ast_type.type_id = AstTypeId::POINTER;
   node_type_0->ast_type.child_type = node_child_type_0;
 
-  auto node_child_type_1 = get_type_node("i32");
+  auto node_child_type_1 = types_repository.get_type_node("i32");
 
   auto node_type_1 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
   node_type_1->ast_type.type_id = AstTypeId::POINTER;
@@ -52,15 +56,17 @@ TEST(SemanticTypes, Pointer) {
 
 TEST(SemanticTypes, Array) {
   std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
+
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
-  auto node_child_type_0 = get_type_node("i32");
+  auto node_child_type_0 = types_repository.get_type_node("i32");
 
   auto node_type_0 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
   node_type_0->ast_type.type_id = AstTypeId::ARRAY;
   node_type_0->ast_type.child_type = node_child_type_0;
 
-  auto node_child_type_1 = get_type_node("i32");
+  auto node_child_type_1 = types_repository.get_type_node("i32");
 
   auto node_type_1 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
   node_type_1->ast_type.type_id = AstTypeId::ARRAY;
@@ -78,10 +84,12 @@ TEST(SemanticTypes, Array) {
 
 TEST(SemanticTypes, Integer) {
   std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
+
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
-  auto node_type_0 = get_type_node("i32");
-  auto node_type_1 = get_type_node("i32");
+  auto node_type_0 = types_repository.get_type_node("i32");
+  auto node_type_1 = types_repository.get_type_node("i32");
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
@@ -95,10 +103,12 @@ TEST(SemanticTypes, Integer) {
 
 TEST(SemanticTypes, Float) {
   std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
+
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
-  auto node_type_0 = get_type_node("f32");
-  auto node_type_1 = get_type_node("f32");
+  auto node_type_0 = types_repository.get_type_node("f32");
+  auto node_type_1 = types_repository.get_type_node("f32");
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
@@ -117,8 +127,9 @@ TEST(SemanticTypes, Float) {
 TEST(SemanticVariableDefinitions, GlobalVariable) {
   bool is_global = true;
   std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
 
-  auto i32_type_node = get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("i32");
 
   auto const_value_node = new AstNode(AstNodeType::AST_CONST_VALUE, 0, 0, "");
   const_value_node->const_value.type = ConstValueType::INT;
@@ -142,8 +153,9 @@ TEST(SemanticVariableDefinitions, GlobalVariable) {
 TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
   bool is_global = false;
   std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
 
-  auto i32_type_node = get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("i32");
 
   auto var_def_node = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
   var_def_node->var_def.type = i32_type_node;
@@ -181,8 +193,10 @@ TEST(SemanticExpressions, ConstantValue) {
 }
 
 TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
+  TypesRepository types_repository = TypesRepository::get();
+
   // given: variable definition
-  auto i32_type_node = get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("i32");
 
   auto var_def_node = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
   var_def_node->var_def.type = i32_type_node;
@@ -325,8 +339,10 @@ TEST(SemanticExpressions, BinaryExprBitShift) {
 }
 
 TEST(SemanticExpressions, BinaryExprBoolOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
   // given: variable definition
-  auto i32_type_node = get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("i32");
 
   auto var_def_node = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
   var_def_node->var_def.type = i32_type_node;
@@ -366,8 +382,10 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
 }
 
 TEST(SemanticExpressions, BinaryExprAssignOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
   // given: variable definition
-  auto i32_type_node = get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("i32");
 
   auto var_def_node = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
   var_def_node->var_def.type = i32_type_node;
@@ -509,8 +527,10 @@ TEST(SemanticExpressions, FunctionRetConstant) {
 //==================================================================================
 
 TEST(SemanticExpressions, FunctionCallNoParam) {
+  TypesRepository types_repository = TypesRepository::get();
+
   // given: variable definition
-  auto void_type_node = get_type_node("void");
+  auto void_type_node = types_repository.get_type_node("void");
 
   // given: function proto -> fn my_func() void
   auto function_proto_node = new AstNode(AstNodeType::AST_FUNC_PROTO, 0, 0, "");
@@ -551,9 +571,11 @@ TEST(SemanticExpressions, FunctionCallNoParam) {
 }
 
 TEST(SemanticExpressions, FunctionCallWithParams) {
+  TypesRepository types_repository = TypesRepository::get();
+
   // given: types
-  auto void_type_node = get_type_node("void");
-  auto i32_type_node = get_type_node("i32");
+  auto void_type_node = types_repository.get_type_node("void");
+  auto i32_type_node = types_repository.get_type_node("i32");
 
   // given: arg -> constant integer
   auto const_value_node = new AstNode(AstNodeType::AST_CONST_VALUE, 0, 0, "");

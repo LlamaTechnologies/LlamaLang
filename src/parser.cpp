@@ -196,7 +196,7 @@ AstNode *Parser::parse_directive(const Lexer &lexer) noexcept {
     src_code_node->source_code.lexer = loaded_file_lexer;
 
     // add parsed source code to the repository.
-    RepositorySrcCode::get().add_source_code(file_name, src_code_node);
+    RepositorySrcCode::get()._add_source_code(file_name, src_code_node);
   } break;
   default:
     LL_UNREACHEABLE; // unimplemented directive
@@ -242,7 +242,8 @@ AstNode *Parser::parse_function_def(const Lexer &lexer) noexcept {
     return nullptr;
   }
 
-  auto func_node = new AstNode(AstNodeType::AST_FUNC_DEF, fn_token.start_line, fn_token.start_column, fn_token.file_name);
+  auto func_node =
+    new AstNode(AstNodeType::AST_FUNC_DEF, fn_token.start_line, fn_token.start_column, fn_token.file_name);
   func_prot_node->parent = func_node;
   block_node->parent = func_node;
   func_node->function_def.proto = func_prot_node;
@@ -599,7 +600,7 @@ AstNode *Parser::parse_type(const Lexer &lexer) noexcept {
 
     return type_node;
   } else if (token.id == TokenId::IDENTIFIER) {
-    return get_type_node(lexer.get_token_value(token));
+    return TypesRepository::get().get_type_node(lexer.get_token_value(token));
   } else if (token.id == TokenId::_EOF) {
     const Token &prev_token = lexer.get_previous_token();
     parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
