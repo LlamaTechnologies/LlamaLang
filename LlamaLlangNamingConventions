@@ -2,6 +2,8 @@ functions snake_case
 
 methods snake_case
 
+private methods _snake_case
+
 variables snake_case
 
 member variables snake_case

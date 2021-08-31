@@ -18,9 +18,9 @@ private:
 
   std::filesystem::path file_path;
 
-  bool parse_args(const char **argv, const int argc);
+  bool _parse_args(const char **argv, const int argc);
 
-  bool verify_file_path();
+  bool _verify_file_path();
 
-  bool get_tool_chain();
+  bool _get_tool_chain();
 };

@@ -9,9 +9,9 @@ enum class FILE_PATH_STATUS
   NOT_LLAMA_FILE
 };
 
-constexpr char *BITCODE_FILE_EXTENSION = ".bc";
-constexpr char *EXE_EXTENSION = ".exe";
-constexpr char *LL_FILE_EXTENSION = ".llama";
+constexpr const char *BITCODE_FILE_EXTENSION = ".bc";
+constexpr const char *EXE_EXTENSION = ".exe";
+constexpr const char *LL_FILE_EXTENSION = ".llama";
 
 std::filesystem::path resolve_path(std::string &in_file_path, std::error_code &error_code);
 

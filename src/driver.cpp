@@ -22,15 +22,15 @@ constexpr const char *ARG_OUT_DIR = "-O";
 Driver::Driver() : current_dir(get_current_dir()) {}
 
 bool Driver::setup(const char **argv, const int argc) {
-  if (!parse_args(argv, argc)) {
+  if (!_parse_args(argv, argc)) {
     return false;
   }
 
-  if (!verify_file_path()) {
+  if (!_verify_file_path()) {
     return false;
   }
 
-  if (!get_tool_chain()) {
+  if (!_get_tool_chain()) {
     return false;
   }
 
@@ -75,7 +75,7 @@ bool Driver::run() {
   #define LLD_NAME "clang"
 #endif
 
-bool Driver::get_tool_chain() {
+bool Driver::_get_tool_chain() {
   this->lld_path = LLD_NAME; // get_path_to_program_by_name(LLD_NAME);
   {
     if (this->lld_path.size() == 0) {
@@ -86,12 +86,12 @@ bool Driver::get_tool_chain() {
   return true;
 }
 
-bool Driver::verify_file_path() {
+bool Driver::_verify_file_path() {
   FILE_PATH_STATUS status = ::verify_file_path(this->file_path);
   return status == FILE_PATH_STATUS::OK;
 }
 
-bool Driver::parse_args(const char **argv, const int argc) {
+bool Driver::_parse_args(const char **argv, const int argc) {
   std::string source_name;
 
   for (size_t i = 1; i < argc; i += 2) {
