@@ -45,7 +45,7 @@ LlvmIrGenerator::~LlvmIrGenerator() {
   delete code_module;
 }
 
-void LlvmIrGenerator::generateFuncProto(const AstFuncProto &in_func_proto, AstFuncDef *in_function) {
+void LlvmIrGenerator::generateFuncProto(const AstFnProto &in_func_proto, AstFnDef *in_function) {
   // TODO(pablo96): Temp printf.
   if (in_func_proto.name == "printf") {
     generatePrintfDeclaration();
@@ -81,7 +81,7 @@ void LlvmIrGenerator::generateFuncProto(const AstFuncProto &in_func_proto, AstFu
   }
 }
 
-bool LlvmIrGenerator::generateFuncBlock(const AstBlock &in_func_block, AstFuncDef &in_function) {
+bool LlvmIrGenerator::generateFuncBlock(const AstBlock &in_func_block, AstFnDef &in_function) {
   // Create a new basic block to start insertion into.
   llvm::BasicBlock *BB = llvm::BasicBlock::Create(context, "", in_function.function);
   builder->SetInsertPoint(BB);
@@ -100,16 +100,16 @@ bool LlvmIrGenerator::generateFuncBlock(const AstBlock &in_func_block, AstFuncDe
   // Genereate body and finish the function with the return value
   for (auto stmnt : in_func_block.statements) {
     switch (stmnt->node_type) {
-    case AstNodeType::AstVarDef:
+    case AstNodeType::AST_VAR_DEF:
       generateVarDef(stmnt->var_def, false);
       break;
-    case AstNodeType::AstUnaryExpr:
+    case AstNodeType::AST_UNARY_EXPR:
       generateUnaryExpr(stmnt->unary_expr);
       break;
-    case AstNodeType::AstBinaryExpr:
+    case AstNodeType::AST_BINARY_EXPR:
       generateBinaryExpr(stmnt->binary_expr);
       break;
-    case AstNodeType::AstFuncCallExpr:
+    case AstNodeType::AST_FN_CALL_EXPR:
       generateFuncCallExpr(stmnt->func_call);
       break;
     default:
@@ -146,15 +146,15 @@ bool LlvmIrGenerator::generateFuncBlock(const AstBlock &in_func_block, AstFuncDe
 
 llvm::Value *LlvmIrGenerator::generateExpr(const AstNode *in_expr) {
   switch (in_expr->node_type) {
-  case AstNodeType::AstUnaryExpr:
+  case AstNodeType::AST_UNARY_EXPR:
     return generateUnaryExpr(in_expr->unary_expr);
-  case AstNodeType::AstBinaryExpr:
+  case AstNodeType::AST_BINARY_EXPR:
     return generateBinaryExpr(in_expr->binary_expr);
-  case AstNodeType::AstFuncCallExpr:
+  case AstNodeType::AST_FN_CALL_EXPR:
     return generateFuncCallExpr(in_expr->func_call);
-  case AstNodeType::AstSymbol:
+  case AstNodeType::AST_SYMBOL:
     return generateSymbolExpr(in_expr->symbol);
-  case AstNodeType::AstConstValue:
+  case AstNodeType::AST_CONST_VALUE:
     return translateConstant(in_expr->const_value);
   default:
     LL_UNREACHEABLE;
@@ -172,7 +172,7 @@ void LlvmIrGenerator::generateVarDef(const AstVarDef &in_var_def, const bool is_
 
     llvm::Constant *init_value;
     if (in_var_def.initializer) {
-      assert(in_var_def.initializer->node_type == AstNodeType::AstConstValue);
+      assert(in_var_def.initializer->node_type == AstNodeType::AST_CONST_VALUE);
       init_value = translateConstant(in_var_def.initializer->const_value);
     } else {
       init_value = getConstantDefaultValue(in_var_def.type->ast_type, type);
@@ -319,9 +319,9 @@ llvm::Value *LlvmIrGenerator::generateSymbolExpr(const AstSymbol &in_symbol) {
     return nullptr;
   }
   case SymbolType::VAR: {
-    if (in_symbol.data->node_type == AstNodeType::AstVarDef)
+    if (in_symbol.data->node_type == AstNodeType::AST_VAR_DEF)
       return builder->CreateLoad(in_symbol.data->var_def.llvm_value);
-    if (in_symbol.data->node_type == AstNodeType::AstParamDecl)
+    if (in_symbol.data->node_type == AstNodeType::AST_PARAM_DECL)
       return builder->CreateLoad(in_symbol.data->param_decl.llvm_value);
   }
     LL_FALLTHROUGH
@@ -330,7 +330,7 @@ llvm::Value *LlvmIrGenerator::generateSymbolExpr(const AstSymbol &in_symbol) {
   }
 }
 
-llvm::Value *LlvmIrGenerator::generateFuncCallExpr(const AstFuncCallExpr &in_call_expr) {
+llvm::Value *LlvmIrGenerator::generateFuncCallExpr(const AstFnCallExpr &in_call_expr) {
   if (in_call_expr.fn_name == "printf") {
     std::vector<llvm::Value *> args;
     for (auto arg_node : in_call_expr.args) {
@@ -378,7 +378,7 @@ llvm::Type *LlvmIrGenerator::translateType(const AstType &in_type) {
   case AstTypeId::Bool:
     return llvm::Type::getInt1Ty(context);
   case AstTypeId::Integer:
-    switch (in_type.type_info->bit_size) {
+    switch (in_type.type_info.bit_size) {
     case 8:
       return llvm::Type::getInt8Ty(context);
     case 16:
@@ -394,11 +394,11 @@ llvm::Type *LlvmIrGenerator::translateType(const AstType &in_type) {
     }
     break;
   case AstTypeId::FloatingPoint:
-    if (in_type.type_info->bit_size == 32)
+    if (in_type.type_info.bit_size == 32)
       return llvm::Type::getFloatTy(context);
-    if (in_type.type_info->bit_size == 64)
+    if (in_type.type_info.bit_size == 64)
       return llvm::Type::getDoubleTy(context);
-    if (in_type.type_info->bit_size == 128)
+    if (in_type.type_info.bit_size == 128)
       return llvm::Type::getFP128Ty(context);
     LL_FALLTHROUGH
   default:
@@ -454,7 +454,7 @@ llvm::Constant *getConstantDefaultValue(const AstType &in_type, llvm::Type *in_l
   switch (in_type.type_id) {
   case AstTypeId::Bool:
   case AstTypeId::Integer:
-    return llvm::ConstantInt::get(in_llvm_type, 0, in_type.type_info->is_signed);
+    return llvm::ConstantInt::get(in_llvm_type, 0, in_type.type_info.is_signed);
   case AstTypeId::FloatingPoint:
     return llvm::ConstantFP::get(in_llvm_type, 0.0);
   case AstTypeId::Void:

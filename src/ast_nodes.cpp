@@ -2,14 +2,14 @@
 
 #include "lexer.hpp"
 
-static std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
+static const std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
 
 const std::string get_directive_type_name(const DirectiveType directive_type) noexcept {
   assert(directive_type <= DirectiveType::FN_TYPE);
   return directives_keywords.at((size_t)directive_type);
 }
 
-static std::vector<const char *> unary_operators_symbols = {
+static const std::vector<const char *> unary_operators_symbols = {
   "++", "--", "-", "!", "~",
 };
 
@@ -18,7 +18,7 @@ const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept {
   return unary_operators_symbols[(size_t)op_type];
 }
 
-AstFuncDef::~AstFuncDef() {
+AstFnDef::~AstFnDef() {
   if (block) {
     delete block;
     block = nullptr;
@@ -29,7 +29,7 @@ AstFuncDef::~AstFuncDef() {
   }
 }
 
-AstFuncProto::~AstFuncProto() {
+AstFnProto::~AstFnProto() {
   if (!params.empty()) {
     for (AstNode *&param : params) {
       if (param) {
@@ -61,7 +61,7 @@ AstVarDef::~AstVarDef() {
   // Types are deleted by the type allocator
 }
 
-AstFuncCallExpr::~AstFuncCallExpr() {
+AstFnCallExpr::~AstFnCallExpr() {
   if (!args.empty()) {
     for (AstNode *&arg : args) {
       if (arg) {
@@ -117,11 +117,6 @@ AstType::~AstType() {
   if (child_type) {
     delete child_type;
     child_type = nullptr;
-  }
-
-  if (type_info) {
-    delete type_info;
-    type_info = nullptr;
   }
 }
 

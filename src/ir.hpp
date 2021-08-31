@@ -21,12 +21,12 @@ public:
   LlvmIrGenerator(const std::string &_output_directory, const std::string &_executable_name);
   ~LlvmIrGenerator();
 
-  void generateFuncProto(const AstFuncProto &in_func_proto, AstFuncDef *in_function);
-  bool generateFuncBlock(const AstBlock &in_func_block, AstFuncDef &in_function);
+  void generateFuncProto(const AstFnProto &in_func_proto, AstFnDef *in_function);
+  bool generateFuncBlock(const AstBlock &in_func_block, AstFnDef &in_function);
   void generateVarDef(const AstVarDef &in_var_def, const bool is_global);
   llvm::Value *generateUnaryExpr(const AstUnaryExpr &in_unary_expr);
   llvm::Value *generateBinaryExpr(const AstBinaryExpr &in_binary_expr);
-  llvm::Value *generateFuncCallExpr(const AstFuncCallExpr &in_call_expr);
+  llvm::Value *generateFuncCallExpr(const AstFnCallExpr &in_call_expr);
   llvm::Value *generateExpr(const AstNode *in_expr);
   llvm::Value *generateSymbolExpr(const AstSymbol &in_symbol);
   void flush();

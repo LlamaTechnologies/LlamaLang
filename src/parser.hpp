@@ -27,10 +27,10 @@ public:
   // returns AstDirective
   LL_NODISCARD AstNode *parse_directive(const Lexer &lexer) noexcept;
 
-  // returns AstFuncDef
+  // returns AstFnDef
   LL_NODISCARD AstNode *parse_function_def(const Lexer &lexer) noexcept;
 
-  // returns AstFuncProto
+  // returns AstFnProto
   LL_NODISCARD AstNode *parse_function_proto(const Lexer &lexer) noexcept;
 
   // returns AstParamDecl
@@ -54,25 +54,25 @@ public:
   // returns AstUnaryExpr
   LL_NODISCARD AstNode *parse_ret_stmnt(const Lexer &lexer) noexcept;
 
-  // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+  // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_expr(const Lexer &lexer) noexcept;
 
-  // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+  // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_comp_expr(const Lexer &lexer) noexcept;
 
-  // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+  // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_algebraic_expr(const Lexer &lexer) noexcept;
 
-  // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+  // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_term_expr(const Lexer &lexer) noexcept;
 
-  // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstUnaryExpr
+  // returns AstSymbol | AstConstValue | AstFnCallExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_unary_expr(const Lexer &lexer) noexcept;
 
-  // returns AstSymbol | AstConstValue | AstFuncCallExpr | AstBinaryExpr | AstUnaryExpr
+  // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_primary_expr(const Lexer &lexer) noexcept;
 
-  // returns AstFuncCallExpr
+  // returns AstFnCallExpr
   LL_NODISCARD AstNode *parse_function_call(const Lexer &lexer) noexcept;
 
   AstNode *parse_error(const Token &token, const char *format, ...) noexcept;

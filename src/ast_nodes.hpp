@@ -23,14 +23,14 @@ struct Token;
 struct AstNode;
 struct AstDirective;
 struct AstType;
-struct AstFuncDef;
-struct AstFuncProto;
+struct AstFnDef;
+struct AstFnProto;
 struct AstBlock;
 struct AstSourceCode;
 
 struct AstVarDef;
 struct AstSymbol;
-struct AstFuncCallExpr;
+struct AstFnCallExpr;
 struct AstBinaryExpr;
 struct AstUnaryExpr;
 
@@ -54,21 +54,21 @@ struct AstDirective {
   } argument;
 };
 
-struct AstFuncDef {
+struct AstFnDef {
   AstNode *proto = nullptr;
   AstNode *block = nullptr;
   llvm::Function *function = nullptr;
 
-  virtual ~AstFuncDef();
+  virtual ~AstFnDef();
 };
 
-struct AstFuncProto {
+struct AstFnProto {
   bool is_extern = false;
   std::string_view name;
   std::vector<AstNode *> params;
   AstNode *return_type = nullptr;
 
-  virtual ~AstFuncProto();
+  virtual ~AstFnProto();
 };
 
 struct AstBlock {
@@ -124,12 +124,12 @@ struct AstConstValue {
   virtual ~AstConstValue();
 };
 
-struct AstFuncCallExpr {
+struct AstFnCallExpr {
   std::string_view fn_name;
   mutable const AstNode *fn_ref;
   std::vector<AstNode *> args;
 
-  virtual ~AstFuncCallExpr();
+  virtual ~AstFnCallExpr();
 };
 
 enum class BinaryExprType
@@ -195,22 +195,26 @@ enum class AstTypeId
   Bool,
   Integer,
   FloatingPoint,
-  Struct
+  Struct,
+  UNKNOWN
 };
 
 struct TypeInfo {
-  std::string_view name;
-  LLVMTypeRef llvm_type;
-  uint32_t bit_size;
-  bool is_signed;
+  std::string_view name = "";
+  LLVMTypeRef llvm_type = nullptr;
+  uint32_t bit_size = 1;
+  bool is_signed = false;
 };
 
 struct AstType {
   AstTypeId type_id;             // Pointer Array Integer FloatingPoint
   AstNode *child_type = nullptr; // Not null if type == (pointer | array)
-  TypeInfo *type_info = nullptr; // null if type == (pointer | array)
+  TypeInfo type_info;            // null if type == (pointer | array)
 
-  AstType() : type_id(AstTypeId::Void), child_type(nullptr), type_info(nullptr) {}
+  AstType() : type_id(AstTypeId::Void), child_type(nullptr) {}
+
+  AstType(AstTypeId in_type_id, std::string_view in_name, uint32_t in_bit_size, bool in_is_signed)
+      : type_id(in_type_id), child_type(nullptr), type_info({ in_name, nullptr, in_bit_size, in_is_signed }) {}
 
   virtual ~AstType();
 };
@@ -218,19 +222,19 @@ struct AstType {
 // ast nodes enum
 enum class AstNodeType
 {
-  AstSourceCode,
-  AstDirective,
-  AstFuncDef,
-  AstFuncProto,
-  AstParamDecl,
-  AstBlock,
-  AstType,
-  AstVarDef,
-  AstSymbol,
-  AstConstValue,
-  AstFuncCallExpr,
-  AstBinaryExpr,
-  AstUnaryExpr
+  AST_SOURCE_CODE,
+  AST_DIRECTIVE,
+  AST_TYPE,
+  AST_FUNC_DEF,
+  AST_FUNC_PROTO,
+  AST_BLOCK,
+  AST_PARAM_DECL,
+  AST_VAR_DEF,
+  AST_SYMBOL,
+  AST_CONST_VALUE,
+  AST_FN_CALL_EXPR,
+  AST_BINARY_EXPR,
+  AST_UNARY_EXPR
 };
 
 // base ast node
@@ -238,7 +242,7 @@ struct AstNode {
   AstNode *parent = nullptr;
   size_t line;
   size_t column;
-  AstNodeType node_type = AstNodeType::AstSourceCode;
+  AstNodeType node_type = AstNodeType::AST_SOURCE_CODE;
   std::string_view file_name;
 
   // actual node
@@ -246,8 +250,8 @@ struct AstNode {
   // union {
   AstSourceCode source_code;
   AstDirective directive;      // # dir_name args*
-  AstFuncDef function_def;     // function definition
-  AstFuncProto function_proto; // fn name L_PAREN param_decl (, param_decl)* R_PAREN
+  AstFnDef function_def;     // function definition
+  AstFnProto function_proto; // fn name L_PAREN param_decl (, param_decl)* R_PAREN
   AstParamDecl param_decl;     // name type
   AstBlock block;              // L_CURLY statements R_CURLY
   AstVarDef var_def;           // name type
@@ -256,11 +260,17 @@ struct AstNode {
   AstBinaryExpr binary_expr;   // expr binary_op expr
   AstSymbol symbol;            // symbol_name
   AstConstValue const_value;   // constant value
-  AstFuncCallExpr func_call;   // func_name L_PAREN (expr (, expr)*)? R_PAREN
+  AstFnCallExpr func_call;   // func_name L_PAREN (expr (, expr)*)? R_PAREN
   //};
 
   AstNode(AstNodeType in_node_type, size_t in_line, size_t in_column, std::string_view in_file_name)
       : parent(nullptr), line(in_line), column(in_column), node_type(in_node_type), file_name(in_file_name) {}
+
+  static AstNode *CreatePredefType(const AstType &in_type) {
+    AstNode *node = new AstNode(AstNodeType::AST_TYPE, 0, 0, "predefined");
+    node->ast_type = in_type;
+    return node;
+  }
 
   virtual ~AstNode() {}
 };

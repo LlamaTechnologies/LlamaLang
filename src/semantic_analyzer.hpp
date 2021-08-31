@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-struct AstFuncDef;
+struct AstFnDef;
 struct AstBlock;
 struct AstNode;
 enum class SymbolType;
@@ -35,7 +35,7 @@ public:
    * - all middle statements are OK.
    * - return statment type match function's return type
    */
-  bool analizeFuncBlock(const AstBlock &in_func_block, AstFuncDef &in_function);
+  bool analizeFuncBlock(const AstBlock &in_func_block, AstFnDef &in_function);
 
   /* Returns true if:
    * - all refered variables had been defined
@@ -54,6 +54,14 @@ public:
  */
 bool check_types(std::vector<Error> &errors, const AstNode *type_node0, const AstNode *type_node1,
                  const AstNode *expr_node);
+
+/* Returns true if:
+ * - types are the same bit size
+ * - both integers are signed or uinsigned
+ * - pointers|arrays types have the same sub type_id
+ */
+bool check_compatible_types(std::vector<Error> &errors, const AstNode *type_node0, const AstNode *type_node1,
+                            const AstNode *expr_node);
 
 /* Returns a node representing the expression type */
 const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_table, const AstNode *expr);

@@ -36,15 +36,15 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   // first pass
   for (auto child : source_code_node->source_code.children) {
     switch (child->node_type) {
-    case AstNodeType::AstFuncDef:
+    case AstNodeType::AST_FUNC_DEF:
       if (analyzer.analizeFuncProto(child->function_def.proto))
         generator.generateFuncProto(child->function_def.proto->function_proto, &child->function_def);
       break;
-    case AstNodeType::AstFuncProto:
+    case AstNodeType::AST_FUNC_PROTO:
       if (analyzer.analizeFuncProto(child))
         generator.generateFuncProto(child->function_proto, nullptr);
       break;
-    case AstNodeType::AstVarDef:
+    case AstNodeType::AST_VAR_DEF:
       // global variables
       if (analyzer.analizeVarDef(child, true))
         generator.generateVarDef(child->var_def, true);
@@ -58,7 +58,7 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   // second pass
   for (auto child : source_code_node->source_code.children) {
     switch (child->node_type) {
-    case AstNodeType::AstFuncDef:
+    case AstNodeType::AST_FUNC_DEF:
       if (analyzer.analizeFuncBlock(child->function_def.block->block, child->function_def)) {
         bool block_no_error = generator.generateFuncBlock(child->function_def.block->block, child->function_def);
         has_no_errors = has_no_errors && block_no_error;
