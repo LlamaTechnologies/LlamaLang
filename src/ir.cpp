@@ -77,18 +77,18 @@ void LlvmIrGenerator::generateFuncProto(const AstFnProto &in_func_proto, AstFnDe
 
   // Add to symbols
   if (in_function) {
-    in_function->function = function;
+    in_function->llvm_value = function;
   }
 }
 
 bool LlvmIrGenerator::generateFuncBlock(const AstBlock &in_func_block, AstFnDef &in_function) {
   // Create a new basic block to start insertion into.
-  llvm::BasicBlock *BB = llvm::BasicBlock::Create(context, "", in_function.function);
+  llvm::BasicBlock *BB = llvm::BasicBlock::Create(context, "", in_function.llvm_value);
   builder->SetInsertPoint(BB);
 
   // Store params in local variables to avoid problems
   int i = 0;
-  auto args = in_function.function->args();
+  auto args = in_function.llvm_value->args();
   auto it = args.begin();
 
   for (; it != args.end(); it++, i++) {
@@ -120,25 +120,25 @@ bool LlvmIrGenerator::generateFuncBlock(const AstBlock &in_func_block, AstFnDef 
     }
   }
 
-  if (in_function.proto->function_proto.return_type->ast_type.type_id == AstTypeId::Void) {
+  if (in_function.proto->function_proto.return_type->ast_type.type_id == AstTypeId::VOID) {
     builder->CreateRetVoid();
   }
 
   std::string error_msg;
   auto llvm_output_file = llvm::raw_string_ostream(error_msg);
   // Validate the generated code, checking for consistency.
-  if (llvm::verifyFunction(*in_function.function, &llvm_output_file)) {
+  if (llvm::verifyFunction(*in_function.llvm_value, &llvm_output_file)) {
     console::WriteLine();
     console::WriteLine("Error in generated function");
     console::WriteLine(error_msg);
     console::WriteLine();
 
-    in_function.function->dump();
+    in_function.llvm_value->dump();
 
     console::WriteLine();
 
     // Error reading body, remove function.
-    in_function.function->eraseFromParent();
+    in_function.llvm_value->eraseFromParent();
     return false;
   }
   return true;
@@ -373,11 +373,11 @@ void LlvmIrGenerator::flush() {
 
 llvm::Type *LlvmIrGenerator::translateType(const AstType &in_type) {
   switch (in_type.type_id) {
-  case AstTypeId::Void:
+  case AstTypeId::VOID:
     return llvm::Type::getVoidTy(context);
-  case AstTypeId::Bool:
+  case AstTypeId::BOOL:
     return llvm::Type::getInt1Ty(context);
-  case AstTypeId::Integer:
+  case AstTypeId::INTEGER:
     switch (in_type.type_info.bit_size) {
     case 8:
       return llvm::Type::getInt8Ty(context);
@@ -393,7 +393,7 @@ llvm::Type *LlvmIrGenerator::translateType(const AstType &in_type) {
       LL_UNREACHEABLE;
     }
     break;
-  case AstTypeId::FloatingPoint:
+  case AstTypeId::FLOATING_POINT:
     if (in_type.type_info.bit_size == 32)
       return llvm::Type::getFloatTy(context);
     if (in_type.type_info.bit_size == 64)
@@ -452,12 +452,12 @@ llvm::Constant *LlvmIrGenerator::translateConstant(const AstConstValue &in_const
 
 llvm::Constant *getConstantDefaultValue(const AstType &in_type, llvm::Type *in_llvm_type) {
   switch (in_type.type_id) {
-  case AstTypeId::Bool:
-  case AstTypeId::Integer:
+  case AstTypeId::BOOL:
+  case AstTypeId::INTEGER:
     return llvm::ConstantInt::get(in_llvm_type, 0, in_type.type_info.is_signed);
-  case AstTypeId::FloatingPoint:
+  case AstTypeId::FLOATING_POINT:
     return llvm::ConstantFP::get(in_llvm_type, 0.0);
-  case AstTypeId::Void:
+  case AstTypeId::VOID:
   default:
     LL_UNREACHEABLE;
   }

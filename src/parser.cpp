@@ -560,7 +560,7 @@ AstNode *Parser::parse_type(const Lexer &lexer) noexcept {
   if (token.id == TokenId::MUL) {
     // POINTER TYPE
     AstNode *type_node = new AstNode(AstNodeType::AST_TYPE, token.start_line, token.start_column, token.file_name);
-    type_node->ast_type.type_id = AstTypeId::Pointer;
+    type_node->ast_type.type_id = AstTypeId::POINTER;
     const Token &next_token = lexer.get_next_token();
     if (!is_type_start_token(next_token)) {
       parse_error(next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
@@ -583,7 +583,7 @@ AstNode *Parser::parse_type(const Lexer &lexer) noexcept {
       return nullptr;
     }
     AstNode *type_node = new AstNode(AstNodeType::AST_TYPE, token.start_line, token.start_column, token.file_name);
-    type_node->ast_type.type_id = AstTypeId::Array;
+    type_node->ast_type.type_id = AstTypeId::ARRAY;
 
     const Token &next_token = lexer.get_next_token();
     if (!is_type_start_token(next_token)) {

@@ -83,7 +83,7 @@ bool SemanticAnalyzer::analizeFuncProto(const AstNode *in_proto_node) {
   auto ret_type = func_proto.return_type;
 
   // we dont support structs yet
-  if (ret_type->ast_type.type_id == AstTypeId::Struct) {
+  if (ret_type->ast_type.type_id == AstTypeId::STRUCT) {
     add_semantic_error(errors, ret_type, ERROR_STRUCTS_UNSUPORTED);
     return false;
   }
@@ -121,7 +121,7 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock &in_func_block, AstFnDef 
   // - ret stmnt required
   // - ret stmnt type
 
-  bool has_ret_type = ret_type->ast_type.type_id != AstTypeId::Void;
+  bool has_ret_type = ret_type->ast_type.type_id != AstTypeId::VOID;
   bool has_ret_stmnt = false;
 
   // check every statement in the function
@@ -172,7 +172,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
 
       // right value should be an integer
       auto r_expr_type_node = get_expr_type(errors, symbol_table, bin_expr.right_expr);
-      if (r_expr_type_node->ast_type.type_id != AstTypeId::Integer) {
+      if (r_expr_type_node->ast_type.type_id != AstTypeId::INTEGER) {
         add_semantic_error(errors, in_expr, ERROR_BIT_SHIFT_LEFT_EXPR_NO_INT);
         return false;
       }
@@ -243,19 +243,19 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     }
 
     // Overloading operators is not supported
-    if (type_node->ast_type.type_id == AstTypeId::Struct) {
+    if (type_node->ast_type.type_id == AstTypeId::STRUCT) {
       auto operator_symbol = get_unary_op_symbol(unary_expr.op);
       add_semantic_error(errors, in_expr, ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR, operator_symbol.c_str());
       return false;
     }
     // If it is a boolean expr only the NOT operator is valid
-    if (type_node->ast_type.type_id == AstTypeId::Bool && unary_expr.op != UnaryExprType::NOT) {
+    if (type_node->ast_type.type_id == AstTypeId::BOOL && unary_expr.op != UnaryExprType::NOT) {
       auto operator_symbol = get_unary_op_symbol(unary_expr.op);
       add_semantic_error(errors, in_expr, ERROR_UNSUPORTED_OP_BOOL_EXPR, operator_symbol.c_str());
       return false;
     }
     // If it is not boolean expr the NOT operator is invalid
-    if (type_node->ast_type.type_id != AstTypeId::Bool && unary_expr.op == UnaryExprType::NOT) {
+    if (type_node->ast_type.type_id != AstTypeId::BOOL && unary_expr.op == UnaryExprType::NOT) {
       add_semantic_error(errors, in_expr, ERROR_UNSUPORTED_OP_NOT_BOOL_EXPR);
       return false;
     }
@@ -397,16 +397,16 @@ bool check_types(std::vector<Error> &errors, const AstNode *type_node0, const As
 
   if (type0.type_id == type1.type_id) {
     // check arrays or pointers
-    if (type0.type_id == AstTypeId::Pointer || type0.type_id == AstTypeId::Array)
+    if (type0.type_id == AstTypeId::POINTER || type0.type_id == AstTypeId::ARRAY)
       return check_types(errors, type0.child_type, type1.child_type, expr_node);
 
     // check complex types
-    if (type0.type_id == AstTypeId::Struct)
+    if (type0.type_id == AstTypeId::STRUCT)
       // NOTE: Structs No Supported
       // TODO: Add support for structs
       LL_UNREACHEABLE;
 
-    if (type0.type_id == AstTypeId::Integer) {
+    if (type0.type_id == AstTypeId::INTEGER) {
       bool same_size = type0.type_info.bit_size == type1.type_info.bit_size;
 
       if (!same_size) {
@@ -422,7 +422,7 @@ bool check_types(std::vector<Error> &errors, const AstNode *type_node0, const As
       }
     }
 
-    if (type0.type_id == AstTypeId::FloatingPoint) {
+    if (type0.type_id == AstTypeId::FLOATING_POINT) {
       bool are_same = type0.type_info.bit_size == type1.type_info.bit_size;
 
       if (!are_same) {
@@ -452,16 +452,16 @@ bool check_compatible_types(std::vector<Error> &errors, const AstNode *type_node
   const AstType &type1 = type_node1->ast_type;
 
   // check arrays or pointers
-  if (type0.type_id == AstTypeId::Pointer || type0.type_id == AstTypeId::Array)
+  if (type0.type_id == AstTypeId::POINTER || type0.type_id == AstTypeId::ARRAY)
     return check_types(errors, type0.child_type, type1.child_type, expr_node);
 
   // check complex types
-  if (type0.type_id == AstTypeId::Struct)
+  if (type0.type_id == AstTypeId::STRUCT)
     // NOTE: Structs No Supported
     // TODO: Add support for structs
     LL_UNREACHEABLE;
 
-  if (type0.type_id == AstTypeId::Integer) {
+  if (type0.type_id == AstTypeId::INTEGER) {
     bool same_size = type0.type_info.bit_size == type1.type_info.bit_size;
 
     if (!same_size) {
@@ -477,7 +477,7 @@ bool check_compatible_types(std::vector<Error> &errors, const AstNode *type_node
     }
   }
 
-  if (type0.type_id == AstTypeId::FloatingPoint) {
+  if (type0.type_id == AstTypeId::FLOATING_POINT) {
     bool are_same = type0.type_info.bit_size == type1.type_info.bit_size;
 
     if (!are_same) {
@@ -525,7 +525,7 @@ const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
         }
 
         // if they are numbers
-        LL_ASSERT(typeL->ast_type.type_id == AstTypeId::Integer || typeL->ast_type.type_id == AstTypeId::FloatingPoint);
+        LL_ASSERT(typeL->ast_type.type_id == AstTypeId::INTEGER || typeL->ast_type.type_id == AstTypeId::FLOATING_POINT);
 
         return bin_expr.left_expr->node_type == AstNodeType::AST_CONST_VALUE ? typeR : typeL;
       }
@@ -636,8 +636,8 @@ void set_type_info(const AstNode *expr_node, const AstNode *type_node) {
 
   switch (expr_node->node_type) {
   case AstNodeType::AST_CONST_VALUE:
-    if (type_node->ast_type.type_id == AstTypeId::Array || type_node->ast_type.type_id == AstTypeId::Pointer ||
-        type_node->ast_type.type_id == AstTypeId::Struct || type_node->ast_type.type_id == AstTypeId::Void)
+    if (type_node->ast_type.type_id == AstTypeId::ARRAY || type_node->ast_type.type_id == AstTypeId::POINTER ||
+        type_node->ast_type.type_id == AstTypeId::STRUCT || type_node->ast_type.type_id == AstTypeId::VOID)
       LL_UNREACHEABLE;
     expr_node->const_value.bit_size = type_node->ast_type.type_info.bit_size;
     return;

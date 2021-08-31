@@ -33,7 +33,7 @@ public:
   // returns AstFnProto
   LL_NODISCARD AstNode *parse_function_proto(const Lexer &lexer) noexcept;
 
-  // returns AstParamDecl
+  // returns AstParamDef
   LL_NODISCARD AstNode *parse_param_decl(const Lexer &lexer) noexcept;
 
   // returns AstBlock

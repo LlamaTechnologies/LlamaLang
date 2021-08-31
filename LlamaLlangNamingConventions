@@ -14,3 +14,14 @@ enum names PascalCase
 
 enum values MACRO_CASE
 
+// code conventions
+
+always use struct over class unless it has to many private members
+
+every llvm value in struct|class should have the prefix llvm_
+
+enums should be enum class
+
+everything that wont be modified should be declared 'const'
+
+minimize the use of exceptions. always use the version without exceptions in std lib

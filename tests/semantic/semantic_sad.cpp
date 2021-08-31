@@ -29,13 +29,13 @@ TEST(SemanticTypes, PointerDistinctTypes) {
   auto node_child_type_0 = get_type_node("i32");
 
   auto node_type_0 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
-  node_type_0->ast_type.type_id = AstTypeId::Pointer;
+  node_type_0->ast_type.type_id = AstTypeId::POINTER;
   node_type_0->ast_type.child_type = node_child_type_0;
 
   auto node_child_type_1 = get_type_node("f32");
 
   auto node_type_1 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
-  node_type_1->ast_type.type_id = AstTypeId::Pointer;
+  node_type_1->ast_type.type_id = AstTypeId::POINTER;
   node_type_1->ast_type.child_type = node_child_type_1;
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
@@ -51,13 +51,13 @@ TEST(SemanticTypes, ArrayDistinctTypes) {
   auto node_child_type_0 = get_type_node("i32");
 
   auto node_type_0 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
-  node_type_0->ast_type.type_id = AstTypeId::Array;
+  node_type_0->ast_type.type_id = AstTypeId::ARRAY;
   node_type_0->ast_type.child_type = node_child_type_0;
 
   auto node_child_type_1 = get_type_node("f32");
 
   auto node_type_1 = new AstNode(AstNodeType::AST_TYPE, 0, 0, "");
-  node_type_1->ast_type.type_id = AstTypeId::Array;
+  node_type_1->ast_type.type_id = AstTypeId::ARRAY;
   node_type_1->ast_type.child_type = node_child_type_1;
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);

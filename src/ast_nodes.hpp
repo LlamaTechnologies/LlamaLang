@@ -57,16 +57,16 @@ struct AstDirective {
 struct AstFnDef {
   AstNode *proto = nullptr;
   AstNode *block = nullptr;
-  llvm::Function *function = nullptr;
+  llvm::Function *llvm_value = nullptr;
 
   virtual ~AstFnDef();
 };
 
 struct AstFnProto {
-  bool is_extern = false;
-  std::string_view name;
   std::vector<AstNode *> params;
+  std::string_view name;
   AstNode *return_type = nullptr;
+  bool is_extern = false;
 
   virtual ~AstFnProto();
 };
@@ -80,15 +80,15 @@ struct AstBlock {
 };
 
 struct AstVarDef {
-  mutable llvm::Value *llvm_value;
   std::string_view name;
   AstNode *type = nullptr;
   AstNode *initializer = nullptr;
+  mutable llvm::Value *llvm_value;
 
   virtual ~AstVarDef();
 };
 
-typedef AstVarDef AstParamDecl;
+typedef AstVarDef AstParamDef;
 
 enum class SymbolType
 {
@@ -97,10 +97,10 @@ enum class SymbolType
 };
 
 struct AstSymbol {
-  mutable SymbolType type;
-  mutable const AstNode *data; // resolved ast node (DO NOT OWN IT)
-  const Token *token;
   std::string_view cached_name;
+  const Token *token;
+  mutable const AstNode *data; // resolved ast node (DO NOT OWN IT)
+  mutable SymbolType type;
 };
 
 enum class ConstValueType
@@ -125,9 +125,9 @@ struct AstConstValue {
 };
 
 struct AstFnCallExpr {
+  std::vector<AstNode *> args;
   std::string_view fn_name;
   mutable const AstNode *fn_ref;
-  std::vector<AstNode *> args;
 
   virtual ~AstFnCallExpr();
 };
@@ -154,8 +154,8 @@ enum class BinaryExprType
 
 struct AstBinaryExpr {
   AstNode *left_expr = nullptr;
-  BinaryExprType bin_op;
   AstNode *right_expr = nullptr;
+  BinaryExprType bin_op;
 
   virtual ~AstBinaryExpr();
 };
@@ -181,21 +181,21 @@ struct AstUnaryExpr {
 };
 
 struct AstSourceCode {
-  const Lexer *lexer = nullptr;
   std::vector<AstNode *> children;
+  const Lexer *lexer = nullptr;
 
   virtual ~AstSourceCode();
 };
 
 enum class AstTypeId
 {
-  Pointer,
-  Array,
-  Void,
-  Bool,
-  Integer,
-  FloatingPoint,
-  Struct,
+  VOID,
+  BOOL,
+  INTEGER,
+  FLOATING_POINT,
+  POINTER,
+  ARRAY,
+  STRUCT,
   UNKNOWN
 };
 
@@ -207,11 +207,11 @@ struct TypeInfo {
 };
 
 struct AstType {
-  AstTypeId type_id;             // Pointer Array Integer FloatingPoint
-  AstNode *child_type = nullptr; // Not null if type == (pointer | array)
   TypeInfo type_info;            // null if type == (pointer | array)
+  AstNode *child_type = nullptr; // Not null if type == (pointer | array)
+  AstTypeId type_id;             // Pointer Array Integer FloatingPoint
 
-  AstType() : type_id(AstTypeId::Void), child_type(nullptr) {}
+  AstType() : type_id(AstTypeId::VOID), child_type(nullptr) {}
 
   AstType(AstTypeId in_type_id, std::string_view in_name, uint32_t in_bit_size, bool in_is_signed)
       : type_id(in_type_id), child_type(nullptr), type_info({ in_name, nullptr, in_bit_size, in_is_signed }) {}
@@ -240,26 +240,26 @@ enum class AstNodeType
 // base ast node
 struct AstNode {
   AstNode *parent = nullptr;
+  std::string_view file_name;
   size_t line;
   size_t column;
   AstNodeType node_type = AstNodeType::AST_SOURCE_CODE;
-  std::string_view file_name;
 
   // actual node
   // TODO: try to use std::variant instead of union
   // union {
   AstSourceCode source_code;
-  AstDirective directive;      // # dir_name args*
+  AstDirective directive;    // # dir_name args*
   AstFnDef function_def;     // function definition
   AstFnProto function_proto; // fn name L_PAREN param_decl (, param_decl)* R_PAREN
-  AstParamDecl param_decl;     // name type
-  AstBlock block;              // L_CURLY statements R_CURLY
-  AstVarDef var_def;           // name type
-  AstType ast_type;            // type
-  AstUnaryExpr unary_expr;     // unary_op expr
-  AstBinaryExpr binary_expr;   // expr binary_op expr
-  AstSymbol symbol;            // symbol_name
-  AstConstValue const_value;   // constant value
+  AstParamDef param_decl;   // name type
+  AstBlock block;            // L_CURLY statements R_CURLY
+  AstVarDef var_def;         // name type
+  AstType ast_type;          // type
+  AstUnaryExpr unary_expr;   // unary_op expr
+  AstBinaryExpr binary_expr; // expr binary_op expr
+  AstSymbol symbol;          // symbol_name
+  AstConstValue const_value; // constant value
   AstFnCallExpr func_call;   // func_name L_PAREN (expr (, expr)*)? R_PAREN
   //};
 

@@ -6,21 +6,21 @@ struct TypeIdAstTypeId {
 };
 
 std::unordered_map<std::string_view, const AstType> typesIds = {
-  { "i8", { AstTypeId::Integer, "i8", 8, true } },
-  { "i16", { AstTypeId::Integer, "i16", 16, true } },
-  { "i32", { AstTypeId::Integer, "i32", 32, true } },
-  { "i64", { AstTypeId::Integer, "i64", 64, true } },
-  { "i128", { AstTypeId::Integer, "i128", 128, true } },
-  { "u8", { AstTypeId::Integer, "u8", 8, false } },
-  { "u16", { AstTypeId::Integer, "u16", 16, false } },
-  { "u32", { AstTypeId::Integer, "u32", 32, false } },
-  { "u64", { AstTypeId::Integer, "u64", 64, false } },
-  { "u128", { AstTypeId::Integer, "u128", 128, false } },
-  { "f32", { AstTypeId::FloatingPoint, "f32", 32, true } },
-  { "f64", { AstTypeId::FloatingPoint, "f64", 64, true } },
-  { "f128", { AstTypeId::FloatingPoint, "f128", 128, true } },
-  { "void", { AstTypeId::Void, "void", 0, false } },
-  { "bool", { AstTypeId::Bool, "bool", 1, false } }
+  { "i8", { AstTypeId::INTEGER, "i8", 8, true } },
+  { "i16", { AstTypeId::INTEGER, "i16", 16, true } },
+  { "i32", { AstTypeId::INTEGER, "i32", 32, true } },
+  { "i64", { AstTypeId::INTEGER, "i64", 64, true } },
+  { "i128", { AstTypeId::INTEGER, "i128", 128, true } },
+  { "u8", { AstTypeId::INTEGER, "u8", 8, false } },
+  { "u16", { AstTypeId::INTEGER, "u16", 16, false } },
+  { "u32", { AstTypeId::INTEGER, "u32", 32, false } },
+  { "u64", { AstTypeId::INTEGER, "u64", 64, false } },
+  { "u128", { AstTypeId::INTEGER, "u128", 128, false } },
+  { "f32", { AstTypeId::FLOATING_POINT, "f32", 32, true } },
+  { "f64", { AstTypeId::FLOATING_POINT, "f64", 64, true } },
+  { "f128", { AstTypeId::FLOATING_POINT, "f128", 128, true } },
+  { "void", { AstTypeId::VOID, "void", 0, false } },
+  { "bool", { AstTypeId::BOOL, "bool", 1, false } }
 };
 
 const AstTypeId get_type_id(std::string_view in_name) noexcept {
