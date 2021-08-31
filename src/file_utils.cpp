@@ -11,18 +11,18 @@ FILE_PATH_STATUS verify_file_path(std::filesystem::path &in_path) {
   // TODO(pablo96): handle error_code
   bool path_exists = std::filesystem::exists(in_path, error_code);
   if (!path_exists) {
-    console::WriteLine("file '" + in_path.string() + "' does not exists!");
+    console::write_line("file '" + in_path.string() + "' does not exists!");
     return FILE_PATH_STATUS::NOT_FOUND;
   }
 
   bool is_file = std::filesystem::is_regular_file(in_path, error_code);
   if (!is_file) {
-    console::WriteLine("file '" + in_path.string() + "' is not a file!");
+    console::write_line("file '" + in_path.string() + "' is not a file!");
     return FILE_PATH_STATUS::NOT_A_FILE;
   }
 
   if (in_path.extension() != LL_FILE_EXTENSION) {
-    console::WriteLine("file '" + in_path.string() + "' is not a llama lang file!");
+    console::write_line("file '" + in_path.string() + "' is not a llama lang file!");
     return FILE_PATH_STATUS::NOT_LLAMA_FILE;
   }
 

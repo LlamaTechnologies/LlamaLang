@@ -6,11 +6,11 @@
 struct Token;
 
 namespace console {
-inline void WriteLine() { std::cout << std::endl; }
+inline void write_line() { std::cout << std::endl; }
 
-inline void WriteLine(const std::string &msg) { std::cout << msg << std::endl; }
+inline void write_line(const std::string &msg) { std::cout << msg << std::endl; }
 
-inline bool WriteLine(std::istream &msg) {
+inline bool write_line(std::istream &msg) {
   msg.clear();
   msg.seekg(0, std::ios::beg);
 
@@ -30,6 +30,6 @@ inline bool WriteLine(std::istream &msg) {
   return true;
 }
 
-inline char ReadKey() { return std::cin.get(); }
+inline char read_key() { return std::cin.get(); }
 
 } // namespace console

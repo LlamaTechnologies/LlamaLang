@@ -128,14 +128,14 @@ bool LlvmIrGenerator::generateFuncBlock(const AstBlock &in_func_block, AstFnDef 
   auto llvm_output_file = llvm::raw_string_ostream(error_msg);
   // Validate the generated code, checking for consistency.
   if (llvm::verifyFunction(*in_function.llvm_value, &llvm_output_file)) {
-    console::WriteLine();
-    console::WriteLine("Error in generated function");
-    console::WriteLine(error_msg);
-    console::WriteLine();
+    console::write_line();
+    console::write_line("Error in generated function");
+    console::write_line(error_msg);
+    console::write_line();
 
     in_function.llvm_value->dump();
 
-    console::WriteLine();
+    console::write_line();
 
     // Error reading body, remove function.
     in_function.llvm_value->eraseFromParent();
@@ -357,7 +357,7 @@ llvm::Value *LlvmIrGenerator::generateFuncCallExpr(const AstFnCallExpr &in_call_
 void LlvmIrGenerator::flush() {
 #ifndef LL_TESTS
   #ifdef _DEBUG
-  console::WriteLine();
+  console::write_line();
   code_module->dump();
   #endif
 #endif

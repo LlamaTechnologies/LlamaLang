@@ -40,7 +40,7 @@ bool Driver::setup(const char **argv, const int argc) {
 bool Driver::run() {
   auto source_file = std::ifstream(this->file_path);
   if (source_file.bad()) {
-    console::WriteLine("corrupted file \"" + this->file_path.string() + "\"");
+    console::write_line("corrupted file \"" + this->file_path.string() + "\"");
     return false;
   }
 
@@ -57,15 +57,15 @@ bool Driver::run() {
   auto file_in = file_full_path + BITCODE_FILE_EXTENSION;
   std::string lld_args = this->lld_path + " " + file_in + " -o " + file_out;
 
-  console::WriteLine(lld_args);
+  console::write_line(lld_args);
 
   int lld_exit_code = run_process(this->lld_path, lld_args);
   if (lld_exit_code < 0) {
-    console::WriteLine("error with lld");
+    console::write_line("error with lld");
     return false;
   }
 
-  console::WriteLine("Compiled Successfuly: " + file_out);
+  console::write_line("Compiled Successfuly: " + file_out);
   return true;
 }
 
@@ -79,7 +79,7 @@ bool Driver::get_tool_chain() {
   this->lld_path = LLD_NAME; // get_path_to_program_by_name(LLD_NAME);
   {
     if (this->lld_path.size() == 0) {
-      console::WriteLine("lld not found. please install llvm toolchain.");
+      console::write_line("lld not found. please install llvm toolchain.");
       return false;
     }
   }
@@ -104,7 +104,7 @@ bool Driver::parse_args(const char **argv, const int argc) {
     } else if (strncmp(option, ARG_OUT_DIR, option_len > 2 ? 2 : option_len) == 0) {
       this->output_dir = argv[i + 1];
     } else {
-      console::WriteLine(std::string("bad argument: ") + option);
+      console::write_line(std::string("bad argument: ") + option);
       return false;
     }
   }
@@ -212,11 +212,11 @@ void handle_error() {
                    error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *)&lpMsgBuf, 0, NULL);
 
   if (!no_error) {
-    console::WriteLine("error formatting msg");
+    console::write_line("error formatting msg");
   }
 
   if (lpMsgBuf) {
-    console::WriteLine((char *)lpMsgBuf);
+    console::write_line((char *)lpMsgBuf);
     LocalFree(lpMsgBuf);
   }
 }
