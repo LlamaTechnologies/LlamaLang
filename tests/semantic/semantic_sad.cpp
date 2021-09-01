@@ -89,7 +89,7 @@ TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
   var_def_node->var_def.initializer = nullptr;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analizeVarDef(var_def_node, is_global);
+  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_FALSE(is_valid);
@@ -113,7 +113,7 @@ TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
   var_def_node->var_def.initializer = const_value_node;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analizeVarDef(var_def_node, is_global);
+  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_FALSE(is_valid);
@@ -131,7 +131,7 @@ TEST(SemanticExpressions, UnknownConstantValue) {
 
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  ASSERT_DEATH(analizer.analizeExpr(const_value_node), "");
+  ASSERT_DEATH(analizer.analize_expr(const_value_node), "");
 }
 
 TEST(SemanticExpressions, ResolveUnknownVariableSymbol) {
@@ -145,7 +145,7 @@ TEST(SemanticExpressions, ResolveUnknownVariableSymbol) {
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  bool is_valid = analizer.analizeExpr(symbol_node);
+  bool is_valid = analizer.analize_expr(symbol_node);
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
@@ -170,7 +170,7 @@ TEST(SemanticExpressions, UnaryExprBoolWrongOp) {
   // when: call to analize_expr
   // with: a bool expresion
   // with: a unary operator valid for the expr type
-  bool is_valid = analizer.analizeExpr(unary_epxr_node);
+  bool is_valid = analizer.analize_expr(unary_epxr_node);
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
@@ -196,7 +196,7 @@ TEST(SemanticExpressions, UnaryExprNumberWrongOp) {
   // when: call to analize_expr
   // with: a number expresion
   // with: a unary operator valid for the expr type
-  bool is_valid = analizer.analizeExpr(unary_epxr_node);
+  bool is_valid = analizer.analize_expr(unary_epxr_node);
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
@@ -222,7 +222,7 @@ TEST(SemanticExpressions, BinaryExprBitShiftNoIntRExpr) {
   // when: call to analize_expr
   // with: a number expresion
   // with: a unary operator valid for the expr type
-  bool is_valid = analizer.analizeExpr(binary_epxr_node);
+  bool is_valid = analizer.analize_expr(binary_epxr_node);
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
@@ -251,7 +251,7 @@ TEST(SemanticExpressions, BinaryExprBitShiftUnknownSymbol) {
   // when: call to analize_expr
   // with: a number expresion
   // with: a unary operator valid for the expr type
-  bool is_valid = analizer.analizeExpr(binary_epxr_node);
+  bool is_valid = analizer.analize_expr(binary_epxr_node);
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
@@ -280,7 +280,7 @@ TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
   // when: call to analize_expr
   // with: symbol as left expr
   // with: constant as right expr
-  bool is_valid = analizer.analizeExpr(binary_epxr_node);
+  bool is_valid = analizer.analize_expr(binary_epxr_node);
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
@@ -314,12 +314,12 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
   // given: analizer
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analizeVarDef(var_def_node, false);
+  bool is_valid_var_def = analizer.analize_var_def(var_def_node, false);
 
   // when: call to analize_expr
   // with: symbol as left expr
   // with: constant as right expr
-  bool is_valid = analizer.analizeExpr(binary_epxr_node);
+  bool is_valid = analizer.analize_expr(binary_epxr_node);
 
   // then:
   ASSERT_EQ(is_valid_var_def, true);
@@ -349,7 +349,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
   // when: call to analize_expr
   // with: symbol as left expr
   // with: constant as right expr
-  bool is_valid = analizer.analizeExpr(binary_epxr_node);
+  bool is_valid = analizer.analize_expr(binary_epxr_node);
 
   // then:
   ASSERT_EQ(errors.size(), 1L);
@@ -399,8 +399,8 @@ TEST(SemanticExpressions, FunctionInvalidStmnt) {
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
-  bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
+  bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node->block, function_node->function_def);
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -452,8 +452,8 @@ TEST(SemanticExpressions, FunctionNoReqRet) {
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
-  bool is_valid = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
+  bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node->block, function_node->function_def);
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -475,7 +475,7 @@ TEST(SemanticExpressions, FunctionCallUndeclaredFn) {
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  bool is_valid_call = analizer.analizeExpr(function_call_node);
+  bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
   ASSERT_FALSE(is_valid_call);
@@ -503,10 +503,10 @@ TEST(SemanticExpressions, FunctionCallSymbolNotAFn) {
   SemanticAnalyzer analizer(errors);
 
   // given: valid variable
-  bool is_valid_var = analizer.analizeVarDef(var_def_node, is_global);
+  bool is_valid_var = analizer.analize_var_def(var_def_node, is_global);
 
   // when: call to analize_expr
-  bool is_valid_call = analizer.analizeExpr(function_call_node);
+  bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
   ASSERT_TRUE(is_valid_var);
@@ -547,9 +547,9 @@ TEST(SemanticExpressions, FunctionCallParamsCountMismatch) {
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
-  bool is_valid_block = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
-  bool is_valid_call = analizer.analizeExpr(function_call_node);
+  bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node->block, function_node->function_def);
+  bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -599,9 +599,9 @@ TEST(SemanticExpressions, FunctionCallParamsTypeMismatch) {
   SemanticAnalyzer analizer(errors);
 
   // when: call to analize_expr
-  bool is_valid_proto = analizer.analizeFuncProto(function_proto_node);
-  bool is_valid_block = analizer.analizeFuncBlock(function_block_node->block, function_node->function_def);
-  bool is_valid_call = analizer.analizeExpr(function_call_node);
+  bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node->block, function_node->function_def);
+  bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
   ASSERT_TRUE(is_valid_proto);

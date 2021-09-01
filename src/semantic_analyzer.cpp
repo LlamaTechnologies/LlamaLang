@@ -18,7 +18,7 @@ static void _set_type_info(const AstNode *expr_node, const AstNode *type_node);
 
 //----- START PRIMARY CHECK FUNCTIONS -----
 
-bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_global) {
+bool SemanticAnalyzer::analize_var_def(const AstNode *in_node, const bool is_global) {
   LL_ASSERT(in_node != nullptr);
   LL_ASSERT((in_node->node_type == AstNodeType::AST_VAR_DEF) || (in_node->node_type == AstNodeType::AST_PARAM_DECL));
 
@@ -56,7 +56,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
 
   // variable declaration and definition
   if (var_def.initializer) {
-    bool is_valid_init = analizeExpr(var_def.initializer);
+    bool is_valid_init = analize_expr(var_def.initializer);
     if (!is_valid_init)
       return false;
 
@@ -75,7 +75,7 @@ bool SemanticAnalyzer::analizeVarDef(const AstNode *in_node, const bool is_globa
   return true;
 }
 
-bool SemanticAnalyzer::analizeFuncProto(const AstNode *in_proto_node) {
+bool SemanticAnalyzer::analize_fn_proto(const AstNode *in_proto_node) {
   LL_ASSERT(in_proto_node != nullptr);
   LL_ASSERT(in_proto_node->node_type == AstNodeType::AST_FUNC_PROTO);
 
@@ -109,7 +109,7 @@ bool SemanticAnalyzer::analizeFuncProto(const AstNode *in_proto_node) {
   return has_no_error;
 }
 
-bool SemanticAnalyzer::analizeFuncBlock(const AstBlock &in_func_block, AstFnDef &in_function) {
+bool SemanticAnalyzer::analize_fn_block(const AstBlock &in_func_block, AstFnDef &in_function) {
   auto ret_type = in_function.proto->function_proto.return_type;
 
   // set function's symbol table as current table
@@ -129,16 +129,16 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock &in_func_block, AstFnDef 
     if (IS_RET_STATEMENT(stmnt)) {
       has_ret_stmnt = true;
 
-      if (!analizeExpr(stmnt))
+      if (!analize_expr(stmnt))
         continue;
 
       // if ret stmnt is ok
       // then check if return type is the same as the one in the prototype
       check_and_set_type(stmnt, ret_type, stmnt->unary_expr.expr);
     } else if (stmnt->node_type == AstNodeType::AST_VAR_DEF) {
-      analizeVarDef(stmnt, false);
+      analize_var_def(stmnt, false);
     } else {
-      analizeExpr(stmnt);
+      analize_expr(stmnt);
     }
   }
 
@@ -159,7 +159,7 @@ bool SemanticAnalyzer::analizeFuncBlock(const AstBlock &in_func_block, AstFnDef 
 
 //----- END PRIMARY CHECK FUNCTIONS -------
 
-bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
+bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
   switch (in_expr->node_type) {
   case AstNodeType::AST_BINARY_EXPR: {
     const AstBinaryExpr &bin_expr = in_expr->binary_expr;
@@ -167,7 +167,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     // BITWISE OPERATORS
     case BinaryExprType::LSHIFT:
     case BinaryExprType::RSHIFT: {
-      if (!analizeExpr(bin_expr.left_expr) || !analizeExpr(bin_expr.right_expr))
+      if (!analize_expr(bin_expr.left_expr) || !analize_expr(bin_expr.right_expr))
         return false;
 
       // right value should be an integer
@@ -188,7 +188,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     case BinaryExprType::GREATER:
     case BinaryExprType::LESS:
       // We just check their expressions are good
-      return analizeExpr(bin_expr.left_expr) && analizeExpr(bin_expr.right_expr);
+      return analize_expr(bin_expr.left_expr) && analize_expr(bin_expr.right_expr);
     // BINARY OPERATORS
     case BinaryExprType::ADD:
     case BinaryExprType::SUB:
@@ -196,7 +196,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     case BinaryExprType::DIV:
     case BinaryExprType::MOD:
     case BinaryExprType::ASSIGN: {
-      if (!analizeExpr(bin_expr.left_expr) || !analizeExpr(bin_expr.right_expr))
+      if (!analize_expr(bin_expr.left_expr) || !analize_expr(bin_expr.right_expr))
         return false;
 
       auto l_expr_type_node = get_expr_type(errors, symbol_table, bin_expr.left_expr);
@@ -260,7 +260,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
       return false;
     }
 
-    return analizeExpr(unary_expr.expr);
+    return analize_expr(unary_expr.expr);
   }
   case AstNodeType::AST_FN_CALL_EXPR: {
     const AstFnCallExpr &fn_call = in_expr->func_call;
@@ -282,7 +282,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
     // TODO(pablo96): temporal solution to printf!
     if (fn_call.fn_name == "printf") {
       for (auto arg : fn_call.args) {
-        if (!analizeExpr(arg))
+        if (!analize_expr(arg))
           continue;
 
         _set_type_info(arg, TypesRepository::get().get_type_node("i32"));
@@ -304,7 +304,7 @@ bool SemanticAnalyzer::analizeExpr(const AstNode *in_expr) {
 
     size_t i = 0;
     for (auto arg : fn_call.args) {
-      if (!analizeExpr(arg)) {
+      if (!analize_expr(arg)) {
         i++;
         continue;
       }

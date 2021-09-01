@@ -37,16 +37,16 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   for (auto child : source_code_node->source_code.children) {
     switch (child->node_type) {
     case AstNodeType::AST_FUNC_DEF:
-      if (analyzer.analizeFuncProto(child->function_def.proto))
+      if (analyzer.analize_fn_proto(child->function_def.proto))
         generator.gen_fn_proto(child->function_def.proto->function_proto, &child->function_def);
       break;
     case AstNodeType::AST_FUNC_PROTO:
-      if (analyzer.analizeFuncProto(child))
+      if (analyzer.analize_fn_proto(child))
         generator.gen_fn_proto(child->function_proto, nullptr);
       break;
     case AstNodeType::AST_VAR_DEF:
       // global variables
-      if (analyzer.analizeVarDef(child, true))
+      if (analyzer.analize_var_def(child, true))
         generator.gen_var_def(child->var_def, true);
       break;
     default:
@@ -59,7 +59,7 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   for (auto child : source_code_node->source_code.children) {
     switch (child->node_type) {
     case AstNodeType::AST_FUNC_DEF:
-      if (analyzer.analizeFuncBlock(child->function_def.block->block, child->function_def)) {
+      if (analyzer.analize_fn_block(child->function_def.block->block, child->function_def)) {
         bool block_no_error = generator.gen_fn_block(child->function_def.block->block, child->function_def);
         has_no_errors = has_no_errors && block_no_error;
       }

@@ -24,24 +24,24 @@ public:
    * - initializer expr is compatible with variable's type.
    * - variable is not shadowing another in the same scope.
    */
-  bool analizeVarDef(const AstNode *in_node, const bool is_global);
+  bool analize_var_def(const AstNode *in_node, const bool is_global);
 
   /* TEMP: Returns true.
    * NOTE: Here we will check fn_type
    */
-  bool analizeFuncProto(const AstNode *in_func_proto);
+  bool analize_fn_proto(const AstNode *in_func_proto);
 
   /* Returns true if:
    * - all middle statements are OK.
    * - return statment type match function's return type
    */
-  bool analizeFuncBlock(const AstBlock &in_func_block, AstFnDef &in_function);
+  bool analize_fn_block(const AstBlock &in_func_block, AstFnDef &in_function);
 
   /* Returns true if:
    * - all refered variables had been defined
    * - all constants types are valid to be in the same operation
    */
-  bool analizeExpr(const AstNode *in_expr);
+  bool analize_expr(const AstNode *in_expr);
 
   bool check_and_set_type(const AstNode *in_node, const AstNode *l_type_node, const AstNode *expr_node);
 };
