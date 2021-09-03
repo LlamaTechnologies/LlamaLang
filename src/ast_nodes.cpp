@@ -1,6 +1,9 @@
 #include "ast_nodes.hpp"
 
+#include "Types.hpp"
 #include "lexer.hpp"
+
+#define LL_DEFAULT_TYPE TypesRepository::get().get_type("void")
 
 static const std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
 
@@ -18,6 +21,20 @@ const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept {
   return unary_operators_symbols[(size_t)op_type];
 }
 
+AstType::AstType()
+    : AstNode(AstNodeType::AST_TYPE, 0L, 0L, "predefined"), child_type(nullptr), type_info(LL_DEFAULT_TYPE) {}
+
+AstType::AstType(const size_t in_line, const size_t in_column, const std::string_view in_file_name)
+    : AstNode(AstNodeType::AST_TYPE, in_line, in_column, in_file_name), child_type(nullptr),
+      type_info(LL_DEFAULT_TYPE) {}
+
+AstType::AstType(const TypeInfo *in_type)
+    : AstNode(AstNodeType::AST_TYPE, 0L, 0L, "predefined"), child_type(nullptr), type_info(in_type) {}
+
+AstType::AstType(const TypeInfo *in_type, const size_t in_line, const size_t in_column,
+                 const std::string_view in_file_name)
+    : AstNode(AstNodeType::AST_TYPE, in_line, in_column, in_file_name), child_type(nullptr), type_info(in_type) {}
+
 AstFnDef::~AstFnDef() {
   if (block) {
     delete block;
@@ -31,7 +48,7 @@ AstFnDef::~AstFnDef() {
 
 AstFnProto::~AstFnProto() {
   if (!params.empty()) {
-    for (AstNode *&param : params) {
+    for (AstParamDef *param : params) {
       if (param) {
         delete param;
         param = nullptr;
@@ -112,6 +129,8 @@ AstSourceCode::~AstSourceCode() {
     delete lexer;
   }
 }
+
+TypeInfo::~TypeInfo() {}
 
 AstType::~AstType() {
   if (child_type) {

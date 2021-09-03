@@ -14,7 +14,12 @@ struct TypesRepository {
   /**
    * Get the ast node (AstType) of the type with name 'in_name'
    **/
-  AstNode *get_type_node(std::string_view in_name) noexcept;
+  AstType *get_type_node(std::string_view in_name) noexcept;
+
+  /**
+   * Get the type information of the type with name 'in_name'
+   **/
+  const TypeInfo *get_type(std::string_view in_name) noexcept;
 
   /**
    * Register a new type
@@ -23,5 +28,5 @@ struct TypesRepository {
   bool register_type(std::string_view in_name) noexcept;
 
 private:
-  std::unordered_map<std::string_view, const AstType> types_id;
+  std::unordered_map<std::string_view, const TypeInfo> types_id;
 };

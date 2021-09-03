@@ -34,20 +34,20 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
   SemanticAnalyzer analyzer(errors);
 
   // first pass
-  for (auto child : source_code_node->source_code.children) {
+  for (AstNode *child : source_code_node->source_code()->children) {
     switch (child->node_type) {
-    case AstNodeType::AST_FUNC_DEF:
-      if (analyzer.analize_fn_proto(child->function_def.proto))
-        generator.gen_fn_proto(child->function_def.proto->function_proto, &child->function_def);
+    case AstNodeType::AST_FN_DEF:
+      if (analyzer.analize_fn_proto(child->function_def()->proto))
+        generator.gen_fn_proto(child->function_def()->proto->function_proto(), child->function_def());
       break;
-    case AstNodeType::AST_FUNC_PROTO:
-      if (analyzer.analize_fn_proto(child))
-        generator.gen_fn_proto(child->function_proto, nullptr);
+    case AstNodeType::AST_FN_PROTO:
+      if (analyzer.analize_fn_proto(child->function_proto()))
+        generator.gen_fn_proto(child->function_proto(), nullptr);
       break;
     case AstNodeType::AST_VAR_DEF:
       // global variables
-      if (analyzer.analize_var_def(child, true))
-        generator.gen_var_def(child->var_def, true);
+      if (analyzer.analize_var_def(child->var_def(), true))
+        generator.gen_var_def(child->var_def(), true);
       break;
     default:
       break;
@@ -56,11 +56,11 @@ bool compiler::compile(const std::string &in_output_directory, const std::string
 
   bool has_no_errors = true;
   // second pass
-  for (auto child : source_code_node->source_code.children) {
+  for (auto child : source_code_node->source_code()->children) {
     switch (child->node_type) {
-    case AstNodeType::AST_FUNC_DEF:
-      if (analyzer.analize_fn_block(child->function_def.block->block, child->function_def)) {
-        bool block_no_error = generator.gen_fn_block(child->function_def.block->block, child->function_def);
+    case AstNodeType::AST_FN_DEF:
+      if (analyzer.analize_fn_block(child->function_def()->block, child->function_def())) {
+        bool block_no_error = generator.gen_fn_block(child->function_def()->block->block(), child->function_def());
         has_no_errors = has_no_errors && block_no_error;
       }
       break;

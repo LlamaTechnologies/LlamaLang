@@ -6,9 +6,12 @@
 #include <unordered_map>
 #include <vector>
 
+struct AstNode;
+struct AstType;
+struct AstVarDef;
+struct AstFnProto;
 struct AstFnDef;
 struct AstBlock;
-struct AstNode;
 enum class SymbolType;
 
 class SemanticAnalyzer {
@@ -24,18 +27,18 @@ public:
    * - initializer expr is compatible with variable's type.
    * - variable is not shadowing another in the same scope.
    */
-  bool analize_var_def(const AstNode *in_node, const bool is_global);
+  bool analize_var_def(const AstVarDef *in_node, const bool is_global);
 
   /* TEMP: Returns true.
    * NOTE: Here we will check fn_type
    */
-  bool analize_fn_proto(const AstNode *in_func_proto);
+  bool analize_fn_proto(const AstFnProto *in_func_proto);
 
   /* Returns true if:
    * - all middle statements are OK.
    * - return statment type match function's return type
    */
-  bool analize_fn_block(const AstBlock &in_func_block, AstFnDef &in_function);
+  bool analize_fn_block(const AstBlock *in_func_block, AstFnDef *in_function);
 
   /* Returns true if:
    * - all refered variables had been defined
@@ -43,7 +46,7 @@ public:
    */
   bool analize_expr(const AstNode *in_expr);
 
-  bool check_and_set_type(const AstNode *in_node, const AstNode *l_type_node, const AstNode *expr_node);
+  bool check_and_set_type(const AstNode *in_node, const AstType *l_type_node, const AstNode *expr_node);
 };
 
 /* Returns true if:
@@ -52,7 +55,7 @@ public:
  * - both integers are signed or uinsigned
  * - pointers|arrays types have the same sub type_id
  */
-bool check_types(std::vector<Error> &errors, const AstNode *type_node0, const AstNode *type_node1,
+bool check_types(std::vector<Error> &errors, const AstType *type_node0, const AstType *type_node1,
                  const AstNode *expr_node);
 
 /* Returns true if:
@@ -60,11 +63,11 @@ bool check_types(std::vector<Error> &errors, const AstNode *type_node0, const As
  * - both integers are signed or uinsigned
  * - pointers|arrays types have the same sub type_id
  */
-bool check_compatible_types(std::vector<Error> &errors, const AstNode *type_node0, const AstNode *type_node1,
+bool check_compatible_types(std::vector<Error> &errors, const AstType *type_node0, const AstType *type_node1,
                             const AstNode *expr_node);
 
 /* Returns a node representing the expression type */
-const AstNode *get_expr_type(std::vector<Error> &errors, const Table *symbol_table, const AstNode *expr);
+const AstType *get_expr_type(std::vector<Error> &errors, const Table *symbol_table, const AstNode *expr);
 
 /* Returns a node representing the variable or the function found by the name */
 const AstNode *resolve_function_variable(std::vector<Error> &errors, const Table *symbol_table,
