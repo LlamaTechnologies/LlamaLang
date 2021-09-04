@@ -224,7 +224,7 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
           _set_type_info(r_const_value, l_expr_type_node);
         }
       } else // if both are NOT a constant check their types
-        if (!check_compatible_types(errors, l_expr_type_node, r_expr_type_node, in_expr)) {
+        if (!check_types(errors, l_expr_type_node, r_expr_type_node, in_expr)) {
         // not the same type
         return false;
       }
@@ -353,7 +353,7 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
 bool SemanticAnalyzer::check_and_set_type(const AstNode *in_node, const AstType *l_type_node,
                                           const AstNode *expr_node) {
   const AstType *expr_type = get_expr_type(errors, symbol_table, expr_node);
-  if (!check_types(errors, l_type_node, expr_type, in_node)) {
+  if (expr_node->node_type != AstNodeType::AST_CONST_VALUE && !check_types(errors, l_type_node, expr_type, in_node)) {
     return false;
   }
 

@@ -425,6 +425,7 @@ TEST(SemanticExpressions, FunctionRetConstant) {
   // given: parser
   Parser parser(errors);
   AstNode *function_def_node = parser.parse_function_def(lexer);
+
   ASSERT_NE(function_def_node, nullptr);
   ASSERT_EQ(function_def_node->node_type, AstNodeType::AST_FN_DEF);
 

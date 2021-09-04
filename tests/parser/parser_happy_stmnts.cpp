@@ -1202,9 +1202,9 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
   ASSERT_EQ(var_type->parent, var_def_expr);
   ASSERT_EQ(var_type->type_info->type_id, AstTypeId::INTEGER);
   ASSERT_EQ(var_type->child_type, nullptr);
-  ASSERT_NE(var_type->type_info->name, "i32");
-  ASSERT_NE(var_type->type_info->bit_size, 32);
-  ASSERT_NE(var_type->type_info->is_signed, true);
+  ASSERT_EQ(var_type->type_info->name, "i32");
+  ASSERT_EQ(var_type->type_info->bit_size, 32);
+  ASSERT_EQ(var_type->type_info->is_signed, true);
 
   const AstNode *func_def_node = main_stmnts.at(1);
   ASSERT_NE(func_def_node, nullptr);
