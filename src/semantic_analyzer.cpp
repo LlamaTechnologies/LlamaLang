@@ -313,13 +313,8 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
 
       const AstParamDef *param = fn_proto.params.at(i);
       const AstType *param_type = param->type;
-      const AstType *arg_type = get_expr_type(errors, symbol_table, arg);
 
-      bool is_compat = check_types(errors, param_type, arg_type, in_expr);
-
-      if (is_compat && arg->node_type == AstNodeType::AST_CONST_VALUE) {
-        _set_type_info(arg, param_type);
-      }
+      check_and_set_type(in_expr, param_type, arg);
 
       i++;
     }
@@ -353,7 +348,14 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
 bool SemanticAnalyzer::check_and_set_type(const AstNode *in_node, const AstType *l_type_node,
                                           const AstNode *expr_node) {
   const AstType *expr_type = get_expr_type(errors, symbol_table, expr_node);
+
+  // return false if:
+  // 1. is not a constant and the types are not the same
+  // 2. or it is a constant but the types dont match
   if (expr_node->node_type != AstNodeType::AST_CONST_VALUE && !check_types(errors, l_type_node, expr_type, in_node)) {
+    return false;
+  } else if (expr_type->type_info->type_id != l_type_node->type_info->type_id) {
+    add_semantic_error(errors, expr_node, ERROR_TYPES_MISMATCH);
     return false;
   }
 
@@ -654,7 +656,7 @@ void _set_type_info(const AstNode *expr_node, const AstType *type_node) {
 bool _analize_param(std::vector<Error> &errors, Table *symbol_table, const AstParamDef *in_node) {
   LL_ASSERT(symbol_table != nullptr);
   LL_ASSERT(in_node != nullptr);
-  LL_ASSERT(in_node->node_type != AstNodeType::AST_PARAM_DEF);
+  LL_ASSERT(in_node->node_type == AstNodeType::AST_PARAM_DEF);
 
   // add param as local variable
   symbol_table->add_symbol(std::string(in_node->name), SymbolType::VAR, in_node);

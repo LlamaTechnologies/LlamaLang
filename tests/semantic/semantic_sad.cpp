@@ -600,14 +600,15 @@ TEST(SemanticExpressions, FunctionCallParamsTypeMismatch) {
   function_proto_node->return_type = void_type_node;
   function_proto_node->params.push_back(param_node);
 
-  // given: function block
+  // given: empty function block
   AstBlock *function_block_node = new AstBlock(0, 0, "");
 
-  // given: function
+  // given: empty function
   AstFnDef *function_node = new AstFnDef(0, 0, "");
   function_node->proto = function_proto_node;
   function_node->block = function_block_node;
 
+  // given: call with argument float constant
   AstFnCallExpr *function_call_node = new AstFnCallExpr(0, 0, "");
   function_call_node->fn_name = "my_func";
   function_call_node->fn_ref = nullptr;
