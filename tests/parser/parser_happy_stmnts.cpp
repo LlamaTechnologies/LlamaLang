@@ -771,7 +771,7 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
   ASSERT_NE(node, nullptr);
   ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  AstFnDef *value_node = node->function_def();
+  AstFnDef *value_node = node->fn_def();
   ASSERT_NE(value_node->block, nullptr);
   ASSERT_NE(value_node->proto, nullptr);
 
@@ -808,7 +808,7 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
   ASSERT_NE(node, nullptr);
   ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  AstFnDef *value_node = node->function_def();
+  AstFnDef *value_node = node->fn_def();
   ASSERT_NE(value_node->block, nullptr);
   ASSERT_NE(value_node->proto, nullptr);
 
@@ -856,7 +856,7 @@ TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
   ASSERT_NE(node, nullptr);
   ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  AstFnDef *value_node = node->function_def();
+  AstFnDef *value_node = node->fn_def();
   ASSERT_NE(value_node->block, nullptr);
   ASSERT_NE(value_node->proto, nullptr);
 
@@ -905,7 +905,7 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
   ASSERT_NE(node, nullptr);
   ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  AstFnDef *value_node = node->function_def();
+  AstFnDef *value_node = node->fn_def();
   ASSERT_NE(value_node->block, nullptr);
   ASSERT_NE(value_node->proto, nullptr);
 
@@ -956,7 +956,7 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
   ASSERT_NE(node, nullptr);
   ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  AstFnDef *value_node = node->function_def();
+  AstFnDef *value_node = node->fn_def();
   ASSERT_NE(value_node->block, nullptr);
   ASSERT_NE(value_node->proto, nullptr);
 
@@ -1072,7 +1072,7 @@ TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
   ASSERT_NE(bin_expr->right_expr, nullptr);
   ASSERT_EQ(bin_expr->right_expr->node_type, AstNodeType::AST_FN_CALL_EXPR);
 
-  const AstFnCallExpr *fn_call_node = bin_expr->right_expr->func_call();
+  const AstFnCallExpr *fn_call_node = bin_expr->right_expr->fn_call();
   ASSERT_EQ(fn_call_node->parent, bin_expr);
   ASSERT_EQ(fn_call_node->fn_name, "myFunc");
   ASSERT_EQ(fn_call_node->args.size(), 1L);
@@ -1108,7 +1108,7 @@ TEST(ParserHappyStmntTests, FuncCallNestedTest) {
   ASSERT_EQ(param_node_0->parent, value_node);
   ASSERT_EQ(param_node_0->node_type, AstNodeType::AST_FN_CALL_EXPR);
 
-  const AstFnCallExpr *param_node_func = param_node_0->func_call();
+  const AstFnCallExpr *param_node_func = param_node_0->fn_call();
   ASSERT_EQ(param_node_func->fn_name, "myFunc2");
   ASSERT_EQ(param_node_func->args.size(), 1L);
 
@@ -1145,7 +1145,7 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
   ASSERT_NE(param_node_1, nullptr);
   ASSERT_EQ(param_node_1->node_type, AstNodeType::AST_FN_CALL_EXPR);
 
-  const AstFnCallExpr *param_node_func = param_node_1->func_call();
+  const AstFnCallExpr *param_node_func = param_node_1->fn_call();
   ASSERT_EQ(param_node_func->parent, value_node);
   ASSERT_EQ(param_node_func->fn_name, "myFunc2");
   ASSERT_EQ(param_node_func->args.size(), 1L);
@@ -1210,7 +1210,7 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
   ASSERT_NE(func_def_node, nullptr);
   ASSERT_EQ(func_def_node->node_type, AstNodeType::AST_FN_DEF);
 
-  const AstFnDef *fn_def = func_def_node->function_def();
+  const AstFnDef *fn_def = func_def_node->fn_def();
   ASSERT_EQ(fn_def->parent, source_code_node);
   ASSERT_NE(fn_def->block, nullptr);
   ASSERT_NE(fn_def->proto, nullptr);

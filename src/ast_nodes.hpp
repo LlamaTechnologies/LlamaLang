@@ -69,8 +69,8 @@ struct AstNode {
 
   AstSourceCode *source_code() { return (AstSourceCode *)this; }
   AstDirective *directive() { return (AstDirective *)this; }     // # dir_name args*
-  AstFnDef *function_def() { return (AstFnDef *)this; }          // function definition
-  AstFnProto *function_proto() { return (AstFnProto *)this; }    // fn name L_PAREN param_decl (, param_decl)* R_PAREN
+  AstFnDef *fn_def() { return (AstFnDef *)this; }          // function definition
+  AstFnProto *fn_proto() { return (AstFnProto *)this; }    // fn name L_PAREN param_decl (, param_decl)* R_PAREN
   AstParamDef *param_decl() { return (AstParamDef *)this; }      // name type
   AstBlock *block() { return (AstBlock *)this; }                 // L_CURLY statements R_CURLY
   AstVarDef *var_def() { return (AstVarDef *)this; }             // name type
@@ -79,12 +79,12 @@ struct AstNode {
   AstBinaryExpr *binary_expr() { return (AstBinaryExpr *)this; } // expr binary_op expr
   AstSymbol *symbol() { return (AstSymbol *)this; }              // symbol_name
   AstConstValue *const_value() { return (AstConstValue *)this; } // constant value
-  AstFnCallExpr *func_call() { return (AstFnCallExpr *)this; }   // func_name L_PAREN (expr (, expr)*)? R_PAREN
+  AstFnCallExpr *fn_call() { return (AstFnCallExpr *)this; }   // func_name L_PAREN (expr (, expr)*)? R_PAREN
 
   const AstSourceCode *source_code() const { return (AstSourceCode *)this; }
   const AstDirective *directive() const { return (AstDirective *)this; }
-  const AstFnDef *function_def() const { return (AstFnDef *)this; }
-  const AstFnProto *function_proto() const { return (AstFnProto *)this; }
+  const AstFnDef *fn_def() const { return (AstFnDef *)this; }
+  const AstFnProto *fn_proto() const { return (AstFnProto *)this; }
   const AstParamDef *param_decl() const { return (AstParamDef *)this; }
   const AstBlock *block() const { return (AstBlock *)this; }
   const AstVarDef *var_def() const { return (AstVarDef *)this; }
@@ -93,7 +93,7 @@ struct AstNode {
   const AstBinaryExpr *binary_expr() const { return (AstBinaryExpr *)this; }
   const AstSymbol *symbol() const { return (AstSymbol *)this; }
   const AstConstValue *const_value() const { return (AstConstValue *)this; }
-  const AstFnCallExpr *func_call() const { return (AstFnCallExpr *)this; }
+  const AstFnCallExpr *fn_call() const { return (AstFnCallExpr *)this; }
 };
 
 struct AstVarDef : public AstNode {
@@ -214,7 +214,7 @@ struct AstConstValue : public AstNode {
 struct AstFnCallExpr : public AstNode {
   std::vector<AstNode *> args;
   std::string_view fn_name;
-  mutable const AstNode *fn_ref = nullptr;
+  mutable const AstFnProto *fn_ref = nullptr;
 
   AstFnCallExpr(size_t in_line, size_t in_column, std::string_view in_file_name)
       : AstNode(AstNodeType::AST_FN_CALL_EXPR, in_line, in_column, in_file_name) {}

@@ -265,16 +265,19 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
     return analize_expr(unary_expr.expr);
   }
   case AstNodeType::AST_FN_CALL_EXPR: {
-    const AstFnCallExpr &fn_call = *in_expr->func_call();
+    const AstFnCallExpr &fn_call = *in_expr->fn_call();
 
     SymbolType symbol_type;
     fn_call.fn_ref =
-      resolve_function_variable(errors, symbol_table, std::string(fn_call.fn_name), in_expr, &symbol_type);
+      resolve_function_variable(errors, symbol_table, std::string(fn_call.fn_name), in_expr, &symbol_type)
+        ->fn_proto();
 
     if (symbol_type != SymbolType::FUNC) {
       add_semantic_error(errors, in_expr, ERROR_SYMBOL_NOT_A_FN, fn_call.fn_name);
       return false;
     }
+
+    LL_ASSERT(fn_call.fn_ref->node_type == AstNodeType::AST_FN_PROTO);
 
     if (!fn_call.fn_ref) {
       add_semantic_error(errors, in_expr, ERROR_UNDECLARED_FN, fn_call.fn_name);
@@ -292,7 +295,7 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
       return true;
     }
 
-    const AstFnProto &fn_proto = *fn_call.fn_ref->function_proto();
+    const AstFnProto &fn_proto = *fn_call.fn_ref;
     if (fn_call.args.size() != fn_proto.params.size()) {
       auto params_size = fn_proto.params.size();
       auto args_size = fn_call.args.size();
@@ -555,17 +558,20 @@ const AstType *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
     return get_expr_type(errors, symbol_table, unary_expr.expr);
   }
   case AstNodeType::AST_FN_CALL_EXPR: {
-    const AstNode **func_node = &expr->func_call()->fn_ref;
-    if (!*func_node)
-      *func_node = resolve_function_variable(errors, symbol_table, std::string(expr->func_call()->fn_name), expr);
+    const AstFnProto **fn_node = &expr->fn_call()->fn_ref;
+    if (!*fn_node)
+      *fn_node = resolve_function_variable(errors, symbol_table, std::string(expr->fn_call()->fn_name), expr)
+                   ->fn_proto();
 
-    return get_expr_type(errors, symbol_table, *func_node);
+    LL_ASSERT((*fn_node)->node_type == AstNodeType::AST_FN_PROTO);
+
+    return get_expr_type(errors, symbol_table, *fn_node);
   }
   case AstNodeType::AST_FN_DEF: {
-    return expr->function_def()->proto->return_type;
+    return expr->fn_def()->proto->return_type;
   }
   case AstNodeType::AST_FN_PROTO: {
-    return expr->function_proto()->return_type;
+    return expr->fn_proto()->return_type;
   }
   case AstNodeType::AST_SYMBOL: {
     // TODO(pablo96): should make it posible to resolve function names as func pointers
@@ -582,9 +588,9 @@ const AstType *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
     case AstNodeType::AST_PARAM_DEF:
       return var_node->param_decl()->type;
     case AstNodeType::AST_FN_DEF:
-      return var_node->function_def()->proto->return_type;
+      return var_node->fn_def()->proto->return_type;
     case AstNodeType::AST_FN_PROTO:
-      return var_node->function_proto()->return_type;
+      return var_node->fn_proto()->return_type;
     default:
       LL_UNREACHEABLE;
     } // var_node type switch

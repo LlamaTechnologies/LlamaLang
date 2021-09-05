@@ -110,7 +110,7 @@ bool LlvmIrGenerator::gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_f
       gen_binary_expr(stmnt->binary_expr());
       break;
     case AstNodeType::AST_FN_CALL_EXPR:
-      gen_fn_call_expr(stmnt->func_call());
+      gen_fn_call_expr(stmnt->fn_call());
       break;
     default:
       // ignore stmnt:
@@ -151,7 +151,7 @@ llvm::Value *LlvmIrGenerator::gen_expr(const AstNode *in_expr) {
   case AstNodeType::AST_BINARY_EXPR:
     return gen_binary_expr(in_expr->binary_expr());
   case AstNodeType::AST_FN_CALL_EXPR:
-    return gen_fn_call_expr(in_expr->func_call());
+    return gen_fn_call_expr(in_expr->fn_call());
   case AstNodeType::AST_SYMBOL:
     return gen_symbol_expr(in_expr->symbol());
   case AstNodeType::AST_CONST_VALUE:

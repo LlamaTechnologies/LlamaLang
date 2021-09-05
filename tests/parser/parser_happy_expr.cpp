@@ -145,7 +145,7 @@ TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
   ASSERT_NE(unary_expr->expr, nullptr);
   ASSERT_EQ(unary_expr->expr->node_type, AstNodeType::AST_FN_CALL_EXPR);
 
-  const AstFnCallExpr *func_call = unary_expr->expr->func_call();
+  const AstFnCallExpr *func_call = unary_expr->expr->fn_call();
   ASSERT_EQ(func_call->parent, value_node);
   ASSERT_EQ(func_call->fn_name, "myFunc");
   ASSERT_EQ(func_call->args.size(), 0L);
@@ -320,7 +320,7 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
   ASSERT_EQ(unary_expr->op, UnaryExprType::DEC);
   ASSERT_EQ(unary_expr->expr->symbol()->token->id, TokenId::IDENTIFIER);
 
-  const AstFnCallExpr *func_call = binary_expr->right_expr->func_call();
+  const AstFnCallExpr *func_call = binary_expr->right_expr->fn_call();
   ASSERT_NE(func_call, nullptr);
   ASSERT_EQ(func_call->parent, binary_expr);
   ASSERT_EQ(func_call->fn_name, "myFunc");
@@ -803,7 +803,7 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierAndFuncCallTest) {
   ASSERT_EQ(unary_expr->op, UnaryExprType::DEC);
   ASSERT_EQ(unary_expr->expr->symbol()->token->id, TokenId::IDENTIFIER);
 
-  const AstFnCallExpr *func_call = binary_expr->right_expr->func_call();
+  const AstFnCallExpr *func_call = binary_expr->right_expr->fn_call();
   ASSERT_NE(func_call, nullptr);
   ASSERT_EQ(func_call->parent, binary_expr);
   ASSERT_EQ(func_call->fn_name, "myFunc");
@@ -1349,7 +1349,7 @@ TEST(ParserHappyParseCompExprTests, Mul2IdentifierAndFuncCallTest) {
   ASSERT_EQ(unary_expr->op, UnaryExprType::DEC);
   ASSERT_EQ(unary_expr->expr->symbol()->token->id, TokenId::IDENTIFIER);
 
-  const AstFnCallExpr *func_call = binary_expr->right_expr->func_call();
+  const AstFnCallExpr *func_call = binary_expr->right_expr->fn_call();
   ASSERT_NE(func_call, nullptr);
   ASSERT_EQ(func_call->parent, binary_expr);
   ASSERT_EQ(func_call->fn_name, "myFunc");

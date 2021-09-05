@@ -1,5 +1,6 @@
 #include "scope.hpp"
 
+#include "ast_nodes.hpp"
 #include "common_defs.hpp"
 
 Table *Table::create_child(const std::string &in_name) {
@@ -34,6 +35,10 @@ const Symbol &Table::get_symbol(const std::string &in_name) const {
 void Table::remove_last_child() { children_scopes.erase(last_child_key); }
 
 void Table::add_symbol(const std::string &in_name, const SymbolType in_type, const AstNode *in_data) {
+  LL_ASSERT(in_data != nullptr);
+  LL_ASSERT(in_data->node_type == AstNodeType::AST_VAR_DEF || in_data->node_type == AstNodeType::AST_PARAM_DEF ||
+            in_data->node_type == AstNodeType::AST_FN_PROTO);
+
   Symbol symbol = Symbol(in_name, in_type, in_data);
   last_symbol_key = in_name;
   symbols.emplace(in_name, symbol);

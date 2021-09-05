@@ -69,7 +69,8 @@ bool check_compatible_types(std::vector<Error> &errors, const AstType *type_node
 /* Returns a node representing the expression type */
 const AstType *get_expr_type(std::vector<Error> &errors, const Table *symbol_table, const AstNode *expr);
 
-/* Returns a node representing the variable or the function found by the name */
+/* Returns a node representing the variable or the function found by the name:
+ * Can be an AstVarDef|AstParamDef or an AstFnProto for a function.*/
 const AstNode *resolve_function_variable(std::vector<Error> &errors, const Table *symbol_table,
                                          const std::string &in_name, const AstNode *in_parent_node,
                                          SymbolType *out_symbol_type = nullptr);

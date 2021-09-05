@@ -389,7 +389,7 @@ TEST(SemanticExpressions, FunctionNoRet) {
   ASSERT_NE(function_node, nullptr);
   ASSERT_EQ(function_node->node_type, AstNodeType::AST_FN_DEF);
 
-  AstFnDef *fn_def_node = function_node->function_def();
+  AstFnDef *fn_def_node = function_node->fn_def();
   ASSERT_NE(fn_def_node->proto, nullptr);
   ASSERT_NE(fn_def_node->block, nullptr);
   ASSERT_EQ(errors.size(), 0L);
@@ -429,17 +429,17 @@ TEST(SemanticExpressions, FunctionRetConstant) {
   ASSERT_NE(function_def_node, nullptr);
   ASSERT_EQ(function_def_node->node_type, AstNodeType::AST_FN_DEF);
 
-  AstFnDef *fn_def_node = function_def_node->function_def();
+  AstFnDef *fn_def_node = function_def_node->fn_def();
   // given: analizer
   SemanticAnalyzer analizer(errors);
 
-  AstFnProto *function_proto = fn_def_node->proto;
+  AstFnProto *fn_proto = fn_def_node->proto;
   AstBlock *block_node = fn_def_node->block;
   ASSERT_NE(block_node, nullptr);
   ASSERT_NE(block_node, nullptr);
 
   // when: call to analize_expr
-  bool is_valid_proto = analizer.analize_fn_proto(function_proto);
+  bool is_valid_proto = analizer.analize_fn_proto(fn_proto);
   bool is_valid = analizer.analize_fn_block(block_node, fn_def_node);
 
   // then:
