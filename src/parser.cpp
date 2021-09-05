@@ -173,7 +173,6 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
 
   switch (dir_type) {
   case DirectiveType::LOAD: {
-    // TODO(pablo96): implement load directive
     const auto &file_name = identifier_value;
     directive_node->argument.str = file_name;
 
@@ -192,6 +191,10 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
 
     // parse source code.
     AstSourceCode *src_code_node = parse(*loaded_file_lexer);
+
+    /* NOTE(pablo96): Since AstSourceCode owns the lexer pointer
+     * only loaded SourceCodes have the lexer pointer.
+     */
     src_code_node->lexer = loaded_file_lexer;
 
     // add parsed source code to the repository.
@@ -485,7 +488,7 @@ stmnt_expr:
     lexer.get_back();
     return parse_ret_stmnt(lexer);
   case TokenId::L_CURLY:
-    // TODO(pablo96): parse block
+    // TODO(pablo96): parse local block
     return nullptr;
   case TokenId::SEMI:
     // empty_statement

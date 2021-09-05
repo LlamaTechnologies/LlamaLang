@@ -384,7 +384,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
 //          SEMANTIC FUNCTIONS
 //==================================================================================
 
-TEST(SemanticExpressions, FunctionInvalidStmnt) {
+TEST(SemanticFunctions, FunctionInvalidStmnt) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: l_expr -> symbol node
@@ -431,7 +431,7 @@ TEST(SemanticExpressions, FunctionInvalidStmnt) {
   delete function_node;
 }
 
-TEST(SemanticExpressions, FunctionNoReqRet) {
+TEST(SemanticFunctions, FunctionNoReqRet) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
@@ -490,7 +490,7 @@ TEST(SemanticExpressions, FunctionNoReqRet) {
 //          SEMANTIC FUNCTION CALLS
 //==================================================================================
 
-TEST(SemanticExpressions, FunctionCallUndeclaredFn) {
+TEST(SemanticFunctionsCalls, FunctionCallUndeclaredFn) {
   AstFnCallExpr *function_call_node = new AstFnCallExpr(0, 0, "");
   function_call_node->fn_name = "my_func";
   function_call_node->fn_ref = nullptr;
@@ -509,7 +509,7 @@ TEST(SemanticExpressions, FunctionCallUndeclaredFn) {
   delete function_call_node;
 }
 
-TEST(SemanticExpressions, FunctionCallSymbolNotAFn) {
+TEST(SemanticFunctionsCalls, FunctionCallSymbolNotAFn) {
   TypesRepository types_repository = TypesRepository::get();
 
   AstFnCallExpr *function_call_node = new AstFnCallExpr(0, 0, "");
@@ -530,7 +530,7 @@ TEST(SemanticExpressions, FunctionCallSymbolNotAFn) {
   delete function_call_node;
 }
 
-TEST(SemanticExpressions, FunctionCallParamsCountMismatch) {
+TEST(SemanticFunctionsCalls, FunctionCallParamsCountMismatch) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
@@ -577,7 +577,7 @@ TEST(SemanticExpressions, FunctionCallParamsCountMismatch) {
   delete function_node;
 }
 
-TEST(SemanticExpressions, FunctionCallParamsTypeMismatch) {
+TEST(SemanticFunctionsCalls, FunctionCallParamsTypeMismatch) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: types

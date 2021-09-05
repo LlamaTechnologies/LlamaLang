@@ -5,22 +5,48 @@
 #include <llvm/IR/Value.h>
 #include <string>
 
+struct GeneratorInterface {
+  virtual void gen_fn_proto(const AstFnProto *in_func_proto, AstFnDef *in_function) = 0;
+  virtual bool gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_function) = 0;
+  virtual void gen_var_def(const AstVarDef *in_var_def, const bool is_global) = 0;
+  virtual llvm::Value *gen_unary_expr(const AstUnaryExpr *in_unary_expr) = 0;
+  virtual llvm::Value *gen_binary_expr(const AstBinaryExpr *in_binary_expr) = 0;
+  virtual llvm::Value *gen_fn_call_expr(const AstFnCallExpr *in_call_expr) = 0;
+  virtual llvm::Value *gen_expr(const AstNode *in_expr) = 0;
+  virtual llvm::Value *gen_symbol_expr(const AstSymbol *in_symbol) = 0;
+  virtual void flush() = 0;
+
+  virtual ~GeneratorInterface() {}
+};
+
+struct VoidGenerator : public GeneratorInterface {
+  void gen_fn_proto(const AstFnProto *in_func_proto, AstFnDef *in_function) override {}
+  bool gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_function) override { return true; }
+  void gen_var_def(const AstVarDef *in_var_def, const bool is_global) override {}
+  llvm::Value *gen_unary_expr(const AstUnaryExpr *in_unary_expr) override { return nullptr; }
+  llvm::Value *gen_binary_expr(const AstBinaryExpr *in_binary_expr) override { return nullptr; }
+  llvm::Value *gen_fn_call_expr(const AstFnCallExpr *in_call_expr) override { return nullptr; }
+  llvm::Value *gen_expr(const AstNode *in_expr) override { return nullptr; }
+  llvm::Value *gen_symbol_expr(const AstSymbol *in_symbol) override { return nullptr; }
+  void flush() override {}
+};
+
 /*
  * Translates the AST to LLVM intermediate representation
  */
-struct LlvmIrGenerator {
+struct LlvmIrGenerator : public GeneratorInterface {
   LlvmIrGenerator(const std::string &_output_directory, const std::string &_executable_name);
   ~LlvmIrGenerator();
 
-  void gen_fn_proto(const AstFnProto *in_func_proto, AstFnDef *in_function);
-  bool gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_function);
-  void gen_var_def(const AstVarDef *in_var_def, const bool is_global);
-  llvm::Value *gen_unary_expr(const AstUnaryExpr *in_unary_expr);
-  llvm::Value *gen_binary_expr(const AstBinaryExpr *in_binary_expr);
-  llvm::Value *gen_fn_call_expr(const AstFnCallExpr *in_call_expr);
-  llvm::Value *gen_expr(const AstNode *in_expr);
-  llvm::Value *gen_symbol_expr(const AstSymbol *in_symbol);
-  void flush();
+  void gen_fn_proto(const AstFnProto *in_func_proto, AstFnDef *in_function) override;
+  bool gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_function) override;
+  void gen_var_def(const AstVarDef *in_var_def, const bool is_global) override;
+  llvm::Value *gen_unary_expr(const AstUnaryExpr *in_unary_expr) override;
+  llvm::Value *gen_binary_expr(const AstBinaryExpr *in_binary_expr) override;
+  llvm::Value *gen_fn_call_expr(const AstFnCallExpr *in_call_expr) override;
+  llvm::Value *gen_expr(const AstNode *in_expr) override;
+  llvm::Value *gen_symbol_expr(const AstSymbol *in_symbol) override;
+  void flush() override;
 
 private:
   llvm::LLVMContext context;

@@ -8,7 +8,7 @@ std::filesystem::path resolve_path(std::string &in_file_path, std::error_code &e
 
 FILE_PATH_STATUS verify_file_path(std::filesystem::path &in_path) {
   std::error_code error_code;
-  // TODO(pablo96): handle error_code
+
   bool path_exists = std::filesystem::exists(in_path, error_code);
   if (!path_exists) {
     console::write_line("file '" + in_path.string() + "' does not exists!");

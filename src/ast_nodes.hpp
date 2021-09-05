@@ -69,8 +69,8 @@ struct AstNode {
 
   AstSourceCode *source_code() { return (AstSourceCode *)this; }
   AstDirective *directive() { return (AstDirective *)this; }     // # dir_name args*
-  AstFnDef *fn_def() { return (AstFnDef *)this; }          // function definition
-  AstFnProto *fn_proto() { return (AstFnProto *)this; }    // fn name L_PAREN param_decl (, param_decl)* R_PAREN
+  AstFnDef *fn_def() { return (AstFnDef *)this; }                // function definition
+  AstFnProto *fn_proto() { return (AstFnProto *)this; }          // fn name L_PAREN param_decl (, param_decl)* R_PAREN
   AstParamDef *param_decl() { return (AstParamDef *)this; }      // name type
   AstBlock *block() { return (AstBlock *)this; }                 // L_CURLY statements R_CURLY
   AstVarDef *var_def() { return (AstVarDef *)this; }             // name type
@@ -79,7 +79,7 @@ struct AstNode {
   AstBinaryExpr *binary_expr() { return (AstBinaryExpr *)this; } // expr binary_op expr
   AstSymbol *symbol() { return (AstSymbol *)this; }              // symbol_name
   AstConstValue *const_value() { return (AstConstValue *)this; } // constant value
-  AstFnCallExpr *fn_call() { return (AstFnCallExpr *)this; }   // func_name L_PAREN (expr (, expr)*)? R_PAREN
+  AstFnCallExpr *fn_call() { return (AstFnCallExpr *)this; }     // func_name L_PAREN (expr (, expr)*)? R_PAREN
 
   const AstSourceCode *source_code() const { return (AstSourceCode *)this; }
   const AstDirective *directive() const { return (AstDirective *)this; }
@@ -279,6 +279,7 @@ struct AstUnaryExpr : public AstNode {
 struct AstSourceCode : public AstNode {
   std::vector<AstNode *> children;
   const Lexer *lexer = nullptr;
+  bool is_analyzed = false;
 
   AstSourceCode(size_t in_line, size_t in_column, std::string_view in_file_name)
       : AstNode(AstNodeType::AST_SOURCE_CODE, in_line, in_column, in_file_name) {}

@@ -269,8 +269,7 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
 
     SymbolType symbol_type;
     fn_call.fn_ref =
-      resolve_function_variable(errors, symbol_table, std::string(fn_call.fn_name), in_expr, &symbol_type)
-        ->fn_proto();
+      resolve_function_variable(errors, symbol_table, std::string(fn_call.fn_name), in_expr, &symbol_type)->fn_proto();
 
     if (symbol_type != SymbolType::FUNC) {
       add_semantic_error(errors, in_expr, ERROR_SYMBOL_NOT_A_FN, fn_call.fn_name);
@@ -371,12 +370,14 @@ const AstNode *resolve_function_variable(std::vector<Error> &errors, const Table
                                          SymbolType *out_symbol_type) {
   auto curr_table = symbol_table;
   do {
+    // is it a scope? (functions)
     if (curr_table->has_child(in_name)) {
       const Symbol &symbol = curr_table->get_symbol(in_name);
       if (out_symbol_type)
         *out_symbol_type = SymbolType::FUNC;
       return symbol.data_node;
     }
+    // is it a variable?
     if (curr_table->has_symbol(in_name)) {
       const Symbol &symbol = curr_table->get_symbol(in_name);
       if (out_symbol_type)
@@ -385,6 +386,9 @@ const AstNode *resolve_function_variable(std::vector<Error> &errors, const Table
     }
     curr_table = curr_table->parent;
   } while (curr_table);
+
+  // may be a scope in another file
+  // TODO(pablo96): search in loaded files!
 
   add_semantic_error(errors, in_parent_node, ERROR_UNKNOWN_SYMBOL, in_name.c_str());
 
@@ -560,8 +564,8 @@ const AstType *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
   case AstNodeType::AST_FN_CALL_EXPR: {
     const AstFnProto **fn_node = &expr->fn_call()->fn_ref;
     if (!*fn_node)
-      *fn_node = resolve_function_variable(errors, symbol_table, std::string(expr->fn_call()->fn_name), expr)
-                   ->fn_proto();
+      *fn_node =
+        resolve_function_variable(errors, symbol_table, std::string(expr->fn_call()->fn_name), expr)->fn_proto();
 
     LL_ASSERT((*fn_node)->node_type == AstNodeType::AST_FN_PROTO);
 

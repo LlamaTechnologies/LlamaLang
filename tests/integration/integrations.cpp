@@ -3,9 +3,64 @@
 #include "../../src/lexer.hpp"
 #include "../../src/parser.hpp"
 
+#include <gtest/gtest.h>
+
 #define LL_INTEGRATIONS_TESTS 0
+
+//==================================================================================
+//          SEMANTIC LOADED FILE
+//==================================================================================
+
+TEST(Integrations, FunctionDeclarationExternFile) {
+  std::vector<Error> errors;
+  Parser parser = Parser(errors);
+
+  // given: extern file
+  Lexer ext_lexer = Lexer("extern fn my_func() i32\n", "extern_file", errors);
+  ext_lexer.tokenize();
+
+  AstSourceCode *ext_src_code = parser.parse(ext_lexer);
+
+  //// given: loader file
+  const char *main_file_name = "main.llama";
+  // given: load directive :: #load "extern_file"
+  AstDirective *load_directive = new AstDirective(0, 0, main_file_name);
+  load_directive->directive_type = DirectiveType::LOAD;
+  load_directive->argument.ast_node = ext_src_code;
+
+  // given: main fn
+  // fn main() i32 {
+  //   my_func()
+  //   ret 0
+  // }
+  const char *source_code = "//oad \"extern_file\"\n"
+                            "\n"
+                            "fn main() i32 {\n"
+                            "\tmy_func()\n"
+                            "\tret 0\n"
+                            "}\n";
+
+  // given: loader file lexer
+  Lexer lexer = Lexer(source_code, main_file_name, errors);
+  lexer.tokenize();
+
+  // given: parsed loader file
+  AstSourceCode *main_src_code = parser.parse(lexer);
+  main_src_code->children.insert(main_src_code->children.begin(), load_directive);
+
+  // when: analyze ext_src_code
+  VoidGenerator generator;
+  bool program_ok = compiler::compile_node(&generator, "output", "executable_name", errors, main_src_code);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0);
+  ASSERT_TRUE(program_ok);
+
+  delete main_src_code;
+  delete ext_src_code;
+}
+
 #if (LL_INTEGRATIONS_TESTS == 1)
-  #include <gtest/gtest.h>
 
 TEST(Integrations, FromCompiler) {
   const char *output_path = "";

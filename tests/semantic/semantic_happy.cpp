@@ -368,7 +368,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperator) {
 //          SEMANTIC FUNCTIONS
 //==================================================================================
 
-TEST(SemanticExpressions, FunctionNoRet) {
+TEST(SemanticFunctions, FunctionNoRet) {
   std::vector<Error> errors;
 
   // given: source_file
@@ -410,7 +410,7 @@ TEST(SemanticExpressions, FunctionNoRet) {
   delete function_node;
 }
 
-TEST(SemanticExpressions, FunctionRetConstant) {
+TEST(SemanticFunctions, FunctionRetConstant) {
   // given: code
   const char *source_name = "function_ret.llama";
   const char *source_code = "fn function_ret() i32 {\n"
@@ -469,7 +469,7 @@ TEST(SemanticExpressions, FunctionRetConstant) {
 //          SEMANTIC FUNCTION CALLS
 //==================================================================================
 
-TEST(SemanticExpressions, FunctionCallNoParam) {
+TEST(SemanticFunctionsCalls, FunctionCallNoParam) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
@@ -502,7 +502,7 @@ TEST(SemanticExpressions, FunctionCallNoParam) {
   delete function_proto_node;
 }
 
-TEST(SemanticExpressions, FunctionCallWithParams) {
+TEST(SemanticFunctionsCalls, FunctionCallWithParams) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: types
