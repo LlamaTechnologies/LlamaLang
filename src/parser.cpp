@@ -201,11 +201,16 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
       delete directive_node;
       return nullptr;
     }
-    directive_node->argument.str = file_name;
 
     std::string file_path = file_directory + std::filesystem::path::preferred_separator + file_name;
-    RepositorySrcCode code_repository = RepositorySrcCode::get();
+    // copy file_path to directive argument
+    {
+      char *str = (char *)malloc(file_path.size() + 1);
+      ::memcpy(str, file_path.c_str(), file_path.size() + 1);
+      directive_node->argument.str = str;
+    }
 
+    RepositorySrcCode &code_repository = RepositorySrcCode::get();
     // only parse the file if not in the code repository
     if (!code_repository.has_file(file_path)) {
       size_t errors_before = errors.size();

@@ -73,7 +73,7 @@ bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInt
       AstDirective *directive_node = child->directive();
       // if it is a load directive we should analyze all the source code.
       if (directive_node->directive_type == DirectiveType::LOAD) {
-        std::string_view file_name = directive_node->argument.str;
+        const std::string &file_name = directive_node->argument.str;
         RepositorySrcCode code_repository = RepositorySrcCode::get();
         // if we have found and parsed the file...
         if (code_repository.has_file(file_name)) {

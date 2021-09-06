@@ -16,15 +16,15 @@ struct RepositorySrcCode {
   static RepositorySrcCode &get();
   static void clean();
 
-  bool has_file(std::string_view in_file_name) const;
-  AstSourceCode *get_source_code(std::string_view in_file_name);
+  bool has_file(const std::string &in_file_name) const;
+  AstSourceCode *get_source_code(const std::string &in_file_name);
 
 private:
   explicit RepositorySrcCode() = default;
   friend class Parser;
 
-  void _add_source_code(const std::string_view in_file_name, AstSourceCode *in_source_code);
+  void _add_source_code(const std::string &in_file_name, AstSourceCode *in_source_code);
 
 private:
-  std::unordered_map<std::string_view, AstSourceCode *> src_codes;
+  std::unordered_map<std::string, AstSourceCode *> src_codes;
 };

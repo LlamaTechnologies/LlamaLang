@@ -132,7 +132,7 @@ const std::string get_directive_type_name(const DirectiveType) noexcept;
 struct AstDirective : public AstNode {
   DirectiveType directive_type = DirectiveType::COMPILE;
   union {
-    std::string_view str = {};
+    const char *str = nullptr;
     AstNode *ast_node; // may be a function proto node (OWNED BY PARSER)
   } argument;
 
