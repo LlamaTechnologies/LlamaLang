@@ -1,4 +1,5 @@
 #include "driver.hpp"
+#include "file_utils.hpp"
 
 int main(int argc, const char *argv[]) {
   Driver driver = Driver();

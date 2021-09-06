@@ -1,7 +1,9 @@
 #include "../../src/compiler.hpp"
 #include "../../src/error.hpp"
+#include "../../src/file_utils.hpp"
 #include "../../src/lexer.hpp"
 #include "../../src/parser.hpp"
+#include "../../src/src_code_repository.hpp"
 
 #include <gtest/gtest.h>
 
@@ -12,28 +14,18 @@
 //==================================================================================
 
 TEST(Integrations, FunctionDeclarationExternFile) {
+  static const char *external_file = "extern fn my_func() i32\n";
+
+  struct FileInputMock : FileInput {
+    FILE_PATH_STATUS verify_file_path(std::filesystem::path &in_path) const { return FILE_PATH_STATUS::OK; }
+    std::string open_and_read_file(const std::string &in_file_path) const { return std::string(external_file); }
+  } file_input;
+
   std::vector<Error> errors;
-  Parser parser = Parser(errors);
+  Parser parser = Parser(errors, file_input);
 
-  // given: extern file
-  Lexer ext_lexer = Lexer("extern fn my_func() i32\n", "extern_file", errors);
-  ext_lexer.tokenize();
-
-  AstSourceCode *ext_src_code = parser.parse(ext_lexer);
-
-  //// given: loader file
-  const char *main_file_name = "main.llama";
-  // given: load directive :: #load "extern_file"
-  AstDirective *load_directive = new AstDirective(0, 0, main_file_name);
-  load_directive->directive_type = DirectiveType::LOAD;
-  load_directive->argument.ast_node = ext_src_code;
-
-  // given: main fn
-  // fn main() i32 {
-  //   my_func()
-  //   ret 0
-  // }
-  const char *source_code = "//oad \"extern_file\"\n"
+  // given: source code
+  const char *source_code = "#load \"extern_file\"\n"
                             "\n"
                             "fn main() i32 {\n"
                             "\tmy_func()\n"
@@ -41,12 +33,11 @@ TEST(Integrations, FunctionDeclarationExternFile) {
                             "}\n";
 
   // given: loader file lexer
-  Lexer lexer = Lexer(source_code, main_file_name, errors);
+  Lexer lexer = Lexer(source_code, "file/directory", "main.llama", errors);
   lexer.tokenize();
 
   // given: parsed loader file
   AstSourceCode *main_src_code = parser.parse(lexer);
-  main_src_code->children.insert(main_src_code->children.begin(), load_directive);
 
   // when: analyze ext_src_code
   VoidGenerator generator;
@@ -56,8 +47,8 @@ TEST(Integrations, FunctionDeclarationExternFile) {
   ASSERT_EQ(errors.size(), 0);
   ASSERT_TRUE(program_ok);
 
+  RepositorySrcCode::clean();
   delete main_src_code;
-  delete ext_src_code;
 }
 
 #if (LL_INTEGRATIONS_TESTS == 1)

@@ -2,6 +2,7 @@
 
 #include "Types.hpp"
 #include "ast_nodes.hpp"
+#include "file_utils.hpp"
 #include "lexer.hpp"
 #include "parse_error_msgs.hpp"
 #include "src_code_repository.hpp"
@@ -10,6 +11,11 @@
 #include <stdarg.h>
 #include <unordered_map>
 
+static void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
+static bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in_errors,
+                                    const Token &in_string_token, const std::string_view in_relative_file_name,
+                                    const std::string &in_file_directory, std::string &out_file_path,
+                                    std::string &out_file_name);
 static const char *_get_const_char(const std::string_view str);
 static BinaryExprType _get_binary_op(const Token &token) noexcept;
 static UnaryExprType _get_unary_op(const Token &token) noexcept;
@@ -34,7 +40,10 @@ static bool _get_directive_type(DirectiveType &, std::string_view in_directive_n
   TokenId::LSHIFT : case TokenId::RSHIFT : case TokenId::BIT_AND : case TokenId::BIT_XOR : case TokenId::BIT_NOT \
       : case TokenId::BIT_OR
 
-Parser::Parser(std::vector<Error> &in_error_vec) : error_vec(in_error_vec) {}
+Parser::Parser(std::vector<Error> &in_error_vec, const FileInput &_file_input)
+    : errors(in_error_vec), file_input(_file_input) {}
+
+Parser::Parser(std::vector<Error> &in_error_vec) : errors(in_error_vec), file_input(get_std_file_input()) {}
 
 AstSourceCode *Parser::parse(const Lexer &lexer) noexcept { return parse_source_code(lexer); }
 /*
@@ -121,7 +130,8 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
       if (semicolon_token.id != TokenId::_EOF &&
           !is_new_line_between(lexer, prev_semi_token.end_pos, semicolon_token.start_pos)) {
         // statement wrong ending
-        parse_error(prev_semi_token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(prev_semi_token));
+        _parse_error(errors, prev_semi_token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER,
+                     lexer.get_token_value(prev_semi_token));
         delete node;
         continue;
       }
@@ -144,7 +154,7 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
  *   | # 'main'
  *   | # 'run' call
  *   | # 'compile'
- *   | # 'fn_type' type
+ *   | # 'fn_type' identifier
  *   ;
  */
 AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
@@ -157,7 +167,7 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
   std::string_view identifier_value = lexer.get_token_value(identifier_token);
 
   if (identifier_token.id != TokenId::IDENTIFIER) {
-    parse_error(hash_token, ERROR_UNEXPECTED_HASH, std::string(identifier_value).c_str());
+    _parse_error(errors, hash_token, ERROR_UNEXPECTED_HASH, std::string(identifier_value).c_str());
     return nullptr;
   }
 
@@ -166,7 +176,7 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
   DirectiveType dir_type;
   if (_get_directive_type(dir_type, identifier_value) == false) {
     delete directive_node;
-    parse_error(identifier_token, ERROR_UNKNOWN_DIRECTIVE, std::string(identifier_value).c_str());
+    _parse_error(errors, identifier_token, ERROR_UNKNOWN_DIRECTIVE, std::string(identifier_value).c_str());
     return nullptr;
   }
 
@@ -175,34 +185,39 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
   switch (dir_type) {
   case DirectiveType::LOAD: {
     const Token &file_name_token = lexer.get_next_token();
+    std::string_view relative_file_path = lexer.get_token_value(file_name_token);
+
     if (file_name_token.id != TokenId::STRING) {
-      // TODO(pablo96): LoadDirective :: String Expected error
+      _parse_error(errors, file_name_token, ERROR_DIRECTIVE_EXPECTED_STRING, std::string(relative_file_path).c_str());
       delete directive_node;
       return nullptr;
     }
 
-    // file_name without double quotes
-    std::string_view file_name = lexer.get_token_value(file_name_token);
-    file_name = file_name.substr(1, file_name.size() - 2);
-
-    // TODO(pablo96): LoadDirective :: file name from current file directory
-
+    std::string file_name;
+    std::string file_directory;
+    if (_get_file_name_and_path(this->file_input, this->errors, file_name_token, relative_file_path,
+                                lexer.file_directory, file_directory, file_name) == false) {
+      // path was not a file, file did not exist or file was no ".llama"
+      delete directive_node;
+      return nullptr;
+    }
     directive_node->argument.str = file_name;
 
+    std::string file_path = file_directory + std::filesystem::path::preferred_separator + file_name;
     RepositorySrcCode code_repository = RepositorySrcCode::get();
 
     // only parse the file if not in the code repository
-    if (!code_repository.has_file(file_name)) {
-      size_t errors_before = error_vec.size();
+    if (!code_repository.has_file(file_path)) {
+      size_t errors_before = errors.size();
 
-      // TODO(pablo96): LoadDirective :: File not found error
+      std::string source_code_str = this->file_input.open_and_read_file(file_path);
 
       // create new lexer and tokenize.
-      Lexer *loaded_file_lexer = new Lexer(file_name, error_vec);
+      Lexer *loaded_file_lexer = new Lexer(source_code_str, file_directory, file_name, errors);
       loaded_file_lexer->tokenize();
 
       // there were errors in lexing.
-      if (errors_before > error_vec.size()) {
+      if (errors_before > errors.size()) {
         // TODO(pablo96): error handling
         delete directive_node;
         return nullptr;
@@ -217,7 +232,7 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
       src_code_node->lexer = loaded_file_lexer;
 
       // add parsed source code to the repository.
-      code_repository._add_source_code(file_name, src_code_node);
+      code_repository._add_source_code(file_path, src_code_node);
     }
   } break;
   default:
@@ -253,7 +268,7 @@ AstNode *Parser::parse_function_def(const Lexer &lexer) noexcept {
     return func_prot_node;
   }
   if (func_prot_node->is_extern) {
-    parse_error(l_curly_token, ERROR_EXTERN_FN_HAS_BODY);
+    _parse_error(errors, l_curly_token, ERROR_EXTERN_FN_HAS_BODY);
   }
 
   lexer.get_back();
@@ -289,7 +304,7 @@ AstFnProto *Parser::parse_function_proto(const Lexer &lexer) noexcept {
 
   const Token &fn_token = first_token.id == TokenId::EXTERN ? lexer.get_next_token() : first_token;
   if (fn_token.id != TokenId::FN && first_token.id == TokenId::EXTERN) {
-    parse_error(fn_token, ERROR_UNEXPECTED_EXTERN, lexer.get_token_value(fn_token));
+    _parse_error(errors, fn_token, ERROR_UNEXPECTED_EXTERN, lexer.get_token_value(fn_token));
     return nullptr;
   }
 
@@ -335,7 +350,7 @@ AstFnProto *Parser::parse_function_proto(const Lexer &lexer) noexcept {
 
       if (token.id == TokenId::_EOF) {
         const Token &prev_token = lexer.get_previous_token();
-        parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+        _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
         delete func_prot_node;
         return nullptr;
       }
@@ -432,7 +447,7 @@ AstBlock *Parser::parse_block(const Lexer &lexer) noexcept {
 
     if (token.id == TokenId::_EOF) {
       const Token &prev_token = lexer.get_previous_token();
-      parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+      _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
       delete block_node;
       return nullptr;
     }
@@ -451,7 +466,7 @@ AstBlock *Parser::parse_block(const Lexer &lexer) noexcept {
       // checking for r_curly allows for '{stmnt}' as block
       if (semicolon_token.id != TokenId::R_CURLY && !has_new_line) {
         // statement wrong ending
-        parse_error(token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(token));
+        _parse_error(errors, token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(token));
         delete stmnt;
         delete block_node;
         return nullptr;
@@ -581,7 +596,7 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
     auto type_node = new AstType(type_info, token.start_line, token.start_column, token.file_name);
     const Token &next_token = lexer.get_next_token();
     if (!_is_type_start_token(next_token)) {
-      parse_error(next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
+      _parse_error(errors, next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
       lexer.get_back();
       delete type_node;
       return nullptr;
@@ -596,7 +611,7 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
     // ARRAY TYPE
     const Token &r_braket_token = lexer.get_next_token();
     if (r_braket_token.id != TokenId::R_BRACKET) {
-      parse_error(r_braket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(r_braket_token));
+      _parse_error(errors, r_braket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(r_braket_token));
       lexer.get_back();
       return nullptr;
     }
@@ -605,7 +620,7 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
 
     const Token &next_token = lexer.get_next_token();
     if (!_is_type_start_token(next_token)) {
-      parse_error(next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
+      _parse_error(errors, next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
       lexer.get_back();
       delete type_node;
       return nullptr;
@@ -621,7 +636,7 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
     return TypesRepository::get().get_type_node(lexer.get_token_value(token));
   } else if (token.id == TokenId::_EOF) {
     const Token &prev_token = lexer.get_previous_token();
-    parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+    _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
     return nullptr;
   }
   // Bad prediction
@@ -711,7 +726,7 @@ AstNode *Parser::parse_expr(const Lexer &lexer) noexcept {
     auto expression = parse_expr(lexer);
     if (lexer.get_next_token().id != TokenId::R_PAREN) {
       const Token &prev_token = lexer.get_previous_token();
-      parse_error(prev_token, ERROR_EXPECTED_R_PAREN_AFTER, lexer.get_token_value(prev_token));
+      _parse_error(errors, prev_token, ERROR_EXPECTED_R_PAREN_AFTER, lexer.get_token_value(prev_token));
       return nullptr;
     }
     return expression;
@@ -870,7 +885,7 @@ consume_plus:
 
   if (unary_op_token.id == TokenId::_EOF) {
     const Token &prev_token = lexer.get_previous_token();
-    parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+    _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
     return nullptr;
   }
 
@@ -933,7 +948,7 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
 
   if (token.id == TokenId::_EOF) {
     const Token &prev_token = lexer.get_previous_token();
-    parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+    _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
     return nullptr;
   }
 
@@ -988,7 +1003,8 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
   }
 
   auto token_value = lexer.get_token_value(number_token);
-  parse_error(number_token, ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN, token_value, token_id_name(number_token.id));
+  _parse_error(errors, number_token, ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN, token_value,
+               token_id_name(number_token.id));
   return nullptr;
 }
 
@@ -1027,7 +1043,7 @@ AstFnCallExpr *Parser::parse_function_call(const Lexer &lexer) noexcept {
 
     if (token.id == TokenId::_EOF) {
       const Token &prev_token = lexer.get_previous_token();
-      parse_error(prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
+      _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
       delete func_call_node;
       return nullptr;
     }
@@ -1045,7 +1061,7 @@ AstFnCallExpr *Parser::parse_function_call(const Lexer &lexer) noexcept {
   return func_call_node;
 }
 
-AstNode *Parser::parse_error(const Token &token, const char *format, ...) noexcept {
+void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept {
   va_list ap, ap2;
   va_start(ap, format);
   va_copy(ap2, ap);
@@ -1061,10 +1077,10 @@ AstNode *Parser::parse_error(const Token &token, const char *format, ...) noexce
   assert(len2 == len1);
 
   Error error(ERROR_TYPE::ERROR, token.start_line, token.start_column, token.file_name, msg);
+  in_errors.push_back(error);
 
   va_end(ap);
   va_end(ap2);
-  return nullptr;
 }
 
 bool Parser::is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos) {
@@ -1265,4 +1281,40 @@ const char *_get_const_char(const std::string_view str) {
   strncpy(str_nt, str.data(), src_size);
   str_nt[src_size] = 0;
   return str_nt;
+}
+
+bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in_errors, const Token &in_string_token,
+                             const std::string_view in_relative_file_name, const std::string &in_file_directory,
+                             std::string &out_file_path, std::string &out_file_name) {
+  // file_name without double quotes
+  std::string_view relative_file_name = in_relative_file_name.substr(1, in_relative_file_name.size() - 2);
+
+  std::error_code error_code;
+
+  // complete relative file name path
+  std::string relative_file_name_path =
+    in_file_directory + std::filesystem::path::preferred_separator + std::string(relative_file_name);
+  std::filesystem::path file_path = resolve_path(relative_file_name_path, error_code);
+
+  switch (file_input.verify_file_path(file_path)) {
+  case FILE_PATH_STATUS::NOT_A_FILE: {
+    _parse_error(in_errors, in_string_token, ERROR_NOT_A_FILE, file_path.string().c_str());
+    return false;
+  }
+  case FILE_PATH_STATUS::NOT_FOUND: {
+    _parse_error(in_errors, in_string_token, ERROR_FILE_NOT_FOUND, file_path.string().c_str());
+    return false;
+  }
+  case FILE_PATH_STATUS::NOT_LLAMA_FILE: {
+    _parse_error(in_errors, in_string_token, ERROR_NOT_LLAMA_FILE, file_path.string().c_str());
+    return false;
+  }
+  default:
+    break;
+  }
+
+  out_file_name = file_path.filename();
+  out_file_path = file_path.parent_path();
+
+  return true;
 }

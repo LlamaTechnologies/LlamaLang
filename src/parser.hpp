@@ -20,15 +20,18 @@ struct AstType;
 struct AstBinaryExpr;
 struct AstUnaryExpr;
 struct AstFnCallExpr;
+struct FileInput;
 
 bool match(const Token *token, ...) noexcept;
 #define MATCH(token, ...) match(token, __VA_ARGS__, TokenId(size_t(TokenId::_EOF) + 1))
 
 class Parser {
-  std::vector<Error> &error_vec;
+  std::vector<Error> &errors;
+  const FileInput &file_input;
 
 public:
   Parser(std::vector<Error> &in_error_vec);
+  Parser(std::vector<Error> &in_error_vec, const FileInput &in_file_input);
 
   AstSourceCode *parse(const Lexer &lexer) noexcept;
 
@@ -75,8 +78,6 @@ public:
 
   // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_primary_expr(const Lexer &lexer) noexcept;
-
-  AstNode *parse_error(const Token &token, const char *format, ...) noexcept;
 
   bool is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos);
 

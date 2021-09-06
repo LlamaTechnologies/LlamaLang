@@ -11,7 +11,7 @@
 
 TEST(ParserHappyParseValueTests, IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar", "IdentifierTest", errors);
+  Lexer lexer("myVar", "file/directory", "IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -31,7 +31,7 @@ TEST(ParserHappyParseValueTests, IdentifierTest) {
 
 TEST(ParserHappyParseValueTests, FloatTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547.12f", "FloatTest", errors);
+  Lexer lexer("12_547.12f", "file/directory", "FloatTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -47,7 +47,7 @@ TEST(ParserHappyParseValueTests, FloatTest) {
 
 TEST(ParserHappyParseValueTests, IntTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547", "IntTest", errors);
+  Lexer lexer("12_547", "file/directory", "IntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -66,7 +66,7 @@ TEST(ParserHappyParseValueTests, IntTest) {
 
 TEST(ParserHappyParseValueTests, UnicodeCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -89,7 +89,7 @@ TEST(ParserHappyParseValueTests, UnicodeCharTest) {
 
 TEST(ParserHappyParseUnaryExprTests, PreIncIdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("++myVar", "PreIncIdentifierTest", errors);
+  Lexer lexer("++myVar", "file/directory", "PreIncIdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -109,7 +109,7 @@ TEST(ParserHappyParseUnaryExprTests, PreIncIdentifierTest) {
 
 TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar++", "PostIncIdentifierTest", errors);
+  Lexer lexer("myVar++", "file/directory", "PostIncIdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -129,7 +129,7 @@ TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
 
 TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
   std::vector<Error> errors;
-  Lexer lexer("++myFunc()", "PreIncFuncCallTest", errors);
+  Lexer lexer("++myFunc()", "file/directory", "PreIncFuncCallTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -155,7 +155,7 @@ TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
 
 TEST(ParserHappyParseUnaryExprTests, IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar", "IdentifierTest", errors);
+  Lexer lexer("myVar", "file/directory", "IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -175,7 +175,7 @@ TEST(ParserHappyParseUnaryExprTests, IdentifierTest) {
 
 TEST(ParserHappyParseUnaryExprTests, FloatTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547.12f", "FloatTest", errors);
+  Lexer lexer("12_547.12f", "file/directory", "FloatTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -191,7 +191,7 @@ TEST(ParserHappyParseUnaryExprTests, FloatTest) {
 
 TEST(ParserHappyParseUnaryExprTests, IntTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547", "IntTest", errors);
+  Lexer lexer("12_547", "file/directory", "IntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -210,7 +210,7 @@ TEST(ParserHappyParseUnaryExprTests, IntTest) {
 
 TEST(ParserHappyParseUnaryExprTests, NegativeIntTest) {
   std::vector<Error> errors;
-  Lexer lexer("-12_547", "NegativeIntTest", errors);
+  Lexer lexer("-12_547", "file/directory", "NegativeIntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -232,7 +232,7 @@ TEST(ParserHappyParseUnaryExprTests, NegativeIntTest) {
 
 TEST(ParserHappyParseUnaryExprTests, ExplicitPositiveIntTest) {
   std::vector<Error> errors;
-  Lexer lexer("+12_547", "ExplicitPositiveIntTest", errors);
+  Lexer lexer("+12_547", "file/directory", "ExplicitPositiveIntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -252,7 +252,7 @@ TEST(ParserHappyParseUnaryExprTests, ExplicitPositiveIntTest) {
 
 TEST(ParserHappyParseUnaryExprTests, UnicodeCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -275,7 +275,7 @@ TEST(ParserHappyParseUnaryExprTests, UnicodeCharTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myVar2", "Mul2IdentifierAndDecTest", errors);
+  Lexer lexer("myVar-- * myVar2", "file/directory", "Mul2IdentifierAndDecTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -301,7 +301,7 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myFunc()", "Mul2IdentifierAndFuncCallTest", errors);
+  Lexer lexer("myVar-- * myFunc()", "file/directory", "Mul2IdentifierAndFuncCallTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -331,7 +331,7 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
   std::vector<Error> errors;
-  Lexer lexer("++myVar * myVar2", "Mul2IdentifierAndIncTest", errors);
+  Lexer lexer("++myVar * myVar2", "file/directory", "Mul2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -362,7 +362,7 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndIncTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar * myVar2", "Mul2IdentifierTest", errors);
+  Lexer lexer("myVar * myVar2", "file/directory", "Mul2IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -390,7 +390,7 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierTest) {
 
 TEST(ParserHappyParseMulExprTests, MulNumberIdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * myVar2", "MulNumberIdentifierTest", errors);
+  Lexer lexer("25 * myVar2", "file/directory", "MulNumberIdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -416,7 +416,7 @@ TEST(ParserHappyParseMulExprTests, MulNumberIdentifierTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f", "Mul2NumbersTest", errors);
+  Lexer lexer("25 * 21.5f", "file/directory", "Mul2NumbersTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -442,7 +442,7 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f / 'g'", "Mul2NumbersAndCharTest", errors);
+  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -480,7 +480,7 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
 
 TEST(ParserHappyParseMulExprTests, IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar", "IdentifierTest", errors);
+  Lexer lexer("myVar", "file/directory", "IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -500,7 +500,7 @@ TEST(ParserHappyParseMulExprTests, IdentifierTest) {
 
 TEST(ParserHappyParseMulExprTests, FloatTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547.12f", "FloatTest", errors);
+  Lexer lexer("12_547.12f", "file/directory", "FloatTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -516,7 +516,7 @@ TEST(ParserHappyParseMulExprTests, FloatTest) {
 
 TEST(ParserHappyParseMulExprTests, IntTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547", "IntTest", errors);
+  Lexer lexer("12_547", "file/directory", "IntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -535,7 +535,7 @@ TEST(ParserHappyParseMulExprTests, IntTest) {
 
 TEST(ParserHappyParseMulExprTests, UnicodeCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -557,7 +557,7 @@ TEST(ParserHappyParseMulExprTests, UnicodeCharTest) {
 //==================================================================================
 TEST(ParserHappyParseAddExprTests, Add2IdentifierAndIncTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar++ + myVar2", "Add2IdentifierAndIncTest", errors);
+  Lexer lexer("myVar++ + myVar2", "file/directory", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -595,7 +595,7 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierAndIncTest) {
 
 TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar + myVar2", "Add2IdentifierTest", errors);
+  Lexer lexer("myVar + myVar2", "file/directory", "Add2IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -621,7 +621,7 @@ TEST(ParserHappyParseAddExprTests, Add2IdentifierTest) {
 
 TEST(ParserHappyParseAddExprTests, AddIdentifierNumberTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar + 25", "AddIdentifierNumberTest", errors);
+  Lexer lexer("myVar + 25", "file/directory", "AddIdentifierNumberTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -647,7 +647,7 @@ TEST(ParserHappyParseAddExprTests, AddIdentifierNumberTest) {
 
 TEST(ParserHappyParseAddExprTests, Add2NumbersTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25", "Add2NumbersTest", errors);
+  Lexer lexer(".25f + 25", "file/directory", "Add2NumbersTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -673,7 +673,7 @@ TEST(ParserHappyParseAddExprTests, Add2NumbersTest) {
 
 TEST(ParserHappyParseAddExprTests, Add2NumberAndCharTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25 - 'g'", "Add2NumberAndCharTest", errors);
+  Lexer lexer(".25f + 25 - 'g'", "file/directory", "Add2NumberAndCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -709,7 +709,7 @@ TEST(ParserHappyParseAddExprTests, Add2NumberAndCharTest) {
 
 TEST(ParserHappyParseAddExprTests, FullAlgebraicTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25 * 14 - 'g' % 15", "FullAlgebraicTest", errors);
+  Lexer lexer(".25f + 25 * 14 - 'g' % 15", "file/directory", "FullAlgebraicTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -758,7 +758,7 @@ TEST(ParserHappyParseAddExprTests, FullAlgebraicTest) {
 
 TEST(ParserHappyParseAddExprTests, Mul2IdentifierAndDecTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myVar2", "Mul2IdentifierAndDecTest", errors);
+  Lexer lexer("myVar-- * myVar2", "file/directory", "Mul2IdentifierAndDecTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -784,7 +784,7 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierAndDecTest) {
 
 TEST(ParserHappyParseAddExprTests, Mul2IdentifierAndFuncCallTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myFunc()", "Mul2IdentifierAndFuncCallTest", errors);
+  Lexer lexer("myVar-- * myFunc()", "file/directory", "Mul2IdentifierAndFuncCallTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -814,7 +814,7 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierAndFuncCallTest) {
 
 TEST(ParserHappyParseAddExprTests, Mul2IdentifierAndIncTest) {
   std::vector<Error> errors;
-  Lexer lexer("++myVar * myVar2", "Mul2IdentifierAndIncTest", errors);
+  Lexer lexer("++myVar * myVar2", "file/directory", "Mul2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -845,7 +845,7 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierAndIncTest) {
 
 TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar * myVar2", "Mul2IdentifierTest", errors);
+  Lexer lexer("myVar * myVar2", "file/directory", "Mul2IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -873,7 +873,7 @@ TEST(ParserHappyParseAddExprTests, Mul2IdentifierTest) {
 
 TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * myVar2", "MulNumberIdentifierTest", errors);
+  Lexer lexer("25 * myVar2", "file/directory", "MulNumberIdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -899,7 +899,7 @@ TEST(ParserHappyParseAddExprTests, MulNumberIdentifierTest) {
 
 TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f", "Mul2NumbersTest", errors);
+  Lexer lexer("25 * 21.5f", "file/directory", "Mul2NumbersTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -925,7 +925,7 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
 
 TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f / 'g'", "Mul2NumbersAndCharTest", errors);
+  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -963,7 +963,7 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
 
 TEST(ParserHappyParseAddExprTests, IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar", "IdentifierTest", errors);
+  Lexer lexer("myVar", "file/directory", "IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -983,7 +983,7 @@ TEST(ParserHappyParseAddExprTests, IdentifierTest) {
 
 TEST(ParserHappyParseAddExprTests, FloatTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547.12f", "FloatTest", errors);
+  Lexer lexer("12_547.12f", "file/directory", "FloatTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -999,7 +999,7 @@ TEST(ParserHappyParseAddExprTests, FloatTest) {
 
 TEST(ParserHappyParseAddExprTests, IntTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547", "IntTest", errors);
+  Lexer lexer("12_547", "file/directory", "IntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1018,7 +1018,7 @@ TEST(ParserHappyParseAddExprTests, IntTest) {
 
 TEST(ParserHappyParseAddExprTests, UnicodeCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1041,7 +1041,7 @@ TEST(ParserHappyParseAddExprTests, UnicodeCharTest) {
 
 TEST(ParserHappyParseCompExprTests, Comp2IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar == myVar2", "Add2IdentifierAndIncTest", errors);
+  Lexer lexer("myVar == myVar2", "file/directory", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1067,7 +1067,7 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierTest) {
 
 TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar == myVar2 >= 45", "Add2IdentifierAndIncTest", errors);
+  Lexer lexer("myVar == myVar2 >= 45", "file/directory", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1103,7 +1103,7 @@ TEST(ParserHappyParseCompExprTests, Comp2IdentifierAndNumberTest) {
 
 TEST(ParserHappyParseCompExprTests, Add2IdentifierAndIncTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar++ + myVar2", "Add2IdentifierAndIncTest", errors);
+  Lexer lexer("myVar++ + myVar2", "file/directory", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1141,7 +1141,7 @@ TEST(ParserHappyParseCompExprTests, Add2IdentifierAndIncTest) {
 
 TEST(ParserHappyParseCompExprTests, Add2IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar + myVar2", "Add2IdentifierTest", errors);
+  Lexer lexer("myVar + myVar2", "file/directory", "Add2IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1167,7 +1167,7 @@ TEST(ParserHappyParseCompExprTests, Add2IdentifierTest) {
 
 TEST(ParserHappyParseCompExprTests, AddIdentifierNumberTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar + 25", "AddIdentifierNumberTest", errors);
+  Lexer lexer("myVar + 25", "file/directory", "AddIdentifierNumberTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1193,7 +1193,7 @@ TEST(ParserHappyParseCompExprTests, AddIdentifierNumberTest) {
 
 TEST(ParserHappyParseCompExprTests, Add2NumbersTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25", "Add2NumbersTest", errors);
+  Lexer lexer(".25f + 25", "file/directory", "Add2NumbersTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1219,7 +1219,7 @@ TEST(ParserHappyParseCompExprTests, Add2NumbersTest) {
 
 TEST(ParserHappyParseCompExprTests, Add2NumberAndCharTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25 - 'g'", "Add2NumberAndCharTest", errors);
+  Lexer lexer(".25f + 25 - 'g'", "file/directory", "Add2NumberAndCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1255,7 +1255,7 @@ TEST(ParserHappyParseCompExprTests, Add2NumberAndCharTest) {
 
 TEST(ParserHappyParseCompExprTests, FullAlgebraicTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25 * 14 - 'g' % 15", "FullAlgebraicTest", errors);
+  Lexer lexer(".25f + 25 * 14 - 'g' % 15", "file/directory", "FullAlgebraicTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1304,7 +1304,7 @@ TEST(ParserHappyParseCompExprTests, FullAlgebraicTest) {
 
 TEST(ParserHappyParseCompExprTests, Mul2IdentifierAndDecTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myVar2", "Mul2IdentifierAndDecTest", errors);
+  Lexer lexer("myVar-- * myVar2", "file/directory", "Mul2IdentifierAndDecTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1330,7 +1330,7 @@ TEST(ParserHappyParseCompExprTests, Mul2IdentifierAndDecTest) {
 
 TEST(ParserHappyParseCompExprTests, Mul2IdentifierAndFuncCallTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myFunc()", "Mul2IdentifierAndFuncCallTest", errors);
+  Lexer lexer("myVar-- * myFunc()", "file/directory", "Mul2IdentifierAndFuncCallTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1360,7 +1360,7 @@ TEST(ParserHappyParseCompExprTests, Mul2IdentifierAndFuncCallTest) {
 
 TEST(ParserHappyParseCompExprTests, Mul2IdentifierAndIncTest) {
   std::vector<Error> errors;
-  Lexer lexer("++myVar * myVar2", "Mul2IdentifierAndIncTest", errors);
+  Lexer lexer("++myVar * myVar2", "file/directory", "Mul2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1391,7 +1391,7 @@ TEST(ParserHappyParseCompExprTests, Mul2IdentifierAndIncTest) {
 
 TEST(ParserHappyParseCompExprTests, Mul2IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar * myVar2", "Mul2IdentifierTest", errors);
+  Lexer lexer("myVar * myVar2", "file/directory", "Mul2IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1419,7 +1419,7 @@ TEST(ParserHappyParseCompExprTests, Mul2IdentifierTest) {
 
 TEST(ParserHappyParseCompExprTests, MulNumberIdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * myVar2", "MulNumberIdentifierTest", errors);
+  Lexer lexer("25 * myVar2", "file/directory", "MulNumberIdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1445,7 +1445,7 @@ TEST(ParserHappyParseCompExprTests, MulNumberIdentifierTest) {
 
 TEST(ParserHappyParseCompExprTests, Mul2NumbersTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f", "Mul2NumbersTest", errors);
+  Lexer lexer("25 * 21.5f", "file/directory", "Mul2NumbersTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1471,7 +1471,7 @@ TEST(ParserHappyParseCompExprTests, Mul2NumbersTest) {
 
 TEST(ParserHappyParseCompExprTests, Mul2NumbersAndCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f / 'g'", "Mul2NumbersAndCharTest", errors);
+  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1509,7 +1509,7 @@ TEST(ParserHappyParseCompExprTests, Mul2NumbersAndCharTest) {
 
 TEST(ParserHappyParseCompExprTests, IdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar", "IdentifierTest", errors);
+  Lexer lexer("myVar", "file/directory", "IdentifierTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1529,7 +1529,7 @@ TEST(ParserHappyParseCompExprTests, IdentifierTest) {
 
 TEST(ParserHappyParseCompExprTests, FloatTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547.12f", "FloatTest", errors);
+  Lexer lexer("12_547.12f", "file/directory", "FloatTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1545,7 +1545,7 @@ TEST(ParserHappyParseCompExprTests, FloatTest) {
 
 TEST(ParserHappyParseCompExprTests, IntTest) {
   std::vector<Error> errors;
-  Lexer lexer("12_547", "IntTest", errors);
+  Lexer lexer("12_547", "file/directory", "IntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1564,7 +1564,7 @@ TEST(ParserHappyParseCompExprTests, IntTest) {
 
 TEST(ParserHappyParseCompExprTests, UnicodeCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1587,7 +1587,7 @@ TEST(ParserHappyParseCompExprTests, UnicodeCharTest) {
 
 TEST(ParserHappyParseExprTests, CompGroupedTest) {
   std::vector<Error> errors;
-  Lexer lexer("(myVar == (myVar2 + 5))", "CompGroupedTest", errors);
+  Lexer lexer("(myVar == (myVar2 + 5))", "file/directory", "CompGroupedTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);

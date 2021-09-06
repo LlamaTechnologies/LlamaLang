@@ -10,7 +10,7 @@
 
 TEST(ParserHappyStmntTests, RetStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret myVar * (5 + 8)", "Ret stmnt", errors);
+  Lexer lexer("ret myVar * (5 + 8)", "file/directory", "Ret stmnt", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -28,7 +28,7 @@ TEST(ParserHappyStmntTests, RetStmnt) {
 
 TEST(ParserHappyStmntTests, RetEmptyStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret ", "RetEmptyStmnt", errors);
+  Lexer lexer("ret ", "file/directory", "RetEmptyStmnt", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -49,7 +49,7 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
 
 TEST(ParserHappyStmntTests, AssignStmntTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar = 5 * (6 + 9)", "AssignStmntTest", errors);
+  Lexer lexer("myVar = 5 * (6 + 9)", "file/directory", "AssignStmntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -73,7 +73,7 @@ TEST(ParserHappyStmntTests, AssignStmntTest) {
 
 TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
   std::vector<Error> errors;
-  Lexer lexer("i32", "TypeNameIsPrimitiveParse", errors);
+  Lexer lexer("i32", "file/directory", "TypeNameIsPrimitiveParse", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -93,7 +93,7 @@ TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
 
 TEST(ParserHappyStmntTests, TypeArrayParse) {
   std::vector<Error> errors;
-  Lexer lexer("[]i32", "TypeArrayParse", errors);
+  Lexer lexer("[]i32", "file/directory", "TypeArrayParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -115,7 +115,7 @@ TEST(ParserHappyStmntTests, TypeArrayParse) {
 
 TEST(ParserHappyStmntTests, TypePointerParse) {
   std::vector<Error> errors;
-  Lexer lexer("*i32", "TypePointerParse", errors);
+  Lexer lexer("*i32", "file/directory", "TypePointerParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -141,7 +141,7 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar i32", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -167,7 +167,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32 = -65", "VarDefSimpleTypeInitializerParse", errors);
+  Lexer lexer("myVar i32 = -65", "file/directory", "VarDefSimpleTypeInitializerParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -202,7 +202,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32 = 65 + PI", "VarDefSimpleTypeInitializerAddParse", errors);
+  Lexer lexer("myVar i32 = 65 + PI", "file/directory", "VarDefSimpleTypeInitializerAddParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -242,7 +242,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
 
 TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
+  Lexer lexer("myVar []i32", "file/directory", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -272,7 +272,7 @@ TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
 
 TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
+  Lexer lexer("myVar *i32", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -306,7 +306,7 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar i32", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -332,7 +332,7 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
+  Lexer lexer("myVar []i32", "file/directory", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -363,7 +363,7 @@ TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
+  Lexer lexer("myVar *i32", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -396,7 +396,7 @@ TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar = 5 * (6 + 9)", "AssignStmntTest", errors);
+  Lexer lexer("myVar = 5 * (6 + 9)", "file/directory", "AssignStmntTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -420,7 +420,7 @@ TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
 
 TEST(ParserHappyStmntTests, StatementRetStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret myVar * (5 + 8)", "Ret stmnt", errors);
+  Lexer lexer("ret myVar * (5 + 8)", "file/directory", "Ret stmnt", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -440,7 +440,7 @@ TEST(ParserHappyStmntTests, StatementRetStmnt) {
 
 TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret ", "RetEmptyStmnt", errors);
+  Lexer lexer("ret ", "file/directory", "RetEmptyStmnt", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -463,7 +463,7 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
 
 TEST(ParserHappyStmntTests, BlockEmptyTest) {
   std::vector<Error> errors;
-  Lexer lexer("{}", "BlockEmptyTest", errors);
+  Lexer lexer("{}", "file/directory", "BlockEmptyTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -479,7 +479,7 @@ TEST(ParserHappyStmntTests, BlockEmptyTest) {
 
 TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{myVar i32\nret myvar}", "BlockNoSpaceNearCurliesTest", errors);
+  Lexer lexer("{myVar i32\nret myvar}", "file/directory", "BlockNoSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -516,7 +516,7 @@ TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
 
 TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ myVar i32\nret myvar }", "BlockSpaceNearCurliesTest", errors);
+  Lexer lexer("{ myVar i32\nret myvar }", "file/directory", "BlockSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -553,7 +553,7 @@ TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
 
 TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{\n\tmyVar i32\n\tret myvar\n}", "BlockNewlinesNearCurliesTest", errors);
+  Lexer lexer("{\n\tmyVar i32\n\tret myvar\n}", "file/directory", "BlockNewlinesNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -589,7 +589,8 @@ TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
 
 TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ \n  \t myVar i32   \n  \t  ret myvar  \n   }", "BlockSpacesBetweenNewlinesTest", errors);
+  Lexer lexer("{ \n  \t myVar i32   \n  \t  ret myvar  \n   }", "file/directory", "BlockSpacesBetweenNewlinesTest",
+              errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -629,7 +630,7 @@ TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
 
 TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void", "FuncProtoEmptyParamTest", errors);
+  Lexer lexer("fn myFunc() void", "file/directory", "FuncProtoEmptyParamTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -653,7 +654,7 @@ TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
 
 TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) void", "FuncProtoSingleParamTest", errors);
+  Lexer lexer("fn myFunc(param1 i32) void", "file/directory", "FuncProtoSingleParamTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -687,7 +688,7 @@ TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
 
 TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32", "FuncProtoMultiParamTest", errors);
+  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32", "file/directory", "FuncProtoMultiParamTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -722,7 +723,8 @@ TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
 
 TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn\nmyFunc\n(param1 i32\n, param1 i32,\n param1\ni32)\ni32", "FuncProtoMultiLineTest", errors);
+  Lexer lexer("fn\nmyFunc\n(param1 i32\n, param1 i32,\n param1\ni32)\ni32", " file / directory ",
+              "FuncProtoMultiLineTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -761,7 +763,7 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
 
 TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void {}", "FuncDefNoParamsVoidBlockTest", errors);
+  Lexer lexer("fn myFunc() void {}", "file/directory", "FuncDefNoParamsVoidBlockTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -798,7 +800,7 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
 
 TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) i32 {}", "FuncDefSingleParamsVoidBlockTest", errors);
+  Lexer lexer("fn myFunc(param1 i32) i32 {}", "file/directory", "FuncDefSingleParamsVoidBlockTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -846,7 +848,8 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
 
 TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "FuncDefMultiParamsVoidBlockTest", errors);
+  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "file/directory",
+              "FuncDefMultiParamsVoidBlockTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -895,7 +898,7 @@ TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
 
 TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "FuncDefNoParamsTest", errors);
+  Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "file/directory", "FuncDefNoParamsTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -946,7 +949,7 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
 
 TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "FuncDefSingleParamsTest", errors);
+  Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "file/directory", "FuncDefSingleParamsTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1008,7 +1011,7 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
 
 TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc()", "FuncCallNoParamsTest", errors);
+  Lexer lexer("myFunc()", "file/directory", "FuncCallNoParamsTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1025,7 +1028,7 @@ TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
 
 TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc(5)", "FuncCall1ParamTest", errors);
+  Lexer lexer("myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1048,7 +1051,7 @@ TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
 
 TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
   std::vector<Error> errors;
-  Lexer lexer("85 + myFunc(5)", "FuncCall1ParamTest", errors);
+  Lexer lexer("85 + myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1091,7 +1094,7 @@ TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
 
 TEST(ParserHappyStmntTests, FuncCallNestedTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc(myFunc2(5))", "FuncCallNestedTest", errors);
+  Lexer lexer("myFunc(myFunc2(5))", "file/directory", "FuncCallNestedTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1123,7 +1126,7 @@ TEST(ParserHappyStmntTests, FuncCallNestedTest) {
 
 TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc(myVar, myFunc2(5))", "FuncCallMultiParamsTest", errors);
+  Lexer lexer("myFunc(myVar, myFunc2(5))", "file/directory", "FuncCallMultiParamsTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1177,7 +1180,7 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
                             "}";
 
   std::vector<Error> errors;
-  Lexer lexer(source_code, "FullProgramNoNewLineEnd", errors);
+  Lexer lexer(source_code, "file/directory", "FullProgramNoNewLineEnd", errors);
   lexer.tokenize();
 
   Parser parser(errors);

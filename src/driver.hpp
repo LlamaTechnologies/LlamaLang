@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <string>
 
+struct FileInput;
+
 struct Driver {
   Driver();
 

@@ -45,9 +45,10 @@ bool Driver::run() {
   }
 
   const std::string source_name = this->file_path.filename().string();
-  std::string source_code = read_file(source_file);
+  std::string source_code = get_std_file_input().read_file(source_file);
 
-  bool program_ok = compiler::compile(this->output_dir, this->output_name, source_code, source_name);
+  bool program_ok = compiler::compile(this->file_path.parent_path().string(), this->output_dir, this->output_name,
+                                      source_code, source_name);
   if (program_ok == false) {
     return false;
   }
@@ -87,8 +88,19 @@ bool Driver::_get_tool_chain() {
 }
 
 bool Driver::_verify_file_path() {
-  FILE_PATH_STATUS status = ::verify_file_path(this->file_path);
-  return status == FILE_PATH_STATUS::OK;
+  switch (get_std_file_input().verify_file_path(this->file_path)) {
+  case FILE_PATH_STATUS::NOT_FOUND:
+    console::write_line("file '" + this->file_path.string() + "' does not exists!");
+    return false;
+  case FILE_PATH_STATUS::NOT_A_FILE:
+    console::write_line("file '" + this->file_path.string() + "' is not a file!");
+    return false;
+  case FILE_PATH_STATUS::NOT_LLAMA_FILE:
+    console::write_line("file '" + this->file_path.string() + "' is not a llama lang file!");
+    return false;
+  default:
+    return true;
+  }
 }
 
 bool Driver::_parse_args(const char **argv, const int argc) {

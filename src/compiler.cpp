@@ -11,14 +11,15 @@ static void _print_errors(const std::vector<Error> &errors);
 static bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInterface *in_generator,
                                             AstSourceCode *const in_source_code);
 
-bool compiler::compile(const std::string &in_output_directory, const std::string &in_executable_name,
-                       const std::string &in_source_code, const std::string &in_source_name) {
+bool compiler::compile(const std::string &in_input_directory, const std::string &in_output_directory,
+                       const std::string &in_executable_name, const std::string &in_source_code,
+                       const std::string &in_source_name) {
   LL_ASSERT(in_source_code.size() > 0);
   LL_ASSERT(in_source_name.size() > 0);
 
   std::vector<Error> errors;
 
-  Lexer lexer(in_source_code, in_source_name, errors);
+  Lexer lexer(in_source_code, in_input_directory, in_source_name, errors);
   lexer.tokenize();
 
   if (!errors.empty()) {

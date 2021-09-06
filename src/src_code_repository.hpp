@@ -14,6 +14,7 @@ class Parser;
 
 struct RepositorySrcCode {
   static RepositorySrcCode &get();
+  static void clean();
 
   bool has_file(std::string_view in_file_name) const;
   AstSourceCode *get_source_code(std::string_view in_file_name);

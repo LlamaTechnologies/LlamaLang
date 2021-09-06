@@ -9,7 +9,7 @@
 
 TEST(LexerHappyIdentifierTests, IdentifierSingleUnderscoreTest) {
   std::vector<Error> errors;
-  Lexer lexer("_", "SingleUnderscoreTest", errors);
+  Lexer lexer("_", "file/directory", "SingleUnderscoreTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -19,7 +19,7 @@ TEST(LexerHappyIdentifierTests, IdentifierSingleUnderscoreTest) {
 
 TEST(LexerHappyIdentifierTests, IdentifierAlphaOnlyTest) {
   std::vector<Error> errors;
-  Lexer lexer("thisIsMyIdentifier", "AlphaOnlyTest", errors);
+  Lexer lexer("thisIsMyIdentifier", "file/directory", "AlphaOnlyTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -29,7 +29,7 @@ TEST(LexerHappyIdentifierTests, IdentifierAlphaOnlyTest) {
 
 TEST(LexerHappyIdentifierTests, IdentifierAlphaNumericTest) {
   std::vector<Error> errors;
-  Lexer lexer("myIdentifier214ok", "AlphaNumericTest", errors);
+  Lexer lexer("myIdentifier214ok", "file/directory", "AlphaNumericTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -39,7 +39,7 @@ TEST(LexerHappyIdentifierTests, IdentifierAlphaNumericTest) {
 
 TEST(LexerHappyIdentifierTests, IdentifierUnderscorePrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("_myIdentifier214ok", "UnderscorePrefixTest", errors);
+  Lexer lexer("_myIdentifier214ok", "file/directory", "UnderscorePrefixTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -49,7 +49,7 @@ TEST(LexerHappyIdentifierTests, IdentifierUnderscorePrefixTest) {
 
 TEST(LexerHappyIdentifierTests, IdentifierCompleteTest) {
   std::vector<Error> errors;
-  Lexer lexer("myIdentifier214_ok", "IdentifierCompleteTest", errors);
+  Lexer lexer("myIdentifier214_ok", "file/directory", "IdentifierCompleteTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -59,7 +59,7 @@ TEST(LexerHappyIdentifierTests, IdentifierCompleteTest) {
 
 TEST(LexerHappyIdentifierTests, IdentifierCompleteUnderscorePrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("_myIdentifier214_ok", "CompleteUnderscorePrefixTest", errors);
+  Lexer lexer("_myIdentifier214_ok", "file/directory", "CompleteUnderscorePrefixTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -73,7 +73,7 @@ TEST(LexerHappyIdentifierTests, IdentifierCompleteUnderscorePrefixTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordFnTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn", "KeywordFnTest", errors);
+  Lexer lexer("fn", "file/directory", "KeywordFnTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -83,7 +83,7 @@ TEST(LexerHappyKeywordsTests, KeywordFnTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordRetTest) {
   std::vector<Error> errors;
-  Lexer lexer("ret", "KeywordRetTest", errors);
+  Lexer lexer("ret", "file/directory", "KeywordRetTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -93,7 +93,7 @@ TEST(LexerHappyKeywordsTests, KeywordRetTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordAndTest) {
   std::vector<Error> errors;
-  Lexer lexer("and", "KeywordAndTest", errors);
+  Lexer lexer("and", "file/directory", "KeywordAndTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -103,7 +103,7 @@ TEST(LexerHappyKeywordsTests, KeywordAndTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordOrTest) {
   std::vector<Error> errors;
-  Lexer lexer("or", "KeywordOrTest", errors);
+  Lexer lexer("or", "file/directory", "KeywordOrTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -113,7 +113,7 @@ TEST(LexerHappyKeywordsTests, KeywordOrTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordFnNewLineTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn\n", "KeywordFnNewLineTest", errors);
+  Lexer lexer("fn\n", "file/directory", "KeywordFnNewLineTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -123,7 +123,7 @@ TEST(LexerHappyKeywordsTests, KeywordFnNewLineTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordRetNewLineTest) {
   std::vector<Error> errors;
-  Lexer lexer("ret \n", "KeywordRetNewLineTest", errors);
+  Lexer lexer("ret \n", "file/directory", "KeywordRetNewLineTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -133,7 +133,7 @@ TEST(LexerHappyKeywordsTests, KeywordRetNewLineTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordAndNewLineTest) {
   std::vector<Error> errors;
-  Lexer lexer("and\n", "KeywordAndNewLineTest", errors);
+  Lexer lexer("and\n", "file/directory", "KeywordAndNewLineTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -143,7 +143,7 @@ TEST(LexerHappyKeywordsTests, KeywordAndNewLineTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordOrNewLineTest) {
   std::vector<Error> errors;
-  Lexer lexer("or\n", "KeywordOrNewLineTest", errors);
+  Lexer lexer("or\n", "file/directory", "KeywordOrNewLineTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -157,7 +157,7 @@ TEST(LexerHappyKeywordsTests, KeywordOrNewLineTest) {
 
 TEST(LexerHappyOperatorsTests, HashOperatorTest) {
   std::vector<Error> errors;
-  Lexer lexer("#", "KeywordRetTest", errors);
+  Lexer lexer("#", "file/directory", "KeywordRetTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -167,7 +167,7 @@ TEST(LexerHappyOperatorsTests, HashOperatorTest) {
 
 TEST(LexerHappyOperatorsTests, OperatorsTest) {
   std::vector<Error> errors;
-  Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "OperatorsTest", errors);
+  Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory", "OperatorsTest", errors);
   lexer.tokenize();
 
   // do not change order
@@ -209,7 +209,7 @@ TEST(LexerHappyOperatorsTests, OperatorsTest) {
 
 TEST(LexerHappyIntegerTests, IntegerDigitOnlyTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415", "DigitOnlyTest", errors);
+  Lexer lexer("5415", "file/directory", "DigitOnlyTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -223,7 +223,7 @@ TEST(LexerHappyIntegerTests, IntegerDigitOnlyTest) {
 
 TEST(LexerHappyIntegerTests, IntegerDigitOnlyZeroPrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("0o5415", "DigitOnlyZeroPrefixTest", errors);
+  Lexer lexer("0o5415", "file/directory", "DigitOnlyZeroPrefixTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -238,7 +238,7 @@ TEST(LexerHappyIntegerTests, IntegerDigitOnlyZeroPrefixTest) {
 
 TEST(LexerHappyIntegerTests, IntegerUnderscoreSeparatorTest) {
   std::vector<Error> errors;
-  Lexer lexer("5_415", "UnderscoreSeparatorTest", errors);
+  Lexer lexer("5_415", "file/directory", "UnderscoreSeparatorTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -253,7 +253,7 @@ TEST(LexerHappyIntegerTests, IntegerUnderscoreSeparatorTest) {
 
 TEST(LexerHappyIntegerTests, IntegerUnsignedSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415u", "UnsignedSpecifierTest", errors);
+  Lexer lexer("5415u", "file/directory", "UnsignedSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -269,7 +269,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignedSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerByteTypeSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415b", "ByteTypeSpecifierTest", errors);
+  Lexer lexer("5415b", "file/directory", "ByteTypeSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -285,7 +285,7 @@ TEST(LexerHappyIntegerTests, IntegerByteTypeSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerUnsignByteTypeSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415ub", "UnsignByteTypeSpecifierTest", errors);
+  Lexer lexer("5415ub", "file/directory", "UnsignByteTypeSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -302,7 +302,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignByteTypeSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerWordTypeSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415w", "WordTypeSpecifierTest", errors);
+  Lexer lexer("5415w", "file/directory", "WordTypeSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -318,7 +318,7 @@ TEST(LexerHappyIntegerTests, IntegerWordTypeSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerUnsignWordTypeSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415uw", "UnsignWordTypeSpecifierTest", errors);
+  Lexer lexer("5415uw", "file/directory", "UnsignWordTypeSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -335,7 +335,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignWordTypeSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("8l", "LongTypeSpecifierTest", errors);
+  Lexer lexer("8l", "file/directory", "LongTypeSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -351,7 +351,7 @@ TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierSpaceTest) {
   std::vector<Error> errors;
-  Lexer lexer("8l ", "LongTypeSpecifierSpaceTest", errors);
+  Lexer lexer("8l ", "file/directory", "LongTypeSpecifierSpaceTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -367,7 +367,7 @@ TEST(LexerHappyIntegerTests, IntegerLongTypeSpecifierSpaceTest) {
 
 TEST(LexerHappyIntegerTests, IntegerUnsignLongTypeSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415ul", "UnsignLongTypeSpecifierTest", errors);
+  Lexer lexer("5415ul", "file/directory", "UnsignLongTypeSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -384,7 +384,7 @@ TEST(LexerHappyIntegerTests, IntegerUnsignLongTypeSpecifierTest) {
 
 TEST(LexerHappyIntegerTests, IntegerUnderscoreUnsignLongTypeSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("5415_ul", "UnderscoreUnsignLongTypeSpecifierTest", errors);
+  Lexer lexer("5415_ul", "file/directory", "UnderscoreUnsignLongTypeSpecifierTest", errors);
   lexer.tokenize();
 
   auto int_token = lexer.get_next_token();
@@ -406,7 +406,7 @@ TEST(LexerHappyIntegerTests, IntegerUnderscoreUnsignLongTypeSpecifierTest) {
 
 TEST(LexerHappyFloatTests, FloatNoDecimalsTest) {
   std::vector<Error> errors;
-  Lexer lexer("52.", "NoDecimalsTest", errors);
+  Lexer lexer("52.", "file/directory", "NoDecimalsTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -419,7 +419,7 @@ TEST(LexerHappyFloatTests, FloatNoDecimalsTest) {
 
 TEST(LexerHappyFloatTests, FloatNoDecimalsFloatIdentifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("52.f", "NoDecimalsFloatIdentifierTest", errors);
+  Lexer lexer("52.f", "file/directory", "NoDecimalsFloatIdentifierTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -433,7 +433,7 @@ TEST(LexerHappyFloatTests, FloatNoDecimalsFloatIdentifierTest) {
 
 TEST(LexerHappyFloatTests, FloatNoDecimalsFollowedByEOSTest) {
   std::vector<Error> errors;
-  Lexer lexer("52.\n", "NoDecimalsFollowedByEOSTest", errors);
+  Lexer lexer("52.\n", "file/directory", "NoDecimalsFollowedByEOSTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -446,7 +446,7 @@ TEST(LexerHappyFloatTests, FloatNoDecimalsFollowedByEOSTest) {
 
 TEST(LexerHappyFloatTests, FloatNoIntegerPartTest) {
   std::vector<Error> errors;
-  Lexer lexer(".52", "NoIntegerPartTest", errors);
+  Lexer lexer(".52", "file/directory", "NoIntegerPartTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -458,7 +458,7 @@ TEST(LexerHappyFloatTests, FloatNoIntegerPartTest) {
 
 TEST(LexerHappyFloatTests, FloatNegativeNoIntegerPartTest) {
   std::vector<Error> errors;
-  Lexer lexer("-.52", "FloatNegativeNoIntegerPartTest", errors);
+  Lexer lexer("-.52", "file/directory", "FloatNegativeNoIntegerPartTest", errors);
   lexer.tokenize();
 
   auto minusToken = lexer.get_next_token();
@@ -471,7 +471,7 @@ TEST(LexerHappyFloatTests, FloatNegativeNoIntegerPartTest) {
 
 TEST(LexerHappyFloatTests, FloatCompleteTest) {
   std::vector<Error> errors;
-  Lexer lexer("1.52", "FloatCompleteTest", errors);
+  Lexer lexer("1.52", "file/directory", "FloatCompleteTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -483,7 +483,7 @@ TEST(LexerHappyFloatTests, FloatCompleteTest) {
 
 TEST(LexerHappyFloatTests, FloatCompleteFloatSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("1.52f", "FloatCompleteFloatSpecifierTest", errors);
+  Lexer lexer("1.52f", "file/directory", "FloatCompleteFloatSpecifierTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -495,7 +495,7 @@ TEST(LexerHappyFloatTests, FloatCompleteFloatSpecifierTest) {
 
 TEST(LexerHappyFloatTests, FloatCompleteExponentTest) {
   std::vector<Error> errors;
-  Lexer lexer("6.022e23", "FloatCompleteExponentTest", errors);
+  Lexer lexer("6.022e23", "file/directory", "FloatCompleteExponentTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -507,7 +507,7 @@ TEST(LexerHappyFloatTests, FloatCompleteExponentTest) {
 
 TEST(LexerHappyFloatTests, FloatCompleteNegativExponentTest) {
   std::vector<Error> errors;
-  Lexer lexer("1.6e-19", "FloatCompleteNegativExponentTest", errors);
+  Lexer lexer("1.6e-19", "file/directory", "FloatCompleteNegativExponentTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -519,7 +519,7 @@ TEST(LexerHappyFloatTests, FloatCompleteNegativExponentTest) {
 
 TEST(LexerHappyFloatTests, FloatCompleteNegativeExponentTest) {
   std::vector<Error> errors;
-  Lexer lexer("1.6e-19", "FloatCompleteNegativeExponentTest", errors);
+  Lexer lexer("1.6e-19", "file/directory", "FloatCompleteNegativeExponentTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -531,7 +531,7 @@ TEST(LexerHappyFloatTests, FloatCompleteNegativeExponentTest) {
 
 TEST(LexerHappyFloatTests, FloatCompleteNegativeExponentFloatSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer("1.6e-19f", "FloatCompleteNegativeExponentFloatSpecifierTest", errors);
+  Lexer lexer("1.6e-19f", "file/directory", "FloatCompleteNegativeExponentFloatSpecifierTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -543,7 +543,7 @@ TEST(LexerHappyFloatTests, FloatCompleteNegativeExponentFloatSpecifierTest) {
 
 TEST(LexerHappyFloatTests, FloatNegativeCompleteNegativeExponentTest) {
   std::vector<Error> errors;
-  Lexer lexer("-1.6e-19", "FloatNegativeCompleteNegativeExponentTest", errors);
+  Lexer lexer("-1.6e-19", "file/directory", "FloatNegativeCompleteNegativeExponentTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -554,7 +554,7 @@ TEST(LexerHappyFloatTests, FloatNegativeCompleteNegativeExponentTest) {
 
 TEST(LexerHappyFloatTests, FloatDecimalPartOnlyUnderscoreTest) {
   std::vector<Error> errors;
-  Lexer lexer(".619_485", "FloatDecimalPartOnlyUnderscoreTest", errors);
+  Lexer lexer(".619_485", "file/directory", "FloatDecimalPartOnlyUnderscoreTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -565,7 +565,7 @@ TEST(LexerHappyFloatTests, FloatDecimalPartOnlyUnderscoreTest) {
 
 TEST(LexerHappyFloatTests, FloatDecimalPartOnlyUnderscoreFloatSpecifierTest) {
   std::vector<Error> errors;
-  Lexer lexer(".619_485f", "FloatDecimalPartOnlyUnderscoreFloatSpecifierTest", errors);
+  Lexer lexer(".619_485f", "file/directory", "FloatDecimalPartOnlyUnderscoreFloatSpecifierTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -576,7 +576,7 @@ TEST(LexerHappyFloatTests, FloatDecimalPartOnlyUnderscoreFloatSpecifierTest) {
 
 TEST(LexerHappyFloatTests, FloatIntegerPartOnlyUnderscoresTest) {
   std::vector<Error> errors;
-  Lexer lexer("417_528.", "FloatIntegerPartOnlyUnderscoresTest", errors);
+  Lexer lexer("417_528.", "file/directory", "FloatIntegerPartOnlyUnderscoresTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -588,7 +588,7 @@ TEST(LexerHappyFloatTests, FloatIntegerPartOnlyUnderscoresTest) {
 
 TEST(LexerHappyFloatTests, FloatCompleteUnderscoresTest) {
   std::vector<Error> errors;
-  Lexer lexer("417_528.213_546f", "FloatCompleteUnderscoresTest", errors);
+  Lexer lexer("417_528.213_546f", "file/directory", "FloatCompleteUnderscoresTest", errors);
   lexer.tokenize();
 
   auto float_token = lexer.get_next_token();
@@ -604,7 +604,7 @@ TEST(LexerHappyFloatTests, FloatCompleteUnderscoresTest) {
 
 TEST(LexerHappyStringCharTests, EmptyStringTest) {
   std::vector<Error> errors;
-  Lexer lexer("\"\"", "EmptyStringTest", errors);
+  Lexer lexer("\"\"", "file/directory", "EmptyStringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -614,7 +614,7 @@ TEST(LexerHappyStringCharTests, EmptyStringTest) {
 
 TEST(LexerHappyStringCharTests, StringTest) {
   std::vector<Error> errors;
-  Lexer lexer(" \"Hello world for 1st time!\" ", "StringTest", errors);
+  Lexer lexer(" \"Hello world for 1st time!\" ", "file/directory", "StringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -624,7 +624,7 @@ TEST(LexerHappyStringCharTests, StringTest) {
 
 TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
   std::vector<Error> errors;
-  Lexer lexer(" \"Hello world for /*1st*/ time!\" ", "CommentInsideStringTest", errors);
+  Lexer lexer(" \"Hello world for /*1st*/ time!\" ", "file/directory", "CommentInsideStringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -634,7 +634,7 @@ TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
 
 TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
   std::vector<Error> errors;
-  Lexer lexer(" \"\'Hello world\\' \\n \\'for 1st time!\'\" ", "EscapedCharStringTest", errors);
+  Lexer lexer(" \"\'Hello world\\' \\n \\'for 1st time!\'\" ", "file/directory", "EscapedCharStringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -644,7 +644,7 @@ TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
 
 TEST(LexerHappyStringCharTests, EscapedCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\r\'", "EscapedCharTest", errors);
+  Lexer lexer("\'\\r\'", "file/directory", "EscapedCharTest", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();
@@ -657,7 +657,7 @@ TEST(LexerHappyStringCharTests, EscapedCharTest) {
 
 TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\x42\'", "EscapedCharTest", errors);
+  Lexer lexer("\'\\x42\'", "file/directory", "EscapedCharTest", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();
@@ -671,7 +671,7 @@ TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
 
 TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\u{00B6}\'", "EscapedCharUnicodeTest", errors);
+  Lexer lexer("\'\\u{00B6}\'", "file/directory", "EscapedCharUnicodeTest", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();

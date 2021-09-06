@@ -378,7 +378,7 @@ TEST(SemanticFunctions, FunctionNoRet) {
                             "}";
 
   // given: tokens
-  Lexer lexer = Lexer(source_file, "FunctionNoRet", errors);
+  Lexer lexer = Lexer(source_file, "file/directory", "FunctionNoRet", errors);
   lexer.tokenize();
 
   // given: parsed source node
@@ -419,7 +419,7 @@ TEST(SemanticFunctions, FunctionRetConstant) {
 
   // given: lexer
   std::vector<Error> errors;
-  Lexer lexer(source_code, source_name, errors);
+  Lexer lexer(source_code, "file/directory", source_name, errors);
   lexer.tokenize();
 
   // given: parser

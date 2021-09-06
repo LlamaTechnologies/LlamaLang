@@ -9,6 +9,13 @@ RepositorySrcCode &RepositorySrcCode::get() {
   return *repository;
 }
 
+void RepositorySrcCode::clean() {
+  if (!repository)
+    return;
+
+  repository->src_codes.erase(repository->src_codes.begin(), repository->src_codes.end());
+}
+
 bool RepositorySrcCode::has_file(std::string_view in_file_name) const {
   return this->src_codes.find(in_file_name) != this->src_codes.end();
 }

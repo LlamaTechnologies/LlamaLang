@@ -84,26 +84,11 @@ enum class TokenizerState
   ERROR,                               //
 };
 
-Lexer::Lexer(const std::string_view &_file_name, std::vector<Error> &_errors)
-    : file_name(_file_name), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX), current_line(0L),
-      current_column(0L), state(TokenizerState::START), radix(10), is_trailing_underscore(false),
-      is_invalid_token(false), current_token(file_name), tokens_vec(), comments_vec() {
-  // open file
-  std::error_code error_code;
-  auto path = resolve_path(this->file_name, error_code);
-  if (error_code.value() == 0) {
-    auto status = verify_file_path(path);
-    if (status == FILE_PATH_STATUS::OK) {
-      auto file = std::ifstream(path.string());
-      this->source = read_file(file);
-    }
-  }
-}
-
-Lexer::Lexer(const std::string &_src_file, const std::string &_file_name, std::vector<Error> &_errors)
-    : file_name(_file_name), source(_src_file), errors(_errors), cursor_pos(0L), curr_index(SIZE_MAX), current_line(0L),
-      current_column(0L), state(TokenizerState::START), radix(10), is_trailing_underscore(false),
-      is_invalid_token(false), current_token(file_name), tokens_vec(), comments_vec() {}
+Lexer::Lexer(const std::string &_src_file, const std::string_view &_file_directory, const std::string &_file_name,
+             std::vector<Error> &_errors)
+    : file_directory(_file_directory), file_name(_file_name), source(_src_file), errors(_errors), cursor_pos(0L),
+      curr_index(SIZE_MAX), current_line(0L), current_column(0L), state(TokenizerState::START), radix(10),
+      is_trailing_underscore(false), is_invalid_token(false), current_token(file_name), tokens(), comments() {}
 
 // IMPORTANT!: should not be called more than once after the constructor.
 void Lexer::tokenize() noexcept {
@@ -1041,11 +1026,11 @@ void Lexer::tokenize() noexcept {
   _end_token(*this);
 }
 
-const bool Lexer::has_tokens() const noexcept { return tokens_vec.size() - (curr_index + 1) != 0; }
+const bool Lexer::has_tokens() const noexcept { return tokens.size() - (curr_index + 1) != 0; }
 
-const Token &Lexer::get_previous_token() const noexcept { return tokens_vec.at(curr_index - 1); }
+const Token &Lexer::get_previous_token() const noexcept { return tokens.at(curr_index - 1); }
 
-const Token &Lexer::get_next_token() const noexcept { return tokens_vec.at(++curr_index); }
+const Token &Lexer::get_next_token() const noexcept { return tokens.at(++curr_index); }
 
 void Lexer::get_back() const noexcept { curr_index--; }
 
@@ -1070,10 +1055,10 @@ void _end_token(Lexer &in_lexer) noexcept {
 
   switch (in_lexer.current_token.id) {
   case TokenId::DOC_COMMENT:
-    in_lexer.comments_vec.push_back(in_lexer.current_token);
+    in_lexer.comments.push_back(in_lexer.current_token);
     break;
   default:
-    in_lexer.tokens_vec.push_back(in_lexer.current_token);
+    in_lexer.tokens.push_back(in_lexer.current_token);
     break;
   }
 }
@@ -1090,7 +1075,7 @@ void _end_token_check_is_keyword(Lexer &in_lexer) noexcept {
   case TokenId::AND:
   case TokenId::OR:
   case TokenId::IDENTIFIER:
-    in_lexer.tokens_vec.push_back(in_lexer.current_token);
+    in_lexer.tokens.push_back(in_lexer.current_token);
     break;
   default:
     LL_UNREACHEABLE;
@@ -1399,7 +1384,7 @@ std::string create_id_names_line(const size_t start, const size_t end, const std
 }
 
 Console print_tokens(Lexer &lexer) {
-  auto &tokens = lexer.tokens_vec;
+  auto &tokens = lexer.tokens;
   Console console;
 
   size_t total_size = 0;

@@ -182,12 +182,13 @@ class Lexer {
   TokenizerState state;
 
 public:
+  std::string file_directory;
   std::string file_name;
   std::string source;
 
 private:
-  std::vector<Token> tokens_vec;
-  std::vector<Token> comments_vec;
+  std::vector<Token> tokens;
+  std::vector<Token> comments;
   std::vector<Error> &errors;
 
   size_t cursor_pos;
@@ -207,13 +208,10 @@ private:
 
 public:
   /**
-   * Open a file and tokenize it
-   **/
-  Lexer(const std::string_view &_file_name, std::vector<Error> &_errors);
-  /**
    * Tokenize the '_src_file' string
    **/
-  Lexer(const std::string &_src_file, const std::string &_file_name, std::vector<Error> &_errors);
+  Lexer(const std::string &_src_file, const std::string_view &_file_directory, const std::string &_file_name,
+        std::vector<Error> &_errors);
   void tokenize() noexcept;
 
   const bool has_tokens() const noexcept;

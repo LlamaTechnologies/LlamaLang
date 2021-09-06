@@ -11,3 +11,7 @@ constexpr const char *ERROR_UNEXPECTED_EXTERN = "extern only goes behind a 'fn' 
 constexpr const char *ERROR_EXTERN_FN_HAS_BODY = "extern function declaration should not have a body.";
 constexpr const char *ERROR_UNEXPECTED_HASH = "unexpected # before '%s'";
 constexpr const char *ERROR_UNKNOWN_DIRECTIVE = "unknown directive '%s'";
+constexpr const char *ERROR_DIRECTIVE_EXPECTED_STRING = "expected string as directive argument, got '%s'";
+constexpr const char *ERROR_NOT_A_FILE = "path '%s' is a directory";
+constexpr const char *ERROR_FILE_NOT_FOUND = "file '%s' was not found";
+constexpr const char *ERROR_NOT_LLAMA_FILE = "file '%s' is not a llama file (.llama)";
