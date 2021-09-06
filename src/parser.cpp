@@ -17,6 +17,7 @@ static bool _is_type_start_token(const Token &token) noexcept;
 static bool _is_expr_token(const Token &token) noexcept;
 static bool _is_symbol_start_char(const char _char) noexcept;
 static bool _is_whitespace_char(const char _char) noexcept;
+/* Returns true if it is a valid directive type */
 static bool _get_directive_type(DirectiveType &, std::string_view in_directive_name);
 
 //  ('=='|'!=' | '!' | '>=' | '<=' | '<' | '>')
@@ -155,7 +156,7 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
   const Token &identifier_token = lexer.get_next_token();
   std::string_view identifier_value = lexer.get_token_value(identifier_token);
 
-  if (hash_token.id != TokenId::IDENTIFIER) {
+  if (identifier_token.id != TokenId::IDENTIFIER) {
     parse_error(hash_token, ERROR_UNEXPECTED_HASH, std::string(identifier_value).c_str());
     return nullptr;
   }
@@ -163,7 +164,7 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
   AstDirective *directive_node = new AstDirective(hash_token.start_line, hash_token.start_column, hash_token.file_name);
 
   DirectiveType dir_type;
-  if (_get_directive_type(dir_type, identifier_value)) {
+  if (_get_directive_type(dir_type, identifier_value) == false) {
     delete directive_node;
     parse_error(identifier_token, ERROR_UNKNOWN_DIRECTIVE, std::string(identifier_value).c_str());
     return nullptr;
@@ -173,32 +174,51 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
 
   switch (dir_type) {
   case DirectiveType::LOAD: {
-    const auto &file_name = identifier_value;
-    directive_node->argument.str = file_name;
-
-    size_t errors_before = error_vec.size();
-
-    // create new lexer and tokenize.
-    auto loaded_file_lexer = new Lexer(file_name, error_vec);
-    loaded_file_lexer->tokenize();
-
-    // there were errors in lexing.
-    if (errors_before > error_vec.size()) {
-      // TODO(pablo96): error handling
+    const Token &file_name_token = lexer.get_next_token();
+    if (file_name_token.id != TokenId::STRING) {
+      // TODO(pablo96): LoadDirective :: String Expected error
       delete directive_node;
       return nullptr;
-    };
+    }
 
-    // parse source code.
-    AstSourceCode *src_code_node = parse(*loaded_file_lexer);
+    // file_name without double quotes
+    std::string_view file_name = lexer.get_token_value(file_name_token);
+    file_name = file_name.substr(1, file_name.size() - 2);
 
-    /* NOTE(pablo96): Since AstSourceCode owns the lexer pointer
-     * only loaded SourceCodes have the lexer pointer.
-     */
-    src_code_node->lexer = loaded_file_lexer;
+    // TODO(pablo96): LoadDirective :: file name from current file directory
 
-    // add parsed source code to the repository.
-    RepositorySrcCode::get()._add_source_code(file_name, src_code_node);
+    directive_node->argument.str = file_name;
+
+    RepositorySrcCode code_repository = RepositorySrcCode::get();
+
+    // only parse the file if not in the code repository
+    if (!code_repository.has_file(file_name)) {
+      size_t errors_before = error_vec.size();
+
+      // TODO(pablo96): LoadDirective :: File not found error
+
+      // create new lexer and tokenize.
+      Lexer *loaded_file_lexer = new Lexer(file_name, error_vec);
+      loaded_file_lexer->tokenize();
+
+      // there were errors in lexing.
+      if (errors_before > error_vec.size()) {
+        // TODO(pablo96): error handling
+        delete directive_node;
+        return nullptr;
+      };
+
+      // parse source code.
+      AstSourceCode *src_code_node = parse(*loaded_file_lexer);
+
+      /* NOTE(pablo96): Since AstSourceCode owns the lexer pointer
+       * only loaded SourceCodes have the lexer pointer.
+       */
+      src_code_node->lexer = loaded_file_lexer;
+
+      // add parsed source code to the repository.
+      code_repository._add_source_code(file_name, src_code_node);
+    }
   } break;
   default:
     LL_UNREACHEABLE; // unimplemented directive
@@ -1208,6 +1228,7 @@ const std::unordered_map<std::string_view, DirectiveType> directives = { { "load
                                                                          { "run", DirectiveType::RUN },
                                                                          { "compile", DirectiveType::COMPILE },
                                                                          { "fn_type", DirectiveType::FN_TYPE } };
+
 bool _get_directive_type(DirectiveType &dir_type, std::string_view in_directive_name) {
   bool exists = directives.find(in_directive_name) != directives.end();
   if (exists) {

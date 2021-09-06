@@ -50,7 +50,7 @@ TEST(Integrations, FunctionDeclarationExternFile) {
 
   // when: analyze ext_src_code
   VoidGenerator generator;
-  bool program_ok = compiler::compile_node(&generator, "output", "executable_name", errors, main_src_code);
+  bool program_ok = compiler::compile_node(&generator, errors, main_src_code);
 
   // then:
   ASSERT_EQ(errors.size(), 0);
