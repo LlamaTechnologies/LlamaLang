@@ -1,0 +1,39 @@
+functions snake_case
+
+methods snake_case
+
+private methods _snake_case
+
+static cpp functions _snake_case
+
+variables snake_case
+
+member variables snake_case
+
+types PascalCase
+
+namespaces PascalCase
+
+enum names PascalCase
+
+enum values MACRO_CASE
+
+// code conventions
+
+always use struct over class unless it has to many private members
+
+every llvm value in struct|class should have the prefix llvm_
+
+enums should be enum class
+
+everything that wont be modified should be declared 'const'
+
+minimize the use of exceptions. always use the version without exceptions in std lib
+
+constexpr instead of #define
+
+every build should have no warnings!
+
+annotate with noexcept always and LL_NODISCARD as needed
+
+should use this-> always so it is clear where the symbol comes from

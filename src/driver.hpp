@@ -1,18 +1,10 @@
 #pragma once
-#include <string>
 #include <filesystem>
+#include <string>
 
-class Driver {
-  std::string lld_path;
+struct FileInput;
 
-  std::string current_dir;
-  std::string output_dir;
-
-  std::string output_name;
-
-  std::filesystem::path file_path;
-
-public:
+struct Driver {
   Driver();
 
   bool setup(const char **argv, const int argc);
@@ -20,9 +12,17 @@ public:
   bool run();
 
 private:
-  bool parse_args(const char **argv, const int argc);
+  std::string current_dir;
+  std::string lld_path;
 
-  bool verify_file_path();
-  
-  bool get_tool_chain();
+  std::string output_dir;
+  std::string output_name;
+
+  std::filesystem::path file_path;
+
+  bool _parse_args(const char **argv, const int argc);
+
+  bool _verify_file_path();
+
+  bool _get_tool_chain();
 };

@@ -4,36 +4,33 @@
 #include "compiler.hpp"
 #include "console.hpp"
 #include "error.hpp"
+#include "file_utils.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
 #include <system_error>
 
-static std::string read_file(std::ifstream &in_file);
 static std::string get_current_dir();
 static std::vector<char *> *split_string(const std::string &in_str, const char in_separator);
 static std::string get_path_to_program_by_name(const std::string &in_name);
 static int run_process(const std::string &in_program_path, const std::string &in_program_args);
 
-#define LL_FILE_EXTENSION ".llama"
-#define ARG_SRC_FILE "-s"
-#define ARG_OUT_NAME "-o"
-#define ARG_OUT_DIR "-O"
-#define BITCODE_FILE_EXTENSION ".bc"
-#define EXE_EXTENSION ".exe"
+constexpr const char *ARG_SRC_FILE = "-s";
+constexpr const char *ARG_OUT_NAME = "-o";
+constexpr const char *ARG_OUT_DIR = "-O";
 
 Driver::Driver() : current_dir(get_current_dir()) {}
 
 bool Driver::setup(const char **argv, const int argc) {
-  if (!parse_args(argv, argc)) {
+  if (!_parse_args(argv, argc)) {
     return false;
   }
 
-  if (!verify_file_path()) {
+  if (!_verify_file_path()) {
     return false;
   }
 
-  if (!get_tool_chain()) {
+  if (!_get_tool_chain()) {
     return false;
   }
 
@@ -43,14 +40,15 @@ bool Driver::setup(const char **argv, const int argc) {
 bool Driver::run() {
   auto source_file = std::ifstream(this->file_path);
   if (source_file.bad()) {
-    console::WriteLine("corrupted file \"" + this->file_path.string() + "\"");
+    console::write_line("corrupted file \"" + this->file_path.string() + "\"");
     return false;
   }
 
   const std::string source_name = this->file_path.filename().string();
-  std::string source_code = read_file(source_file);
+  std::string source_code = get_std_file_input().read_file(source_file);
 
-  bool program_ok = compiler::compile(this->output_dir, this->output_name, source_code, source_name);
+  bool program_ok = compiler::compile(this->file_path.parent_path().string(), this->output_dir, this->output_name,
+                                      source_code, source_name);
   if (program_ok == false) {
     return false;
   }
@@ -58,17 +56,17 @@ bool Driver::run() {
   std::string file_full_path = this->output_dir + "/" + this->output_name;
   auto file_out = file_full_path + ".a";
   auto file_in = file_full_path + BITCODE_FILE_EXTENSION;
-  std::string lld_args = this->lld_path + " " + file_in +  " -o " + file_out;
+  std::string lld_args = this->lld_path + " " + file_in + " -o " + file_out;
 
-  console::WriteLine(lld_args);
+  console::write_line(lld_args);
 
   int lld_exit_code = run_process(this->lld_path, lld_args);
   if (lld_exit_code < 0) {
-    console::WriteLine("error with lld");
+    console::write_line("error with lld");
     return false;
   }
 
-  console::WriteLine("Compiled Successfuly: " + file_out);
+  console::write_line("Compiled Successfuly: " + file_out);
   return true;
 }
 
@@ -78,41 +76,34 @@ bool Driver::run() {
   #define LLD_NAME "clang"
 #endif
 
-bool Driver::get_tool_chain() {
+bool Driver::_get_tool_chain() {
   this->lld_path = LLD_NAME; // get_path_to_program_by_name(LLD_NAME);
   {
     if (this->lld_path.size() == 0) {
-      console::WriteLine("lld not found. please install llvm toolchain.");
+      console::write_line("lld not found. please install llvm toolchain.");
       return false;
     }
   }
   return true;
 }
 
-bool Driver::verify_file_path() {
-  std::error_code error_code;
-  // TODO(pablo96): handle error_code
-  bool path_exists = std::filesystem::exists(this->file_path, error_code);
-  if (!path_exists) {
-    console::WriteLine("file '" + this->file_path.string() + "' does not exists!");
+bool Driver::_verify_file_path() {
+  switch (get_std_file_input().verify_file_path(this->file_path)) {
+  case FILE_PATH_STATUS::NOT_FOUND:
+    console::write_line("file '" + this->file_path.string() + "' does not exists!");
     return false;
-  }
-
-  bool is_file = std::filesystem::is_regular_file(this->file_path, error_code);
-  if (!is_file) {
-    console::WriteLine("file '" + this->file_path.string() + "' is not a file!");
+  case FILE_PATH_STATUS::NOT_A_FILE:
+    console::write_line("file '" + this->file_path.string() + "' is not a file!");
     return false;
-  }
-
-  if (this->file_path.extension() != LL_FILE_EXTENSION) {
-    console::WriteLine("file '" + this->file_path.string() + "' is not a llama lang file!");
+  case FILE_PATH_STATUS::NOT_LLAMA_FILE:
+    console::write_line("file '" + this->file_path.string() + "' is not a llama lang file!");
     return false;
+  default:
+    return true;
   }
-
-  return true;
 }
 
-bool Driver::parse_args(const char **argv, const int argc) {
+bool Driver::_parse_args(const char **argv, const int argc) {
   std::string source_name;
 
   for (size_t i = 1; i < argc; i += 2) {
@@ -125,7 +116,7 @@ bool Driver::parse_args(const char **argv, const int argc) {
     } else if (strncmp(option, ARG_OUT_DIR, option_len > 2 ? 2 : option_len) == 0) {
       this->output_dir = argv[i + 1];
     } else {
-      console::WriteLine(std::string("bad argument: ") + option);
+      console::write_line(std::string("bad argument: ") + option);
       return false;
     }
   }
@@ -153,7 +144,7 @@ bool Driver::parse_args(const char **argv, const int argc) {
   }
 
   std::error_code error_code;
-  this->file_path = std::filesystem::absolute(std::filesystem::path(source_name), error_code);
+  this->file_path = resolve_path(source_name, error_code);
   // TODO(pablo96): handle error_code
 
   return true;
@@ -168,23 +159,6 @@ bool Driver::parse_args(const char **argv, const int argc) {
   #include <unistd.h>
   #define GetCurrentDir getcwd
 #endif
-
-std::string read_file(std::ifstream &in_file) {
-  std::string file_content;
-
-  in_file.seekg(0, std::ios::end);
-
-  file_content.reserve(in_file.tellg());
-
-  in_file.seekg(0, std::ios::beg);
-
-  // store content in this.source
-  file_content.assign((std::istreambuf_iterator<char>(in_file)), std::istreambuf_iterator<char>());
-
-  in_file.close();
-
-  return file_content;
-}
 
 std::string get_current_dir() {
   char buff[FILENAME_MAX]; // create string buffer to hold path
@@ -227,13 +201,13 @@ int run_process(const std::string &in_program_path, const std::string &in_progra
 
 #ifdef LL_WIN32
 std::string get_path_to_program_by_name(const std::string &in_name) {
-  const unsigned int nBufferLength = MAX_PATH;
+  const unsigned int n_buffer_len = MAX_PATH;
 
-  char *buffer = new char[nBufferLength];
-  DWORD writenChars = SearchPathA(NULL, // null to make it search on the registry
-                                  in_name.c_str(), ".exe", nBufferLength, buffer, nullptr);
+  char *buffer = new char[n_buffer_len];
+  DWORD writen_chars = SearchPathA(NULL, // null to make it search on the registry
+                                   in_name.c_str(), ".exe", n_buffer_len, buffer, nullptr);
 
-  if (writenChars <= 0) {
+  if (writen_chars <= 0) {
     return "";
   }
   auto ret_val = std::string(buffer);
@@ -242,20 +216,20 @@ std::string get_path_to_program_by_name(const std::string &in_name) {
 }
 
 void handle_error() {
-  LPVOID lpMsgBuf = nullptr;
+  LPVOID lp_msg_buf = nullptr;
   DWORD error_code = GetLastError();
 
   DWORD no_error =
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
-                   error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *)&lpMsgBuf, 0, NULL);
+                   error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *)&lp_msg_buf, 0, NULL);
 
   if (!no_error) {
-    console::WriteLine("error formatting msg");
+    console::write_line("error formatting msg");
   }
 
-  if (lpMsgBuf) {
-    console::WriteLine((char *)lpMsgBuf);
-    LocalFree(lpMsgBuf);
+  if (lp_msg_buf) {
+    console::write_line((char *)lp_msg_buf);
+    LocalFree(lp_msg_buf);
   }
 }
 

@@ -1,9 +1,57 @@
 #include "../../src/compiler.hpp"
 #include "../../src/error.hpp"
+#include "../../src/file_utils.hpp"
 #include "../../src/lexer.hpp"
 #include "../../src/parser.hpp"
+#include "../../src/src_code_repository.hpp"
 
 #include <gtest/gtest.h>
+
+#define LL_INTEGRATIONS_TESTS 0
+
+//==================================================================================
+//          SEMANTIC LOADED FILE
+//==================================================================================
+
+TEST(Integrations, FunctionDeclarationExternFile) {
+  static const char *external_file = "extern fn my_func() i32\n";
+
+  struct FileInputMock : FileInput {
+    FILE_PATH_STATUS verify_file_path(std::filesystem::path &in_path) const { return FILE_PATH_STATUS::OK; }
+    std::string open_and_read_file(const std::string &in_file_path) const { return std::string(external_file); }
+  } file_input;
+
+  std::vector<Error> errors;
+  Parser parser = Parser(errors, file_input);
+
+  // given: source code
+  const char *source_code = "#load \"extern_file\"\n"
+                            "\n"
+                            "fn main() i32 {\n"
+                            "\tmy_func()\n"
+                            "\tret 0\n"
+                            "}\n";
+
+  // given: loader file lexer
+  Lexer lexer = Lexer(source_code, "file/directory", "main.llama", errors);
+  lexer.tokenize();
+
+  // given: parsed loader file
+  AstSourceCode *main_src_code = parser.parse(lexer);
+
+  // when: analyze ext_src_code
+  VoidGenerator generator;
+  bool program_ok = compiler::compile_node(&generator, errors, main_src_code);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0);
+  ASSERT_TRUE(program_ok);
+
+  RepositorySrcCode::clean();
+  delete main_src_code;
+}
+
+#if (LL_INTEGRATIONS_TESTS == 1)
 
 TEST(Integrations, FromCompiler) {
   const char *output_path = "";
@@ -144,3 +192,4 @@ TEST(Integrations, PrintfCall) {
 
   ASSERT_EQ(has_no_errors, true);
 }
+#endif // LL_INTEGRATIONS_TESTS

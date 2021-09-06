@@ -10,35 +10,35 @@
 
 TEST(ParserHappyStmntTests, RetStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret myVar * (5 + 8)", "Ret stmnt", errors);
+  Lexer lexer("ret myVar * (5 + 8)", "file/directory", "Ret stmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_ret_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_ret_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_NE(value_node->unary_expr.expr, nullptr);
-  ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(value_node->op, UnaryExprType::RET);
+  ASSERT_NE(value_node->expr, nullptr);
+  ASSERT_EQ(value_node->expr->parent, value_node);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, RetEmptyStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret ", "RetEmptyStmnt", errors);
+  Lexer lexer("ret ", "file/directory", "RetEmptyStmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_ret_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_ret_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_EQ(value_node->unary_expr.expr, nullptr);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(value_node->op, UnaryExprType::RET);
+  ASSERT_EQ(value_node->expr, nullptr);
 
   delete value_node;
 }
@@ -49,20 +49,20 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
 
 TEST(ParserHappyStmntTests, AssignStmntTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar = 5 * (6 + 9)", "AssignStmntTest", errors);
+  Lexer lexer("myVar = 5 * (6 + 9)", "file/directory", "AssignStmntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_assign_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_assign_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
-  ASSERT_EQ(value_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
-  ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
-  ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(value_node->bin_op, BinaryExprType::ASSIGN);
+  ASSERT_EQ(value_node->left_expr->node_type, AstNodeType::AST_SYMBOL);
+  ASSERT_EQ(value_node->right_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(value_node->left_expr->parent, value_node);
+  ASSERT_EQ(value_node->right_expr->parent, value_node);
 
   delete value_node;
 }
@@ -73,90 +73,66 @@ TEST(ParserHappyStmntTests, AssignStmntTest) {
 
 TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
   std::vector<Error> errors;
-  Lexer lexer("i32", "TypeNameIsPrimitiveParse", errors);
+  Lexer lexer("i32", "file/directory", "TypeNameIsPrimitiveParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
+  ASSERT_EQ(errors.size(), 0L);
+
+  Parser parser(errors);
+  auto value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(value_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(value_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(value_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(value_node->ast_type.type_info->is_signed, true);
-
-  delete value_node;
-}
-
-TEST(ParserHappyStmntTests, TypeNameParse) {
-  std::vector<Error> errors;
-  Lexer lexer("MyType", "TypeNameParse", errors);
-  lexer.tokenize();
-
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
-
-  ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Struct);
-  ASSERT_EQ(value_node->ast_type.type_info->name, "MyType");
-  ASSERT_EQ(value_node->ast_type.type_info->bit_size, 8);
-  ASSERT_EQ(value_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(value_node->ast_type.type_info->is_signed, false);
-
-  delete value_node;
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(value_node->type_info->name, "i32");
+  ASSERT_EQ(value_node->type_info->bit_size, 32);
+  ASSERT_EQ(value_node->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(value_node->type_info->is_signed);
 }
 
 TEST(ParserHappyStmntTests, TypeArrayParse) {
   std::vector<Error> errors;
-  Lexer lexer("[]MyType", "TypeArrayParse", errors);
+  Lexer lexer("[]i32", "file/directory", "TypeArrayParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
+  Parser parser(errors);
+  auto value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Array);
-  ASSERT_NE(value_node->ast_type.child_type, nullptr);
-  ASSERT_EQ(value_node->ast_type.child_type->parent, value_node);
-  ASSERT_EQ(value_node->ast_type.child_type->node_type, AstNodeType::AstType);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_id, AstTypeId::Struct);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->name, "MyType");
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->bit_size, 8);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->is_signed, false);
-
-  delete value_node;
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->type_info->type_id, AstTypeId::ARRAY);
+  ASSERT_NE(value_node->child_type, nullptr);
+  ASSERT_EQ(value_node->child_type->parent, value_node);
+  ASSERT_EQ(value_node->child_type->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->child_type->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(value_node->child_type->type_info->name, "i32");
+  ASSERT_EQ(value_node->child_type->type_info->bit_size, 32);
+  ASSERT_EQ(value_node->child_type->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(value_node->child_type->type_info->is_signed);
 }
 
 TEST(ParserHappyStmntTests, TypePointerParse) {
   std::vector<Error> errors;
-  Lexer lexer("*MyType", "TypePointerParse", errors);
+  Lexer lexer("*i32", "file/directory", "TypePointerParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_type();
+  Parser parser(errors);
+  auto value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(value_node->ast_type.type_id, AstTypeId::Pointer);
-  ASSERT_NE(value_node->ast_type.child_type, nullptr);
-  ASSERT_EQ(value_node->ast_type.child_type->parent, value_node);
-  ASSERT_EQ(value_node->ast_type.child_type->node_type, AstNodeType::AstType);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_id, AstTypeId::Struct);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->name, "MyType");
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->bit_size, 8);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(value_node->ast_type.child_type->ast_type.type_info->is_signed, false);
-
-  delete value_node;
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->type_info->type_id, AstTypeId::POINTER);
+  ASSERT_NE(value_node->child_type, nullptr);
+  ASSERT_EQ(value_node->child_type->parent, value_node);
+  ASSERT_EQ(value_node->child_type->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->child_type->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(value_node->child_type->type_info->name, "i32");
+  ASSERT_EQ(value_node->child_type->type_info->bit_size, 32);
+  ASSERT_EQ(value_node->child_type->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(value_node->child_type->type_info->is_signed);
 }
 
 //==================================================================================
@@ -165,157 +141,161 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar i32", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
-  ASSERT_EQ(value_node->var_def.initializer, nullptr);
-  ASSERT_NE(value_node->var_def.type, nullptr);
-  auto type_node = value_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
+  ASSERT_EQ(value_node->name, "myVar");
+  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->type, nullptr);
+  auto type_node = value_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(type_node->type_info->is_signed);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32 = -65", "VarDefSimpleTypeInitializerParse", errors);
+  Lexer lexer("myVar i32 = -65", "file/directory", "VarDefSimpleTypeInitializerParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
+  ASSERT_EQ(value_node->name, "myVar");
 
-  auto type_node = value_node->var_def.type;
+  auto type_node = value_node->type;
   ASSERT_NE(type_node, nullptr);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(type_node->type_info->is_signed, true);
 
-  auto init_node = value_node->var_def.initializer;
-  ASSERT_NE(init_node, nullptr);
-  ASSERT_EQ(init_node->parent, value_node);
-  ASSERT_EQ(init_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(init_node->const_value.type, ConstValueType::INT);
-  ASSERT_EQ(init_node->const_value.is_negative, true);
+  auto init_node_generic = value_node->initializer;
+  ASSERT_NE(init_node_generic, nullptr);
+  ASSERT_EQ(init_node_generic->parent, value_node);
+  ASSERT_EQ(init_node_generic->node_type, AstNodeType::AST_CONST_VALUE);
+
+  auto init_node = init_node_generic->const_value();
+  ASSERT_EQ(init_node->type, ConstValueType::INT);
+  ASSERT_EQ(init_node->is_negative, true);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32 = 65 + PI", "VarDefSimpleTypeInitializerAddParse", errors);
+  Lexer lexer("myVar i32 = 65 + PI", "file/directory", "VarDefSimpleTypeInitializerAddParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
+  ASSERT_EQ(value_node->name, "myVar");
 
-  auto type_node = value_node->var_def.type;
+  auto type_node = value_node->type;
   ASSERT_NE(type_node, nullptr);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(type_node->type_info->is_signed, true);
 
-  auto init_node = value_node->var_def.initializer;
-  ASSERT_NE(init_node, nullptr);
-  ASSERT_EQ(init_node->parent, value_node);
-  ASSERT_EQ(init_node->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(init_node->binary_expr.bin_op, BinaryExprType::ADD);
-  ASSERT_NE(init_node->binary_expr.left_expr, nullptr);
-  ASSERT_NE(init_node->binary_expr.right_expr, nullptr);
-  ASSERT_EQ(init_node->binary_expr.left_expr->parent, init_node);
-  ASSERT_EQ(init_node->binary_expr.right_expr->parent, init_node);
-  ASSERT_EQ(init_node->binary_expr.left_expr->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(init_node->binary_expr.right_expr->node_type, AstNodeType::AstSymbol);
+  auto init_node_generic = value_node->initializer;
+  ASSERT_NE(init_node_generic, nullptr);
+  ASSERT_EQ(init_node_generic->parent, value_node);
+  ASSERT_EQ(init_node_generic->node_type, AstNodeType::AST_BINARY_EXPR);
+
+  auto init_node = init_node_generic->binary_expr();
+  ASSERT_EQ(init_node->bin_op, BinaryExprType::ADD);
+  ASSERT_NE(init_node->left_expr, nullptr);
+  ASSERT_NE(init_node->right_expr, nullptr);
+  ASSERT_EQ(init_node->left_expr->parent, init_node);
+  ASSERT_EQ(init_node->right_expr->parent, init_node);
+  ASSERT_EQ(init_node->left_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_EQ(init_node->right_expr->node_type, AstNodeType::AST_SYMBOL);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
+  Lexer lexer("myVar []i32", "file/directory", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
-  ASSERT_EQ(value_node->var_def.initializer, nullptr);
-  ASSERT_NE(value_node->var_def.type, nullptr);
-  auto type_node = value_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
+  ASSERT_EQ(value_node->name, "myVar");
+  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->type, nullptr);
+  auto type_node = value_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Array);
-  ASSERT_NE(type_node->ast_type.child_type, nullptr);
-  auto data_type_node = type_node->ast_type.child_type;
-  ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::ARRAY);
+  ASSERT_NE(type_node->child_type, nullptr);
+  auto data_type_node = type_node->child_type;
+  ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
-  ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->bit_size, 32);
+  ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(data_type_node->type_info->is_signed, true);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
+  Lexer lexer("myVar *i32", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_vardef_stmnt();
+  Parser parser(errors);
+  auto value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
-  ASSERT_EQ(value_node->var_def.initializer, nullptr);
-  ASSERT_NE(value_node->var_def.type, nullptr);
-  auto type_node = value_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
+  ASSERT_EQ(value_node->name, "myVar");
+  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->type, nullptr);
+  auto type_node = value_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Pointer);
-  ASSERT_NE(type_node->ast_type.child_type, nullptr);
-  auto data_type_node = type_node->ast_type.child_type;
-  ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::POINTER);
+  ASSERT_NE(type_node->child_type, nullptr);
+  auto data_type_node = type_node->child_type;
+  ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
-  ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->bit_size, 32);
+  ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(data_type_node->type_info->is_signed, true);
 
   delete value_node;
 }
@@ -326,137 +306,153 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar i32", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
-  ASSERT_EQ(value_node->var_def.initializer, nullptr);
-  ASSERT_NE(value_node->var_def.type, nullptr);
-  auto type_node = value_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_VAR_DEF);
+  auto value_node = node->var_def();
+  ASSERT_EQ(value_node->name, "myVar");
+  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->type, nullptr);
+  auto type_node = value_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(type_node->type_info->is_signed, true);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar []i32", "VarDefArrayTypeParse", errors);
+  Lexer lexer("myVar []i32", "file/directory", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
-  ASSERT_EQ(value_node->var_def.initializer, nullptr);
-  ASSERT_NE(value_node->var_def.type, nullptr);
-  auto type_node = value_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_VAR_DEF);
+  auto value_node = node->var_def();
+  ASSERT_EQ(value_node->name, "myVar");
+  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->type, nullptr);
+  auto type_node = value_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Array);
-  ASSERT_NE(type_node->ast_type.child_type, nullptr);
-  auto data_type_node = type_node->ast_type.child_type;
-  ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::ARRAY);
+  ASSERT_NE(type_node->child_type, nullptr);
+  auto data_type_node = type_node->child_type;
+  ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
-  ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->bit_size, 32);
+  ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(data_type_node->type_info->is_signed, true);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar *i32", "VarDefPointerTypeParse", errors);
+  Lexer lexer("myVar *i32", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(value_node->var_def.name, "myVar");
-  ASSERT_EQ(value_node->var_def.initializer, nullptr);
-  ASSERT_NE(value_node->var_def.type, nullptr);
-  auto type_node = value_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_VAR_DEF);
+
+  auto value_node = node->var_def();
+  ASSERT_EQ(value_node->name, "myVar");
+  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->type, nullptr);
+  auto type_node = value_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Pointer);
-  ASSERT_NE(type_node->ast_type.child_type, nullptr);
-  auto data_type_node = type_node->ast_type.child_type;
-  ASSERT_EQ(data_type_node->node_type, AstNodeType::AstType);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::POINTER);
+  ASSERT_NE(type_node->child_type, nullptr);
+  auto data_type_node = type_node->child_type;
+  ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
-  ASSERT_EQ(data_type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(data_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(data_type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(data_type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(data_type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->bit_size, 32);
+  ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(data_type_node->type_info->is_signed, true);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar = 5 * (6 + 9)", "AssignStmntTest", errors);
+  Lexer lexer("myVar = 5 * (6 + 9)", "file/directory", "AssignStmntTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ASSIGN);
-  ASSERT_EQ(value_node->binary_expr.left_expr->node_type, AstNodeType::AstSymbol);
-  ASSERT_EQ(value_node->binary_expr.right_expr->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(value_node->binary_expr.left_expr->parent, value_node);
-  ASSERT_EQ(value_node->binary_expr.right_expr->parent, value_node);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_BINARY_EXPR);
+
+  auto value_node = node->binary_expr();
+  ASSERT_EQ(value_node->bin_op, BinaryExprType::ASSIGN);
+  ASSERT_NE(value_node->left_expr, nullptr);
+  ASSERT_NE(value_node->right_expr, nullptr);
+  ASSERT_EQ(value_node->left_expr->node_type, AstNodeType::AST_SYMBOL);
+  ASSERT_EQ(value_node->right_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(value_node->left_expr->parent, value_node);
+  ASSERT_EQ(value_node->right_expr->parent, value_node);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, StatementRetStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret myVar * (5 + 8)", "Ret stmnt", errors);
+  Lexer lexer("ret myVar * (5 + 8)", "file/directory", "Ret stmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_NE(value_node->unary_expr.expr, nullptr);
-  ASSERT_EQ(value_node->unary_expr.expr->parent, value_node);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_UNARY_EXPR);
+
+  auto value_node = node->unary_expr();
+  ASSERT_EQ(value_node->op, UnaryExprType::RET);
+  ASSERT_NE(value_node->expr, nullptr);
+  ASSERT_EQ(value_node->expr->parent, value_node);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
   std::vector<Error> errors;
-  Lexer lexer("ret ", "RetEmptyStmnt", errors);
+  Lexer lexer("ret ", "file/directory", "RetEmptyStmnt", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  auto value_node = parser.parse_statement();
+  Parser parser(errors);
+  auto node = parser.parse_statement(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(value_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_EQ(value_node->unary_expr.expr, nullptr);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_UNARY_EXPR);
+
+  auto value_node = node->unary_expr();
+  ASSERT_EQ(value_node->op, UnaryExprType::RET);
+  ASSERT_EQ(value_node->expr, nullptr);
 
   delete value_node;
 }
@@ -467,156 +463,163 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
 
 TEST(ParserHappyStmntTests, BlockEmptyTest) {
   std::vector<Error> errors;
-  Lexer lexer("{}", "BlockEmptyTest", errors);
+  Lexer lexer("{}", "file/directory", "BlockEmptyTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstBlock *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->block.statements.size(), 0L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(value_node->statements.size(), 0L);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{myVar i32\nret myvar}", "BlockNoSpaceNearCurliesTest", errors);
+  Lexer lexer("{myVar i32\nret myvar}", "file/directory", "BlockNoSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstBlock *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->block.statements.size(), 2);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(value_node->statements.size(), 2);
 
-  ASSERT_EQ(value_node->block.statements.at(0)->node_type, AstNodeType::AstVarDef);
-  AstNode *var_def_node = value_node->block.statements.at(0);
+  ASSERT_EQ(value_node->statements.at(0)->node_type, AstNodeType::AST_VAR_DEF);
+
+  AstVarDef *var_def_node = value_node->statements.at(0)->var_def();
   ASSERT_EQ(var_def_node->parent, value_node);
-  ASSERT_EQ(var_def_node->var_def.name, "myVar");
-  ASSERT_NE(var_def_node->var_def.type, nullptr);
-  AstNode *type_node = var_def_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(var_def_node->name, "myVar");
+  ASSERT_NE(var_def_node->type, nullptr);
 
-  ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
-  AstNode *ret_node = value_node->block.statements.at(1);
+  AstType *type_node = var_def_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(type_node->type_info->is_signed, true);
+
+  ASSERT_EQ(value_node->statements.at(1)->node_type, AstNodeType::AST_UNARY_EXPR);
+  AstUnaryExpr *ret_node = value_node->statements.at(1)->unary_expr();
   ASSERT_EQ(ret_node->parent, value_node);
-  ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_NE(ret_node->unary_expr.expr, nullptr);
+  ASSERT_EQ(ret_node->op, UnaryExprType::RET);
+  ASSERT_NE(ret_node->expr, nullptr);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ myVar i32\nret myvar }", "BlockSpaceNearCurliesTest", errors);
+  Lexer lexer("{ myVar i32\nret myvar }", "file/directory", "BlockSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstBlock *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->block.statements.size(), 2);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(value_node->statements.size(), 2);
 
-  ASSERT_EQ(value_node->block.statements.at(0)->node_type, AstNodeType::AstVarDef);
-  AstNode *var_def_node = value_node->block.statements.at(0);
+  ASSERT_EQ(value_node->statements.at(0)->node_type, AstNodeType::AST_VAR_DEF);
+
+  AstVarDef *var_def_node = value_node->statements.at(0)->var_def();
   ASSERT_EQ(var_def_node->parent, value_node);
-  ASSERT_EQ(var_def_node->var_def.name, "myVar");
-  ASSERT_NE(var_def_node->var_def.type, nullptr);
-  AstNode *type_node = var_def_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(var_def_node->name, "myVar");
+  ASSERT_NE(var_def_node->type, nullptr);
 
-  ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
-  AstNode *ret_node = value_node->block.statements.at(1);
+  AstType *type_node = var_def_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(type_node->type_info->is_signed, true);
+
+  ASSERT_EQ(value_node->statements.at(1)->node_type, AstNodeType::AST_UNARY_EXPR);
+  AstUnaryExpr *ret_node = value_node->statements.at(1)->unary_expr();
   ASSERT_EQ(ret_node->parent, value_node);
-  ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_NE(ret_node->unary_expr.expr, nullptr);
+  ASSERT_EQ(ret_node->op, UnaryExprType::RET);
+  ASSERT_NE(ret_node->expr, nullptr);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{\n\tmyVar i32\n\tret myvar\n}", "BlockNewlinesNearCurliesTest", errors);
+  Lexer lexer("{\n\tmyVar i32\n\tret myvar\n}", "file/directory", "BlockNewlinesNearCurliesTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstBlock *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->block.statements.size(), 2);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(value_node->statements.size(), 2);
 
-  ASSERT_EQ(value_node->block.statements.at(0)->node_type, AstNodeType::AstVarDef);
-  AstNode *var_def_node = value_node->block.statements.at(0);
+  ASSERT_EQ(value_node->statements.at(0)->node_type, AstNodeType::AST_VAR_DEF);
+  AstVarDef *var_def_node = value_node->statements.at(0)->var_def();
   ASSERT_EQ(var_def_node->parent, value_node);
-  ASSERT_EQ(var_def_node->var_def.name, "myVar");
-  ASSERT_NE(var_def_node->var_def.type, nullptr);
-  AstNode *type_node = var_def_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(var_def_node->name, "myVar");
+  ASSERT_NE(var_def_node->type, nullptr);
 
-  ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
-  AstNode *ret_node = value_node->block.statements.at(1);
+  AstType *type_node = var_def_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(type_node->type_info->is_signed, true);
+
+  ASSERT_EQ(value_node->statements.at(1)->node_type, AstNodeType::AST_UNARY_EXPR);
+  AstUnaryExpr *ret_node = value_node->statements.at(1)->unary_expr();
   ASSERT_EQ(ret_node->parent, value_node);
-  ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_NE(ret_node->unary_expr.expr, nullptr);
+  ASSERT_EQ(ret_node->op, UnaryExprType::RET);
+  ASSERT_NE(ret_node->expr, nullptr);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ \n  \t myVar i32   \n  \t  ret myvar  \n   }", "BlockSpacesBetweenNewlinesTest", errors);
+  Lexer lexer("{ \n  \t myVar i32   \n  \t  ret myvar  \n   }", "file/directory", "BlockSpacesBetweenNewlinesTest",
+              errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_block();
+  Parser parser(errors);
+  AstBlock *value_node = parser.parse_block(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->block.statements.size(), 2);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(value_node->statements.size(), 2);
 
-  ASSERT_EQ(value_node->block.statements.at(0)->node_type, AstNodeType::AstVarDef);
-  AstNode *var_def_node = value_node->block.statements.at(0);
+  ASSERT_EQ(value_node->statements.at(0)->node_type, AstNodeType::AST_VAR_DEF);
+  AstVarDef *var_def_node = value_node->statements.at(0)->var_def();
   ASSERT_EQ(var_def_node->parent, value_node);
-  ASSERT_EQ(var_def_node->var_def.name, "myVar");
-  ASSERT_NE(var_def_node->var_def.type, nullptr);
-  AstNode *type_node = var_def_node->var_def.type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(type_node->ast_type.type_info->bit_size, 32);
-  ASSERT_EQ(type_node->ast_type.type_info->llvm_type, nullptr);
-  ASSERT_EQ(type_node->ast_type.type_info->is_signed, true);
+  ASSERT_EQ(var_def_node->name, "myVar");
+  ASSERT_NE(var_def_node->type, nullptr);
 
-  ASSERT_EQ(value_node->block.statements.at(1)->node_type, AstNodeType::AstUnaryExpr);
-  AstNode *ret_node = value_node->block.statements.at(1);
+  AstType *type_node = var_def_node->type;
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->bit_size, 32);
+  ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
+  ASSERT_EQ(type_node->type_info->is_signed, true);
+
+  ASSERT_EQ(value_node->statements.at(1)->node_type, AstNodeType::AST_UNARY_EXPR);
+  AstUnaryExpr *ret_node = value_node->statements.at(1)->unary_expr();
   ASSERT_EQ(ret_node->parent, value_node);
-  ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_NE(ret_node->unary_expr.expr, nullptr);
+  ASSERT_EQ(ret_node->op, UnaryExprType::RET);
+  ASSERT_NE(ret_node->expr, nullptr);
 
   delete value_node;
 }
@@ -627,127 +630,129 @@ TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
 
 TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void", "FuncProtoEmptyParamTest", errors);
+  Lexer lexer("fn myFunc() void", "file/directory", "FuncProtoEmptyParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstFnProto *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(value_node->function_proto.name, "myFunc");
-  ASSERT_EQ(value_node->function_proto.params.size(), 0);
-  ASSERT_NE(value_node->function_proto.return_type, nullptr);
-  auto ret_type_node = value_node->function_proto.return_type;
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(value_node->name, "myFunc");
+  ASSERT_EQ(value_node->params.size(), 0);
+  ASSERT_NE(value_node->return_type, nullptr);
+
+  auto ret_type_node = value_node->return_type;
   ASSERT_EQ(ret_type_node->parent, value_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "void");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::VOID);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) void", "FuncProtoSingleParamTest", errors);
+  Lexer lexer("fn myFunc(param1 i32) void", "file/directory", "FuncProtoSingleParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstFnProto *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(value_node->function_proto.name, "myFunc");
-  ASSERT_NE(value_node->function_proto.return_type, nullptr);
-  ASSERT_EQ(value_node->function_proto.params.size(), 1L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(value_node->name, "myFunc");
+  ASSERT_NE(value_node->return_type, nullptr);
+  ASSERT_EQ(value_node->params.size(), 1L);
 
-  auto param_node = value_node->function_proto.params.at(0L);
-  ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+  AstParamDef *param_node = value_node->params.at(0L);
+  ASSERT_EQ(param_node->node_type, AstNodeType::AST_PARAM_DEF);
   ASSERT_EQ(param_node->parent, value_node);
-  ASSERT_EQ(param_node->param_decl.name, "param1");
-  ASSERT_NE(param_node->param_decl.type, nullptr);
-  ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
-  ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-  ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
-  ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(param_node->name, "param1");
+  ASSERT_NE(param_node->type, nullptr);
+  ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(param_node->type->parent, param_node);
+  ASSERT_EQ(param_node->type->type_info->name, "i32");
+  ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
 
-  auto ret_type_node = value_node->function_proto.return_type;
+  AstType *ret_type_node = value_node->return_type;
   ASSERT_EQ(ret_type_node->parent, value_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "void");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::VOID);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32", "FuncProtoMultiParamTest", errors);
+  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32", "file/directory", "FuncProtoMultiParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstFnProto *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(value_node->function_proto.name, "myFunc");
-  ASSERT_NE(value_node->function_proto.return_type, nullptr);
-  ASSERT_EQ(value_node->function_proto.params.size(), 3L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(value_node->name, "myFunc");
+  ASSERT_NE(value_node->return_type, nullptr);
+  ASSERT_EQ(value_node->params.size(), 3L);
 
-  for (auto param_node : value_node->function_proto.params) {
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+  for (auto param_node : value_node->params) {
+    ASSERT_EQ(param_node->node_type, AstNodeType::AST_PARAM_DEF);
     ASSERT_EQ(param_node->parent, value_node);
-    ASSERT_EQ(param_node->param_decl.name, "param1");
-    ASSERT_NE(param_node->param_decl.type, nullptr);
-    ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
-    ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(param_node->name, "param1");
+    ASSERT_NE(param_node->type, nullptr);
+    ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
+    ASSERT_EQ(param_node->type->parent, param_node);
+    ASSERT_EQ(param_node->type->type_info->name, "i32");
+    ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
   }
 
-  auto ret_type_node = value_node->function_proto.return_type;
+  AstType *ret_type_node = value_node->return_type;
   ASSERT_EQ(ret_type_node->parent, value_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn\nmyFunc\n(param1 i32\n, param1 i32,\n param1\ni32)\ni32", "FuncProtoMultiLineTest", errors);
+  Lexer lexer("fn\nmyFunc\n(param1 i32\n, param1 i32,\n param1\ni32)\ni32", " file / directory ",
+              "FuncProtoMultiLineTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_proto();
+  Parser parser(errors);
+  AstFnProto *value_node = parser.parse_function_proto(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(value_node->function_proto.name, "myFunc");
-  ASSERT_NE(value_node->function_proto.return_type, nullptr);
-  ASSERT_EQ(value_node->function_proto.params.size(), 3L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(value_node->name, "myFunc");
+  ASSERT_NE(value_node->return_type, nullptr);
+  ASSERT_EQ(value_node->params.size(), 3L);
 
-  for (auto param_node : value_node->function_proto.params) {
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+  for (auto param_node : value_node->params) {
+    ASSERT_EQ(param_node->node_type, AstNodeType::AST_PARAM_DEF);
     ASSERT_EQ(param_node->parent, value_node);
-    ASSERT_EQ(param_node->param_decl.name, "param1");
-    ASSERT_NE(param_node->param_decl.type, nullptr);
-    ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
-    ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(param_node->name, "param1");
+    ASSERT_NE(param_node->type, nullptr);
+    ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
+    ASSERT_EQ(param_node->type->parent, param_node);
+    ASSERT_EQ(param_node->type->type_info->name, "i32");
+    ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
   }
 
-  auto ret_type_node = value_node->function_proto.return_type;
+  AstType *ret_type_node = value_node->return_type;
   ASSERT_EQ(ret_type_node->parent, value_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
@@ -758,226 +763,244 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
 
 TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void {}", "FuncDefNoParamsVoidBlockTest", errors);
+  Lexer lexer("fn myFunc() void {}", "file/directory", "FuncDefNoParamsVoidBlockTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
-  ASSERT_NE(value_node->function_def.block, nullptr);
-  ASSERT_NE(value_node->function_def.proto, nullptr);
-  ASSERT_EQ(value_node->function_def.block->parent, value_node);
-  ASSERT_EQ(value_node->function_def.block->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->function_def.block->block.statements.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  auto proto_node = value_node->function_def.proto;
+  AstFnDef *value_node = node->fn_def();
+  ASSERT_NE(value_node->block, nullptr);
+  ASSERT_NE(value_node->proto, nullptr);
+
+  AstBlock *block_node = value_node->block;
+  ASSERT_EQ(block_node->parent, value_node);
+  ASSERT_EQ(block_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(block_node->statements.size(), 0L);
+
+  AstFnProto *proto_node = value_node->proto;
   ASSERT_EQ(proto_node->parent, value_node);
-  ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(proto_node->function_proto.name, "myFunc");
-  ASSERT_EQ(proto_node->function_proto.params.size(), 0L);
+  ASSERT_EQ(proto_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(proto_node->name, "myFunc");
+  ASSERT_EQ(proto_node->params.size(), 0L);
 
-  auto ret_type_node = proto_node->function_proto.return_type;
+  AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "void");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::VOID);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) i32 {}", "FuncDefSingleParamsVoidBlockTest", errors);
+  Lexer lexer("fn myFunc(param1 i32) i32 {}", "file/directory", "FuncDefSingleParamsVoidBlockTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
-  ASSERT_NE(value_node->function_def.block, nullptr);
-  ASSERT_NE(value_node->function_def.proto, nullptr);
-  ASSERT_EQ(value_node->function_def.block->parent, value_node);
-  ASSERT_EQ(value_node->function_def.block->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->function_def.block->block.statements.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  auto proto_node = value_node->function_def.proto;
+  AstFnDef *value_node = node->fn_def();
+  ASSERT_NE(value_node->block, nullptr);
+  ASSERT_NE(value_node->proto, nullptr);
+
+  AstBlock *block_node = value_node->block;
+  ASSERT_EQ(block_node->parent, value_node);
+  ASSERT_EQ(block_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(block_node->statements.size(), 0L);
+
+  AstFnProto *proto_node = value_node->proto;
   ASSERT_EQ(proto_node->parent, value_node);
-  ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(proto_node->function_proto.name, "myFunc");
-  ASSERT_NE(proto_node->function_proto.return_type, nullptr);
-  ASSERT_EQ(proto_node->function_proto.params.size(), 1L);
+  ASSERT_EQ(proto_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(proto_node->name, "myFunc");
+  ASSERT_NE(proto_node->return_type, nullptr);
+  ASSERT_EQ(proto_node->params.size(), 1L);
 
-  auto param_node = proto_node->function_proto.params.at(0L);
-  ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+  AstParamDef *param_node = proto_node->params.at(0L);
+  ASSERT_EQ(param_node->node_type, AstNodeType::AST_PARAM_DEF);
   ASSERT_EQ(param_node->parent, proto_node);
-  ASSERT_EQ(param_node->param_decl.name, "param1");
-  ASSERT_NE(param_node->param_decl.type, nullptr);
-  ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
-  ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-  ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
-  ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(param_node->name, "param1");
+  ASSERT_NE(param_node->type, nullptr);
+  ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(param_node->type->parent, param_node);
+  ASSERT_EQ(param_node->type->type_info->name, "i32");
+  ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
 
-  auto ret_type_node = proto_node->function_proto.return_type;
+  AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "FuncDefMultiParamsVoidBlockTest", errors);
+  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "file/directory",
+              "FuncDefMultiParamsVoidBlockTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
-  ASSERT_NE(value_node->function_def.block, nullptr);
-  ASSERT_NE(value_node->function_def.proto, nullptr);
-  ASSERT_EQ(value_node->function_def.block->parent, value_node);
-  ASSERT_EQ(value_node->function_def.block->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(value_node->function_def.block->block.statements.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  auto proto_node = value_node->function_def.proto;
+  AstFnDef *value_node = node->fn_def();
+  ASSERT_NE(value_node->block, nullptr);
+  ASSERT_NE(value_node->proto, nullptr);
+
+  AstBlock *block_node = value_node->block;
+  ASSERT_EQ(block_node->parent, value_node);
+  ASSERT_EQ(block_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(block_node->statements.size(), 0L);
+
+  AstFnProto *proto_node = value_node->proto;
   ASSERT_EQ(proto_node->parent, value_node);
-  ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(proto_node->function_proto.name, "myFunc");
-  ASSERT_NE(proto_node->function_proto.return_type, nullptr);
-  ASSERT_EQ(proto_node->function_proto.params.size(), 3L);
+  ASSERT_EQ(proto_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(proto_node->name, "myFunc");
+  ASSERT_NE(proto_node->return_type, nullptr);
+  ASSERT_EQ(proto_node->params.size(), 3L);
 
-  for (auto param_node : proto_node->function_proto.params) {
-    ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+  for (AstParamDef *param_node : proto_node->params) {
+    ASSERT_EQ(param_node->node_type, AstNodeType::AST_PARAM_DEF);
     ASSERT_EQ(param_node->parent, proto_node);
-    ASSERT_EQ(param_node->param_decl.name, "param1");
-    ASSERT_NE(param_node->param_decl.type, nullptr);
-    ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
-    ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
-    ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
+    ASSERT_EQ(param_node->name, "param1");
+    ASSERT_NE(param_node->type, nullptr);
+    ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
+    ASSERT_EQ(param_node->type->parent, param_node);
+    ASSERT_EQ(param_node->type->type_info->name, "i32");
+    ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
   }
 
-  auto ret_type_node = proto_node->function_proto.return_type;
+  AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "FuncDefNoParamsTest", errors);
+  Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "file/directory", "FuncDefNoParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
-  ASSERT_NE(value_node->function_def.block, nullptr);
-  ASSERT_NE(value_node->function_def.proto, nullptr);
-  auto block_node = value_node->function_def.block;
-  ASSERT_EQ(block_node->parent, value_node);
-  ASSERT_EQ(block_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(block_node->block.statements.size(), 1L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  auto var_def_node = value_node->function_def.block->block.statements.at(0);
+  AstFnDef *value_node = node->fn_def();
+  ASSERT_NE(value_node->block, nullptr);
+  ASSERT_NE(value_node->proto, nullptr);
+
+  AstBlock *block_node = value_node->block;
+  ASSERT_EQ(block_node->parent, value_node);
+  ASSERT_EQ(block_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(block_node->statements.size(), 1L);
+
+  AstVarDef *var_def_node = block_node->statements.at(0)->var_def();
   ASSERT_NE(var_def_node, nullptr);
   ASSERT_EQ(var_def_node->parent, block_node);
-  ASSERT_EQ(var_def_node->node_type, AstNodeType::AstVarDef);
-  ASSERT_EQ(var_def_node->var_def.name, "myVar");
-  ASSERT_NE(var_def_node->var_def.type, nullptr);
-  ASSERT_EQ(var_def_node->var_def.initializer, nullptr);
+  ASSERT_EQ(var_def_node->node_type, AstNodeType::AST_VAR_DEF);
+  ASSERT_EQ(var_def_node->name, "myVar");
+  ASSERT_NE(var_def_node->type, nullptr);
+  ASSERT_EQ(var_def_node->initializer, nullptr);
 
-  auto type_node = var_def_node->var_def.type;
+  AstType *type_node = var_def_node->type;
   ASSERT_EQ(type_node->parent, var_def_node);
-  ASSERT_EQ(type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(type_node->ast_type.type_id, AstTypeId::Integer);
-  ASSERT_EQ(type_node->ast_type.type_info->name, "i32");
+  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(type_node->type_info->name, "i32");
 
-  auto proto_node = value_node->function_def.proto;
+  AstFnProto *proto_node = value_node->proto;
   ASSERT_EQ(proto_node->parent, value_node);
-  ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(proto_node->function_proto.name, "myFunc");
-  ASSERT_EQ(proto_node->function_proto.params.size(), 0L);
+  ASSERT_EQ(proto_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(proto_node->name, "myFunc");
+  ASSERT_EQ(proto_node->params.size(), 0L);
 
-  auto ret_type_node = proto_node->function_proto.return_type;
+  AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "void");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::VOID);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "FuncDefSingleParamsTest", errors);
+  Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "file/directory", "FuncDefSingleParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_def();
+  Parser parser(errors);
+  AstNode *node = parser.parse_function_def(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncDef);
-  ASSERT_NE(value_node->function_def.block, nullptr);
-  ASSERT_NE(value_node->function_def.proto, nullptr);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_FN_DEF);
 
-  auto block_node = value_node->function_def.block;
+  AstFnDef *value_node = node->fn_def();
+  ASSERT_NE(value_node->block, nullptr);
+  ASSERT_NE(value_node->proto, nullptr);
+
+  AstBlock *block_node = value_node->block;
   ASSERT_EQ(block_node->parent, value_node);
-  ASSERT_EQ(block_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(block_node->block.statements.size(), 1L);
+  ASSERT_EQ(block_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(block_node->statements.size(), 1L);
 
-  auto ret_node = block_node->block.statements.at(0);
+  AstUnaryExpr *ret_node = block_node->statements.at(0)->unary_expr();
   ASSERT_NE(ret_node, nullptr);
   ASSERT_EQ(ret_node->parent, block_node);
-  ASSERT_EQ(ret_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_NE(ret_node->unary_expr.expr, nullptr);
-  ASSERT_EQ(ret_node->unary_expr.expr->parent, ret_node);
-  ASSERT_EQ(ret_node->unary_expr.expr->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(ret_node->unary_expr.expr->binary_expr.bin_op, BinaryExprType::ADD);
+  ASSERT_EQ(ret_node->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(ret_node->op, UnaryExprType::RET);
+  ASSERT_NE(ret_node->expr, nullptr);
+  ASSERT_EQ(ret_node->expr->parent, ret_node);
+  ASSERT_EQ(ret_node->expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(ret_node->expr->binary_expr()->bin_op, BinaryExprType::ADD);
 
-  auto proto_node = value_node->function_def.proto;
+  AstFnProto *proto_node = value_node->proto;
   ASSERT_EQ(proto_node->parent, value_node);
-  ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(proto_node->function_proto.name, "myFunc");
-  ASSERT_NE(proto_node->function_proto.return_type, nullptr);
-  ASSERT_EQ(proto_node->function_proto.params.size(), 1L);
+  ASSERT_EQ(proto_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(proto_node->name, "myFunc");
+  ASSERT_NE(proto_node->return_type, nullptr);
+  ASSERT_EQ(proto_node->params.size(), 1L);
 
-  auto param_node = proto_node->function_proto.params.at(0L);
-  ASSERT_EQ(param_node->node_type, AstNodeType::AstParamDecl);
+  AstParamDef *param_node = proto_node->params.at(0L);
+  ASSERT_EQ(param_node->node_type, AstNodeType::AST_PARAM_DEF);
   ASSERT_EQ(param_node->parent, proto_node);
-  ASSERT_EQ(param_node->param_decl.name, "param1");
-  ASSERT_NE(param_node->param_decl.type, nullptr);
-  ASSERT_EQ(param_node->param_decl.type->node_type, AstNodeType::AstType);
-  ASSERT_EQ(param_node->param_decl.type->parent, param_node);
-  ASSERT_EQ(param_node->param_decl.type->ast_type.type_info->name, "i32");
-  ASSERT_EQ(param_node->param_decl.type->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(param_node->name, "param1");
+  ASSERT_NE(param_node->type, nullptr);
+  ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(param_node->type->parent, param_node);
+  ASSERT_EQ(param_node->type->type_info->name, "i32");
+  ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
 
-  auto ret_type_node = proto_node->function_proto.return_type;
+  AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "i32");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Integer);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
@@ -988,144 +1011,153 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
 
 TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc()", "FuncCallNoParamsTest", errors);
+  Lexer lexer("myFunc()", "file/directory", "FuncCallNoParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  AstFnCallExpr *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
-  ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
-  ASSERT_EQ(value_node->func_call.args.size(), 0L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_CALL_EXPR);
+  ASSERT_EQ(value_node->fn_name, "myFunc");
+  ASSERT_EQ(value_node->args.size(), 0L);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc(5)", "FuncCall1ParamTest", errors);
+  Lexer lexer("myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  AstFnCallExpr *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
-  ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
-  ASSERT_EQ(value_node->func_call.args.size(), 1L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_CALL_EXPR);
+  ASSERT_EQ(value_node->fn_name, "myFunc");
+  ASSERT_EQ(value_node->args.size(), 1L);
 
-  auto param_node = value_node->func_call.args.at(0);
+  AstNode *param_node = value_node->args.at(0);
   ASSERT_NE(param_node, nullptr);
   ASSERT_EQ(param_node->parent, value_node);
-  ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
+  ASSERT_EQ(param_node->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_EQ(param_node->const_value()->type, ConstValueType::INT);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
   std::vector<Error> errors;
-  Lexer lexer("85 + myFunc(5)", "FuncCall1ParamTest", errors);
+  Lexer lexer("85 + myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_algebraic_expr();
+  Parser parser(errors);
+  const AstNode *value_node = parser.parse_algebraic_expr(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstBinaryExpr);
-  ASSERT_EQ(value_node->binary_expr.bin_op, BinaryExprType::ADD);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BINARY_EXPR);
 
-  const AstNode *const_value_node = value_node->binary_expr.left_expr;
-  ASSERT_NE(const_value_node, nullptr);
-  ASSERT_EQ(const_value_node->parent, value_node);
-  ASSERT_EQ(const_value_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(const_value_node->const_value.type, ConstValueType::INT);
-  ASSERT_EQ(const_value_node->const_value.is_negative, false);
-  ASSERT_EQ(strcmp(const_value_node->const_value.number, "85"), 0);
+  const AstBinaryExpr *bin_expr = value_node->binary_expr();
+  ASSERT_EQ(bin_expr->bin_op, BinaryExprType::ADD);
+  ASSERT_NE(bin_expr->left_expr, nullptr);
+  ASSERT_EQ(bin_expr->left_expr->node_type, AstNodeType::AST_CONST_VALUE);
 
-  const AstNode *fn_call_node = value_node->binary_expr.right_expr;
-  ASSERT_NE(fn_call_node, nullptr);
-  ASSERT_EQ(fn_call_node->parent, value_node);
-  ASSERT_EQ(fn_call_node->node_type, AstNodeType::AstFuncCallExpr);
-  ASSERT_EQ(fn_call_node->func_call.fn_name, "myFunc");
-  ASSERT_EQ(fn_call_node->func_call.args.size(), 1L);
+  const AstConstValue *const_value_node = bin_expr->left_expr->const_value();
+  ASSERT_EQ(const_value_node->parent, bin_expr);
+  ASSERT_EQ(const_value_node->type, ConstValueType::INT);
+  ASSERT_EQ(const_value_node->is_negative, false);
+  ASSERT_EQ(strcmp(const_value_node->number, "85"), 0);
 
-  const AstNode *arg_node = fn_call_node->func_call.args.at(0);
+  ASSERT_NE(bin_expr->right_expr, nullptr);
+  ASSERT_EQ(bin_expr->right_expr->node_type, AstNodeType::AST_FN_CALL_EXPR);
+
+  const AstFnCallExpr *fn_call_node = bin_expr->right_expr->fn_call();
+  ASSERT_EQ(fn_call_node->parent, bin_expr);
+  ASSERT_EQ(fn_call_node->fn_name, "myFunc");
+  ASSERT_EQ(fn_call_node->args.size(), 1L);
+
+  const AstNode *arg_node = fn_call_node->args.at(0);
   ASSERT_NE(arg_node, nullptr);
   ASSERT_EQ(arg_node->parent, fn_call_node);
-  ASSERT_EQ(arg_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(arg_node->const_value.type, ConstValueType::INT);
-  ASSERT_EQ(strcmp(arg_node->const_value.number, "5"), 0);
+  ASSERT_EQ(arg_node->node_type, AstNodeType::AST_CONST_VALUE);
+
+  const AstConstValue *const_value_arg = arg_node->const_value();
+  ASSERT_EQ(const_value_arg->type, ConstValueType::INT);
+  ASSERT_EQ(strcmp(const_value_arg->number, "5"), 0);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncCallNestedTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc(myFunc2(5))", "FuncCallNestedTest", errors);
+  Lexer lexer("myFunc(myFunc2(5))", "file/directory", "FuncCallNestedTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  const AstFnCallExpr *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
-  ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
-  ASSERT_EQ(value_node->func_call.args.size(), 1L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_CALL_EXPR);
+  ASSERT_EQ(value_node->fn_name, "myFunc");
+  ASSERT_EQ(value_node->args.size(), 1L);
 
-  auto param_node_func = value_node->func_call.args.at(0);
-  ASSERT_NE(param_node_func, nullptr);
-  ASSERT_EQ(param_node_func->parent, value_node);
-  ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
-  ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
-  ASSERT_EQ(param_node_func->func_call.args.size(), 1L);
+  const AstNode *param_node_0 = value_node->args.at(0);
+  ASSERT_NE(param_node_0, nullptr);
+  ASSERT_EQ(param_node_0->parent, value_node);
+  ASSERT_EQ(param_node_0->node_type, AstNodeType::AST_FN_CALL_EXPR);
 
-  auto param_node = param_node_func->func_call.args.at(0);
-  ASSERT_NE(param_node, nullptr);
-  ASSERT_EQ(param_node->parent, param_node_func);
-  ASSERT_EQ(param_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(param_node->const_value.type, ConstValueType::INT);
+  const AstFnCallExpr *param_node_func = param_node_0->fn_call();
+  ASSERT_EQ(param_node_func->fn_name, "myFunc2");
+  ASSERT_EQ(param_node_func->args.size(), 1L);
+
+  const AstNode *param_node_1 = param_node_func->args.at(0);
+  ASSERT_NE(param_node_1, nullptr);
+  ASSERT_EQ(param_node_1->parent, param_node_func);
+  ASSERT_EQ(param_node_1->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_EQ(param_node_1->const_value()->type, ConstValueType::INT);
 
   delete value_node;
 }
 
 TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("myFunc(myVar, myFunc2(5))", "FuncCallMultiParamsTest", errors);
+  Lexer lexer("myFunc(myVar, myFunc2(5))", "file/directory", "FuncCallMultiParamsTest", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *value_node = parser.parse_function_call();
+  Parser parser(errors);
+  const AstFnCallExpr *value_node = parser.parse_function_call(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AstFuncCallExpr);
-  ASSERT_EQ(value_node->func_call.fn_name, "myFunc");
-  ASSERT_EQ(value_node->func_call.args.size(), 2L);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_FN_CALL_EXPR);
+  ASSERT_EQ(value_node->fn_name, "myFunc");
+  ASSERT_EQ(value_node->args.size(), 2L);
 
-  auto param_node = value_node->func_call.args.at(0);
-  ASSERT_NE(param_node, nullptr);
-  ASSERT_EQ(param_node->parent, value_node);
-  ASSERT_EQ(param_node->node_type, AstNodeType::AstSymbol);
-  ASSERT_EQ(param_node->symbol.token->id, TokenId::IDENTIFIER);
+  const AstNode *param_node_0 = value_node->args.at(0);
+  ASSERT_NE(param_node_0, nullptr);
+  ASSERT_EQ(param_node_0->parent, value_node);
+  ASSERT_EQ(param_node_0->node_type, AstNodeType::AST_SYMBOL);
+  ASSERT_EQ(param_node_0->symbol()->token->id, TokenId::IDENTIFIER);
 
-  auto param_node_func = value_node->func_call.args.at(1);
-  ASSERT_NE(param_node_func, nullptr);
+  const AstNode *param_node_1 = value_node->args.at(1);
+  ASSERT_NE(param_node_1, nullptr);
+  ASSERT_EQ(param_node_1->node_type, AstNodeType::AST_FN_CALL_EXPR);
+
+  const AstFnCallExpr *param_node_func = param_node_1->fn_call();
   ASSERT_EQ(param_node_func->parent, value_node);
-  ASSERT_EQ(param_node_func->node_type, AstNodeType::AstFuncCallExpr);
-  ASSERT_EQ(param_node_func->func_call.fn_name, "myFunc2");
-  ASSERT_EQ(param_node_func->func_call.args.size(), 1L);
+  ASSERT_EQ(param_node_func->fn_name, "myFunc2");
+  ASSERT_EQ(param_node_func->args.size(), 1L);
 
-  auto func_param_node = param_node_func->func_call.args.at(0);
+  const AstNode *func_param_node = param_node_func->args.at(0);
   ASSERT_NE(func_param_node, nullptr);
   ASSERT_EQ(func_param_node->parent, param_node_func);
-  ASSERT_EQ(func_param_node->node_type, AstNodeType::AstConstValue);
-  ASSERT_EQ(func_param_node->const_value.type, ConstValueType::INT);
+  ASSERT_EQ(func_param_node->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_EQ(func_param_node->const_value()->type, ConstValueType::INT);
 
   delete value_node;
 }
@@ -1148,49 +1180,70 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
                             "}";
 
   std::vector<Error> errors;
-  Lexer lexer(source_code, "FullProgramNoNewLineEnd", errors);
+  Lexer lexer(source_code, "file/directory", "FullProgramNoNewLineEnd", errors);
   lexer.tokenize();
 
-  Parser parser(lexer, errors);
-  AstNode *source_code_node = parser.parse();
+  Parser parser(errors);
+  const AstSourceCode *source_code_node = parser.parse(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(source_code_node, nullptr);
-  ASSERT_EQ(source_code_node->node_type, AstNodeType::AstSourceCode);
-  ASSERT_EQ(source_code_node->source_code.children.size(), 2L);
-  auto main_stmnts = source_code_node->source_code.children;
+  ASSERT_EQ(source_code_node->node_type, AstNodeType::AST_SOURCE_CODE);
+  ASSERT_EQ(source_code_node->children.size(), 2L);
+  auto main_stmnts = source_code_node->children;
 
-  AstNode *var_def_node = main_stmnts.at(0);
-  AstNode *func_def_node = main_stmnts.at(1);
+  const AstNode *var_def_node = main_stmnts.at(0);
+  ASSERT_NE(var_def_node, nullptr);
+  ASSERT_EQ(var_def_node->node_type, AstNodeType::AST_VAR_DEF);
+
+  const AstVarDef *var_def_expr = var_def_node->var_def();
+  ASSERT_EQ(var_def_expr->parent, source_code_node);
+  ASSERT_EQ(var_def_expr->name, "myVar");
+  ASSERT_NE(var_def_expr->type, nullptr);
+
+  const AstType *var_type = var_def_expr->type;
+  ASSERT_EQ(var_type->parent, var_def_expr);
+  ASSERT_EQ(var_type->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(var_type->child_type, nullptr);
+  ASSERT_EQ(var_type->type_info->name, "i32");
+  ASSERT_EQ(var_type->type_info->bit_size, 32);
+  ASSERT_EQ(var_type->type_info->is_signed, true);
+
+  const AstNode *func_def_node = main_stmnts.at(1);
   ASSERT_NE(func_def_node, nullptr);
-  ASSERT_EQ(func_def_node->node_type, AstNodeType::AstFuncDef);
-  ASSERT_NE(func_def_node->function_def.block, nullptr);
-  ASSERT_NE(func_def_node->function_def.proto, nullptr);
+  ASSERT_EQ(func_def_node->node_type, AstNodeType::AST_FN_DEF);
 
-  auto block_node = func_def_node->function_def.block;
-  ASSERT_EQ(block_node->parent, func_def_node);
-  ASSERT_EQ(block_node->node_type, AstNodeType::AstBlock);
-  ASSERT_EQ(block_node->block.statements.size(), 1L);
+  const AstFnDef *fn_def = func_def_node->fn_def();
+  ASSERT_EQ(fn_def->parent, source_code_node);
+  ASSERT_NE(fn_def->block, nullptr);
+  ASSERT_NE(fn_def->proto, nullptr);
 
-  auto ret_node = block_node->block.statements.at(0);
+  const AstFnProto *proto_node = fn_def->proto;
+  ASSERT_EQ(proto_node->parent, fn_def);
+  ASSERT_EQ(proto_node->node_type, AstNodeType::AST_FN_PROTO);
+  ASSERT_EQ(proto_node->name, "myFunc");
+  ASSERT_EQ(proto_node->params.size(), 0L);
+
+  const AstBlock *block_node = fn_def->block;
+  ASSERT_EQ(block_node->parent, fn_def);
+  ASSERT_EQ(block_node->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(block_node->statements.size(), 1L);
+
+  const AstNode *ret_node = block_node->statements.at(0);
   ASSERT_NE(ret_node, nullptr);
-  ASSERT_EQ(ret_node->parent, block_node);
-  ASSERT_EQ(ret_node->node_type, AstNodeType::AstUnaryExpr);
-  ASSERT_EQ(ret_node->unary_expr.op, UnaryExprType::RET);
-  ASSERT_EQ(ret_node->unary_expr.expr, nullptr);
+  ASSERT_EQ(ret_node->node_type, AstNodeType::AST_UNARY_EXPR);
 
-  auto proto_node = func_def_node->function_def.proto;
-  ASSERT_EQ(proto_node->parent, func_def_node);
-  ASSERT_EQ(proto_node->node_type, AstNodeType::AstFuncProto);
-  ASSERT_EQ(proto_node->function_proto.name, "myFunc");
-  ASSERT_EQ(proto_node->function_proto.params.size(), 0L);
+  const AstUnaryExpr *ret_expr = ret_node->unary_expr();
+  ASSERT_EQ(ret_expr->parent, block_node);
+  ASSERT_EQ(ret_expr->op, UnaryExprType::RET);
+  ASSERT_EQ(ret_expr->expr, nullptr);
 
-  auto ret_type_node = proto_node->function_proto.return_type;
+  const AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
-  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AstType);
-  ASSERT_EQ(ret_type_node->ast_type.type_info->name, "void");
-  ASSERT_EQ(ret_type_node->ast_type.type_id, AstTypeId::Void);
+  ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(ret_type_node->type_info->name, "void");
+  ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::VOID);
 
   delete source_code_node;
 }

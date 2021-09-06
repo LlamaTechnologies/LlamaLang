@@ -30,6 +30,9 @@ driver.cpp
 error.hpp
 error.cpp
 
+file_utils.hpp
+file_utils.cpp
+
 ir.hpp
 ir.cpp
 
@@ -43,10 +46,16 @@ parse_error_msgs.hpp
 parser.hpp
 parser.cpp
 
+scope.hpp
+scope.cpp
+
 semantic_analyzer.hpp
 semantic_analyzer.cpp
 
 semantic_error_msgs.hpp
+
+src_code_repository.hpp
+src_code_repository.cpp
 
 types.hpp
 types.cpp

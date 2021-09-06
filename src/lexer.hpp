@@ -2,6 +2,8 @@
 #include "error.hpp"
 
 #include <string.h>
+#include <string>
+#include <string_view>
 #include <vector>
 
 enum class TokenId
@@ -87,28 +89,22 @@ enum class INT_BASE
   HEXADECIMAL
 };
 
-#define MAX_NUMBER_DIGITS 40
+constexpr const size_t MAX_NUMBER_DIGITS = 40;
 
 struct IntToken {
-  char *number;
+  char number[MAX_NUMBER_DIGITS];
   size_t digits_count;
   INT_BASE base;
   bool is_negative;
 
-  IntToken() : digits_count(0), base(INT_BASE::DECIMAL), is_negative(false) {
-    number = new char[MAX_NUMBER_DIGITS];
-    memset(number, 0, MAX_NUMBER_DIGITS);
-  }
+  IntToken() : digits_count(0), base(INT_BASE::DECIMAL), is_negative(false) { memset(number, 0, MAX_NUMBER_DIGITS); }
 };
 
 struct FloatToken {
-  char *number;
+  char number[MAX_NUMBER_DIGITS];
   size_t digits_count;
 
-  FloatToken() : digits_count(0) {
-    number = new char[MAX_NUMBER_DIGITS];
-    memset(number, 0, MAX_NUMBER_DIGITS);
-  }
+  FloatToken() : digits_count(0) { memset(number, 0, MAX_NUMBER_DIGITS); }
 };
 
 struct Token {
@@ -117,7 +113,7 @@ struct Token {
   size_t end_pos;
   size_t start_line;
   size_t start_column;
-  std::string file_name;
+  std::string_view file_name;
 
   union {
     Char char_lit;
@@ -125,17 +121,16 @@ struct Token {
     IntToken int_lit;
   };
 
-  Token() : id(TokenId::_EOF), start_pos(0L), end_pos(0L), start_line(0), start_column(0), file_name(""), int_lit() {}
+  Token(const std::string &in_file_name)
+      : id(TokenId::_EOF), start_pos(0L), end_pos(0L), start_line(0), start_column(0), file_name(in_file_name),
+        int_lit() {}
 
-  ~Token() {}
+  virtual ~Token() {}
 
   Token(const Token &other)
       : id(other.id), start_pos(other.start_pos), end_pos(other.end_pos), start_line(other.start_line),
         start_column(other.start_column), file_name(other.file_name) {
     switch (id) {
-    case TokenId::INT_LIT:
-      int_lit = other.int_lit;
-      break;
     case TokenId::FLOAT_LIT:
       float_lit = other.float_lit;
       break;
@@ -143,6 +138,7 @@ struct Token {
       char_lit = other.char_lit;
       break;
     default:
+      int_lit = other.int_lit;
       break;
     }
   }
@@ -158,7 +154,18 @@ struct Token {
     start_pos = other.start_pos;
     end_pos = other.end_pos;
     file_name = other.file_name;
-    int_lit = other.int_lit;
+
+    switch (id) {
+    case TokenId::FLOAT_LIT:
+      float_lit = other.float_lit;
+      break;
+    case TokenId::UNICODE_CHAR:
+      char_lit = other.char_lit;
+      break;
+    default:
+      int_lit = other.int_lit;
+      break;
+    }
 
     return *this;
   }
@@ -168,12 +175,25 @@ struct Token {
 
 typedef std::vector<std::string> Console;
 
+enum class TokenizerState;
+
 class Lexer {
-  enum class TokenizerState;
+  Token current_token;
+  TokenizerState state;
+
+public:
+  std::string file_directory;
+  std::string file_name;
+  std::string source;
+
+private:
+  std::vector<Token> tokens;
+  std::vector<Token> comments;
+  std::vector<Error> &errors;
 
   size_t cursor_pos;
-  size_t curr_line;
-  size_t curr_column;
+  size_t current_line;
+  size_t current_column;
   mutable size_t curr_index; // used to consume tokens
 
   size_t char_code_index;      // char_code char counter
@@ -184,21 +204,14 @@ class Lexer {
   bool is_trailing_underscore; // used to interpret number_number
   bool is_invalid_token;       // used to finish tokenizing a error tokens
 
-  TokenizerState state;
-  Token curr_token;
+  bool _padding; // not used, it is to have a clear visual of the struct size
 
 public:
-  std::string file_name;
-  std::string source;
-
-private:
-  std::vector<Token> tokens_vec;
-  std::vector<Token> comments_vec;
-  std::vector<Error> &errors;
-
-public:
-  Lexer(const std::string &_file_name, std::vector<Error> &_errors);
-  Lexer(const std::string &_src_file, const std::string &_file_name, std::vector<Error> &_errors);
+  /**
+   * Tokenize the '_src_file' string
+   **/
+  Lexer(const std::string &_src_file, const std::string_view &_file_directory, const std::string &_file_name,
+        std::vector<Error> &_errors);
   void tokenize() noexcept;
 
   const bool has_tokens() const noexcept;
@@ -216,53 +229,13 @@ public:
   friend Console print_tokens(Lexer &lexer);
 
 private:
-  void begin_token(const TokenId id) noexcept;
-  void set_token_id(const TokenId id) noexcept;
-  void end_token() noexcept;
-  void end_token_check_is_keyword() noexcept;
-  void reset_line() noexcept;
-  void is_keyword() noexcept;
-  void invalid_char_error(uint8_t c) noexcept;
-  void tokenize_error(const char *format, ...) noexcept;
-  void handle_string_escape(uint8_t c) noexcept;
-
-  enum class TokenizerState
-  {
-    Start,
-    Symbol,
-    Zero,                            // "0", which might lead to "0x"
-    Number,                          // "123", "0x123"
-    NumberNoUnderscore,              // "12_", "0x12_" next char must be digit
-    NumberDot,                       //
-    FloatFraction,                   // "123.456", "0x123.456"
-    FloatFractionNoUnderscore,       // "123.45_", "0x123.45_"
-    FloatExponentUnsigned,           // "123.456e", "123e", "0x123p"
-    FloatExponentNumber,             // "123.456e7", "123.456e+7", "123.456e-7"
-    FloatExponentNumberNoUnderscore, // "123.456e7_", "123.456e+7_", "123.456e-7_"
-    String,                          //
-    StringEscape,                    // saw \ inside a string
-    StringEscapeUnicodeStart,        // saw u inside string_escape
-    CharCode,                        // saw x in string_escape or began the unicode escape
-    CharLiteral,                     //
-    CharLiteralUnicode,              // unicode char
-    CharLiteralEnd,                  //
-    SawStar,                         //
-    SawSlash,                        //
-    SawPercent,                      //
-    SawPlus,                         //
-    SawDash,                         //
-    SawNot,
-    SawVerticalBar,
-    SawAmpersand,
-    SawLess,
-    SawGreater,
-    SawSignOrTypeSpec,
-    DocComment,        //
-    SawStarDocComment, // * in multiline comment may lead to end comment
-    LineComment,       //
-    SawEq,             //
-    Error,             //
-  };
+  friend void _begin_token(Lexer &, const TokenId id) noexcept;
+  friend void _end_token(Lexer &) noexcept;
+  friend void _end_token_check_is_keyword(Lexer &) noexcept;
+  friend void _reset_line(Lexer &) noexcept;
+  friend void _invalid_char_error(Lexer &, uint8_t c) noexcept;
+  friend void _tokenize_error(Lexer &, const char *format, ...) noexcept;
+  friend void _handle_string_escape(Lexer &, uint8_t c) noexcept;
 };
 
 Console print_tokens(Lexer &lexer);

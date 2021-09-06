@@ -1,13 +1,18 @@
 #include "ast_nodes.hpp"
 
-static std::vector<const char *> directives_keywords = { "run", "load", "compile_only" };
+#include "Types.hpp"
+#include "lexer.hpp"
+
+#define LL_DEFAULT_TYPE TypesRepository::get().get_type("void")
+
+static const std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
 
 const std::string get_directive_type_name(const DirectiveType directive_type) noexcept {
-  assert(directive_type <= DirectiveType::CompTimeOnly);
+  assert(directive_type <= DirectiveType::FN_TYPE);
   return directives_keywords.at((size_t)directive_type);
 }
 
-static std::vector<const char *> unary_operators_symbols = {
+static const std::vector<const char *> unary_operators_symbols = {
   "++", "--", "-", "!", "~",
 };
 
@@ -16,7 +21,21 @@ const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept {
   return unary_operators_symbols[(size_t)op_type];
 }
 
-AstFuncDef::~AstFuncDef() {
+AstType::AstType()
+    : AstNode(AstNodeType::AST_TYPE, 0L, 0L, "predefined"), child_type(nullptr), type_info(LL_DEFAULT_TYPE) {}
+
+AstType::AstType(const size_t in_line, const size_t in_column, const std::string_view in_file_name)
+    : AstNode(AstNodeType::AST_TYPE, in_line, in_column, in_file_name), child_type(nullptr),
+      type_info(LL_DEFAULT_TYPE) {}
+
+AstType::AstType(const TypeInfo *in_type)
+    : AstNode(AstNodeType::AST_TYPE, 0L, 0L, "predefined"), child_type(nullptr), type_info(in_type) {}
+
+AstType::AstType(const TypeInfo *in_type, const size_t in_line, const size_t in_column,
+                 const std::string_view in_file_name)
+    : AstNode(AstNodeType::AST_TYPE, in_line, in_column, in_file_name), child_type(nullptr), type_info(in_type) {}
+
+AstFnDef::~AstFnDef() {
   if (block) {
     delete block;
     block = nullptr;
@@ -27,9 +46,9 @@ AstFuncDef::~AstFuncDef() {
   }
 }
 
-AstFuncProto::~AstFuncProto() {
+AstFnProto::~AstFnProto() {
   if (!params.empty()) {
-    for (AstNode *&param : params) {
+    for (AstParamDef *param : params) {
       if (param) {
         delete param;
         param = nullptr;
@@ -59,7 +78,7 @@ AstVarDef::~AstVarDef() {
   // Types are deleted by the type allocator
 }
 
-AstFuncCallExpr::~AstFuncCallExpr() {
+AstFnCallExpr::~AstFnCallExpr() {
   if (!args.empty()) {
     for (AstNode *&arg : args) {
       if (arg) {
@@ -105,17 +124,18 @@ AstSourceCode::~AstSourceCode() {
       }
     }
   }
+
+  if (lexer) {
+    delete lexer;
+  }
 }
+
+TypeInfo::~TypeInfo() {}
 
 AstType::~AstType() {
   if (child_type) {
     delete child_type;
     child_type = nullptr;
-  }
-
-  if (type_info) {
-    delete type_info;
-    type_info = nullptr;
   }
 }
 

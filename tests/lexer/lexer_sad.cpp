@@ -4,7 +4,7 @@
 
 TEST(LexerSadIdentifierTests, IdentifierNumOnlyTest) {
   std::vector<Error> errors;
-  Lexer lexer("1542", "NumOnlyTest", errors);
+  Lexer lexer("1542", "file/directory", "NumOnlyTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -14,7 +14,7 @@ TEST(LexerSadIdentifierTests, IdentifierNumOnlyTest) {
 
 TEST(LexerSadIdentifierTests, IdentifierNumPrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("1dentifier", "NumPrefixTest", errors);
+  Lexer lexer("1dentifier", "file/directory", "NumPrefixTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -24,7 +24,7 @@ TEST(LexerSadIdentifierTests, IdentifierNumPrefixTest) {
 
 TEST(LexerSadIdentifierTests, IdentifierInvalidCharPrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("$identifier", "InvalidCharPrefixTest", errors);
+  Lexer lexer("$identifier", "file/directory", "InvalidCharPrefixTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -38,7 +38,7 @@ TEST(LexerSadIdentifierTests, IdentifierInvalidCharPrefixTest) {
 
 TEST(LexerSadKeywordsTests, KeywordFnUpperCaseTest) {
   std::vector<Error> errors;
-  Lexer lexer("FN", "KeywordFnUpperCaseTest", errors);
+  Lexer lexer("FN", "file/directory", "KeywordFnUpperCaseTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -48,7 +48,7 @@ TEST(LexerSadKeywordsTests, KeywordFnUpperCaseTest) {
 
 TEST(LexerSadKeywordsTests, KeywordRetUpperCaseTest) {
   std::vector<Error> errors;
-  Lexer lexer("RET", "KeywordRetUpperCaseTest", errors);
+  Lexer lexer("RET", "file/directory", "KeywordRetUpperCaseTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -58,7 +58,7 @@ TEST(LexerSadKeywordsTests, KeywordRetUpperCaseTest) {
 
 TEST(LexerSadKeywordsTests, KeywordAndUpperCaseTest) {
   std::vector<Error> errors;
-  Lexer lexer("AND", "KeywordAndUpperCaseTest", errors);
+  Lexer lexer("AND", "file/directory", "KeywordAndUpperCaseTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -68,7 +68,7 @@ TEST(LexerSadKeywordsTests, KeywordAndUpperCaseTest) {
 
 TEST(LexerSadKeywordsTests, KeywordOrUpperCaseTest) {
   std::vector<Error> errors;
-  Lexer lexer("OR", "KeywordOrUpperCaseTest", errors);
+  Lexer lexer("OR", "file/directory", "KeywordOrUpperCaseTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -83,7 +83,7 @@ TEST(LexerSadKeywordsTests, KeywordOrUpperCaseTest) {
 /* TODO(pablo96): implement forbiden operators
 TEST(LexerHappyOperatorsTests, ForbiddenOperatorsTest) {
     std::vector<Error> errors;
-    Lexer lexer("## %% ||| &&& === +++ --- ** /// ++= --= **= %%= ^^ ~~ <<< >>> >>< <<> <>< ><>",
+    Lexer lexer("## %% ||| &&& === +++ --- ** /// ++= --= **= %%= ^^ ~~ <<< >>> >>< <<> <>< ><>", "file/directory",
         "ForbiddenOperatorsTest", errors);
     lexer.tokenize();
 
@@ -148,7 +148,7 @@ TEST(LexerHappyOperatorsTests, ForbiddenOperatorsTest) {
 
 TEST(LexerHappyIntegerTests, IntegerContiguousUnderscoreSeparatorTest) {
   std::vector<Error> errors;
-  Lexer lexer("54__15", "ContiguousUnderscoreSeparatorTest", errors);
+  Lexer lexer("54__15", "file/directory", "ContiguousUnderscoreSeparatorTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -158,7 +158,7 @@ TEST(LexerHappyIntegerTests, IntegerContiguousUnderscoreSeparatorTest) {
 
 TEST(LexerHappyIntegerTests, IntegerUnexpectedCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("54$15", "UnexpectedCharTest", errors);
+  Lexer lexer("54$15", "file/directory", "UnexpectedCharTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -168,7 +168,7 @@ TEST(LexerHappyIntegerTests, IntegerUnexpectedCharTest) {
 
 TEST(LexerSadIntegerTests, IntegerFollowedByIdTest) {
   std::vector<Error> errors;
-  Lexer lexer("5_415_identifier", "FollowedByIdTest", errors);
+  Lexer lexer("5_415_identifier", "file/directory", "FollowedByIdTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -179,7 +179,7 @@ TEST(LexerSadIntegerTests, IntegerFollowedByIdTest) {
 /*
 TEST(LexerSadIntegerTests, IntegerSignSpecInvalidTypeSpecTest) {
     std::vector<Error> errors;
-    Lexer lexer("5_415_uR", "IntegerSignSpecInvalidTypeSpecTest", errors);
+    Lexer lexer("5_415_uR", "file/directory", "IntegerSignSpecInvalidTypeSpecTest", errors);
     lexer.tokenize();
 
     ASSERT_EQ(errors.size(), 1L);
@@ -200,7 +200,7 @@ TEST(LexerSadIntegerTests, IntegerSignSpecInvalidTypeSpecTest) {
 
 TEST(LexerSadStringCharTests, EmptyCharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\'", "EmptyStringTest", errors);
+  Lexer lexer("\'\'", "file/directory", "EmptyStringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -210,7 +210,7 @@ TEST(LexerSadStringCharTests, EmptyCharTest) {
 
 TEST(LexerSadStringCharTests, MultilineStringTest) {
   std::vector<Error> errors;
-  Lexer lexer(" \"Hello world for...\n1st time!\" ", "MultilineStringTest", errors);
+  Lexer lexer(" \"Hello world for...\n1st time!\" ", "file/directory", "MultilineStringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
