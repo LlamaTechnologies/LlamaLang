@@ -12,6 +12,9 @@ enum class TokenId
   EXTERN,    // extern
   FN,        // fn
   RET,       // ret
+  IF,        // if
+  ELIF,      // elif
+  ELSE,      // else
   L_PAREN,   // (
   R_PAREN,   // )
   L_CURLY,   // {

@@ -1163,6 +1163,95 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
 }
 
 //==================================================================================
+//          PARSE BRANCHES CALL STATEMENT
+//==================================================================================
+
+TEST(ParserHappyStmntTests, BranchIfConstantExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if true {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyStmntTests, BranchIfBinaryExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if false == true {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyStmntTests, BranchIfUnaryExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if !false {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyStmntTests, BranchIfComplexExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if true == false < 1 + 2 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyStmntTests, BranchIfArithmeticEqualityExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if 5 * 9 == 40 + 5 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+
+  delete if_stmtn_node;
+}
+
+//==================================================================================
 //          PARSE FULL PROGRAM
 //==================================================================================
 

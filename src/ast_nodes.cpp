@@ -59,6 +59,23 @@ AstFnProto::~AstFnProto() {
   // Types are deleted by the type allocator
 }
 
+AstIfStmnt::~AstIfStmnt() {
+  if (condition_expr) {
+    delete condition_expr;
+    condition_expr = nullptr;
+  }
+
+  if (if_block) {
+    delete if_block;
+    if_block = nullptr;
+  }
+
+  if (else_block) {
+    delete else_block;
+    else_block = nullptr;
+  }
+}
+
 AstBlock::~AstBlock() {
   if (!statements.empty()) {
     for (AstNode *&stmnt : statements) {

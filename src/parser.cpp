@@ -11,7 +11,9 @@
 #include <stdarg.h>
 #include <unordered_map>
 
+static bool _is_boolean_expression(const AstNode *in_expr);
 static void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
+static void _parse_warning(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in_errors,
                                     const Token &in_string_token, const std::string_view in_relative_file_name,
                                     const std::string &in_file_directory, std::string &out_file_path,
@@ -429,6 +431,72 @@ AstParamDef *Parser::parse_param_def(const Lexer &lexer) noexcept {
 }
 
 /*
+ * Parses an if/elif/else statement
+ * if_stmnt
+ *   : 'if' '('? expr ')'? block ('elif' '('? expr ')'? block)* ('else' block)?
+ *   ;
+ */
+AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
+  const Token &if_token = lexer.get_next_token();
+
+  if (if_token.id != TokenId::IF) {
+    // compiler bug! we did not predict correctly
+    LL_UNREACHEABLE;
+  }
+
+  const Token &lparent_token = lexer.get_next_token();
+
+  bool requires_rparent = false;
+  if (lparent_token.id == TokenId::L_PAREN) {
+    requires_rparent = true;
+  } else {
+    // it was an expr token so we get it back
+    lexer.get_back();
+  }
+
+  AstNode *conditional_expr = parse_expr(lexer);
+  if (conditional_expr == nullptr) {
+    // TODO(pablo96): handle error
+    return nullptr;
+  }
+
+  if (!_is_boolean_expression(conditional_expr)) {
+    _parse_error(errors, lparent_token, ERROR_BRANCH_EXPR_NOT_BOOL);
+    // NOTE(pablo96): we dont break here since we want to parse as much as we can
+  }
+
+  if (requires_rparent) {
+    const Token &rparent_token = lexer.get_next_token();
+    if (rparent_token.id != TokenId::R_PAREN) {
+      _parse_error(errors, rparent_token, ERROR_BRANCH_EXPECTED_RPAREN,
+                   std::string(lexer.get_token_value(rparent_token)).c_str());
+      return nullptr;
+    }
+  }
+
+  AstIfStmnt *if_stmnt_node = new AstIfStmnt(if_token.start_line, if_token.start_column, if_token.file_name);
+  if_stmnt_node->condition_expr = conditional_expr;
+
+  const Token &lcurly_token = lexer.get_next_token();
+  if (lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty branch
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return if_stmnt_node;
+  }
+
+  lexer.get_back();
+  AstBlock *block_node = parse_block(lexer);
+  if (block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    delete if_stmnt_node;
+    return nullptr;
+  }
+
+  if_stmnt_node->if_block = block_node;
+  return if_stmnt_node;
+}
+
+/*
  * Parses a (function | if-else stmnt) block
  * block
  *   : '{' (statement eos)* '}'
@@ -524,16 +592,23 @@ stmnt_expr:
     lexer.get_back(); // token
     return parse_expr(lexer);
   }
-  case TokenId::RET:
+  case TokenId::RET: {
     lexer.get_back();
     return parse_ret_stmnt(lexer);
-  case TokenId::L_CURLY:
+  }
+  case TokenId::IF: {
+    lexer.get_back();
+    return parse_if_stmnt(lexer);
+  }
+  case TokenId::L_CURLY: {
     // TODO(pablo96): parse local block
     return nullptr;
-  case TokenId::SEMI:
+  }
+  case TokenId::SEMI: {
     // empty_statement
     // consume the token and predict again
     return parse_statement(lexer);
+  }
   case TokenId::_EOF:
     return nullptr;
   default:
@@ -744,7 +819,7 @@ AstNode *Parser::parse_expr(const Lexer &lexer) noexcept {
 /*
  * Parses comparative expresions
  * compExpr
- *   : algebraicExpr ('=='|'!=' | '>='| '<=' | '<'| '>') algebraicExpr
+ *   : algebraicExpr ('==' | '!=' | '>='| '<=' | '<'| '>') algebraicExpr
  *   | algebraicExpr
  *   ;
  */
@@ -1066,26 +1141,43 @@ AstFnCallExpr *Parser::parse_function_call(const Lexer &lexer) noexcept {
   return func_call_node;
 }
 
-void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept {
-  va_list ap, ap2;
-  va_start(ap, format);
+static void _parse_msg(std::vector<Error> &in_errors, ERROR_TYPE in_msg_type, const Token &in_token,
+                       const char *in_format, va_list ap) noexcept {
+  va_list ap2;
   va_copy(ap2, ap);
 
-  int len1 = snprintf(nullptr, 0, format, ap);
+  int len1 = snprintf(nullptr, 0, in_format, ap);
   assert(len1 >= 0);
 
   std::string msg;
   msg.reserve(len1 + 1);
 
-  int len2 = snprintf(msg.data(), msg.capacity(), format, ap2);
+  int len2 = snprintf(msg.data(), msg.capacity(), in_format, ap2);
   assert(len2 >= 0);
   assert(len2 == len1);
 
-  Error error(ERROR_TYPE::ERROR, token.start_line, token.start_column, token.file_name, msg);
+  Error error(in_msg_type, in_token.start_line, in_token.start_column, in_token.file_name, msg);
   in_errors.push_back(error);
 
-  va_end(ap);
   va_end(ap2);
+}
+
+void _parse_error(std::vector<Error> &in_errors, const Token &in_token, const char *in_format, ...) noexcept {
+  va_list args;
+  va_start(args, in_format);
+
+  _parse_msg(in_errors, ERROR_TYPE::ERROR, in_token, in_format, args);
+
+  va_end(args);
+}
+
+void _parse_warning(std::vector<Error> &in_errors, const Token &in_token, const char *in_format, ...) noexcept {
+  va_list args;
+  va_start(args, in_format);
+
+  _parse_msg(in_errors, ERROR_TYPE::WARNING, in_token, in_format, args);
+
+  va_end(args);
 }
 
 bool Parser::is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos) {
@@ -1179,6 +1271,8 @@ UnaryExprType _get_unary_op(const Token &token) noexcept {
     return UnaryExprType::BIT_INV;
   case TokenId::RET:
     return UnaryExprType::RET;
+  case TokenId::NOT:
+    return UnaryExprType::NOT;
   default:
     LL_UNREACHEABLE;
   }
@@ -1322,4 +1416,33 @@ bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in
   out_file_path = file_path.parent_path();
 
   return true;
+}
+
+bool _is_boolean_expression(const AstNode *in_expr) {
+  if (in_expr->node_type == AstNodeType::AST_UNARY_EXPR) {
+    switch (in_expr->unary_expr()->op) {
+    case UnaryExprType::NOT:
+      return true;
+    default:
+      return false;
+    }
+  } else if (in_expr->node_type == AstNodeType::AST_BINARY_EXPR) {
+    switch (in_expr->binary_expr()->bin_op) {
+    case BinaryExprType::GREATER:
+    case BinaryExprType::GREATER_OR_EQUALS:
+    case BinaryExprType::LESS:
+    case BinaryExprType::LESS_OR_EQUALS:
+    case BinaryExprType::EQUALS:
+    case BinaryExprType::NOT_EQUALS:
+      return true;
+    default:
+      return false;
+    }
+  } else if (in_expr->node_type == AstNodeType::AST_CONST_VALUE) {
+    return in_expr->const_value()->type == ConstValueType::BOOL;
+  } else if (in_expr->node_type == AstNodeType::AST_SYMBOL) {
+    // if it is a symbol is up to the semantic analyzer to know its type.
+    return true;
+  }
+  return false;
 }

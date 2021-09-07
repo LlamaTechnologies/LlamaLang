@@ -25,6 +25,7 @@ struct AstDirective;
 struct AstType;
 struct AstFnDef;
 struct AstFnProto;
+struct AstIfStmnt;
 struct AstBlock;
 struct AstSourceCode;
 
@@ -44,6 +45,7 @@ enum class AstNodeType
   AST_TYPE,
   AST_FN_DEF,
   AST_FN_PROTO,
+  AST_IF_STMNT,
   AST_BLOCK,
   AST_PARAM_DEF,
   AST_VAR_DEF,
@@ -80,6 +82,7 @@ struct AstNode {
   AstSymbol *symbol() { return (AstSymbol *)this; }              // symbol_name
   AstConstValue *const_value() { return (AstConstValue *)this; } // constant value
   AstFnCallExpr *fn_call() { return (AstFnCallExpr *)this; }     // func_name L_PAREN (expr (, expr)*)? R_PAREN
+  AstIfStmnt *if_stmnt() { return (AstIfStmnt *)this; }          // if elif? else
 
   const AstSourceCode *source_code() const { return (AstSourceCode *)this; }
   const AstDirective *directive() const { return (AstDirective *)this; }
@@ -94,6 +97,7 @@ struct AstNode {
   const AstSymbol *symbol() const { return (AstSymbol *)this; }
   const AstConstValue *const_value() const { return (AstConstValue *)this; }
   const AstFnCallExpr *fn_call() const { return (AstFnCallExpr *)this; }
+  const AstIfStmnt *if_stmnt() const { return (AstIfStmnt *)this; }
 };
 
 struct AstVarDef : public AstNode {
@@ -160,6 +164,17 @@ struct AstFnProto : public AstNode {
       : AstNode(AstNodeType::AST_FN_PROTO, in_line, in_column, in_file_name) {}
 
   virtual ~AstFnProto();
+};
+
+struct AstIfStmnt : public AstNode {
+  AstNode *condition_expr;
+  AstBlock *if_block = nullptr;
+  AstNode *else_block = nullptr; // AstBlock | AstIfStmnt (for elif)
+
+  AstIfStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)
+      : AstNode(AstNodeType::AST_IF_STMNT, in_line, in_column, in_file_name) {}
+
+  ~AstIfStmnt();
 };
 
 struct AstBlock : public AstNode {

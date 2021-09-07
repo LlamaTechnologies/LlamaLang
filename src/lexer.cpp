@@ -1072,6 +1072,7 @@ void _end_token_check_is_keyword(Lexer &in_lexer) noexcept {
   case TokenId::EXTERN:
   case TokenId::FN:
   case TokenId::RET:
+  case TokenId::IF:
   case TokenId::AND:
   case TokenId::OR:
   case TokenId::IDENTIFIER:
@@ -1144,11 +1145,10 @@ void _handle_string_escape(Lexer &in_lexer, uint8_t c) noexcept {
   }
 }
 
-static std::unordered_map<std::string_view, TokenId> keywords = { { "extern", TokenId::EXTERN },
-                                                                  { "fn", TokenId::FN },
-                                                                  { "ret", TokenId::RET },
-                                                                  { "and", TokenId::AND },
-                                                                  { "or", TokenId::OR } };
+static std::unordered_map<std::string_view, TokenId> keywords = {
+  { "extern", TokenId::EXTERN }, { "fn", TokenId::FN },     { "ret", TokenId::RET },   { "and", TokenId::AND },
+  { "if", TokenId::IF },         { "elif", TokenId::ELIF }, { "else", TokenId::ELSE }, { "or", TokenId::OR }
+};
 
 void _is_keyword(Token &in_token, std::string_view value) noexcept {
   auto len = in_token.end_pos - in_token.start_pos + 1;

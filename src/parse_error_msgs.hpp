@@ -15,3 +15,7 @@ constexpr const char *ERROR_DIRECTIVE_EXPECTED_STRING = "expected string as dire
 constexpr const char *ERROR_NOT_A_FILE = "path '%s' is a directory";
 constexpr const char *ERROR_FILE_NOT_FOUND = "file '%s' was not found";
 constexpr const char *ERROR_NOT_LLAMA_FILE = "file '%s' is not a llama file (.llama)";
+constexpr const char *ERROR_BRANCH_EXPR_NOT_BOOL = "expression in branch statement should be of type boolean";
+constexpr const char *ERROR_BRANCH_EXPECTED_RPAREN =
+  "expected ')' at the end of the branch expression but got '%s' instead";
+constexpr const char *WARN_EMPTY_BRANCH = "empty branch";

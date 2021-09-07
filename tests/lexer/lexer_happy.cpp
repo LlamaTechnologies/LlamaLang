@@ -111,6 +111,16 @@ TEST(LexerHappyKeywordsTests, KeywordOrTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+TEST(LexerHappyKeywordsTests, KeywordIfTest) {
+  std::vector<Error> errors;
+  Lexer lexer("if", "file/directory", "KeywordFnTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::IF);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
 TEST(LexerHappyKeywordsTests, KeywordFnNewLineTest) {
   std::vector<Error> errors;
   Lexer lexer("fn\n", "file/directory", "KeywordFnNewLineTest", errors);
@@ -167,7 +177,8 @@ TEST(LexerHappyOperatorsTests, HashOperatorTest) {
 
 TEST(LexerHappyOperatorsTests, OperatorsTest) {
   std::vector<Error> errors;
-  Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory", "OperatorsTest", errors);
+  Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory",
+              "OperatorsTest", errors);
   lexer.tokenize();
 
   // do not change order
