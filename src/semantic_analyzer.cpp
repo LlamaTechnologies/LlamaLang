@@ -95,7 +95,7 @@ bool SemanticAnalyzer::analize_fn_proto(const AstFnProto *in_proto) {
   // add function to the symbol table
   symbol_table->add_symbol(str_name, SymbolType::FUNC, in_proto);
   // create the function's symbol table
-  symbol_table = symbol_table->create_child(std::string(in_proto->name));
+  symbol_table = symbol_table->create_child(std::string(in_proto->name), in_proto);
 
   // check every param to not have any default value
   // and add them to the function's symbol table
@@ -111,23 +111,41 @@ bool SemanticAnalyzer::analize_fn_proto(const AstFnProto *in_proto) {
   return has_no_error;
 }
 
-bool SemanticAnalyzer::analize_fn_block(const AstBlock *in_func_block, AstFnDef *in_function) {
-  auto ret_type = in_function->proto->return_type;
+void SemanticAnalyzer::enter_fn_scope(AstFnDef *in_function) {
+  LL_ASSERT(in_function != nullptr);
 
   // set function's symbol table as current table
   symbol_table = symbol_table->get_child(std::string(in_function->proto->name));
+}
 
+void SemanticAnalyzer::exit_fn_scope() {
+  // if the function has no parent is a bug in the compiler
+  // at least global scope should be the parent of the function
+  LL_ASSERT(symbol_table->parent != nullptr);
+  symbol_table = symbol_table->parent;
+}
+
+bool SemanticAnalyzer::analize_fn_block(const AstBlock *in_fn_block) {
+  LL_ASSERT(in_fn_block != nullptr);
+  return analize_block(in_fn_block, true);
+}
+
+//----- END PRIMARY CHECK FUNCTIONS -------
+
+bool SemanticAnalyzer::analize_block(const AstBlock *in_block, bool is_first_level_block) {
   size_t errors_before = errors.size();
 
-  // gather:
-  // - ret stmnt required
-  // - ret stmnt type
+  const AstFnProto *fn_proto = symbol_table->fn_proto;
+  // We dont allow blocks outside a function for example:
+  // we dont allow namespaces yet
+  LL_ASSERT(fn_proto != nullptr);
 
-  bool has_ret_type = ret_type->type_info->type_id != AstTypeId::VOID;
+  const AstType *ret_type = fn_proto->return_type;
+  bool requires_ret_stmnt = is_first_level_block && ret_type->type_info->type_id != AstTypeId::VOID;
   bool has_ret_stmnt = false;
 
   // check every statement in the function
-  for (auto stmnt : in_func_block->statements) {
+  for (const AstNode *stmnt : in_block->statements) {
     if (IS_RET_STATEMENT(stmnt)) {
       has_ret_stmnt = true;
 
@@ -139,27 +157,53 @@ bool SemanticAnalyzer::analize_fn_block(const AstBlock *in_func_block, AstFnDef 
       check_and_set_type(stmnt, ret_type, stmnt->unary_expr()->expr);
     } else if (stmnt->node_type == AstNodeType::AST_VAR_DEF) {
       analize_var_def(stmnt->var_def(), false);
+    } else if (stmnt->node_type == AstNodeType::AST_IF_STMNT) {
+      analize_if_stmnt(stmnt);
     } else {
       analize_expr(stmnt);
     }
   }
 
   // if the function should return a type and it doesnt then report it;
-  if (has_ret_type && !has_ret_stmnt) {
-    add_semantic_error(errors, in_function->proto, ERROR_REQUIRE_RET_STMNT);
+  if (requires_ret_stmnt && !has_ret_stmnt) {
+    add_semantic_error(errors, fn_proto, ERROR_REQUIRE_RET_STMNT);
   }
-
-  // if the function has no parent is a bug in the compiler
-  // at least global scope should be the parent of the function
-  LL_ASSERT(symbol_table->parent != nullptr);
-
-  symbol_table = symbol_table->parent;
 
   size_t errors_after = errors.size();
   return errors_before == errors_after;
 }
 
-//----- END PRIMARY CHECK FUNCTIONS -------
+bool SemanticAnalyzer::analize_if_stmnt(const AstNode *in_stmnt) {
+  LL_ASSERT(in_stmnt->node_type == AstNodeType::AST_IF_STMNT);
+  const AstIfStmnt *if_stmnt = in_stmnt->if_stmnt();
+
+  if (!if_stmnt->is_condition_checked) {
+    const AstNode *conditional_expr = if_stmnt->condition_expr;
+    const AstType *expr_type = get_expr_type(this->errors, this->symbol_table, conditional_expr);
+    if (expr_type->type_info->type_id != AstTypeId::BOOL) {
+      add_semantic_error(errors, conditional_expr, ERROR_EXPECTED_BOOL_EXPR,
+                         get_type_id_name(expr_type->type_info->type_id));
+      return false;
+    }
+  }
+
+  const AstBlock *if_block = if_stmnt->if_block;
+  if (!analize_block(if_block)) {
+    // errors have been set inside analize_block so we just return false
+    return false;
+  }
+
+  // check else block
+  const AstBlock *else_block = if_stmnt->else_block;
+  if (else_block != nullptr) {
+    if (!analize_block(else_block)) {
+      // errors have been set inside analize_block so we just return false
+      return false;
+    }
+  }
+
+  return true;
+}
 
 bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
   switch (in_expr->node_type) {

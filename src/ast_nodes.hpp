@@ -121,7 +121,9 @@ struct AstParamDef : public AstVarDef {
       : AstVarDef(AstNodeType::AST_PARAM_DEF, in_line, in_column, in_file_name) {}
 };
 
-// IMPORTANT: do not change order of labels!
+/**
+ * IMPORTANT: DO NOT CHANGE ORDER OF LABELS!
+ */
 enum class DirectiveType
 {
   LOAD,    // load file (first directive in the file)
@@ -169,7 +171,8 @@ struct AstFnProto : public AstNode {
 struct AstIfStmnt : public AstNode {
   AstNode *condition_expr;
   AstBlock *if_block = nullptr;
-  AstNode *else_block = nullptr; // AstBlock | AstIfStmnt (for elif)
+  AstBlock *else_block = nullptr;
+  bool is_condition_checked = false;
 
   AstIfStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)
       : AstNode(AstNodeType::AST_IF_STMNT, in_line, in_column, in_file_name) {}
@@ -268,7 +271,9 @@ struct AstBinaryExpr : public AstNode {
   virtual ~AstBinaryExpr();
 };
 
-// IMPORTANT: do not change order of labels!
+/**
+ * IMPORTANT: DO NOT CHANGE ORDER OF LABELS!
+ */
 enum class UnaryExprType
 {
   INC,     // ++  primaryExpr
@@ -302,6 +307,9 @@ struct AstSourceCode : public AstNode {
   virtual ~AstSourceCode();
 };
 
+/**
+ * IMPORTANT: DO NOT CHANGE ORDER OF LABELS!
+ */
 enum class AstTypeId
 {
   VOID,
@@ -313,6 +321,9 @@ enum class AstTypeId
   STRUCT,
   UNKNOWN
 };
+
+const std::string_view get_type_id_name(AstTypeId in_type_id) noexcept;
+const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcept;
 
 struct TypeInfo {
   std::string_view name;

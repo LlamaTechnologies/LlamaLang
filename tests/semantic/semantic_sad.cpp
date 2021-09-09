@@ -421,7 +421,9 @@ TEST(SemanticFunctions, FunctionInvalidStmnt) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -476,7 +478,9 @@ TEST(SemanticFunctions, FunctionNoReqRet) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -564,7 +568,9 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsCountMismatch) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid_block = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
   bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
@@ -620,7 +626,9 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsTypeMismatch) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid_block = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
   bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:

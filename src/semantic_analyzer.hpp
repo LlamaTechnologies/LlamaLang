@@ -15,7 +15,7 @@ struct AstBlock;
 enum class SymbolType;
 
 class SemanticAnalyzer {
-  Table *global_symbol_table = new Table("global_scope", nullptr);
+  Table *global_symbol_table = new Table("global_scope", nullptr, nullptr);
   Table *symbol_table = global_symbol_table;
   std::vector<Error> &errors;
 
@@ -29,16 +29,39 @@ public:
    */
   bool analize_var_def(const AstVarDef *in_node, const bool is_global);
 
-  /* TEMP: Returns true.
+  /**
+   * TEMP: Returns true.
    * NOTE: Here we will check fn_type
    */
-  bool analize_fn_proto(const AstFnProto *in_func_proto);
+  bool analize_fn_proto(const AstFnProto *in_fn_proto);
+
+  /**
+   * set current scope to be the one of the function passed
+   */
+  void enter_fn_scope(AstFnDef *in_function);
+
+  /**
+   * set current scope to be the parent of the current scope
+   */
+  void exit_fn_scope();
 
   /* Returns true if:
    * - all middle statements are OK.
    * - return statment type match function's return type
    */
-  bool analize_fn_block(const AstBlock *in_func_block, AstFnDef *in_function);
+  bool analize_fn_block(const AstBlock *in_fn_block);
+
+  /* Returns true if:
+   * - all middle statements are OK.
+   */
+  bool analize_block(const AstBlock *in_block, bool is_first_level_block = false);
+
+  /* Returns true if:
+   * - conditional expression is of boolean type
+   * - block has no errors
+   * - none of its else block has errors
+   */
+  bool analize_if_stmnt(const AstNode *in_expr);
 
   /* Returns true if:
    * - all refered variables had been defined

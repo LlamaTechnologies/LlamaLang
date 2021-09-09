@@ -400,7 +400,9 @@ TEST(SemanticFunctions, FunctionNoRet) {
   AstFnProto *function_proto_node = fn_def_node->proto;
   AstBlock *function_block_node = fn_def_node->block;
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid = analizer.analize_fn_block(function_block_node, fn_def_node);
+  analizer.enter_fn_scope(fn_def_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -440,7 +442,9 @@ TEST(SemanticFunctions, FunctionRetConstant) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(fn_proto);
-  bool is_valid = analizer.analize_fn_block(block_node, fn_def_node);
+  analizer.enter_fn_scope(fn_def_node);
+  bool is_valid = analizer.analize_fn_block(block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
@@ -544,7 +548,9 @@ TEST(SemanticFunctionsCalls, FunctionCallWithParams) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid_block = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
   bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
@@ -557,3 +563,49 @@ TEST(SemanticFunctionsCalls, FunctionCallWithParams) {
   delete function_node;
   delete function_call_node;
 }
+
+//==================================================================================
+//          SEMANTIC BRANCHES
+//==================================================================================
+/*
+TEST(SemanticBranches, BoolVar) {
+ std::vector<Error> errors;
+
+ // given: source_file
+ const char *source_file = "fn my_condition() void {\n"
+                           "\tmy_condition bool = false\n"
+                           "\n"
+                           "\tif my_condition {\n"
+                           "\t\tmy_var i32\n"
+                           "\t\tmy_var = 34\n"
+                           "\t}\n"
+                           "}";
+
+ // given: tokens
+ Lexer lexer = Lexer(source_file, "file/directory", "FunctionNoRet", errors);
+ lexer.tokenize();
+
+ // given: parsed source node
+ Parser parser = Parser(errors);
+ AstFnDef *fn_def = parser.parse_function_def(lexer);
+
+ // then:
+ ASSERT_EQ(errors.size(), 0L);
+ ASSERT_NE(fn_def, nullptr);
+
+ // and given: analizer
+ SemanticAnalyzer analizer(errors);
+
+ const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+ AstIfStmnt *if_stmnt = fn_def->block->statements.at(1)->if_stmnt();
+ bool is_valid_var_def = analizer.analize_var_def(var_def, false);
+ bool is_valid = analizer.analize_if_stmnt(if_stmnt);
+
+ // then:
+ ASSERT_TRUE(is_valid_proto);
+ ASSERT_TRUE(is_valid);
+ ASSERT_EQ(errors.size(), 0L);
+
+ delete source_code;
+}
+*/

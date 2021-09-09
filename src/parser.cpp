@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include <unordered_map>
 
-static bool _is_boolean_expression(const AstNode *in_expr);
+static bool _is_boolean_expression(const AstNode *in_expr, AstIfStmnt *if_stmnt_node);
 static void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static void _parse_warning(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in_errors,
@@ -460,7 +460,9 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
     return nullptr;
   }
 
-  if (!_is_boolean_expression(conditional_expr)) {
+  AstIfStmnt *if_stmnt_node = new AstIfStmnt(if_token.start_line, if_token.start_column, if_token.file_name);
+
+  if (!_is_boolean_expression(conditional_expr, if_stmnt_node)) {
     _parse_error(errors, lparent_token, ERROR_BRANCH_EXPR_NOT_BOOL);
     // NOTE(pablo96): we dont break here since we want to parse as much as we can
   }
@@ -470,11 +472,11 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
     if (rparent_token.id != TokenId::R_PAREN) {
       _parse_error(errors, rparent_token, ERROR_BRANCH_EXPECTED_RPAREN,
                    std::string(lexer.get_token_value(rparent_token)).c_str());
+      delete if_stmnt_node;
       return nullptr;
     }
   }
 
-  AstIfStmnt *if_stmnt_node = new AstIfStmnt(if_token.start_line, if_token.start_column, if_token.file_name);
   if_stmnt_node->condition_expr = conditional_expr;
 
   const Token &lcurly_token = lexer.get_next_token();
@@ -1059,7 +1061,8 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
 
   const Token &number_token = is_negative ? lexer.get_next_token() : token;
 
-  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
+  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE,
+            TokenId::FALSE)) {
     AstConstValue *const_value_node = new AstConstValue(token.start_line, token.start_column, token.file_name);
     switch (number_token.id) {
     case TokenId::INT_LIT: {
@@ -1074,6 +1077,11 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
     case TokenId::UNICODE_CHAR:
       const_value_node->type = ConstValueType::CHAR;
       const_value_node->unicode_char = number_token.char_lit;
+      break;
+    case TokenId::FALSE:
+    case TokenId::TRUE:
+      const_value_node->type = ConstValueType::BOOL;
+      const_value_node->boolean = number_token.id == TokenId::TRUE;
       break;
     default:
       LL_UNREACHEABLE;
@@ -1418,7 +1426,9 @@ bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in
   return true;
 }
 
-bool _is_boolean_expression(const AstNode *in_expr) {
+bool _is_boolean_expression(const AstNode *in_expr, AstIfStmnt *if_stmnt_node) {
+  if_stmnt_node->is_condition_checked = true;
+
   if (in_expr->node_type == AstNodeType::AST_UNARY_EXPR) {
     switch (in_expr->unary_expr()->op) {
     case UnaryExprType::NOT:
@@ -1442,6 +1452,7 @@ bool _is_boolean_expression(const AstNode *in_expr) {
     return in_expr->const_value()->type == ConstValueType::BOOL;
   } else if (in_expr->node_type == AstNodeType::AST_SYMBOL) {
     // if it is a symbol is up to the semantic analyzer to know its type.
+    if_stmnt_node->is_condition_checked = false;
     return true;
   }
   return false;

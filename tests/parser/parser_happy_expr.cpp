@@ -83,6 +83,44 @@ TEST(ParserHappyParseValueTests, UnicodeCharTest) {
   delete node;
 }
 
+TEST(ParserHappyParseValueTests, BooleanTrueTest) {
+  std::vector<Error> errors;
+  Lexer lexer("true", "file/directory", "UnicodeCharTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstNode *node = parser.parse_primary_expr(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_CONST_VALUE);
+
+  const AstConstValue *const_value_node = node->const_value();
+  ASSERT_EQ(const_value_node->type, ConstValueType::BOOL);
+  ASSERT_TRUE(const_value_node->boolean);
+
+  delete node;
+}
+
+TEST(ParserHappyParseValueTests, BooleanFalseTest) {
+  std::vector<Error> errors;
+  Lexer lexer("false", "file/directory", "UnicodeCharTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstNode *node = parser.parse_primary_expr(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_CONST_VALUE);
+
+  const AstConstValue *const_value_node = node->const_value();
+  ASSERT_EQ(const_value_node->type, ConstValueType::BOOL);
+  ASSERT_FALSE(const_value_node->boolean);
+
+  delete node;
+}
+
 //==================================================================================
 //          PARSE UNARY EXPRESSIONS FUNCTIONS
 //==================================================================================

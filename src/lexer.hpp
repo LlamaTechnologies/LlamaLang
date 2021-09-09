@@ -15,6 +15,8 @@ enum class TokenId
   IF,        // if
   ELIF,      // elif
   ELSE,      // else
+  TRUE,      // true
+  FALSE,     // false
   L_PAREN,   // (
   R_PAREN,   // )
   L_CURLY,   // {

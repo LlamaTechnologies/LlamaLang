@@ -3,13 +3,37 @@
 #include "Types.hpp"
 #include "lexer.hpp"
 
+#include <algorithm>
+
 #define LL_DEFAULT_TYPE TypesRepository::get().get_type("void")
 
 static const std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
 
 const std::string get_directive_type_name(const DirectiveType directive_type) noexcept {
-  assert(directive_type <= DirectiveType::FN_TYPE);
+  LL_ASSERT(directive_type <= DirectiveType::FN_TYPE);
   return directives_keywords.at((size_t)directive_type);
+}
+
+static const std::vector<const char *> types_id_names = { "VOID",    "BOOL",  "INTEGER", "FLOATING_POINT",
+                                                          "POINTER", "ARRAY", "STRUCT",  "UNKNOWN" };
+
+const std::string_view get_type_id_name(AstTypeId in_type_id) noexcept {
+  LL_ASSERT(in_type_id <= AstTypeId::UNKNOWN);
+  return types_id_names.at((size_t)in_type_id);
+}
+
+const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcept {
+  LL_ASSERT(in_type_id <= AstTypeId::UNKNOWN);
+
+  static std::vector<std::string> types_id_names_lower_case;
+  if (types_id_names_lower_case.empty()) {
+    for (std::string str : types_id_names) {
+      std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+      types_id_names_lower_case.push_back(str);
+    }
+  }
+
+  return types_id_names_lower_case.at((size_t)in_type_id);
 }
 
 static const std::vector<const char *> unary_operators_symbols = {
@@ -17,7 +41,7 @@ static const std::vector<const char *> unary_operators_symbols = {
 };
 
 const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept {
-  assert(op_type < UnaryExprType::RET);
+  LL_ASSERT(op_type < UnaryExprType::RET);
   return unary_operators_symbols[(size_t)op_type];
 }
 

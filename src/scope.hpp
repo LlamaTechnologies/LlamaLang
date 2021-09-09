@@ -4,6 +4,7 @@
 
 enum class SymbolType;
 struct AstNode;
+struct AstFnProto;
 
 /**
  * Symbol:
@@ -32,10 +33,12 @@ struct Table {
 
   Table *parent;
   const std::string name;
+  const AstFnProto *fn_proto;
 
-  Table(const std::string &in_name, Table *in_parent) : parent(in_parent), name(in_name) {}
+  Table(const std::string &in_name, const AstFnProto *in_fn_proto, Table *in_parent)
+      : parent(in_parent), name(in_name), fn_proto(in_fn_proto) {}
 
-  Table *create_child(const std::string &in_name);
+  Table *create_child(const std::string &in_name, const AstFnProto *in_fn_proto);
 
   bool has_child(const std::string &in_name) const;
 

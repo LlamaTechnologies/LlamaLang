@@ -8,7 +8,7 @@
 //          PARSE RETURN STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, RetStmnt) {
+TEST(ParserHappyRetStmntTests, ComplexExpr) {
   std::vector<Error> errors;
   Lexer lexer("ret myVar * (5 + 8)", "file/directory", "Ret stmnt", errors);
   lexer.tokenize();
@@ -26,7 +26,7 @@ TEST(ParserHappyStmntTests, RetStmnt) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, RetEmptyStmnt) {
+TEST(ParserHappyRetStmntTests, EmptyExpr) {
   std::vector<Error> errors;
   Lexer lexer("ret ", "file/directory", "RetEmptyStmnt", errors);
   lexer.tokenize();
@@ -47,7 +47,7 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
 //          PARSE ASSIGN STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, AssignStmntTest) {
+TEST(ParserHappyAssignStmntTests, ComplexExpr) {
   std::vector<Error> errors;
   Lexer lexer("myVar = 5 * (6 + 9)", "file/directory", "AssignStmntTest", errors);
   lexer.tokenize();
@@ -71,7 +71,7 @@ TEST(ParserHappyStmntTests, AssignStmntTest) {
 //          PARSE TYPES
 //==================================================================================
 
-TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
+TEST(ParserHappyTypeStmntTests, NameIsPrimitiveParse) {
   std::vector<Error> errors;
   Lexer lexer("i32", "file/directory", "TypeNameIsPrimitiveParse", errors);
   lexer.tokenize();
@@ -91,7 +91,7 @@ TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
   ASSERT_TRUE(value_node->type_info->is_signed);
 }
 
-TEST(ParserHappyStmntTests, TypeArrayParse) {
+TEST(ParserHappyTypeStmntTests, ArrayParse) {
   std::vector<Error> errors;
   Lexer lexer("[]i32", "file/directory", "TypeArrayParse", errors);
   lexer.tokenize();
@@ -113,7 +113,7 @@ TEST(ParserHappyStmntTests, TypeArrayParse) {
   ASSERT_TRUE(value_node->child_type->type_info->is_signed);
 }
 
-TEST(ParserHappyStmntTests, TypePointerParse) {
+TEST(ParserHappyTypeStmntTests, PointerParse) {
   std::vector<Error> errors;
   Lexer lexer("*i32", "file/directory", "TypePointerParse", errors);
   lexer.tokenize();
@@ -139,7 +139,7 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
 //          PARSE VARIABLE DEFINITION STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
+TEST(ParserHappyVarDefStmntTests, SimpleTypeParse) {
   std::vector<Error> errors;
   Lexer lexer("myVar i32", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
@@ -165,7 +165,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
+TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerParse) {
   std::vector<Error> errors;
   Lexer lexer("myVar i32 = -65", "file/directory", "VarDefSimpleTypeInitializerParse", errors);
   lexer.tokenize();
@@ -200,7 +200,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
+TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerAddParse) {
   std::vector<Error> errors;
   Lexer lexer("myVar i32 = 65 + PI", "file/directory", "VarDefSimpleTypeInitializerAddParse", errors);
   lexer.tokenize();
@@ -240,7 +240,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
+TEST(ParserHappyVarDefStmntTests, ArrayTypeParse) {
   std::vector<Error> errors;
   Lexer lexer("myVar []i32", "file/directory", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
@@ -270,7 +270,7 @@ TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
+TEST(ParserHappyVarDefStmntTests, PointerTypeParse) {
   std::vector<Error> errors;
   Lexer lexer("myVar *i32", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
@@ -461,7 +461,7 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
 //          PARSE BLOCK STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, BlockEmptyTest) {
+TEST(ParserHappyBlockStmntTests, EmptyTest) {
   std::vector<Error> errors;
   Lexer lexer("{}", "file/directory", "BlockEmptyTest", errors);
   lexer.tokenize();
@@ -477,7 +477,7 @@ TEST(ParserHappyStmntTests, BlockEmptyTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
+TEST(ParserHappyBlockStmntTests, NoSpaceNearCurliesTest) {
   std::vector<Error> errors;
   Lexer lexer("{myVar i32\nret myvar}", "file/directory", "BlockNoSpaceNearCurliesTest", errors);
   lexer.tokenize();
@@ -514,7 +514,7 @@ TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
+TEST(ParserHappyBlockStmntTests, SpaceNearCurliesTest) {
   std::vector<Error> errors;
   Lexer lexer("{ myVar i32\nret myvar }", "file/directory", "BlockSpaceNearCurliesTest", errors);
   lexer.tokenize();
@@ -551,7 +551,7 @@ TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
+TEST(ParserHappyBlockStmntTests, NewlinesNearCurliesTest) {
   std::vector<Error> errors;
   Lexer lexer("{\n\tmyVar i32\n\tret myvar\n}", "file/directory", "BlockNewlinesNearCurliesTest", errors);
   lexer.tokenize();
@@ -587,7 +587,7 @@ TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
+TEST(ParserHappyBlockStmntTests, SpacesBetweenNewlinesTest) {
   std::vector<Error> errors;
   Lexer lexer("{ \n  \t myVar i32   \n  \t  ret myvar  \n   }", "file/directory", "BlockSpacesBetweenNewlinesTest",
               errors);
@@ -628,7 +628,7 @@ TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
 //          PARSE FUNCTION DECLARATION STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
+TEST(ParserHappyFnDeclStmntTests, EmptyParamTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc() void", "file/directory", "FuncProtoEmptyParamTest", errors);
   lexer.tokenize();
@@ -652,7 +652,7 @@ TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
+TEST(ParserHappyFnDeclStmntTests, SingleParamTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc(param1 i32) void", "file/directory", "FuncProtoSingleParamTest", errors);
   lexer.tokenize();
@@ -686,7 +686,7 @@ TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
+TEST(ParserHappyFnDeclStmntTests, MultiParamTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32", "file/directory", "FuncProtoMultiParamTest", errors);
   lexer.tokenize();
@@ -721,7 +721,7 @@ TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
+TEST(ParserHappyFnDeclStmntTests, MultiLineTest) {
   std::vector<Error> errors;
   Lexer lexer("fn\nmyFunc\n(param1 i32\n, param1 i32,\n param1\ni32)\ni32", " file / directory ",
               "FuncProtoMultiLineTest", errors);
@@ -761,7 +761,7 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
 //          PARSE FUNCTION DEFINITION STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
+TEST(ParserHappyFnDefStmntTests, NoParamsVoidBlockTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc() void {}", "file/directory", "FuncDefNoParamsVoidBlockTest", errors);
   lexer.tokenize();
@@ -798,7 +798,7 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
+TEST(ParserHappyFnDefStmntTests, OneParamVoidBlockTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc(param1 i32) i32 {}", "file/directory", "FuncDefSingleParamsVoidBlockTest", errors);
   lexer.tokenize();
@@ -846,7 +846,7 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
+TEST(ParserHappyFnDefStmntTests, MultiParamsVoidBlockTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "file/directory",
               "FuncDefMultiParamsVoidBlockTest", errors);
@@ -896,7 +896,7 @@ TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
+TEST(ParserHappyFnDefStmntTests, NoParamsTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "file/directory", "FuncDefNoParamsTest", errors);
   lexer.tokenize();
@@ -947,7 +947,7 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
+TEST(ParserHappyFnDefStmntTests, OneParamTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "file/directory", "FuncDefSingleParamsTest", errors);
   lexer.tokenize();
@@ -1009,7 +1009,7 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
 //          PARSE FUNCTION CALL STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
+TEST(ParserHappyCallStmntTests, NoParamsTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc()", "file/directory", "FuncCallNoParamsTest", errors);
   lexer.tokenize();
@@ -1026,7 +1026,7 @@ TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
+TEST(ParserHappyCallStmntTests, OneParamTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
@@ -1049,7 +1049,7 @@ TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
+TEST(ParserHappyCallStmntTests, OneParamAddOpTest) {
   std::vector<Error> errors;
   Lexer lexer("85 + myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
@@ -1092,7 +1092,7 @@ TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCallNestedTest) {
+TEST(ParserHappyCallStmntTests, NestedCallsTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc(myFunc2(5))", "file/directory", "FuncCallNestedTest", errors);
   lexer.tokenize();
@@ -1124,7 +1124,7 @@ TEST(ParserHappyStmntTests, FuncCallNestedTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
+TEST(ParserHappyCallStmntTests, MultiParamsTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc(myVar, myFunc2(5))", "file/directory", "FuncCallMultiParamsTest", errors);
   lexer.tokenize();
@@ -1166,7 +1166,7 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
 //          PARSE BRANCHES CALL STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, BranchIfConstantExprTest) {
+TEST(ParserHappyBranchStmntTests, BranchIfConstantExprTest) {
   std::vector<Error> errors;
   const char *source_code = "if true {}\n";
 
@@ -1179,11 +1179,12 @@ TEST(ParserHappyStmntTests, BranchIfConstantExprTest) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmtn_node, nullptr);
   ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
 
   delete if_stmtn_node;
 }
 
-TEST(ParserHappyStmntTests, BranchIfBinaryExprTest) {
+TEST(ParserHappyBranchStmntTests, BranchIfBinaryExprTest) {
   std::vector<Error> errors;
   const char *source_code = "if false == true {}\n";
 
@@ -1196,11 +1197,12 @@ TEST(ParserHappyStmntTests, BranchIfBinaryExprTest) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmtn_node, nullptr);
   ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
 
   delete if_stmtn_node;
 }
 
-TEST(ParserHappyStmntTests, BranchIfUnaryExprTest) {
+TEST(ParserHappyBranchStmntTests, BranchIfUnaryExprTest) {
   std::vector<Error> errors;
   const char *source_code = "if !false {}\n";
 
@@ -1213,11 +1215,12 @@ TEST(ParserHappyStmntTests, BranchIfUnaryExprTest) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmtn_node, nullptr);
   ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
 
   delete if_stmtn_node;
 }
 
-TEST(ParserHappyStmntTests, BranchIfComplexExprTest) {
+TEST(ParserHappyBranchStmntTests, BranchIfComplexExprTest) {
   std::vector<Error> errors;
   const char *source_code = "if true == false < 1 + 2 {}\n";
 
@@ -1230,11 +1233,12 @@ TEST(ParserHappyStmntTests, BranchIfComplexExprTest) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmtn_node, nullptr);
   ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
 
   delete if_stmtn_node;
 }
 
-TEST(ParserHappyStmntTests, BranchIfArithmeticEqualityExprTest) {
+TEST(ParserHappyBranchStmntTests, BranchIfArithmeticEqualityExprTest) {
   std::vector<Error> errors;
   const char *source_code = "if 5 * 9 == 40 + 5 {}\n";
 
@@ -1247,6 +1251,133 @@ TEST(ParserHappyStmntTests, BranchIfArithmeticEqualityExprTest) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmtn_node, nullptr);
   ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyBranchStmntTests, BranchIfSymbolExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if my_var {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_FALSE(if_stmtn_node->is_condition_checked);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyBranchStmntTests, IfConstantWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (true) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyBranchStmntTests, IfBinaryWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (false == true) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyBranchStmntTests, IfUnaryWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (!false) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyBranchStmntTests, IfComplexWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (true == false < 1 + 2) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (5 * 9 == 40 + 5) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+
+  delete if_stmtn_node;
+}
+
+TEST(ParserHappyBranchStmntTests, IfSymbolWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if ( my_var ) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmtn_node, nullptr);
+  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_FALSE(if_stmtn_node->is_condition_checked);
 
   delete if_stmtn_node;
 }
@@ -1255,7 +1386,7 @@ TEST(ParserHappyStmntTests, BranchIfArithmeticEqualityExprTest) {
 //          PARSE FULL PROGRAM
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
+TEST(ParserHappyFullProgramStmntTests, NoNewLineEnd) {
   const char *source_code = "/* Test program */\n" // multiline comment
                             "\n"
                             ";\n"         // empty statement : discarded
@@ -1335,4 +1466,29 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
   ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::VOID);
 
   delete source_code_node;
+}
+
+TEST(ParserHappyFullProgramStmntTests, IfStmnt) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 34\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "FunctionNoRet", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->if_block, nullptr);
+  ASSERT_EQ(if_stmnt->if_block->statements.size(), 2);
 }
