@@ -95,7 +95,7 @@ inline bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, Gener
     } break;
     case AstNodeType::AST_VAR_DEF: {
       // global variables
-      if (in_analyzer.analize_var_def(child->var_def(), true))
+      if (in_analyzer.analize_global_var_def(child->var_def()))
         in_generator->gen_var_def(child->var_def(), true);
     } break;
     case AstNodeType::AST_IF_STMNT: {

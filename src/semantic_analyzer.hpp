@@ -23,11 +23,17 @@ public:
   SemanticAnalyzer(std::vector<Error> &in_errors) : errors(in_errors) {}
 
   /* Returns true if:
-   * - global variable has initializer.
    * - initializer expr is compatible with variable's type.
    * - variable is not shadowing another in the same scope.
    */
-  bool analize_var_def(const AstVarDef *in_node, const bool is_global);
+  bool analize_var_def(const AstVarDef *in_node);
+
+  /* Returns true if:
+   * - variable has initializer.
+   * - initializer expr is compatible with variable's type.
+   * - variable is not shadowing another in the same scope.
+   */
+  bool analize_global_var_def(const AstVarDef *in_node);
 
   /**
    * TEMP: Returns true.

@@ -78,7 +78,6 @@ TEST(SemanticTypes, ArrayDistinctTypes) {
 //==================================================================================
 
 TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
-  bool is_global = true;
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
@@ -90,7 +89,7 @@ TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
   var_def_node->initializer = nullptr;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
+  bool is_valid = analizer.analize_global_var_def(var_def_node);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_FALSE(is_valid);
@@ -99,7 +98,6 @@ TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
 }
 
 TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
-  bool is_global = false;
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
@@ -116,7 +114,7 @@ TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
   var_def_node->initializer = const_value_node;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
+  bool is_valid = analizer.analize_var_def(var_def_node);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_FALSE(is_valid);
@@ -333,7 +331,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
   // given: analizer
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analize_var_def(var_def_node, false);
+  bool is_valid_var_def = analizer.analize_var_def(var_def_node);
 
   // when: call to analize_expr
   // with: symbol as left expr
