@@ -11,6 +11,9 @@ struct AstType;
 struct AstVarDef;
 struct AstFnProto;
 struct AstFnDef;
+struct AstFnCallExpr;
+struct AstUnaryExpr;
+struct AstBinaryExpr;
 struct AstBlock;
 enum class SymbolType;
 
@@ -76,6 +79,11 @@ public:
   bool analize_expr(const AstNode *in_expr);
 
   bool check_and_set_type(const AstNode *in_node, const AstType *l_type_node, const AstNode *expr_node);
+
+private:
+  inline bool _analize_call_expr(const AstFnCallExpr *in_fn_call);
+  inline bool _analize_unary_expr(const AstUnaryExpr *in_unary_expr);
+  inline bool _analize_binary_expr(const AstBinaryExpr *in_binary_expr);
 };
 
 /* Returns true if:
