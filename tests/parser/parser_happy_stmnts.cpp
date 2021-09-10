@@ -1489,6 +1489,6 @@ TEST(ParserHappyFullProgramStmntTests, IfStmnt) {
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
   ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_NE(if_stmnt->if_block, nullptr);
-  ASSERT_EQ(if_stmnt->if_block->statements.size(), 2);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
 }

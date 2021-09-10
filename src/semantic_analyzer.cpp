@@ -223,16 +223,16 @@ bool SemanticAnalyzer::analize_if_stmnt(const AstNode *in_stmnt) {
     }
   }
 
-  const AstBlock *if_block = if_stmnt->if_block;
-  if (!analize_block(if_block)) {
+  const AstBlock *true_block = if_stmnt->true_block;
+  if (!analize_block(true_block)) {
     // errors have been set inside analize_block so we just return false
     return false;
   }
 
   // check else block
-  const AstBlock *else_block = if_stmnt->else_block;
-  if (else_block != nullptr) {
-    if (!analize_block(else_block)) {
+  const AstBlock *false_block = if_stmnt->false_block;
+  if (false_block != nullptr) {
+    if (!analize_block(false_block)) {
       // errors have been set inside analize_block so we just return false
       return false;
     }

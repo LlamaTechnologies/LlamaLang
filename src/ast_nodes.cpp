@@ -89,14 +89,14 @@ AstIfStmnt::~AstIfStmnt() {
     condition_expr = nullptr;
   }
 
-  if (if_block) {
-    delete if_block;
-    if_block = nullptr;
+  if (true_block) {
+    delete true_block;
+    true_block = nullptr;
   }
 
-  if (else_block) {
-    delete else_block;
-    else_block = nullptr;
+  if (false_block) {
+    delete false_block;
+    false_block = nullptr;
   }
 }
 

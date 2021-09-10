@@ -170,8 +170,8 @@ struct AstFnProto : public AstNode {
 
 struct AstIfStmnt : public AstNode {
   AstNode *condition_expr;
-  AstBlock *if_block = nullptr;
-  AstBlock *else_block = nullptr;
+  AstBlock *true_block = nullptr;
+  AstBlock *false_block = nullptr;
   bool is_condition_checked = false;
 
   AstIfStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)

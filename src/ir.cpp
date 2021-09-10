@@ -97,28 +97,7 @@ bool LlvmIrGenerator::gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_f
     in_function->proto->params.at(i)->llvm_value = var;
   }
 
-  // Genereate body and finish the function with the return value
-  for (auto stmnt : in_func_block->statements) {
-    switch (stmnt->node_type) {
-    case AstNodeType::AST_VAR_DEF:
-      gen_var_def(stmnt->var_def(), false);
-      break;
-    case AstNodeType::AST_UNARY_EXPR:
-      gen_unary_expr(stmnt->unary_expr());
-      break;
-    case AstNodeType::AST_BINARY_EXPR:
-      gen_binary_expr(stmnt->binary_expr());
-      break;
-    case AstNodeType::AST_FN_CALL_EXPR:
-      gen_fn_call_expr(stmnt->fn_call());
-      break;
-    default:
-      // ignore stmnt:
-      ///// const_value;
-      ///// symbol;
-      break;
-    }
-  }
+  _gen_stmnts(in_func_block->statements);
 
   if (in_function->proto->return_type->type_info->type_id == AstTypeId::VOID) {
     builder->CreateRetVoid();
@@ -352,6 +331,50 @@ llvm::Value *LlvmIrGenerator::gen_fn_call_expr(const AstFnCallExpr *in_call_expr
   }
 
   return builder->CreateCall(llvm_fn, args);
+}
+
+llvm::Value *LlvmIrGenerator::_gen_if_stmnt(const AstIfStmnt *in_if_stmnt) {
+  llvm::Value *condition = gen_expr(in_if_stmnt->condition_expr);
+  llvm::BasicBlock *true_block = _gen_block(in_if_stmnt->true_block);
+  llvm::BasicBlock *false_block = _gen_block(in_if_stmnt->false_block);
+  return this->builder->CreateCondBr(condition, true_block, false_block);
+}
+
+llvm::BasicBlock *LlvmIrGenerator::_gen_block(const AstBlock *in_block) {
+  llvm::BasicBlock *BB = llvm::BasicBlock::Create(context);
+  builder->SetInsertPoint(BB);
+
+  _gen_stmnts(in_block->statements);
+
+  return BB;
+}
+
+void LlvmIrGenerator::_gen_stmnts(const std::vector<AstNode *> &in_stmnts) {
+  // Genereate body and finish the function with the return value
+  for (const AstNode *stmnt : in_stmnts) {
+    switch (stmnt->node_type) {
+    case AstNodeType::AST_VAR_DEF:
+      gen_var_def(stmnt->var_def(), false);
+      break;
+    case AstNodeType::AST_UNARY_EXPR:
+      gen_unary_expr(stmnt->unary_expr());
+      break;
+    case AstNodeType::AST_BINARY_EXPR:
+      gen_binary_expr(stmnt->binary_expr());
+      break;
+    case AstNodeType::AST_FN_CALL_EXPR:
+      gen_fn_call_expr(stmnt->fn_call());
+      break;
+    case AstNodeType::AST_IF_STMNT:
+      _gen_if_stmnt(stmnt->if_stmnt());
+      break;
+    default:
+      // ignore stmnt:
+      ///// const_value;
+      ///// symbol;
+      break;
+    }
+  }
 }
 
 void LlvmIrGenerator::flush() {

@@ -494,7 +494,7 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
     return nullptr;
   }
 
-  if_stmnt_node->if_block = block_node;
+  if_stmnt_node->true_block = block_node;
   return if_stmnt_node;
 }
 
