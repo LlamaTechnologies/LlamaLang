@@ -100,7 +100,7 @@
     "cmake.debugConfig": {
         "args": [
             "-s",
-            "./examples/TestPrint.llama"
+            "./examples/TestBranch.llama"
         ]
     },
     "[cpp]": {

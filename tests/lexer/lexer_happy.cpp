@@ -121,6 +121,26 @@ TEST(LexerHappyKeywordsTests, KeywordIfTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+TEST(LexerHappyKeywordsTests, KeywordElseTest) {
+  std::vector<Error> errors;
+  Lexer lexer("else", "file/directory", "KeywordFnTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ELSE);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordElifTest) {
+  std::vector<Error> errors;
+  Lexer lexer("elif", "file/directory", "KeywordFnTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ELIF);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
 TEST(LexerHappyKeywordsTests, KeywordTrueTest) {
   std::vector<Error> errors;
   Lexer lexer("true", "file/directory", "KeywordFnTest", errors);

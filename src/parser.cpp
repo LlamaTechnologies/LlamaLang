@@ -479,22 +479,48 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
 
   if_stmnt_node->condition_expr = conditional_expr;
 
-  const Token &lcurly_token = lexer.get_next_token();
-  if (lcurly_token.id != TokenId::L_CURLY) {
+  // PARSE BLOCK
+  const Token &true_lcurly_token = lexer.get_next_token();
+  if (true_lcurly_token.id != TokenId::L_CURLY) {
     // Warning: empty branch
     _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
     return if_stmnt_node;
   }
 
   lexer.get_back();
-  AstBlock *block_node = parse_block(lexer);
-  if (block_node == nullptr) {
+  AstBlock *true_block_node = parse_block(lexer);
+  if (true_block_node == nullptr) {
     // TODO(pablo96): handle error in block parsing
     delete if_stmnt_node;
     return nullptr;
   }
 
-  if_stmnt_node->true_block = block_node;
+  if_stmnt_node->true_block = true_block_node;
+
+  // PARSE ELSE
+  const Token &else_token = lexer.get_next_token();
+  if (else_token.id != TokenId::ELSE) {
+    lexer.get_back(); // Not our token
+    return if_stmnt_node;
+  }
+
+  // PARSE ELSE BLOCK
+  const Token &false_lcurly_token = lexer.get_next_token();
+  if (false_lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty branch
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return if_stmnt_node;
+  }
+
+  lexer.get_back();
+  AstBlock *false_block_node = parse_block(lexer);
+  if (false_block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    delete if_stmnt_node;
+    return nullptr;
+  }
+
+  if_stmnt_node->false_block = false_block_node;
   return if_stmnt_node;
 }
 

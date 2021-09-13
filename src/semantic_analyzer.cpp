@@ -193,8 +193,6 @@ bool SemanticAnalyzer::analize_block(const AstBlock *in_block, bool is_first_lev
       check_and_set_type(stmnt, ret_type, stmnt->unary_expr()->expr);
     } else if (stmnt->node_type == AstNodeType::AST_VAR_DEF) {
       analize_var_def(stmnt->var_def());
-    } else if (stmnt->node_type == AstNodeType::AST_IF_STMNT) {
-      analize_if_stmnt(stmnt);
     } else {
       analize_expr(stmnt);
     }
@@ -209,12 +207,14 @@ bool SemanticAnalyzer::analize_block(const AstBlock *in_block, bool is_first_lev
   return errors_before == errors_after;
 }
 
-bool SemanticAnalyzer::analize_if_stmnt(const AstNode *in_stmnt) {
-  LL_ASSERT(in_stmnt->node_type == AstNodeType::AST_IF_STMNT);
-  const AstIfStmnt *if_stmnt = in_stmnt->if_stmnt();
+bool SemanticAnalyzer::analize_if_stmnt(const AstIfStmnt *in_if_stmnt) {
+  LL_ASSERT(in_if_stmnt->node_type == AstNodeType::AST_IF_STMNT);
 
-  if (!if_stmnt->is_condition_checked) {
-    const AstNode *conditional_expr = if_stmnt->condition_expr;
+  if (!in_if_stmnt->is_condition_checked) {
+    const AstNode *conditional_expr = in_if_stmnt->condition_expr;
+    if (!analize_expr(conditional_expr))
+      return false;
+
     const AstType *expr_type = get_expr_type(this->errors, this->symbol_table, conditional_expr);
     if (!_is_type(expr_type, AstTypeId::BOOL)) {
       add_semantic_error(errors, conditional_expr, ERROR_EXPECTED_BOOL_EXPR,
@@ -223,14 +223,14 @@ bool SemanticAnalyzer::analize_if_stmnt(const AstNode *in_stmnt) {
     }
   }
 
-  const AstBlock *true_block = if_stmnt->true_block;
+  const AstBlock *true_block = in_if_stmnt->true_block;
   if (!analize_block(true_block)) {
     // errors have been set inside analize_block so we just return false
     return false;
   }
 
   // check else block
-  const AstBlock *false_block = if_stmnt->false_block;
+  const AstBlock *false_block = in_if_stmnt->false_block;
   if (false_block != nullptr) {
     if (!analize_block(false_block)) {
       // errors have been set inside analize_block so we just return false
@@ -411,6 +411,8 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
     return _analize_symbol(this->errors, this->symbol_table, in_expr->symbol());
   case AstNodeType::AST_CONST_VALUE:
     return _analize_const_value(in_expr->const_value());
+  case AstNodeType::AST_IF_STMNT:
+    return analize_if_stmnt(in_expr->if_stmnt());
   default:
     LL_UNREACHEABLE;
   }

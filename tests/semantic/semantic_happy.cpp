@@ -568,7 +568,7 @@ TEST(SemanticFunctionsCalls, FunctionCallWithParams) {
 //          SEMANTIC BRANCHES
 //==================================================================================
 
-TEST(SemanticBranches, BoolVar) {
+TEST(SemanticBranches, SimpleIfBoolVar) {
   std::vector<Error> errors;
 
   // given: source_file
@@ -578,6 +578,58 @@ TEST(SemanticBranches, BoolVar) {
                             "\tif my_condition {\n"
                             "\t\tmy_var i32\n"
                             "\t\tmy_var = 34\n"
+                            "\t}\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "FunctionNoRet", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstFnDef *fn_def = parser.parse_function_def(lexer)->fn_def();
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(fn_def, nullptr);
+
+  // and given: analizer
+  SemanticAnalyzer analizer(errors);
+
+  bool is_valid_proto = analizer.analize_fn_proto(fn_def->proto);
+
+  analizer.enter_fn_scope(fn_def);
+
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+
+  const AstIfStmnt *if_stmnt = fn_def->block->statements.at(1)->if_stmnt();
+  bool is_valid_if_stmnt = analizer.analize_if_stmnt(if_stmnt);
+
+  analizer.exit_fn_scope();
+
+  // then:
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_if_stmnt);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete fn_def;
+}
+
+TEST(SemanticBranches, IfElseBoolVar) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "fn my_condition() void {\n"
+                            "\tmy_condition bool = false\n"
+                            "\n"
+                            "\tif my_condition {\n"
+                            "\t\tmy_var i32\n"
+                            "\t\tmy_var = 34\n"
+                            "\t} else {\n"
+                            "\t\tmy_var i32\n"
+                            "\t\tmy_var = 43\n"
                             "\t}\n"
                             "}";
 

@@ -15,6 +15,7 @@ struct AstFnCallExpr;
 struct AstUnaryExpr;
 struct AstBinaryExpr;
 struct AstBlock;
+struct AstIfStmnt;
 enum class SymbolType;
 
 class SemanticAnalyzer {
@@ -70,7 +71,7 @@ public:
    * - block has no errors
    * - none of its else block has errors
    */
-  bool analize_if_stmnt(const AstNode *in_expr);
+  bool analize_if_stmnt(const AstIfStmnt *in_expr);
 
   /* Returns true if:
    * - all refered variables had been defined

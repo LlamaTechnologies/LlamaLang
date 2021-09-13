@@ -1073,6 +1073,8 @@ void _end_token_check_is_keyword(Lexer &in_lexer) noexcept {
   case TokenId::FN:
   case TokenId::RET:
   case TokenId::IF:
+  case TokenId::ELSE:
+  case TokenId::ELIF:
   case TokenId::AND:
   case TokenId::OR:
   case TokenId::TRUE:

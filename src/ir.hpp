@@ -58,7 +58,7 @@ private:
   const std::string &output_directory;
 
   llvm::Value *_gen_if_stmnt(const AstIfStmnt *in_if_stmnt);
-  llvm::BasicBlock *_gen_block(const AstBlock *in_block);
+  llvm::BasicBlock *_gen_block(const AstBlock *in_block, llvm::BasicBlock *in_next_block);
   void _gen_stmnts(const std::vector<AstNode *> &in_stmnts);
   llvm::Value *_gen_printf_call(const char *format, const std::vector<llvm::Value *> &args);
   llvm::Value *_gen_printf_decl();

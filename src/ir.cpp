@@ -334,18 +334,37 @@ llvm::Value *LlvmIrGenerator::gen_fn_call_expr(const AstFnCallExpr *in_call_expr
 }
 
 llvm::Value *LlvmIrGenerator::_gen_if_stmnt(const AstIfStmnt *in_if_stmnt) {
+  llvm::Function *parent_fn = builder->GetInsertBlock()->getParent();
+  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "", parent_fn);
+
   llvm::Value *condition = gen_expr(in_if_stmnt->condition_expr);
-  llvm::BasicBlock *true_block = _gen_block(in_if_stmnt->true_block);
-  llvm::BasicBlock *false_block = _gen_block(in_if_stmnt->false_block);
-  return this->builder->CreateCondBr(condition, true_block, false_block);
+  llvm::BasicBlock *true_block = _gen_block(in_if_stmnt->true_block, next_block);
+  llvm::BasicBlock *false_block = nullptr;
+
+  if (in_if_stmnt->false_block) {
+    false_block = _gen_block(in_if_stmnt->false_block, next_block);
+  } else {
+    false_block = next_block;
+  }
+
+  llvm::BranchInst *branch_inst = this->builder->CreateCondBr(condition, true_block, false_block);
+  builder->SetInsertPoint(next_block);
+  return branch_inst;
 }
 
-llvm::BasicBlock *LlvmIrGenerator::_gen_block(const AstBlock *in_block) {
-  llvm::BasicBlock *BB = llvm::BasicBlock::Create(context);
+llvm::BasicBlock *LlvmIrGenerator::_gen_block(const AstBlock *in_block, llvm::BasicBlock *in_next_block) {
+  llvm::BasicBlock *parent_block = builder->GetInsertBlock();
+  llvm::Function *parent_fn = parent_block->getParent();
+  llvm::BasicBlock *BB = llvm::BasicBlock::Create(context, "", parent_fn);
   builder->SetInsertPoint(BB);
 
   _gen_stmnts(in_block->statements);
 
+  if (parent_block != in_next_block) {
+    builder->CreateBr(in_next_block);
+  }
+
+  builder->SetInsertPoint(parent_block);
   return BB;
 }
 
@@ -503,7 +522,7 @@ llvm::Value *LlvmIrGenerator::_gen_printf_decl() {
 llvm::Value *LlvmIrGenerator::_gen_printf_call(const char *format, const std::vector<llvm::Value *> &args) {
   llvm::Function *func_printf = code_module->getFunction("printf");
 
-  llvm::Value *str = builder->CreateGlobalStringPtr(format);
+  llvm::Value *str = builder->CreateGlobalStringPtr(format, "", 0U, this->code_module);
   std::vector<llvm::Value *> call_params;
   call_params.reserve(args.size() + 1);
   call_params.push_back(str);
