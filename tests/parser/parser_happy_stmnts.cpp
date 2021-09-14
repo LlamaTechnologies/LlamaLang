@@ -1174,14 +1174,19 @@ TEST(ParserHappyBranchStmntTests, IfConstantExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstConstValue *cond_expr = if_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfBinaryExprTest) {
@@ -1192,14 +1197,19 @@ TEST(ParserHappyBranchStmntTests, IfBinaryExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfUnaryExprTest) {
@@ -1210,14 +1220,19 @@ TEST(ParserHappyBranchStmntTests, IfUnaryExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstUnaryExpr *cond_expr = if_stmnt->condition_expr->unary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(cond_expr->op, UnaryExprType::NOT);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfComplexExprTest) {
@@ -1228,14 +1243,19 @@ TEST(ParserHappyBranchStmntTests, IfComplexExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::LESS);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityExprTest) {
@@ -1246,14 +1266,19 @@ TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfSymbolExprTest) {
@@ -1264,14 +1289,18 @@ TEST(ParserHappyBranchStmntTests, IfSymbolExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_FALSE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_FALSE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstSymbol *cond_expr = if_stmnt->condition_expr->symbol();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_SYMBOL);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfConstantWithParentsExprTest) {
@@ -1282,14 +1311,19 @@ TEST(ParserHappyBranchStmntTests, IfConstantWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstConstValue *cond_expr = if_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfBinaryWithParentsExprTest) {
@@ -1300,14 +1334,19 @@ TEST(ParserHappyBranchStmntTests, IfBinaryWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfUnaryWithParentsExprTest) {
@@ -1318,14 +1357,19 @@ TEST(ParserHappyBranchStmntTests, IfUnaryWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstUnaryExpr *cond_expr = if_stmnt->condition_expr->unary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(cond_expr->op, UnaryExprType::NOT);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfComplexWithParentsExprTest) {
@@ -1336,14 +1380,19 @@ TEST(ParserHappyBranchStmntTests, IfComplexWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::LESS);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityWithParentsExprTest) {
@@ -1354,14 +1403,19 @@ TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_TRUE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyBranchStmntTests, IfSymbolWithParentsExprTest) {
@@ -1372,14 +1426,18 @@ TEST(ParserHappyBranchStmntTests, IfSymbolWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmtn_node = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(if_stmtn_node, nullptr);
-  ASSERT_EQ(if_stmtn_node->node_type, AstNodeType::AST_IF_STMNT);
-  ASSERT_FALSE(if_stmtn_node->is_condition_checked);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_FALSE(if_stmnt->is_condition_checked);
 
-  delete if_stmtn_node;
+  const AstSymbol *cond_expr = if_stmnt->condition_expr->symbol();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_SYMBOL);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyFullProgramStmntTests, IfStmntFilledBlock) {
@@ -1405,6 +1463,9 @@ TEST(ParserHappyFullProgramStmntTests, IfStmntFilledBlock) {
   ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
   ASSERT_NE(if_stmnt->true_block, nullptr);
   ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+  ASSERT_EQ(if_stmnt->false_block, nullptr);
+
+  delete if_stmnt;
 }
 
 TEST(ParserHappyFullProgramStmntTests, IfElseStmntFilledBlock) {
@@ -1435,6 +1496,132 @@ TEST(ParserHappyFullProgramStmntTests, IfElseStmntFilledBlock) {
   ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
   ASSERT_NE(if_stmnt->false_block, nullptr);
   ASSERT_EQ(if_stmnt->false_block->statements.size(), 2);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyFullProgramStmntTests, IfElifStmntFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 34\n"
+                            "} elif !my_condition {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 43\n"
+                            "}\n";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElifStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+
+  ASSERT_NE(if_stmnt->false_block, nullptr);
+  ASSERT_EQ(if_stmnt->false_block->statements.size(), 1);
+
+  const AstIfStmnt *elif_stmnt = if_stmnt->false_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(elif_stmnt, nullptr);
+  ASSERT_EQ(elif_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(elif_stmnt->true_block, nullptr);
+  ASSERT_EQ(elif_stmnt->true_block->statements.size(), 2);
+  ASSERT_EQ(elif_stmnt->false_block, nullptr);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyFullProgramStmntTests, IfElifStmntWithParenFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 34\n"
+                            "} elif (!my_condition) {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 43\n"
+                            "}\n";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElifStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+
+  ASSERT_NE(if_stmnt->false_block, nullptr);
+  ASSERT_EQ(if_stmnt->false_block->statements.size(), 1);
+
+  const AstIfStmnt *elif_stmnt = if_stmnt->false_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(elif_stmnt, nullptr);
+  ASSERT_EQ(elif_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(elif_stmnt->true_block, nullptr);
+  ASSERT_EQ(elif_stmnt->true_block->statements.size(), 2);
+  ASSERT_EQ(elif_stmnt->false_block, nullptr);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyFullProgramStmntTests, IfElifElseStmntFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 34\n"
+                            "} elif !my_condition {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 43\n"
+                            "} else {\n"
+                            "\tmy_var i32\n"
+                            "\tmy_var = 43\n"
+                            "}\n";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElifElseStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+
+  ASSERT_NE(if_stmnt->false_block, nullptr);
+  ASSERT_EQ(if_stmnt->false_block->statements.size(), 1);
+
+  const AstIfStmnt *elif_stmnt = if_stmnt->false_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(elif_stmnt, nullptr);
+  ASSERT_EQ(elif_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(elif_stmnt->true_block, nullptr);
+  ASSERT_EQ(elif_stmnt->true_block->statements.size(), 2);
+  ASSERT_NE(elif_stmnt->false_block, nullptr);
+  ASSERT_EQ(elif_stmnt->false_block->statements.size(), 2);
+
+  delete if_stmnt;
 }
 
 //==================================================================================

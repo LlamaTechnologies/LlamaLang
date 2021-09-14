@@ -444,37 +444,13 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
     LL_UNREACHEABLE;
   }
 
-  const Token &lparent_token = lexer.get_next_token();
-
-  bool requires_rparent = false;
-  if (lparent_token.id == TokenId::L_PAREN) {
-    requires_rparent = true;
-  } else {
-    // it was an expr token so we get it back
-    lexer.get_back();
-  }
-
   AstNode *conditional_expr = parse_expr(lexer);
-  if (conditional_expr == nullptr) {
-    // TODO(pablo96): handle error
-    return nullptr;
-  }
 
   AstIfStmnt *if_stmnt_node = new AstIfStmnt(if_token.start_line, if_token.start_column, if_token.file_name);
 
   if (!_is_boolean_expression(conditional_expr, if_stmnt_node)) {
-    _parse_error(errors, lparent_token, ERROR_BRANCH_EXPR_NOT_BOOL);
+    _parse_error(errors, if_token, ERROR_BRANCH_EXPR_NOT_BOOL);
     // NOTE(pablo96): we dont break here since we want to parse as much as we can
-  }
-
-  if (requires_rparent) {
-    const Token &rparent_token = lexer.get_next_token();
-    if (rparent_token.id != TokenId::R_PAREN) {
-      _parse_error(errors, rparent_token, ERROR_BRANCH_EXPECTED_RPAREN,
-                   std::string(lexer.get_token_value(rparent_token)).c_str());
-      delete if_stmnt_node;
-      return nullptr;
-    }
   }
 
   if_stmnt_node->condition_expr = conditional_expr;
@@ -497,10 +473,61 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
 
   if_stmnt_node->true_block = true_block_node;
 
+  // PARSE ELIFs
+  AstIfStmnt *prev_if_stmnt = if_stmnt_node;
+  do {
+    const Token &elif_token = lexer.get_next_token();
+    if (elif_token.id != TokenId::ELIF) {
+      lexer.get_back();
+      break;
+    }
+
+    AstNode *elif_conditional_expr = parse_expr(lexer);
+    if (elif_conditional_expr == nullptr) {
+      // TODO(pablo96): handle error
+      delete if_stmnt_node;
+      return nullptr;
+    }
+
+    AstIfStmnt *elif_stmnt = new AstIfStmnt(if_token.start_line, if_token.start_column, if_token.file_name);
+
+    if (!_is_boolean_expression(elif_conditional_expr, elif_stmnt)) {
+      _parse_error(errors, elif_token, ERROR_BRANCH_EXPR_NOT_BOOL);
+      // NOTE(pablo96): we dont break here since we want to parse as much as we can
+    }
+
+    elif_stmnt->condition_expr = elif_conditional_expr;
+
+    // PARSE ELIF BLOCK
+    const Token &elif_lcurly_token = lexer.get_next_token();
+    if (elif_lcurly_token.id != TokenId::L_CURLY) {
+      // Warning: empty branch
+      _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+      continue;
+    }
+
+    lexer.get_back();
+    AstBlock *elif_block_node = parse_block(lexer);
+    if (elif_block_node == nullptr) {
+      // TODO(pablo96): handle error in block parsing
+      delete if_stmnt_node;
+      return nullptr;
+    }
+
+    elif_stmnt->true_block = elif_block_node;
+
+    // ELIF is an IF stmnt in a ELSE block
+    AstBlock *else_block = new AstBlock(elif_token.start_line, elif_token.start_column, elif_token.file_name);
+    else_block->statements.push_back(elif_stmnt);
+
+    prev_if_stmnt->false_block = else_block;
+    prev_if_stmnt = elif_stmnt;
+  } while (true);
+
   // PARSE ELSE
   const Token &else_token = lexer.get_next_token();
   if (else_token.id != TokenId::ELSE) {
-    lexer.get_back(); // Not our token
+    lexer.get_back();
     return if_stmnt_node;
   }
 
@@ -520,7 +547,8 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
     return nullptr;
   }
 
-  if_stmnt_node->false_block = false_block_node;
+  LL_ASSERT(prev_if_stmnt->false_block == nullptr);
+  prev_if_stmnt->false_block = false_block_node;
   return if_stmnt_node;
 }
 
