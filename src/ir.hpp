@@ -57,6 +57,7 @@ private:
   const std::string &output_file_name;
   const std::string &output_directory;
 
+  llvm::Value *_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt);
   llvm::Value *_gen_if_stmnt(const AstIfStmnt *in_if_stmnt);
   llvm::BasicBlock *_gen_block(const AstBlock *in_block, llvm::BasicBlock *in_next_block);
   void _gen_stmnts(const std::vector<AstNode *> &in_stmnts);

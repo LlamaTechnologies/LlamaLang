@@ -386,10 +386,6 @@ inline bool SemanticAnalyzer::_analize_binary_expr(const AstBinaryExpr *in_binar
   if (!is_left_ok || !is_right_ok)
     return false;
 
-  if (_is_boolean_bin_op(in_binary_expr)) {
-    return true;
-  }
-
   if (_is_shift_bin_op(in_binary_expr)) {
     const AstType *r_expr_type = get_expr_type(this->errors, this->symbol_table, r_expr);
     LL_ASSERT(r_expr_type != nullptr);
@@ -437,6 +433,8 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
     return _analize_const_value(in_expr->const_value());
   case AstNodeType::AST_IF_STMNT:
     return analize_if_stmnt(in_expr->if_stmnt());
+  case AstNodeType::AST_LOOP_STMNT:
+    return analize_loop_stmnt(in_expr->loop_stmnt());
   default:
     LL_UNREACHEABLE;
   }
@@ -667,7 +665,8 @@ const AstType *_get_binary_expr_type(std::vector<Error> &errors, const Table *sy
       return nullptr;
     }
 
-    LL_ASSERT(_is_number_type(type_left) != _is_number_type(type_left));
+    // TODO(pablo96): revisar por que esta el assert y comentarlo
+    LL_ASSERT(_is_number_type(type_left) == _is_number_type(type_left));
 
     return in_bin_expr->left_expr->node_type == AstNodeType::AST_CONST_VALUE ? type_right : type_left;
   }

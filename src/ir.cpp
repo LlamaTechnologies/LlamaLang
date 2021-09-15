@@ -296,6 +296,26 @@ llvm::Value *LlvmIrGenerator::gen_fn_call_expr(const AstFnCallExpr *in_call_expr
   return builder->CreateCall(llvm_fn, args);
 }
 
+llvm::Value *LlvmIrGenerator::_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt) {
+  llvm::Function *parent_fn = builder->GetInsertBlock()->getParent();
+  llvm::BranchInst *branch_inst = nullptr;
+
+  llvm::BasicBlock *prev_block = llvm::BasicBlock::Create(context, "", parent_fn);
+  builder->CreateBr(prev_block);
+
+  llvm::BasicBlock *content_block = _gen_block(in_loop_stmnt->content_block, prev_block);
+  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "", parent_fn);
+
+  { // prev block with the conditional jump
+    builder->SetInsertPoint(prev_block);
+    llvm::Value *condition = gen_expr(in_loop_stmnt->condition_expr);
+    branch_inst = this->builder->CreateCondBr(condition, content_block, next_block);
+  }
+
+  builder->SetInsertPoint(next_block);
+  return branch_inst;
+}
+
 llvm::Value *LlvmIrGenerator::_gen_if_stmnt(const AstIfStmnt *in_if_stmnt) {
   llvm::Function *parent_fn = builder->GetInsertBlock()->getParent();
   llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "", parent_fn);
@@ -349,6 +369,9 @@ void LlvmIrGenerator::_gen_stmnts(const std::vector<AstNode *> &in_stmnts) {
       break;
     case AstNodeType::AST_IF_STMNT:
       _gen_if_stmnt(stmnt->if_stmnt());
+      break;
+    case AstNodeType::AST_LOOP_STMNT:
+      _gen_loop_stmnt(stmnt->loop_stmnt());
       break;
     default:
       // ignore stmnt:
