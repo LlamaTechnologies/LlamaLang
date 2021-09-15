@@ -100,6 +100,28 @@ AstIfStmnt::~AstIfStmnt() {
   }
 }
 
+AstLoopStmnt::~AstLoopStmnt() {
+  if (condition_expr) {
+    delete condition_expr;
+    condition_expr = nullptr;
+  }
+
+  if (prev_block) {
+    delete prev_block;
+    prev_block = nullptr;
+  }
+
+  if (content_block) {
+    delete content_block;
+    content_block = nullptr;
+  }
+
+  if (post_block) {
+    delete post_block;
+    post_block = nullptr;
+  }
+}
+
 AstBlock::~AstBlock() {
   if (!statements.empty()) {
     for (AstNode *&stmnt : statements) {

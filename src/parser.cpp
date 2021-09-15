@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include <unordered_map>
 
-static bool _is_boolean_expression(const AstNode *in_expr, AstIfStmnt *if_stmnt_node);
+static bool _is_boolean_expression(const AstNode *in_expr, AstNode *if_stmnt_node);
 static void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static void _parse_warning(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in_errors,
@@ -433,7 +433,7 @@ AstParamDef *Parser::parse_param_def(const Lexer &lexer) noexcept {
 /*
  * Parses an if/elif/else statement
  * if_stmnt
- *   : 'if' '('? expr ')'? block ('elif' '('? expr ')'? block)* ('else' block)?
+ *   : 'if' expr block ('elif' expr block)* ('else' block)?
  *   ;
  */
 AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
@@ -551,6 +551,97 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
   prev_if_stmnt->false_block = false_block_node;
   return if_stmnt_node;
 }
+
+/*
+ * Parses a loop statement
+ * loop_stmnt
+ *   : 'loop' expr  block #while
+ *   | 'loop' IDENTIFIER ('=' INTEGER)? ':' (IDENTIFIER | INTEGER) (';' INTEGER)? #range
+ *   | 'loop' IDENTIFIER ':' IDENTIFIER (';' ( (IDENTIFIER (, INTEGER)?) | INTEGER) )? #each
+ *   ;
+ */
+AstLoopStmnt *Parser::parse_loop_stmnt(const Lexer &lexer) noexcept {
+  const Token &loop_token = lexer.get_next_token();
+  if (loop_token.id != TokenId::LOOP) {
+    // compiler bug! we did not predict correctly
+    LL_UNREACHEABLE;
+  }
+
+  // try to predict loop type
+  const Token &token = lexer.get_next_token();
+  if (token.id == TokenId::IDENTIFIER) {
+    const Token &eq_colon_token = lexer.get_next_token();
+    if (eq_colon_token.id == TokenId::ASSIGN) {
+      lexer.get_back(); // '=' token
+      lexer.get_back(); // IDENTIFIER token
+      return parse_rangeloop_stmnt(lexer, loop_token);
+    }
+
+    if (eq_colon_token.id == TokenId::COLON) {
+      const Token &id_num_token = lexer.get_next_token();
+      if (id_num_token.id == TokenId::INT_LIT) {
+        lexer.get_back(); // IDENTIFIER | NUMBER token
+        lexer.get_back(); // ':' token
+        lexer.get_back(); // IDENTIFIER token
+        return parse_rangeloop_stmnt(lexer, loop_token);
+      }
+
+      // else we parse it as a each loop and let the semantic phase check the syntax
+      lexer.get_back(); // IDENTIFIER | NUMBER token
+      lexer.get_back(); // ':' token
+      lexer.get_back(); // IDENTIFIER token
+      return parse_eachloop_stmnt(lexer, loop_token);
+    }
+
+    // else is a while loop
+    lexer.get_back(); // '=' or ':' token
+  }
+
+  lexer.get_back(); // IDENTIFIER token
+
+  return parse_whileloop_stmnt(lexer, loop_token);
+}
+
+/*
+ * Parses a loop statement
+ * loop_stmnt
+ *   : 'loop' boolExpr  block
+ */
+AstLoopStmnt *Parser::parse_whileloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept {
+  AstNode *conditional_expr = parse_expr(lexer);
+
+  AstLoopStmnt *loop_stmnt = new AstLoopStmnt(loop_token.start_line, loop_token.start_column, loop_token.file_name);
+
+  if (!_is_boolean_expression(conditional_expr, loop_stmnt)) {
+    _parse_error(errors, loop_token, ERROR_BRANCH_EXPR_NOT_BOOL);
+    // NOTE(pablo96): we dont break here since we want to parse as much as we can
+  }
+
+  loop_stmnt->condition_expr = conditional_expr;
+
+  const Token &true_lcurly_token = lexer.get_next_token();
+  if (true_lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty loop
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return loop_stmnt;
+  }
+
+  lexer.get_back();
+  AstBlock *content_block_node = parse_block(lexer);
+  if (content_block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  loop_stmnt->content_block = content_block_node;
+
+  return loop_stmnt;
+}
+
+AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept { return nullptr; }
+
+AstLoopStmnt *Parser::parse_eachloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept { return nullptr; }
 
 /*
  * Parses a (function | if-else stmnt) block
@@ -1480,8 +1571,13 @@ bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in
   return true;
 }
 
-bool _is_boolean_expression(const AstNode *in_expr, AstIfStmnt *if_stmnt_node) {
-  if_stmnt_node->is_condition_checked = true;
+bool _is_boolean_expression(const AstNode *in_expr, AstNode *in_stmnt_node) {
+  LL_ASSERT(in_stmnt_node->node_type == AstNodeType::AST_IF_STMNT ||
+            in_stmnt_node->node_type == AstNodeType::AST_LOOP_STMNT);
+  bool &is_condition_checked = in_stmnt_node->node_type == AstNodeType::AST_IF_STMNT
+                                 ? in_stmnt_node->if_stmnt()->is_condition_checked
+                                 : in_stmnt_node->loop_stmnt()->is_condition_checked;
+  is_condition_checked = true;
 
   if (in_expr->node_type == AstNodeType::AST_UNARY_EXPR) {
     switch (in_expr->unary_expr()->op) {
@@ -1506,7 +1602,7 @@ bool _is_boolean_expression(const AstNode *in_expr, AstIfStmnt *if_stmnt_node) {
     return in_expr->const_value()->type == ConstValueType::BOOL;
   } else if (in_expr->node_type == AstNodeType::AST_SYMBOL) {
     // if it is a symbol is up to the semantic analyzer to know its type.
-    if_stmnt_node->is_condition_checked = false;
+    is_condition_checked = false;
     return true;
   }
   return false;

@@ -14,6 +14,7 @@ struct AstDirective;
 struct AstFnDef;
 struct AstFnProto;
 struct AstIfStmnt;
+struct AstLoopStmnt;
 struct AstBlock;
 struct AstParamDef;
 struct AstVarDef;
@@ -48,6 +49,8 @@ public:
   LL_NODISCARD AstParamDef *parse_param_def(const Lexer &lexer) noexcept;
 
   LL_NODISCARD AstIfStmnt *parse_if_stmnt(const Lexer &lexer) noexcept;
+
+  LL_NODISCARD AstLoopStmnt *parse_loop_stmnt(const Lexer &lexer) noexcept;
 
   LL_NODISCARD AstBlock *parse_block(const Lexer &lexer) noexcept;
 
@@ -86,4 +89,9 @@ public:
 
   // consumes the forbiden statement, report the error and return true else returns false
   bool is_forbiden_statement(const Token &token) noexcept;
+
+private:
+  LL_NODISCARD AstLoopStmnt *parse_whileloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept;
+  LL_NODISCARD AstLoopStmnt *parse_eachloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept;
+  LL_NODISCARD AstLoopStmnt *parse_rangeloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept;
 };

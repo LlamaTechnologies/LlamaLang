@@ -1163,7 +1163,7 @@ TEST(ParserHappyCallStmntTests, MultiParamsTest) {
 }
 
 //==================================================================================
-//          PARSE BRANCHES CALL STATEMENT
+//          PARSE BRANCHES STATEMENT
 //==================================================================================
 
 TEST(ParserHappyBranchStmntTests, IfConstantExprTest) {
@@ -1440,7 +1440,7 @@ TEST(ParserHappyBranchStmntTests, IfSymbolWithParentsExprTest) {
   delete if_stmnt;
 }
 
-TEST(ParserHappyFullProgramStmntTests, IfStmntFilledBlock) {
+TEST(ParserHappyBranchStmntTests, IfStmntFilledBlock) {
   std::vector<Error> errors;
 
   // given: source_file
@@ -1468,7 +1468,7 @@ TEST(ParserHappyFullProgramStmntTests, IfStmntFilledBlock) {
   delete if_stmnt;
 }
 
-TEST(ParserHappyFullProgramStmntTests, IfElseStmntFilledBlock) {
+TEST(ParserHappyBranchStmntTests, IfElseStmntFilledBlock) {
   std::vector<Error> errors;
 
   // given: source_file
@@ -1500,7 +1500,7 @@ TEST(ParserHappyFullProgramStmntTests, IfElseStmntFilledBlock) {
   delete if_stmnt;
 }
 
-TEST(ParserHappyFullProgramStmntTests, IfElifStmntFilledBlock) {
+TEST(ParserHappyBranchStmntTests, IfElifStmntFilledBlock) {
   std::vector<Error> errors;
 
   // given: source_file
@@ -1540,7 +1540,7 @@ TEST(ParserHappyFullProgramStmntTests, IfElifStmntFilledBlock) {
   delete if_stmnt;
 }
 
-TEST(ParserHappyFullProgramStmntTests, IfElifStmntWithParenFilledBlock) {
+TEST(ParserHappyBranchStmntTests, IfElifStmntWithParenFilledBlock) {
   std::vector<Error> errors;
 
   // given: source_file
@@ -1580,7 +1580,7 @@ TEST(ParserHappyFullProgramStmntTests, IfElifStmntWithParenFilledBlock) {
   delete if_stmnt;
 }
 
-TEST(ParserHappyFullProgramStmntTests, IfElifElseStmntFilledBlock) {
+TEST(ParserHappyBranchStmntTests, IfElifElseStmntFilledBlock) {
   std::vector<Error> errors;
 
   // given: source_file
@@ -1622,6 +1622,33 @@ TEST(ParserHappyFullProgramStmntTests, IfElifElseStmntFilledBlock) {
   ASSERT_EQ(elif_stmnt->false_block->statements.size(), 2);
 
   delete if_stmnt;
+}
+
+//==================================================================================
+//          PARSE LOOP STATEMENT
+//==================================================================================
+
+TEST(ParserHappyLoopStmntTests, ConstantExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop true {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
+
+  const AstConstValue *cond_expr = loop_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  delete loop_stmnt;
 }
 
 //==================================================================================
