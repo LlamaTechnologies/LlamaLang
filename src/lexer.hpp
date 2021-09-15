@@ -15,6 +15,7 @@ enum class TokenId
   IF,        // if
   ELIF,      // elif
   ELSE,      // else
+  LOOP,      // loop
   TRUE,      // true
   FALSE,     // false
   L_PAREN,   // (

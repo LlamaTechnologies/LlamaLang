@@ -113,7 +113,7 @@ TEST(LexerHappyKeywordsTests, KeywordOrTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordIfTest) {
   std::vector<Error> errors;
-  Lexer lexer("if", "file/directory", "KeywordFnTest", errors);
+  Lexer lexer("if", "file/directory", "KeywordIfTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -123,7 +123,7 @@ TEST(LexerHappyKeywordsTests, KeywordIfTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordElseTest) {
   std::vector<Error> errors;
-  Lexer lexer("else", "file/directory", "KeywordFnTest", errors);
+  Lexer lexer("else", "file/directory", "KeywordElseTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -133,11 +133,21 @@ TEST(LexerHappyKeywordsTests, KeywordElseTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordElifTest) {
   std::vector<Error> errors;
-  Lexer lexer("elif", "file/directory", "KeywordFnTest", errors);
+  Lexer lexer("elif", "file/directory", "KeywordElifTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::ELIF);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordLoopTest) {
+  std::vector<Error> errors;
+  Lexer lexer("loop", "file/directory", "KeywordLoopTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::LOOP);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
