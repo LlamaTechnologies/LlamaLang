@@ -223,67 +223,67 @@ llvm::Value *LlvmIrGenerator::gen_binary_expr(const AstBinaryExpr *in_binary_exp
     return builder->CreateShl(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::RSHIFT: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateLShr(l_expr_llvm_value, r_expr_llvm_value);
   }
   // TODO(pablo96): support fp operations
   case BinaryExprType::EQUALS: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateICmpEQ(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::NOT_EQUALS: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateICmpNE(l_expr_llvm_value, r_expr_llvm_value);
   }
   // TODO(pablo96): support unsigned operations
   case BinaryExprType::GREATER: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateICmpSGT(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::GREATER_OR_EQUALS: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateICmpSGE(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::LESS: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateICmpSLT(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::LESS_OR_EQUALS: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateICmpSLE(l_expr_llvm_value, r_expr_llvm_value);
   }
   // TODO(pablo96): support fp operations
   case BinaryExprType::ADD: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateAdd(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::SUB: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateSub(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::MUL: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateMul(l_expr_llvm_value, r_expr_llvm_value);
   }
   // TODO(pablo96): support fp operations and unsigned operations
   case BinaryExprType::DIV: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateSDiv(l_expr_llvm_value, r_expr_llvm_value);
   }
   case BinaryExprType::MOD: {
-    auto l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
-    auto r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
+    llvm::Value *l_expr_llvm_value = gen_expr(in_binary_expr->left_expr);
+    llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     return builder->CreateSRem(l_expr_llvm_value, r_expr_llvm_value);
   }
   default:

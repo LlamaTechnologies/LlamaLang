@@ -210,11 +210,11 @@ bool SemanticAnalyzer::analize_block(const AstBlock *in_block, bool is_first_lev
 bool SemanticAnalyzer::analize_if_stmnt(const AstIfStmnt *in_if_stmnt) {
   LL_ASSERT(in_if_stmnt->node_type == AstNodeType::AST_IF_STMNT);
 
-  if (!in_if_stmnt->is_condition_checked) {
-    const AstNode *conditional_expr = in_if_stmnt->condition_expr;
-    if (!analize_expr(conditional_expr))
-      return false;
+  const AstNode *conditional_expr = in_if_stmnt->condition_expr;
+  if (!analize_expr(conditional_expr))
+    return false;
 
+  if (!in_if_stmnt->is_condition_checked) {
     const AstType *expr_type = get_expr_type(this->errors, this->symbol_table, conditional_expr);
     if (!_is_type(expr_type, AstTypeId::BOOL)) {
       add_semantic_error(errors, conditional_expr, ERROR_EXPECTED_BOOL_EXPR,
