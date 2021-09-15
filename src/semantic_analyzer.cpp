@@ -296,7 +296,6 @@ inline bool SemanticAnalyzer::_analize_call_expr(const AstFnCallExpr *in_fn_call
     auto params_size = fn_proto.params.size();
     auto args_size = in_fn_call->args.size();
 
-    // BUG(pablo96): len1 != len2
     add_semantic_error(this->errors, in_fn_call, ERROR_ARGUMENT_COUNT_MISMATCH, params_size, args_size);
     return false;
   }
