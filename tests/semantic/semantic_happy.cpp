@@ -582,7 +582,7 @@ TEST(SemanticBranches, SimpleIfBoolVar) {
                             "}";
 
   // given: tokens
-  Lexer lexer = Lexer(source_file, "file/directory", "FunctionNoRet", errors);
+  Lexer lexer = Lexer(source_file, "file/directory", "SimpleIfBoolVar", errors);
   lexer.tokenize();
 
   // given: parsed source node
@@ -634,7 +634,7 @@ TEST(SemanticBranches, IfElseBoolVar) {
                             "}";
 
   // given: tokens
-  Lexer lexer = Lexer(source_file, "file/directory", "FunctionNoRet", errors);
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElseBoolVar", errors);
   lexer.tokenize();
 
   // given: parsed source node
@@ -664,6 +664,59 @@ TEST(SemanticBranches, IfElseBoolVar) {
   ASSERT_TRUE(is_valid_proto);
   ASSERT_TRUE(is_valid_var_def);
   ASSERT_TRUE(is_valid_if_stmnt);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete fn_def;
+}
+
+//==================================================================================
+//          SEMANTIC LOOPS
+//==================================================================================
+
+TEST(SemanticLoops, SimpleBoolVar) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "fn my_condition() void {\n"
+                            "\tmy_condition bool = false\n"
+                            "\n"
+                            "\tloop my_condition {\n"
+                            "\t\tmy_var i32\n"
+                            "\t\tmy_var = 34\n"
+                            "\t}\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "SimpleBoolVar", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstFnDef *fn_def = parser.parse_function_def(lexer)->fn_def();
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(fn_def, nullptr);
+
+  // and given: analizer
+  SemanticAnalyzer analizer(errors);
+
+  bool is_valid_proto = analizer.analize_fn_proto(fn_def->proto);
+
+  analizer.enter_fn_scope(fn_def);
+
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+
+  const AstLoopStmnt *loop_stmnt = fn_def->block->statements.at(1)->loop_stmnt();
+  bool is_valid_loop_stmnt = analizer.analize_loop_stmnt(loop_stmnt);
+
+  analizer.exit_fn_scope();
+
+  // then:
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_loop_stmnt);
   ASSERT_EQ(errors.size(), 0L);
 
   delete fn_def;

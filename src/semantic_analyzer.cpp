@@ -241,6 +241,31 @@ bool SemanticAnalyzer::analize_if_stmnt(const AstIfStmnt *in_if_stmnt) {
   return true;
 }
 
+bool SemanticAnalyzer::analize_loop_stmnt(const AstLoopStmnt *in_loop_stmnt) {
+  LL_ASSERT(in_loop_stmnt->node_type == AstNodeType::AST_LOOP_STMNT);
+
+  const AstNode *conditional_expr = in_loop_stmnt->condition_expr;
+  if (!analize_expr(conditional_expr))
+    return false;
+
+  if (!in_loop_stmnt->is_condition_checked) {
+    const AstType *expr_type = get_expr_type(this->errors, this->symbol_table, conditional_expr);
+    if (!_is_type(expr_type, AstTypeId::BOOL)) {
+      add_semantic_error(errors, conditional_expr, ERROR_EXPECTED_BOOL_EXPR,
+                         get_type_id_name(expr_type->type_info->type_id));
+      return false;
+    }
+  }
+
+  const AstBlock *content_block = in_loop_stmnt->content_block;
+  if (!analize_block(content_block)) {
+    // errors have been set inside analize_block so we just return false
+    return false;
+  }
+
+  return true;
+}
+
 inline static bool _analize_const_value(const AstConstValue *in_const_value) {
   switch (in_const_value->type) {
   case ConstValueType::BOOL:

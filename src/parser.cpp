@@ -747,6 +747,10 @@ stmnt_expr:
     lexer.get_back();
     return parse_if_stmnt(lexer);
   }
+  case TokenId::LOOP: {
+    lexer.get_back();
+    return parse_loop_stmnt(lexer);
+  }
   case TokenId::L_CURLY: {
     // TODO(pablo96): parse local block
     return nullptr;

@@ -16,6 +16,7 @@ struct AstUnaryExpr;
 struct AstBinaryExpr;
 struct AstBlock;
 struct AstIfStmnt;
+struct AstLoopStmnt;
 enum class SymbolType;
 
 class SemanticAnalyzer {
@@ -72,6 +73,12 @@ public:
    * - none of its else block has errors
    */
   bool analize_if_stmnt(const AstIfStmnt *in_expr);
+
+  /* Returns true if:
+   * - conditional expression is of boolean type
+   * - block has no errors
+   */
+  bool analize_loop_stmnt(const AstLoopStmnt *in_expr);
 
   /* Returns true if:
    * - all refered variables had been defined
