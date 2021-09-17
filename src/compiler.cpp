@@ -65,7 +65,7 @@ inline bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, Gener
                                             AstSourceCode *const in_source_code) {
   bool has_no_errors = true;
   // first pass
-  for (int32_t i = 0; i < in_source_code->source_code()->children.size(); ++i) {
+  for (s32 i = 0; i < in_source_code->source_code()->children.size(); ++i) {
     AstNode *child = in_source_code->source_code()->children.at(i);
 
     switch (child->node_type) {

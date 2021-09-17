@@ -11,11 +11,6 @@ set(LLAMALANG_SRC
 ast_nodes.hpp
 ast_nodes.cpp
 
-bigfloat.hpp
-
-bigint.hpp
-bigint.cpp
-
 common_defs.hpp
 common_defs.cpp
 
@@ -56,6 +51,9 @@ semantic_error_msgs.hpp
 
 src_code_repository.hpp
 src_code_repository.cpp
+
+string.hpp
+string.cpp
 
 types.hpp
 types.cpp

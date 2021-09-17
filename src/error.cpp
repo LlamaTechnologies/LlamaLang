@@ -1,5 +1,7 @@
 #include "error.hpp"
 
+#include "common_defs.hpp"
+
 static const char *error_type_strings[] = {
   "WARNING_0",
   "WARNING_1",

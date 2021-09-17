@@ -1651,6 +1651,46 @@ TEST(ParserHappyLoopStmntTests, ConstantExprTest) {
   delete loop_stmnt;
 }
 
+TEST(ParserHappyLoopStmntTests, ConstantExprBreakEmptyTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop true {\n"
+                            "\tif true {\n"
+                            "\t\tbreak\n"
+                            "\t}\n"
+                            "}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
+  ASSERT_EQ(loop_stmnt->content_block->statements.size(), 1L);
+
+  const AstConstValue *cond_expr = loop_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  const AstIfStmnt *if_stmnt = loop_stmnt->content_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 1L);
+
+  const AstCtrlStmnt *ctrl_stmnt = if_stmnt->true_block->statements.at(0)->ctrl_stmnt();
+  ASSERT_NE(ctrl_stmnt, nullptr);
+  ASSERT_EQ(ctrl_stmnt->node_type, AstNodeType::AST_CTRL_STMNT);
+  ASSERT_EQ(ctrl_stmnt->ctrl_type, CtrlStmntType::BREAK);
+  ASSERT_EQ(ctrl_stmnt->index, 0L);
+  ASSERT_EQ(ctrl_stmnt->label, nullptr);
+
+  delete loop_stmnt;
+}
+
 //==================================================================================
 //          PARSE FULL PROGRAM
 //==================================================================================

@@ -14,8 +14,8 @@
 struct BigInt {
   size_t digit_count;
   union {
-    uint64_t digit;
-    uint64_t *digits; // Least significant digit first
+    u64 digit;
+    u64 *digits; // Least significant digit first
   } data;
   bool is_negative;
 };
@@ -23,12 +23,12 @@ struct BigInt {
 struct Buf;
 struct BigFloat;
 
-void bigint_init_unsigned(BigInt *dest, uint64_t x);
-void bigint_init_signed(BigInt *dest, int64_t x);
+void bigint_init_unsigned(BigInt *dest, u64 x);
+void bigint_init_signed(BigInt *dest, s64 x);
 void bigint_init_bigint(BigInt *dest, const BigInt *src);
 void bigint_deinit(BigInt *bi);
 
-static inline const uint64_t *bigint_ptr(const BigInt *bigint) {
+static inline const u64 *bigint_ptr(const BigInt *bigint) {
   if (bigint->digit_count == 1) {
     return &bigint->data.digit;
   } else {

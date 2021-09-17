@@ -612,7 +612,7 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsTypeMismatch) {
   function_node->proto = function_proto_node;
   function_node->block = function_block_node;
 
-  // given: call with argument float constant
+  // given: call with argument f32 constant
   AstFnCallExpr *function_call_node = new AstFnCallExpr(0, 0, "");
   function_call_node->fn_name = "my_func";
   function_call_node->fn_ref = nullptr;

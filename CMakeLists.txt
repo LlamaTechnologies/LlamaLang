@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.1)
 # set c++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 # MSVC runtime library flags are selected by an abstraction.
 cmake_policy(SET CMP0091 NEW)
 
@@ -12,6 +11,7 @@ mark_as_advanced(CMAKE_INSTALL_PREFIX)
 set(CMAKE_CONFIGURATION_TYPES Release Debug)
 set(CMAKE_CXX_FLAGS_RELEASE_ASSERTS ${CMAKE_CXX_FLAGS_RELEASE})
 set(CMAKE_SHARED_LINKER_FLAGS_RELEASE_ASSERTS ${CMAKE_SHARED_LINKER_FLAGS_RELEASE})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 
 
 # set the project/solution name

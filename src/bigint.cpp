@@ -13,11 +13,11 @@
 #include <limits>
 
 static void bigint_normalize(BigInt *dest) {
-  const uint64_t *digits = bigint_ptr(dest);
+  const u64 *digits = bigint_ptr(dest);
 
   size_t last_nonzero_digit = SIZE_MAX;
   for (size_t i = 0; i < dest->digit_count; i += 1) {
-    uint64_t digit = digits[i];
+    u64 digit = digits[i];
     if (digit != 0) {
       last_nonzero_digit = i;
     }
@@ -33,7 +33,7 @@ static void bigint_normalize(BigInt *dest) {
   }
 }
 
-void bigint_init_unsigned(BigInt *dest, uint64_t x) {
+void bigint_init_unsigned(BigInt *dest, u64 x) {
   if (x == 0) {
     dest->digit_count = 0;
     dest->is_negative = false;
@@ -44,7 +44,7 @@ void bigint_init_unsigned(BigInt *dest, uint64_t x) {
   dest->is_negative = false;
 }
 
-void bigint_init_signed(BigInt *dest, int64_t x) {
+void bigint_init_signed(BigInt *dest, s64 x) {
   if (x >= 0) {
     return bigint_init_unsigned(dest, x);
   }
@@ -53,7 +53,7 @@ void bigint_init_signed(BigInt *dest, int64_t x) {
   dest->data.digit = ((uint64_t)(-(x + 1))) + 1;
 }
 
-void bigint_init_data(BigInt *dest, const uint64_t *digits, size_t digit_count, bool is_negative) {
+void bigint_init_data(BigInt *dest, const u64 *digits, size_t digit_count, bool is_negative) {
   if (digit_count == 0) {
     return bigint_init_unsigned(dest, 0);
   } else if (digit_count == 1) {
@@ -66,7 +66,7 @@ void bigint_init_data(BigInt *dest, const uint64_t *digits, size_t digit_count, 
 
   dest->digit_count = digit_count;
   dest->is_negative = is_negative;
-  dest->data.digits = (uint64_t *)malloc(digit_count + sizeof(uint64_t));
+  dest->data.digits = (u64 *)malloc(digit_count + sizeof(uint64_t));
   memcpy(dest->data.digits, digits, sizeof(uint64_t) * digit_count);
 
   bigint_normalize(dest);
@@ -83,7 +83,7 @@ void bigint_init_bigint(BigInt *dest, const BigInt *src) {
   }
   dest->is_negative = src->is_negative;
   dest->digit_count = src->digit_count;
-  dest->data.digits = (uint64_t *)malloc(dest->digit_count + sizeof(uint64_t));
+  dest->data.digits = (u64 *)malloc(dest->digit_count + sizeof(uint64_t));
   memcpy(dest->data.digits, src->data.digits, sizeof(uint64_t) * dest->digit_count);
 }
 
@@ -92,7 +92,7 @@ void bigint_deinit(BigInt *bi) {
     free(bi->data.digits);
 }
 
-static uint64_t bigint_as_unsigned(const BigInt *bigint) {
+static u64 bigint_as_unsigned(const BigInt *bigint) {
   assert(!bigint->is_negative);
   if (bigint->digit_count == 0) {
     return 0;
@@ -104,17 +104,17 @@ static uint64_t bigint_as_unsigned(const BigInt *bigint) {
 }
 
 #if defined(_MSC_VER)
-static bool add_u64_overflow(uint64_t op1, uint64_t op2, uint64_t *result) {
+static bool add_u64_overflow(u64 op1, u64 op2, u64 *result) {
   *result = op1 + op2;
   return *result < op1 || *result < op2;
 }
 
-static bool sub_u64_overflow(uint64_t op1, uint64_t op2, uint64_t *result) {
+static bool sub_u64_overflow(u64 op1, u64 op2, u64 *result) {
   *result = op1 - op2;
   return *result > op1;
 }
 
-bool mul_u64_overflow(uint64_t op1, uint64_t op2, uint64_t *result) {
+bool mul_u64_overflow(u64 op1, u64 op2, u64 *result) {
   *result = op1 * op2;
 
   if (op1 == 0 || op2 == 0)
@@ -129,16 +129,16 @@ bool mul_u64_overflow(uint64_t op1, uint64_t op2, uint64_t *result) {
   return false;
 }
 #else
-static bool add_u64_overflow(uint64_t op1, uint64_t op2, uint64_t *result) {
-  return __builtin_uaddll_overflow((unsigned long long)op1, (unsigned long long)op2, (unsigned long long *)result);
+static bool add_u64_overflow(u64 op1, u64 op2, u64 *result) {
+  return __builtin_uaddll_overflow((u32 long)op1, (u32 long)op2, (u32 i32 *)result);
 }
 
-static bool sub_u64_overflow(uint64_t op1, uint64_t op2, uint64_t *result) {
-  return __builtin_usubll_overflow((unsigned long long)op1, (unsigned long long)op2, (unsigned long long *)result);
+static bool sub_u64_overflow(u64 op1, u64 op2, u64 *result) {
+  return __builtin_usubll_overflow((u32 long)op1, (u32 long)op2, (u32 i32 *)result);
 }
 
-bool mul_u64_overflow(uint64_t op1, uint64_t op2, uint64_t *result) {
-  return __builtin_umulll_overflow((unsigned long long)op1, (unsigned long long)op2, (unsigned long long *)result);
+bool mul_u64_overflow(u64 op1, u64 op2, u64 *result) {
+  return __builtin_umulll_overflow((u32 long)op1, (u32 long)op2, (u32 i32 *)result);
 }
 #endif
 
@@ -152,8 +152,8 @@ void bigint_add(BigInt *dest, const BigInt *op1, const BigInt *op2) {
   if (op1->is_negative == op2->is_negative) {
     dest->is_negative = op1->is_negative;
 
-    const uint64_t *op1_digits = bigint_ptr(op1);
-    const uint64_t *op2_digits = bigint_ptr(op2);
+    const u64 *op1_digits = bigint_ptr(op1);
+    const u64 *op2_digits = bigint_ptr(op2);
     bool overflow = add_u64_overflow(op1_digits[0], op2_digits[0], &dest->data.digit);
     if (overflow == 0 && op1->digit_count == 1 && op2->digit_count == 1) {
       dest->digit_count = 1;
@@ -161,24 +161,24 @@ void bigint_add(BigInt *dest, const BigInt *op1, const BigInt *op2) {
       return;
     }
     size_t i = 1;
-    uint64_t first_digit = dest->data.digit;
-    dest->data.digits = (uint64_t *)malloc(sizeof(uint64_t) + std::max(op1->digit_count, op2->digit_count) + 1);
+    u64 first_digit = dest->data.digit;
+    dest->data.digits = (u64 *)malloc(sizeof(uint64_t) + std::max(op1->digit_count, op2->digit_count) + 1);
     dest->data.digits[0] = first_digit;
 
     for (;;) {
       bool found_digit = false;
-      uint64_t x = overflow;
+      u64 x = overflow;
       overflow = 0;
 
       if (i < op1->digit_count) {
         found_digit = true;
-        uint64_t digit = op1_digits[i];
+        u64 digit = op1_digits[i];
         overflow += add_u64_overflow(x, digit, &x);
       }
 
       if (i < op2->digit_count) {
         found_digit = true;
-        uint64_t digit = op2_digits[i];
+        u64 digit = op2_digits[i];
         overflow += add_u64_overflow(x, digit, &x);
       }
 
@@ -221,28 +221,28 @@ void bigint_add(BigInt *dest, const BigInt *op1, const BigInt *op2) {
     dest->is_negative = false;
     break;
   }
-  const uint64_t *bigger_op_digits = bigint_ptr(bigger_op);
-  const uint64_t *smaller_op_digits = bigint_ptr(smaller_op);
-  uint64_t overflow = sub_u64_overflow(bigger_op_digits[0], smaller_op_digits[0], &dest->data.digit);
+  const u64 *bigger_op_digits = bigint_ptr(bigger_op);
+  const u64 *smaller_op_digits = bigint_ptr(smaller_op);
+  u64 overflow = sub_u64_overflow(bigger_op_digits[0], smaller_op_digits[0], &dest->data.digit);
   if (overflow == 0 && bigger_op->digit_count == 1 && smaller_op->digit_count == 1) {
     dest->digit_count = 1;
     bigint_normalize(dest);
     return;
   }
-  uint64_t first_digit = dest->data.digit;
-  dest->data.digits = (uint64_t *)malloc(sizeof(uint64_t) + bigger_op->digit_count);
+  u64 first_digit = dest->data.digit;
+  dest->data.digits = (u64 *)malloc(sizeof(uint64_t) + bigger_op->digit_count);
   dest->data.digits[0] = first_digit;
   size_t i = 1;
 
   for (;;) {
     bool found_digit = false;
-    uint64_t x = bigger_op_digits[i];
-    uint64_t prev_overflow = overflow;
+    u64 x = bigger_op_digits[i];
+    u64 prev_overflow = overflow;
     overflow = 0;
 
     if (i < smaller_op->digit_count) {
       found_digit = true;
-      uint64_t digit = smaller_op_digits[i];
+      u64 digit = smaller_op_digits[i];
       overflow += sub_u64_overflow(x, digit, &x);
     }
     if (sub_u64_overflow(x, prev_overflow, &x)) {
@@ -260,17 +260,17 @@ void bigint_add(BigInt *dest, const BigInt *op1, const BigInt *op2) {
   bigint_normalize(dest);
 }
 
-static void mul_overflow(uint64_t op1, uint64_t op2, uint64_t *lo, uint64_t *hi) {
-  uint64_t u1 = (op1 & 0xffffffff);
-  uint64_t v1 = (op2 & 0xffffffff);
-  uint64_t t = (u1 * v1);
-  uint64_t w3 = (t & 0xffffffff);
-  uint64_t k = (t >> 32);
+static void mul_overflow(u64 op1, u64 op2, u64 *lo, u64 *hi) {
+  u64 u1 = (op1 & 0xffffffff);
+  u64 v1 = (op2 & 0xffffffff);
+  u64 t = (u1 * v1);
+  u64 w3 = (t & 0xffffffff);
+  u64 k = (t >> 32);
 
   op1 >>= 32;
   t = (op1 * v1) + k;
   k = (t & 0xffffffff);
-  uint64_t w1 = (t >> 32);
+  u64 w1 = (t >> 32);
 
   op2 >>= 32;
   t = (u1 * op2) + k;
@@ -280,21 +280,21 @@ static void mul_overflow(uint64_t op1, uint64_t op2, uint64_t *lo, uint64_t *hi)
   *lo = (t << 32) + w3;
 }
 
-static void mul_scalar(BigInt *dest, const BigInt *op, uint64_t scalar) {
+static void mul_scalar(BigInt *dest, const BigInt *op, u64 scalar) {
   bigint_init_unsigned(dest, 0);
 
   BigInt bi_64;
   bigint_init_unsigned(&bi_64, 64);
 
-  const uint64_t *op_digits = bigint_ptr(op);
+  const u64 *op_digits = bigint_ptr(op);
   size_t i = op->digit_count - 1;
 
   for (;;) {
     BigInt shifted;
     bigint_shl(&shifted, dest, &bi_64);
 
-    uint64_t result_scalar;
-    uint64_t carry_scalar;
+    u64 result_scalar;
+    u64 carry_scalar;
     mul_overflow(scalar, op_digits[i], &result_scalar, &carry_scalar);
 
     BigInt result;
@@ -322,10 +322,10 @@ void bigint_mul(BigInt *dest, const BigInt *op1, const BigInt *op2) {
   if (op1->digit_count == 0 || op2->digit_count == 0) {
     return bigint_init_unsigned(dest, 0);
   }
-  const uint64_t *op1_digits = bigint_ptr(op1);
-  const uint64_t *op2_digits = bigint_ptr(op2);
+  const u64 *op1_digits = bigint_ptr(op1);
+  const u64 *op2_digits = bigint_ptr(op2);
 
-  uint64_t carry;
+  u64 carry;
   mul_overflow(op1_digits[0], op2_digits[0], &dest->data.digit, &carry);
   if (carry == 0 && op1->digit_count == 1 && op2->digit_count == 1) {
     dest->is_negative = (op1->is_negative != op2->is_negative);
@@ -376,8 +376,8 @@ void bigint_shl(BigInt *dest, const BigInt *op1, const BigInt *op2) {
     panic("TODO shift left by amount greater than 64 bit integer");
   }
 
-  const uint64_t *op1_digits = bigint_ptr(op1);
-  uint64_t shift_amt = bigint_as_unsigned(op2);
+  const u64 *op1_digits = bigint_ptr(op1);
+  u64 shift_amt = bigint_as_unsigned(op2);
 
   if (op1->digit_count == 1 && shift_amt < 64) {
     dest->data.digit = op1_digits[0] << shift_amt;
@@ -388,14 +388,14 @@ void bigint_shl(BigInt *dest, const BigInt *op1, const BigInt *op2) {
     }
   }
 
-  uint64_t digit_shift_count = shift_amt / 64;
-  uint64_t leftover_shift_count = shift_amt % 64;
+  u64 digit_shift_count = shift_amt / 64;
+  u64 leftover_shift_count = shift_amt % 64;
 
-  dest->data.digits = (uint64_t *)malloc(sizeof(uint64_t) + op1->digit_count + digit_shift_count + 1);
+  dest->data.digits = (u64 *)malloc(sizeof(uint64_t) + op1->digit_count + digit_shift_count + 1);
   dest->digit_count = digit_shift_count;
-  uint64_t carry = 0;
+  u64 carry = 0;
   for (size_t i = 0; i < op1->digit_count; i += 1) {
-    uint64_t digit = op1_digits[i];
+    u64 digit = op1_digits[i];
     dest->data.digits[dest->digit_count] = carry | (digit << leftover_shift_count);
     dest->digit_count += 1;
     if (leftover_shift_count > 0) {
@@ -428,11 +428,11 @@ Cmp bigint_cmp(const BigInt *op1, const BigInt *op2) {
   } else if (op1->digit_count == 0) {
     return CmpEQ;
   }
-  const uint64_t *op1_digits = bigint_ptr(op1);
-  const uint64_t *op2_digits = bigint_ptr(op2);
+  const u64 *op1_digits = bigint_ptr(op1);
+  const u64 *op2_digits = bigint_ptr(op2);
   for (size_t i = op1->digit_count - 1;;) {
-    uint64_t op1_digit = op1_digits[i];
-    uint64_t op2_digit = op2_digits[i];
+    u64 op1_digit = op1_digits[i];
+    u64 op2_digit = op2_digits[i];
 
     if (op1_digit > op2_digit) {
       return op1->is_negative ? CmpLT : CmpGT;

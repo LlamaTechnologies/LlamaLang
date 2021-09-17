@@ -5,11 +5,11 @@ static TypesRepository *repository = nullptr;
 TypesRepository &TypesRepository::get() {
   if (!repository) {
     repository = new TypesRepository();
-    repository->types_id = { { "i8", TypeInfo(AstTypeId::INTEGER, "i8", 8, true) },
-                             { "i16", TypeInfo(AstTypeId::INTEGER, "i16", 16, true) },
-                             { "i32", TypeInfo(AstTypeId::INTEGER, "i32", 32, true) },
-                             { "i64", TypeInfo(AstTypeId::INTEGER, "i64", 64, true) },
-                             { "i128", TypeInfo(AstTypeId::INTEGER, "i128", 128, true) },
+    repository->types_id = { { "s8", TypeInfo(AstTypeId::INTEGER, "s8", 8, true) },
+                             { "s16", TypeInfo(AstTypeId::INTEGER, "s16", 16, true) },
+                             { "s32", TypeInfo(AstTypeId::INTEGER, "s32", 32, true) },
+                             { "s64", TypeInfo(AstTypeId::INTEGER, "s64", 64, true) },
+                             { "s128", TypeInfo(AstTypeId::INTEGER, "S128", 128, true) },
                              { "u8", TypeInfo(AstTypeId::INTEGER, "u8", 8, false) },
                              { "u16", TypeInfo(AstTypeId::INTEGER, "u16", 16, false) },
                              { "u32", TypeInfo(AstTypeId::INTEGER, "u32", 32, false) },

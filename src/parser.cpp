@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <unordered_map>
 
 static bool _is_boolean_expression(const AstNode *in_expr, AstNode *if_stmnt_node);
@@ -23,8 +24,8 @@ static BinaryExprType _get_binary_op(const Token &token) noexcept;
 static UnaryExprType _get_unary_op(const Token &token) noexcept;
 static bool _is_type_start_token(const Token &token) noexcept;
 static bool _is_expr_token(const Token &token) noexcept;
-static bool _is_symbol_start_char(const char _char) noexcept;
-static bool _is_whitespace_char(const char _char) noexcept;
+static bool _is_symbol_start_char(const s8 _char) noexcept;
+static bool _is_whitespace_char(const s8 _char) noexcept;
 /* Returns true if it is a valid directive type */
 static bool _get_directive_type(DirectiveType &, std::string_view in_directive_name);
 
@@ -751,6 +752,11 @@ stmnt_expr:
     lexer.get_back();
     return parse_loop_stmnt(lexer);
   }
+  case TokenId::CONTINUE:
+  case TokenId::BREAK: {
+    lexer.get_back();
+    return parse_ctrl_stmnt(lexer);
+  }
   case TokenId::L_CURLY: {
     // TODO(pablo96): parse local block
     return nullptr;
@@ -911,7 +917,7 @@ AstBinaryExpr *Parser::parse_assign_stmnt(const Lexer &lexer) noexcept {
 /*
  * Parses a return statement
  * returnStmt
- *   | 'ret' expression?
+ *   : 'ret' expression?
  *   ;
  */
 AstUnaryExpr *Parser::parse_ret_stmnt(const Lexer &lexer) noexcept {
@@ -943,6 +949,35 @@ AstUnaryExpr *Parser::parse_ret_stmnt(const Lexer &lexer) noexcept {
   }
 
   return node;
+}
+
+/*
+ * Parses a break or continue statement
+ * ctrlStmnt
+ *   : 'break' (IDENTIFIER | INTEGER)?
+ *   | 'continue' (IDENTIFIER | INTEGER)?
+ */
+AstCtrlStmnt *Parser::parse_ctrl_stmnt(const Lexer &lexer) noexcept {
+  const Token &keyword = lexer.get_next_token();
+  if (!match(&keyword, TokenId::BREAK, TokenId::CONTINUE)) {
+    LL_UNREACHEABLE;
+  }
+
+  AstCtrlStmnt *ctrl_stmnt = new AstCtrlStmnt(keyword.start_line, keyword.start_column, keyword.file_name);
+  ctrl_stmnt->ctrl_type = keyword.id == TokenId::BREAK ? CtrlStmntType::BREAK : CtrlStmntType::CONTINUE;
+
+  const Token &label_index = lexer.get_next_token();
+  if (match(&label_index, TokenId::IDENTIFIER, TokenId::INT_LIT)) {
+    if (label_index.id == TokenId::IDENTIFIER) {
+      ctrl_stmnt->label = std::string(lexer.get_token_value(label_index)).c_str();
+    } else {
+      ctrl_stmnt->index = strtoul(label_index.int_lit.number, nullptr, (int)label_index.int_lit.base);
+    }
+  } else {
+    lexer.get_back();
+  }
+
+  return ctrl_stmnt;
 }
 
 /*
@@ -1210,8 +1245,7 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
 
   const Token &number_token = is_negative ? lexer.get_next_token() : token;
 
-  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE,
-            TokenId::FALSE)) {
+  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE, TokenId::FALSE)) {
     AstConstValue *const_value_node = new AstConstValue(token.start_line, token.start_column, token.file_name);
     switch (number_token.id) {
     case TokenId::INT_LIT: {
@@ -1303,13 +1337,13 @@ static void _parse_msg(std::vector<Error> &in_errors, ERROR_TYPE in_msg_type, co
   va_list ap2;
   va_copy(ap2, ap);
 
-  int len1 = snprintf(nullptr, 0, in_format, ap);
+  s32 len1 = snprintf(nullptr, 0, in_format, ap);
   assert(len1 >= 0);
 
   std::string msg;
   msg.reserve(len1 + 1);
 
-  int len2 = snprintf(msg.data(), msg.capacity(), in_format, ap2);
+  s32 len2 = snprintf(msg.data(), msg.capacity(), in_format, ap2);
   assert(len2 >= 0);
   assert(len2 == len1);
 
@@ -1479,11 +1513,11 @@ bool _is_expr_token(const Token &token) noexcept {
   }
 }
 
-bool _is_symbol_start_char(const char next_char) noexcept {
+bool _is_symbol_start_char(const s8 next_char) noexcept {
   return (next_char >= 'a' && next_char <= 'z') || (next_char >= 'A' && next_char <= 'Z') || next_char == '_';
 }
 
-bool _is_whitespace_char(const char _char) noexcept {
+bool _is_whitespace_char(const s8 _char) noexcept {
   switch (_char) {
   case '\t':
   case '\r':

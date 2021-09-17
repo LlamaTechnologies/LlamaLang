@@ -14,9 +14,9 @@ static llvm::Constant *_getConstantDefaultValue(const AstType *in_type, llvm::Ty
 
 static const char *GetDataLayout() {
 #ifdef LL_VISUALSTUDIO
-  return "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128";
+  return "e-m:w-p270:32:32-p271:32:32-p272:64:64-s64:64-f80:128-n8:16:32:64-S128";
 #else
-  return "e-m:e-i64:64-f80:128-n8:16:32:64-S128";
+  return "e-m:e-s64:64-f80:128-n8:16:32:64-S128";
 #endif
 }
 
@@ -87,7 +87,7 @@ bool LlvmIrGenerator::gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_f
   builder->SetInsertPoint(BB);
 
   // Store params in local variables to avoid problems
-  int i = 0;
+  s32 i = 0;
   auto args = in_function->llvm_value->args();
   auto it = args.begin();
 
@@ -300,14 +300,14 @@ llvm::Value *LlvmIrGenerator::_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt)
   llvm::Function *parent_fn = builder->GetInsertBlock()->getParent();
   llvm::BranchInst *branch_inst = nullptr;
 
-  llvm::BasicBlock *prev_block = llvm::BasicBlock::Create(context, "", parent_fn);
-  builder->CreateBr(prev_block);
+  llvm::BasicBlock *header_block = llvm::BasicBlock::Create(context, "", parent_fn);
+  builder->CreateBr(header_block);
 
-  llvm::BasicBlock *content_block = _gen_block(in_loop_stmnt->content_block, prev_block);
+  llvm::BasicBlock *content_block = _gen_block(in_loop_stmnt->content_block, header_block);
   llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "", parent_fn);
 
   { // prev block with the conditional jump
-    builder->SetInsertPoint(prev_block);
+    builder->SetInsertPoint(header_block);
     llvm::Value *condition = gen_expr(in_loop_stmnt->condition_expr);
     branch_inst = this->builder->CreateCondBr(condition, content_block, next_block);
   }
@@ -469,7 +469,7 @@ llvm::Constant *LlvmIrGenerator::_translate_constant(const AstConstValue *in_con
     return llvm::ConstantFP::get(llvm_ty, in_const->number);
   }
   case ConstValueType::CHAR: {
-    const uint32_t char_val = in_const->unicode_char;
+    const u32 char_val = in_const->unicode_char;
     return llvm::ConstantInt::get(context, llvm::APInt(32, char_val));
   }
   default:

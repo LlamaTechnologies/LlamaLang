@@ -1,8 +1,10 @@
 #pragma once
+#include "common_defs.hpp"
+
 #include <cstdint>
 
 typedef struct {
-  uint64_t v[2];
+  u64 v[2];
 } float128_t;
 
 struct BigFloat {

@@ -151,6 +151,26 @@ TEST(LexerHappyKeywordsTests, KeywordLoopTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+TEST(LexerHappyKeywordsTests, KeywordBreakTest) {
+  std::vector<Error> errors;
+  Lexer lexer("break", "file/directory", "KeywordBreakTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::BREAK);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordContinueTest) {
+  std::vector<Error> errors;
+  Lexer lexer("continue", "file/directory", "KeywordContinueTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::CONTINUE);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
 TEST(LexerHappyKeywordsTests, KeywordTrueTest) {
   std::vector<Error> errors;
   Lexer lexer("true", "file/directory", "KeywordFnTest", errors);
@@ -660,10 +680,10 @@ TEST(LexerHappyFloatTests, FloatCompleteUnderscoresTest) {
 }
 
 //==================================================================================
-//          STRING | CHARS
+//          STRING | i8S
 //==================================================================================
 
-TEST(LexerHappyStringCharTests, EmptyStringTest) {
+TEST(LexerHappyStringi8Tests, EmptyStringTest) {
   std::vector<Error> errors;
   Lexer lexer("\"\"", "file/directory", "EmptyStringTest", errors);
   lexer.tokenize();
@@ -673,7 +693,7 @@ TEST(LexerHappyStringCharTests, EmptyStringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, StringTest) {
+TEST(LexerHappyStringi8Tests, StringTest) {
   std::vector<Error> errors;
   Lexer lexer(" \"Hello world for 1st time!\" ", "file/directory", "StringTest", errors);
   lexer.tokenize();
@@ -683,7 +703,7 @@ TEST(LexerHappyStringCharTests, StringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
+TEST(LexerHappyStringi8Tests, CommentInsideStringTest) {
   std::vector<Error> errors;
   Lexer lexer(" \"Hello world for /*1st*/ time!\" ", "file/directory", "CommentInsideStringTest", errors);
   lexer.tokenize();
@@ -693,9 +713,9 @@ TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
+TEST(LexerHappyStringi8Tests, Escapedi8StringTest) {
   std::vector<Error> errors;
-  Lexer lexer(" \"\'Hello world\\' \\n \\'for 1st time!\'\" ", "file/directory", "EscapedCharStringTest", errors);
+  Lexer lexer(" \"\'Hello world\\' \\n \\'for 1st time!\'\" ", "file/directory", "Escapedi8StringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -703,9 +723,9 @@ TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharTest) {
+TEST(LexerHappyStringi8Tests, Escapedi8Test) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\r\'", "file/directory", "EscapedCharTest", errors);
+  Lexer lexer("\'\\r\'", "file/directory", "Escapedi8Test", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();
@@ -716,9 +736,9 @@ TEST(LexerHappyStringCharTests, EscapedCharTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
+TEST(LexerHappyStringi8Tests, Escapedi8CodeTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\x42\'", "file/directory", "EscapedCharTest", errors);
+  Lexer lexer("\'\\x42\'", "file/directory", "Escapedi8Test", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();
@@ -730,9 +750,9 @@ TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
+TEST(LexerHappyStringi8Tests, Escapedi8UnicodeTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\u{00B6}\'", "file/directory", "EscapedCharUnicodeTest", errors);
+  Lexer lexer("\'\\u{00B6}\'", "file/directory", "Escapedi8UnicodeTest", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();

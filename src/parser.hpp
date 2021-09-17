@@ -22,6 +22,7 @@ struct AstType;
 struct AstBinaryExpr;
 struct AstUnaryExpr;
 struct AstFnCallExpr;
+struct AstCtrlStmnt;
 struct FileInput;
 
 bool match(const Token *token, ...) noexcept;
@@ -64,6 +65,8 @@ public:
   LL_NODISCARD AstBinaryExpr *parse_assign_stmnt(const Lexer &lexer) noexcept;
 
   LL_NODISCARD AstUnaryExpr *parse_ret_stmnt(const Lexer &lexer) noexcept;
+
+  LL_NODISCARD AstCtrlStmnt *parse_ctrl_stmnt(const Lexer &lexer) noexcept;
 
   LL_NODISCARD AstFnCallExpr *parse_function_call(const Lexer &lexer) noexcept;
 

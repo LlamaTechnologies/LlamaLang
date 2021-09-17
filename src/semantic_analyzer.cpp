@@ -555,13 +555,13 @@ void add_semantic_error(std::vector<Error> &errors, const AstNode *in_node, cons
   va_start(ap, in_msg);
   va_copy(ap2, ap);
 
-  int len1 = snprintf(nullptr, 0, in_msg, ap);
+  s32 len1 = snprintf(nullptr, 0, in_msg, ap);
   LL_ASSERT(len1 >= 0);
 
-  const int CAPACITY = len1 + 1;
+  const s32 CAPACITY = len1 + 1;
   char *msg = new char[CAPACITY];
 
-  int len2 = snprintf(msg, CAPACITY, in_msg, ap2);
+  s32 len2 = snprintf(msg, CAPACITY, in_msg, ap2);
   LL_ASSERT(len2 >= 0);
   // assert(len2 == len1);
 
@@ -698,7 +698,7 @@ const AstType *_get_const_value_type(std::vector<Error> &errors, const Table *sy
     return types_repository.get_type_node("f128");
   case ConstValueType::INT:
     if (in_const_value->is_negative)
-      return types_repository.get_type_node("i128");
+      return types_repository.get_type_node("s128");
     return types_repository.get_type_node("u128");
   case ConstValueType::CHAR:
     return types_repository.get_type_node("u32");

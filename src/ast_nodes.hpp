@@ -30,6 +30,7 @@ struct AstLoopStmnt;
 struct AstBlock;
 struct AstSourceCode;
 
+struct AstCtrlStmnt;
 struct AstVarDef;
 struct AstParamDef;
 struct AstSymbol;
@@ -47,6 +48,7 @@ enum class AstNodeType
   AST_FN_DEF,
   AST_FN_PROTO,
   AST_IF_STMNT,
+  AST_CTRL_STMNT,
   AST_LOOP_STMNT,
   AST_BLOCK,
   AST_PARAM_DEF,
@@ -86,6 +88,7 @@ struct AstNode {
   AstFnCallExpr *fn_call() { return (AstFnCallExpr *)this; }     // func_name L_PAREN (expr (, expr)*)? R_PAREN
   AstIfStmnt *if_stmnt() { return (AstIfStmnt *)this; }          // if elif? else
   AstLoopStmnt *loop_stmnt() { return (AstLoopStmnt *)this; }    // loop
+  AstCtrlStmnt *ctrl_stmnt() { return (AstCtrlStmnt *)this; }    // continue | break
 
   const AstSourceCode *source_code() const { return (AstSourceCode *)this; }
   const AstDirective *directive() const { return (AstDirective *)this; }
@@ -102,6 +105,7 @@ struct AstNode {
   const AstFnCallExpr *fn_call() const { return (AstFnCallExpr *)this; }
   const AstIfStmnt *if_stmnt() const { return (AstIfStmnt *)this; }
   const AstLoopStmnt *loop_stmnt() const { return (AstLoopStmnt *)this; }
+  const AstCtrlStmnt *ctrl_stmnt() const { return (AstCtrlStmnt *)this; }
 };
 
 struct AstVarDef : public AstNode {
@@ -131,7 +135,7 @@ struct AstParamDef : public AstVarDef {
 enum class DirectiveType
 {
   LOAD,    // load file (first directive in the file)
-  MAIN,    // set entry point (1 per executable)
+  MAIN,    // set entry poi32 (1 per executable)
   RUN,     // run fn at compile-time
   COMPILE, // symbol is safe for use in compile-time
   FN_TYPE  // check function time at compile time
@@ -186,9 +190,9 @@ struct AstIfStmnt : public AstNode {
 
 struct AstLoopStmnt : public AstNode {
   AstNode *condition_expr = nullptr;
-  AstBlock *prev_block = nullptr;
+  AstBlock *header_block = nullptr;
   AstBlock *content_block = nullptr;
-  AstBlock *post_block = nullptr;
+  AstBlock *footer_block = nullptr;
   bool is_condition_checked = false;
 
   AstLoopStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)
@@ -233,7 +237,7 @@ enum class ConstValueType
 struct AstConstValue : public AstNode {
   union {
     bool boolean;
-    uint32_t unicode_char;
+    u32 unicode_char;
     const char *number = nullptr;
   };
   ConstValueType type = ConstValueType::BOOL;
@@ -324,6 +328,23 @@ struct AstSourceCode : public AstNode {
   virtual ~AstSourceCode();
 };
 
+enum CtrlStmntType
+{
+  BREAK,
+  CONTINUE
+};
+
+struct AstCtrlStmnt : public AstNode {
+  AstNode *loop_ref = nullptr;
+  const char *label = nullptr;
+  size_t index = 0;
+  CtrlStmntType ctrl_type;
+
+  AstCtrlStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)
+      : AstNode(AstNodeType::AST_SOURCE_CODE, in_line, in_column, in_file_name) {}
+  virtual ~AstCtrlStmnt();
+};
+
 /**
  * IMPORTANT: DO NOT CHANGE ORDER OF LABELS!
  */
@@ -345,14 +366,13 @@ const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcep
 struct TypeInfo {
   std::string_view name;
   LLVMTypeRef llvm_type;
-  uint32_t bit_size;
+  u32 bit_size;
   AstTypeId type_id;
   bool is_signed;
 
   TypeInfo() : name(""), llvm_type(nullptr), bit_size(0), type_id(AstTypeId::VOID), is_signed(false) {}
 
-  TypeInfo(const AstTypeId in_type_id, const std::string_view in_name, const uint32_t in_bit_size,
-           const bool in_is_signed)
+  TypeInfo(const AstTypeId in_type_id, const std::string_view in_name, const u32 in_bit_size, const bool in_is_signed)
       : name(in_name), llvm_type(nullptr), bit_size(in_bit_size), type_id(in_type_id), is_signed(in_is_signed) {}
 
   virtual ~TypeInfo();

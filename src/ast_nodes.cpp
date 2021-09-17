@@ -70,6 +70,13 @@ AstFnDef::~AstFnDef() {
   }
 }
 
+AstCtrlStmnt::~AstCtrlStmnt() {
+  // loop ref is owned by parser
+  if (this->label) {
+    delete[] label;
+  }
+}
+
 AstFnProto::~AstFnProto() {
   if (!params.empty()) {
     for (AstParamDef *param : params) {
@@ -106,9 +113,9 @@ AstLoopStmnt::~AstLoopStmnt() {
     condition_expr = nullptr;
   }
 
-  if (prev_block) {
-    delete prev_block;
-    prev_block = nullptr;
+  if (header_block) {
+    delete header_block;
+    header_block = nullptr;
   }
 
   if (content_block) {
@@ -116,9 +123,9 @@ AstLoopStmnt::~AstLoopStmnt() {
     content_block = nullptr;
   }
 
-  if (post_block) {
-    delete post_block;
-    post_block = nullptr;
+  if (footer_block) {
+    delete footer_block;
+    footer_block = nullptr;
   }
 }
 

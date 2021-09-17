@@ -22,9 +22,9 @@ TEST(LexerSadIdentifierTests, IdentifierNumPrefixTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerSadIdentifierTests, IdentifierInvalidCharPrefixTest) {
+TEST(LexerSadIdentifierTests, IdentifierInvalidi8PrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("$identifier", "file/directory", "InvalidCharPrefixTest", errors);
+  Lexer lexer("$identifier", "file/directory", "Invalidi8PrefixTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -156,9 +156,9 @@ TEST(LexerHappyIntegerTests, IntegerContiguousUnderscoreSeparatorTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyIntegerTests, IntegerUnexpectedCharTest) {
+TEST(LexerHappyIntegerTests, IntegerUnexpectedi8Test) {
   std::vector<Error> errors;
-  Lexer lexer("54$15", "file/directory", "UnexpectedCharTest", errors);
+  Lexer lexer("54$15", "file/directory", "Unexpectedi8Test", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -192,13 +192,13 @@ TEST(LexerSadIntegerTests, IntegerSignSpecInvalidTypeSpecTest) {
 //          FLOAT LIT
 //==================================================================================
 
-// TODO(pablo96): float literal parsing
+// TODO(pablo96): f32 literal parsing
 
 //==================================================================================
-//          STRING | CHARS
+//          STRING | i8S
 //==================================================================================
 
-TEST(LexerSadStringCharTests, EmptyCharTest) {
+TEST(LexerSadStringi8Tests, Emptyi8Test) {
   std::vector<Error> errors;
   Lexer lexer("\'\'", "file/directory", "EmptyStringTest", errors);
   lexer.tokenize();
@@ -208,7 +208,7 @@ TEST(LexerSadStringCharTests, EmptyCharTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerSadStringCharTests, MultilineStringTest) {
+TEST(LexerSadStringi8Tests, MultilineStringTest) {
   std::vector<Error> errors;
   Lexer lexer(" \"Hello world for...\n1st time!\" ", "file/directory", "MultilineStringTest", errors);
   lexer.tokenize();
