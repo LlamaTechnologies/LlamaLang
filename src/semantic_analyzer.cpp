@@ -425,7 +425,7 @@ inline bool SemanticAnalyzer::_analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_st
 
   // check for parent is not loop
   if (in_ctrl_stmnt->parent->node_type == AstNodeType::AST_LOOP_STMNT) {
-    // TODO(pablo96): report error
+    add_semantic_error(this->errors, in_ctrl_stmnt, ERROR_CTRL_STMNT_INVALID_LOCATION, "direct loop");
     return false;
   }
 
@@ -434,16 +434,13 @@ inline bool SemanticAnalyzer::_analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_st
   while (node->node_type != AstNodeType::AST_LOOP_STMNT) {
     // check for parent is not fn
     if (in_ctrl_stmnt->parent->node_type == AstNodeType::AST_FN_DEF) {
-      // TODO(pablo96): report error
+      add_semantic_error(this->errors, in_ctrl_stmnt, ERROR_CTRL_STMNT_INVALID_LOCATION, "no outer loop");
       return false;
     }
 
     node = node->parent;
 
-    if (node == nullptr) {
-      // TODO(pablo96): report error
-      return false;
-    }
+    LL_ASSERT(node != nullptr);
   }
 
   in_ctrl_stmnt->loop_ref = node;
