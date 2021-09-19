@@ -16,7 +16,7 @@ TEST(SemanticTypes, DistinctTypes) {
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
   auto node_type_0 = types_repository.get_type_node("bool");
-  auto node_type_1 = types_repository.get_type_node("i32");
+  auto node_type_1 = types_repository.get_type_node("s32");
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
@@ -28,7 +28,7 @@ TEST(SemanticTypes, PointerDistinctTypes) {
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
-  AstType *node_child_type_0 = types_repository.get_type_node("i32");
+  AstType *node_child_type_0 = types_repository.get_type_node("s32");
   AstType *node_child_type_1 = types_repository.get_type_node("f32");
 
   AstVarDef *node_expr = new AstVarDef(0, 0, "");
@@ -55,7 +55,7 @@ TEST(SemanticTypes, ArrayDistinctTypes) {
 
   AstVarDef *node_expr = new AstVarDef(0, 0, "");
 
-  AstType *node_child_type_0 = types_repository.get_type_node("i32");
+  AstType *node_child_type_0 = types_repository.get_type_node("s32");
   AstType *node_child_type_1 = types_repository.get_type_node("f32");
 
   AstType *node_type_0 = types_repository.get_type_node("array");
@@ -81,7 +81,7 @@ TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -308,7 +308,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -435,7 +435,7 @@ TEST(SemanticFunctions, FunctionNoReqRet) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -455,7 +455,7 @@ TEST(SemanticFunctions, FunctionNoReqRet) {
   binary_epxr_node->left_expr = symbol_node;
   binary_epxr_node->right_expr = const_value_node;
 
-  // given: function proto -> fn my_func() i32
+  // given: function proto -> fn my_func() s32
   AstFnProto *function_proto_node = new AstFnProto(0, 0, "");
   function_proto_node->name = "my_func";
   function_proto_node->return_type = i32_type_node;
@@ -586,19 +586,19 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsTypeMismatch) {
 
   // given: types
   AstType *void_type_node = types_repository.get_type_node("void");
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   // given: arg -> constant integer
   AstConstValue *const_value_node = new AstConstValue(0, 0, "");
   const_value_node->type = ConstValueType::FLOAT;
 
-  // given: param -> param1 i32
+  // given: param -> param1 s32
   AstParamDef *param_node = new AstParamDef(0, 0, "");
   param_node->name = "param1";
   param_node->type = i32_type_node;
   param_node->initializer = nullptr;
 
-  // given: function proto -> fn my_func(param1 i32) void
+  // given: function proto -> fn my_func(param1 s32) void
   AstFnProto *function_proto_node = new AstFnProto(0, 0, "");
   function_proto_node->name = "my_func";
   function_proto_node->return_type = void_type_node;

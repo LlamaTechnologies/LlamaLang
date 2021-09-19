@@ -1,6 +1,4 @@
 #pragma once
-#include "bigfloat.hpp"
-#include "bigint.hpp"
 #include "common_defs.hpp"
 
 #include <assert.h>
@@ -335,13 +333,13 @@ enum CtrlStmntType
 };
 
 struct AstCtrlStmnt : public AstNode {
-  AstNode *loop_ref = nullptr;
+  mutable AstNode *loop_ref = nullptr;
   const char *label = nullptr;
   size_t index = 0;
   CtrlStmntType ctrl_type;
 
   AstCtrlStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)
-      : AstNode(AstNodeType::AST_SOURCE_CODE, in_line, in_column, in_file_name) {}
+      : AstNode(AstNodeType::AST_CTRL_STMNT, in_line, in_column, in_file_name) {}
   virtual ~AstCtrlStmnt();
 };
 

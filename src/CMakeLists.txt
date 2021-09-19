@@ -52,9 +52,6 @@ semantic_error_msgs.hpp
 src_code_repository.hpp
 src_code_repository.cpp
 
-string.hpp
-string.cpp
-
 types.hpp
 types.cpp
 )

@@ -311,7 +311,7 @@ inline bool SemanticAnalyzer::_analize_call_expr(const AstFnCallExpr *in_fn_call
       if (!analize_expr(arg))
         continue;
 
-      _set_type_info(arg, TypesRepository::get().get_type_node("i32"));
+      _set_type_info(arg, TypesRepository::get().get_type_node("s32"));
     }
     return true;
   }
@@ -419,6 +419,38 @@ inline bool SemanticAnalyzer::_analize_binary_expr(const AstBinaryExpr *in_binar
   return true;
 }
 
+inline bool SemanticAnalyzer::_analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt) {
+  LL_ASSERT(in_ctrl_stmnt->parent != nullptr);
+  LL_ASSERT(in_ctrl_stmnt->node_type == AstNodeType::AST_CTRL_STMNT);
+
+  // check for parent is not loop
+  if (in_ctrl_stmnt->parent->node_type == AstNodeType::AST_LOOP_STMNT) {
+    // TODO(pablo96): report error
+    return false;
+  }
+
+  // check for any grandparent to be a loop
+  AstNode *node = in_ctrl_stmnt->parent;
+  while (node->node_type != AstNodeType::AST_LOOP_STMNT) {
+    // check for parent is not fn
+    if (in_ctrl_stmnt->parent->node_type == AstNodeType::AST_FN_DEF) {
+      // TODO(pablo96): report error
+      return false;
+    }
+
+    node = node->parent;
+
+    if (node == nullptr) {
+      // TODO(pablo96): report error
+      return false;
+    }
+  }
+
+  in_ctrl_stmnt->loop_ref = node;
+
+  return true;
+}
+
 bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
   switch (in_expr->node_type) {
   case AstNodeType::AST_BINARY_EXPR:
@@ -435,6 +467,8 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
     return analize_if_stmnt(in_expr->if_stmnt());
   case AstNodeType::AST_LOOP_STMNT:
     return analize_loop_stmnt(in_expr->loop_stmnt());
+  case AstNodeType::AST_CTRL_STMNT:
+    return _analize_ctrl_stmnt(in_expr->ctrl_stmnt());
   default:
     LL_UNREACHEABLE;
   }

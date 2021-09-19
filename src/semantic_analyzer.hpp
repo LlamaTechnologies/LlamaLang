@@ -17,6 +17,7 @@ struct AstBinaryExpr;
 struct AstBlock;
 struct AstIfStmnt;
 struct AstLoopStmnt;
+struct AstCtrlStmnt;
 enum class SymbolType;
 
 class SemanticAnalyzer {
@@ -92,6 +93,7 @@ private:
   inline bool _analize_call_expr(const AstFnCallExpr *in_fn_call);
   inline bool _analize_unary_expr(const AstUnaryExpr *in_unary_expr);
   inline bool _analize_binary_expr(const AstBinaryExpr *in_binary_expr);
+  inline bool _analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt);
 };
 
 /* Returns true if:

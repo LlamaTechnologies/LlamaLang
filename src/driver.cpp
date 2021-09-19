@@ -233,7 +233,7 @@ void handle_error() {
   }
 }
 
-i32 run_process(const std::string &in_program_path, std::string &in_program_args) {
+s32 run_process(const std::string &in_program_path, std::string &in_program_args) {
   PROCESS_INFORMATION process_info = {};
   STARTUPINFOA start_info = {};
   start_info.cb = sizeof(STARTUPINFOA);

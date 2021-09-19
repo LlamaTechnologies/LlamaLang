@@ -472,6 +472,7 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
     return nullptr;
   }
 
+  true_block_node->parent = if_stmnt_node;
   if_stmnt_node->true_block = true_block_node;
 
   // PARSE ELIFs
@@ -515,6 +516,7 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
       return nullptr;
     }
 
+    elif_block_node->parent = elif_stmnt;
     elif_stmnt->true_block = elif_block_node;
 
     // ELIF is an IF stmnt in a ELSE block
@@ -549,6 +551,7 @@ AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
   }
 
   LL_ASSERT(prev_if_stmnt->false_block == nullptr);
+  false_block_node->parent = prev_if_stmnt;
   prev_if_stmnt->false_block = false_block_node;
   return if_stmnt_node;
 }
@@ -635,6 +638,7 @@ AstLoopStmnt *Parser::parse_whileloop_stmnt(const Lexer &lexer, const Token &loo
     return nullptr;
   }
 
+  content_block_node->parent = loop_stmnt;
   loop_stmnt->content_block = content_block_node;
 
   return loop_stmnt;
@@ -1245,7 +1249,8 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
 
   const Token &number_token = is_negative ? lexer.get_next_token() : token;
 
-  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE, TokenId::FALSE)) {
+  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE,
+            TokenId::FALSE)) {
     AstConstValue *const_value_node = new AstConstValue(token.start_line, token.start_column, token.file_name);
     switch (number_token.id) {
     case TokenId::INT_LIT: {
