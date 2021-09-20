@@ -297,68 +297,117 @@ llvm::Value *LlvmIrGenerator::gen_fn_call_expr(const AstFnCallExpr *in_call_expr
 }
 
 llvm::Value *LlvmIrGenerator::_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt) {
+  llvm::BasicBlock *parent_block = builder->GetInsertBlock();
   llvm::Function *parent_fn = builder->GetInsertBlock()->getParent();
   llvm::BranchInst *branch_inst = nullptr;
 
-  llvm::BasicBlock *header_block = llvm::BasicBlock::Create(context, "", parent_fn);
+  llvm::BasicBlock *header_block = llvm::BasicBlock::Create(context, "loop_header", parent_fn);
+  llvm::BasicBlock *content_block = llvm::BasicBlock::Create(context, "loop_content", parent_fn);
+  llvm::BasicBlock *footer_block = llvm::BasicBlock::Create(context, "loop_footer", parent_fn);
+  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "loop_after", parent_fn);
+
   builder->CreateBr(header_block);
 
-  llvm::BasicBlock *content_block = _gen_block(in_loop_stmnt->content_block, header_block);
-  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "", parent_fn);
+  { // footer block
+    builder->SetInsertPoint(footer_block);
 
-  { // prev block with the conditional jump
+    if (in_loop_stmnt->footer_block == nullptr) {
+      in_loop_stmnt->footer_block = new AstBlock(0, 0, in_loop_stmnt->file_name);
+      in_loop_stmnt->footer_block->llvm_value = footer_block;
+    } else {
+      in_loop_stmnt->footer_block->llvm_value = footer_block;
+      _gen_stmnts(in_loop_stmnt->footer_block->statements);
+    }
+
+    builder->CreateBr(next_block);
+    builder->SetInsertPoint(parent_block);
+  }
+
+  if (in_loop_stmnt->header_block == nullptr) {
+    in_loop_stmnt->header_block = new AstBlock(0, 0, in_loop_stmnt->file_name);
+    in_loop_stmnt->header_block->llvm_value = header_block;
+  } else {
+    in_loop_stmnt->header_block->llvm_value = header_block;
+    builder->SetInsertPoint(header_block);
+    _gen_stmnts(in_loop_stmnt->header_block->statements);
+  }
+
+  { // content block
+    in_loop_stmnt->content_block->llvm_value = content_block;
+    builder->SetInsertPoint(content_block);
+    _gen_stmnts(in_loop_stmnt->content_block->statements);
+    builder->CreateBr(header_block);
+    builder->SetInsertPoint(parent_block);
+  }
+
+  { // header block
     builder->SetInsertPoint(header_block);
     llvm::Value *condition = gen_expr(in_loop_stmnt->condition_expr);
-    branch_inst = this->builder->CreateCondBr(condition, content_block, next_block);
+    branch_inst = this->builder->CreateCondBr(condition, content_block, footer_block);
   }
 
   builder->SetInsertPoint(next_block);
   return branch_inst;
+}
+
+llvm::Value *LlvmIrGenerator::_gen_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt) {
+  LL_ASSERT(in_ctrl_stmnt->loop_ref->header_block->llvm_value != nullptr);
+  LL_ASSERT(in_ctrl_stmnt->loop_ref->content_block->llvm_value != nullptr);
+  LL_ASSERT(in_ctrl_stmnt->loop_ref->footer_block->llvm_value != nullptr);
+
+  if (in_ctrl_stmnt->ctrl_type == CtrlStmntType::BREAK) {
+    return builder->CreateBr(in_ctrl_stmnt->loop_ref->footer_block->llvm_value);
+  }
+
+  if (in_ctrl_stmnt->ctrl_type == CtrlStmntType::CONTINUE) {
+    return builder->CreateBr(in_ctrl_stmnt->loop_ref->header_block->llvm_value);
+  }
+
+  LL_UNREACHEABLE;
 }
 
 llvm::Value *LlvmIrGenerator::_gen_if_stmnt(const AstIfStmnt *in_if_stmnt) {
   llvm::Function *parent_fn = builder->GetInsertBlock()->getParent();
-  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "", parent_fn);
+  llvm::BasicBlock *parent_block = builder->GetInsertBlock();
+  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "after_if", parent_fn);
+  llvm::BasicBlock *true_block = llvm::BasicBlock::Create(context, "true_block", parent_fn);
+  llvm::BasicBlock *false_block = llvm::BasicBlock::Create(context, "false_block", parent_fn);
 
   llvm::Value *condition = gen_expr(in_if_stmnt->condition_expr);
-  llvm::BasicBlock *true_block = _gen_block(in_if_stmnt->true_block, next_block);
-  llvm::BasicBlock *false_block = nullptr;
+  llvm::BranchInst *branch_inst = this->builder->CreateCondBr(condition, true_block, false_block);
 
-  if (in_if_stmnt->false_block) {
-    false_block = _gen_block(in_if_stmnt->false_block, next_block);
-  } else {
-    false_block = next_block;
+  { // true block
+    builder->SetInsertPoint(true_block);
+
+    if (!_gen_stmnts(in_if_stmnt->true_block->statements))
+      builder->CreateBr(next_block);
   }
 
-  llvm::BranchInst *branch_inst = this->builder->CreateCondBr(condition, true_block, false_block);
+  { // false block
+    builder->SetInsertPoint(false_block);
+
+    if (in_if_stmnt->false_block) {
+      if (!_gen_stmnts(in_if_stmnt->false_block->statements))
+        builder->CreateBr(next_block);
+    } else
+      builder->CreateBr(next_block);
+  }
+
   builder->SetInsertPoint(next_block);
   return branch_inst;
 }
 
-llvm::BasicBlock *LlvmIrGenerator::_gen_block(const AstBlock *in_block, llvm::BasicBlock *in_next_block) {
-  llvm::BasicBlock *parent_block = builder->GetInsertBlock();
-  llvm::Function *parent_fn = parent_block->getParent();
-  llvm::BasicBlock *BB = llvm::BasicBlock::Create(context, "", parent_fn);
-  builder->SetInsertPoint(BB);
-
-  _gen_stmnts(in_block->statements);
-
-  if (parent_block != in_next_block) {
-    builder->CreateBr(in_next_block);
-  }
-
-  builder->SetInsertPoint(parent_block);
-  return BB;
-}
-
-void LlvmIrGenerator::_gen_stmnts(const std::vector<AstNode *> &in_stmnts) {
+bool LlvmIrGenerator::_gen_stmnts(const std::vector<AstNode *> &in_stmnts) {
+  bool ends_with_terminator = false;
   // Genereate body and finish the function with the return value
   for (const AstNode *stmnt : in_stmnts) {
+    ends_with_terminator = false;
     switch (stmnt->node_type) {
     case AstNodeType::AST_VAR_DEF:
       gen_var_def(stmnt->var_def(), false);
       break;
     case AstNodeType::AST_UNARY_EXPR:
+      ends_with_terminator = stmnt->unary_expr()->op == UnaryExprType::RET;
       gen_unary_expr(stmnt->unary_expr());
       break;
     case AstNodeType::AST_BINARY_EXPR:
@@ -373,6 +422,10 @@ void LlvmIrGenerator::_gen_stmnts(const std::vector<AstNode *> &in_stmnts) {
     case AstNodeType::AST_LOOP_STMNT:
       _gen_loop_stmnt(stmnt->loop_stmnt());
       break;
+    case AstNodeType::AST_CTRL_STMNT:
+      _gen_ctrl_stmnt(stmnt->ctrl_stmnt());
+      ends_with_terminator = true;
+      break;
     default:
       // ignore stmnt:
       ///// const_value;
@@ -380,6 +433,8 @@ void LlvmIrGenerator::_gen_stmnts(const std::vector<AstNode *> &in_stmnts) {
       break;
     }
   }
+
+  return ends_with_terminator;
 }
 
 void LlvmIrGenerator::flush() {

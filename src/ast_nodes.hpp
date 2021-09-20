@@ -12,6 +12,7 @@ class Lexer;
 namespace llvm {
 class Function;
 class Value;
+class BasicBlock;
 } // namespace llvm
 
 typedef struct LLVMOpaqueType *LLVMTypeRef;
@@ -188,9 +189,9 @@ struct AstIfStmnt : public AstNode {
 
 struct AstLoopStmnt : public AstNode {
   AstNode *condition_expr = nullptr;
-  AstBlock *header_block = nullptr;
+  mutable AstBlock *header_block = nullptr;
   AstBlock *content_block = nullptr;
-  AstBlock *footer_block = nullptr;
+  mutable AstBlock *footer_block = nullptr;
   bool is_condition_checked = false;
 
   AstLoopStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)
@@ -201,6 +202,7 @@ struct AstLoopStmnt : public AstNode {
 
 struct AstBlock : public AstNode {
   std::vector<AstNode *> statements;
+  mutable llvm::BasicBlock *llvm_value;
 
   AstBlock(size_t in_line, size_t in_column, std::string_view in_file_name)
       : AstNode(AstNodeType::AST_BLOCK, in_line, in_column, in_file_name), statements(std::vector<AstNode *>()) {}
@@ -333,7 +335,7 @@ enum CtrlStmntType
 };
 
 struct AstCtrlStmnt : public AstNode {
-  mutable AstNode *loop_ref = nullptr;
+  mutable AstLoopStmnt *loop_ref = nullptr;
   const char *label = nullptr;
   size_t index = 0;
   CtrlStmntType ctrl_type;

@@ -443,7 +443,7 @@ inline bool SemanticAnalyzer::_analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_st
     LL_ASSERT(node != nullptr);
   }
 
-  in_ctrl_stmnt->loop_ref = node;
+  in_ctrl_stmnt->loop_ref = node->loop_stmnt();
 
   return true;
 }
