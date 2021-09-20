@@ -189,9 +189,11 @@ struct AstIfStmnt : public AstNode {
 
 struct AstLoopStmnt : public AstNode {
   AstNode *condition_expr = nullptr;
-  mutable AstBlock *header_block = nullptr;
+  AstBlock *initializer_block = nullptr;
+  AstBlock *header_block = nullptr;
   AstBlock *content_block = nullptr;
-  mutable AstBlock *footer_block = nullptr;
+  AstBlock *footer_block = nullptr;
+  mutable llvm::BasicBlock *next_block = nullptr;
   bool is_condition_checked = false;
 
   AstLoopStmnt(size_t in_line, size_t in_column, std::string_view in_file_name)
@@ -302,7 +304,8 @@ enum class UnaryExprType
   NEG,     // -   primaryExpr
   NOT,     // !   primaryExpr
   BIT_INV, // ~   primaryExpr
-  RET      // ret Expr
+  RET,     // ret Expr
+  JMP      // jmp block NOTE: this is used internally
 };
 
 const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept;

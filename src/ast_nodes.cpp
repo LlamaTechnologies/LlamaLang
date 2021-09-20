@@ -108,6 +108,11 @@ AstIfStmnt::~AstIfStmnt() {
 }
 
 AstLoopStmnt::~AstLoopStmnt() {
+  if (initializer_block) {
+    delete initializer_block;
+    initializer_block = nullptr;
+  }
+
   if (condition_expr) {
     delete condition_expr;
     condition_expr = nullptr;

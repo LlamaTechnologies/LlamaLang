@@ -615,13 +615,13 @@ AstLoopStmnt *Parser::parse_whileloop_stmnt(const Lexer &lexer, const Token &loo
   AstNode *conditional_expr = parse_expr(lexer);
 
   AstLoopStmnt *loop_stmnt = new AstLoopStmnt(loop_token.start_line, loop_token.start_column, loop_token.file_name);
+  loop_stmnt->condition_expr = conditional_expr;
+  conditional_expr->parent = loop_stmnt;
 
   if (!_is_boolean_expression(conditional_expr, loop_stmnt)) {
     _parse_error(errors, loop_token, ERROR_BRANCH_EXPR_NOT_BOOL);
     // NOTE(pablo96): we dont break here since we want to parse as much as we can
   }
-
-  loop_stmnt->condition_expr = conditional_expr;
 
   const Token &true_lcurly_token = lexer.get_next_token();
   if (true_lcurly_token.id != TokenId::L_CURLY) {
@@ -641,10 +641,118 @@ AstLoopStmnt *Parser::parse_whileloop_stmnt(const Lexer &lexer, const Token &loo
   content_block_node->parent = loop_stmnt;
   loop_stmnt->content_block = content_block_node;
 
+  AstBlock *header_block = new AstBlock(conditional_expr->line, conditional_expr->column, conditional_expr->file_name);
+  header_block->parent = loop_stmnt;
+  loop_stmnt->header_block = header_block;
+
   return loop_stmnt;
 }
 
-AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept { return nullptr; }
+AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept {
+  AstLoopStmnt *loop_stmnt = new AstLoopStmnt(loop_token.start_line, loop_token.start_column, loop_token.file_name);
+
+  AstBinaryExpr *it_initializer = parse_assign_stmnt(lexer);
+  if (it_initializer == nullptr) {
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  { // init block
+    AstBlock *init_block = new AstBlock(it_initializer->line, it_initializer->column, it_initializer->file_name);
+    init_block->parent = loop_stmnt;
+    loop_stmnt->initializer_block = init_block;
+
+    init_block->statements.push_back(it_initializer);
+  }
+
+  const Token &colon = lexer.get_next_token();
+  if (colon.id != TokenId::COLON) {
+    std::string value = std::string(lexer.get_token_value(colon));
+    _parse_error(this->errors, colon, ERROR_EXPECTED_COLON_LOOP, value.c_str());
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  AstNode *end_value = parse_primary_expr(lexer);
+  if (end_value == nullptr) {
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  AstNode *incr_expr = nullptr;
+  const Token &semi_colon = lexer.get_next_token();
+  if (semi_colon.id == TokenId::SEMI) {
+    AstNode *_increment_amount = parse_primary_expr(lexer);
+    AstBinaryExpr *_add_expr = new AstBinaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+    _add_expr->bin_op = BinaryExprType::ADD;
+    _add_expr->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
+    _add_expr->left_expr->parent = _add_expr;
+    _add_expr->right_expr = _increment_amount;
+    _add_expr->right_expr->parent = _add_expr;
+    incr_expr = _add_expr;
+  } else {
+    lexer.get_back();
+  }
+
+  const Token &true_lcurly_token = lexer.get_next_token();
+  if (true_lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty loop
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return loop_stmnt;
+  }
+
+  lexer.get_back();
+  AstBlock *content_block_node = parse_block(lexer);
+  if (content_block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    delete loop_stmnt;
+    return nullptr;
+  }
+  loop_stmnt->content_block = content_block_node;
+  content_block_node->parent = loop_stmnt;
+
+  // conditional expr
+  AstBinaryExpr *conditional_expr =
+    new AstBinaryExpr(it_initializer->line, it_initializer->column, it_initializer->file_name);
+  loop_stmnt->condition_expr = conditional_expr;
+  conditional_expr->parent = loop_stmnt;
+
+  conditional_expr->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
+  conditional_expr->left_expr->parent = conditional_expr;
+
+  conditional_expr->bin_op = BinaryExprType::LESS;
+
+  conditional_expr->right_expr = end_value;
+  end_value->parent = conditional_expr;
+
+  loop_stmnt->is_condition_checked = true;
+
+  { // header
+    AstBlock *header_block =
+      new AstBlock(conditional_expr->line, conditional_expr->column, conditional_expr->file_name);
+    header_block->parent = loop_stmnt;
+    loop_stmnt->header_block = header_block;
+  }
+
+  { // footer
+    AstBlock *footer_block = new AstBlock(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+    footer_block->parent = loop_stmnt;
+    loop_stmnt->footer_block = footer_block;
+
+    if (incr_expr == nullptr) {
+      AstUnaryExpr *incr_1 = new AstUnaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+      incr_1->op = UnaryExprType::INC;
+      incr_1->expr = new AstSymbol(*it_initializer->left_expr->symbol());
+      incr_1->expr->parent = incr_1;
+      incr_expr = incr_1;
+    }
+
+    incr_expr->parent = footer_block;
+    footer_block->statements.push_back(incr_expr);
+  }
+
+  return loop_stmnt;
+}
 
 AstLoopStmnt *Parser::parse_eachloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept { return nullptr; }
 

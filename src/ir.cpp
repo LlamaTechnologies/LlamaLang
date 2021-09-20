@@ -303,47 +303,46 @@ llvm::Value *LlvmIrGenerator::_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt)
 
   llvm::BasicBlock *header_block = llvm::BasicBlock::Create(context, "loop_header", parent_fn);
   llvm::BasicBlock *content_block = llvm::BasicBlock::Create(context, "loop_content", parent_fn);
-  llvm::BasicBlock *footer_block = llvm::BasicBlock::Create(context, "loop_footer", parent_fn);
-  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(context, "loop_after", parent_fn);
+  llvm::BasicBlock *footer_block = nullptr;
+  llvm::BasicBlock *next_block = in_loop_stmnt->next_block = llvm::BasicBlock::Create(context, "loop_after", parent_fn);
+
+  if (in_loop_stmnt->initializer_block != nullptr) {
+    _gen_stmnts(in_loop_stmnt->initializer_block->statements);
+  }
 
   builder->CreateBr(header_block);
 
-  { // footer block
-    builder->SetInsertPoint(footer_block);
-
-    if (in_loop_stmnt->footer_block == nullptr) {
-      in_loop_stmnt->footer_block = new AstBlock(0, 0, in_loop_stmnt->file_name);
-      in_loop_stmnt->footer_block->llvm_value = footer_block;
-    } else {
-      in_loop_stmnt->footer_block->llvm_value = footer_block;
-      _gen_stmnts(in_loop_stmnt->footer_block->statements);
-    }
-
-    builder->CreateBr(next_block);
-    builder->SetInsertPoint(parent_block);
-  }
-
-  if (in_loop_stmnt->header_block == nullptr) {
-    in_loop_stmnt->header_block = new AstBlock(0, 0, in_loop_stmnt->file_name);
-    in_loop_stmnt->header_block->llvm_value = header_block;
-  } else {
+  { // header block
     in_loop_stmnt->header_block->llvm_value = header_block;
     builder->SetInsertPoint(header_block);
     _gen_stmnts(in_loop_stmnt->header_block->statements);
+    llvm::Value *condition = gen_expr(in_loop_stmnt->condition_expr);
+    branch_inst = this->builder->CreateCondBr(condition, content_block, next_block);
+  }
+
+  bool has_footer = in_loop_stmnt->footer_block != nullptr;
+  bool jmp_to_footer = has_footer;
+
+  if (has_footer) { // footer block
+    footer_block = llvm::BasicBlock::Create(context, "loop_footer", parent_fn);
+    builder->SetInsertPoint(footer_block);
+
+    in_loop_stmnt->footer_block->llvm_value = footer_block;
+
+    _gen_stmnts(in_loop_stmnt->footer_block->statements);
+
+    builder->CreateBr(header_block);
   }
 
   { // content block
     in_loop_stmnt->content_block->llvm_value = content_block;
     builder->SetInsertPoint(content_block);
     _gen_stmnts(in_loop_stmnt->content_block->statements);
-    builder->CreateBr(header_block);
-    builder->SetInsertPoint(parent_block);
-  }
 
-  { // header block
-    builder->SetInsertPoint(header_block);
-    llvm::Value *condition = gen_expr(in_loop_stmnt->condition_expr);
-    branch_inst = this->builder->CreateCondBr(condition, content_block, footer_block);
+    if (jmp_to_footer)
+      builder->CreateBr(footer_block);
+    else
+      builder->CreateBr(header_block);
   }
 
   builder->SetInsertPoint(next_block);
@@ -353,14 +352,17 @@ llvm::Value *LlvmIrGenerator::_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt)
 llvm::Value *LlvmIrGenerator::_gen_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt) {
   LL_ASSERT(in_ctrl_stmnt->loop_ref->header_block->llvm_value != nullptr);
   LL_ASSERT(in_ctrl_stmnt->loop_ref->content_block->llvm_value != nullptr);
-  LL_ASSERT(in_ctrl_stmnt->loop_ref->footer_block->llvm_value != nullptr);
 
   if (in_ctrl_stmnt->ctrl_type == CtrlStmntType::BREAK) {
-    return builder->CreateBr(in_ctrl_stmnt->loop_ref->footer_block->llvm_value);
+    return builder->CreateBr(in_ctrl_stmnt->loop_ref->next_block);
   }
 
   if (in_ctrl_stmnt->ctrl_type == CtrlStmntType::CONTINUE) {
-    return builder->CreateBr(in_ctrl_stmnt->loop_ref->header_block->llvm_value);
+    bool has_footer = in_ctrl_stmnt->loop_ref->footer_block != nullptr;
+    if (has_footer)
+      return builder->CreateBr(in_ctrl_stmnt->loop_ref->footer_block->llvm_value);
+    else
+      return builder->CreateBr(in_ctrl_stmnt->loop_ref->header_block->llvm_value);
   }
 
   LL_UNREACHEABLE;

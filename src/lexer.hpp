@@ -205,11 +205,11 @@ private:
   size_t current_column;
   mutable size_t curr_index; // used to consume tokens
 
-  size_t char_code_index;        // char_code i8 counter
-  size_t remaining_code_units; // used to count bytes in unicode i8
+  size_t char_code_index;        // char_code char counter
+  size_t remaining_code_units; // used to count bytes in unicode char
   u32 radix;                   // used for getting number value.
   u32 char_code;                 // char_code used accros the char_code state
-  bool unicode;                // is unicode i8 code
+  bool unicode;                // is unicode char code
   bool is_trailing_underscore; // used to interpret number_number
   bool is_invalid_token;       // used to finish tokenizing a error tokens
 

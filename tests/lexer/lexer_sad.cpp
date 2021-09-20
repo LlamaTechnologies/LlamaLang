@@ -22,9 +22,9 @@ TEST(LexerSadIdentifierTests, IdentifierNumPrefixTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerSadIdentifierTests, IdentifierInvalidi8PrefixTest) {
+TEST(LexerSadIdentifierTests, IdentifierInvalidcharPrefixTest) {
   std::vector<Error> errors;
-  Lexer lexer("$identifier", "file/directory", "Invalidi8PrefixTest", errors);
+  Lexer lexer("$identifier", "file/directory", "InvalidcharPrefixTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -156,9 +156,9 @@ TEST(LexerHappyIntegerTests, IntegerContiguousUnderscoreSeparatorTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyIntegerTests, IntegerUnexpectedi8Test) {
+TEST(LexerHappyIntegerTests, IntegerUnexpectedcharTest) {
   std::vector<Error> errors;
-  Lexer lexer("54$15", "file/directory", "Unexpectedi8Test", errors);
+  Lexer lexer("54$15", "file/directory", "UnexpectedcharTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 1L);
@@ -195,10 +195,10 @@ TEST(LexerSadIntegerTests, IntegerSignSpecInvalidTypeSpecTest) {
 // TODO(pablo96): f32 literal parsing
 
 //==================================================================================
-//          STRING | i8S
+//          STRING | charS
 //==================================================================================
 
-TEST(LexerSadStringi8Tests, Emptyi8Test) {
+TEST(LexerSadStringcharTests, EmptycharTest) {
   std::vector<Error> errors;
   Lexer lexer("\'\'", "file/directory", "EmptyStringTest", errors);
   lexer.tokenize();
@@ -208,7 +208,7 @@ TEST(LexerSadStringi8Tests, Emptyi8Test) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerSadStringi8Tests, MultilineStringTest) {
+TEST(LexerSadStringcharTests, MultilineStringTest) {
   std::vector<Error> errors;
   Lexer lexer(" \"Hello world for...\n1st time!\" ", "file/directory", "MultilineStringTest", errors);
   lexer.tokenize();

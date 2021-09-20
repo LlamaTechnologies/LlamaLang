@@ -347,6 +347,11 @@ inline bool SemanticAnalyzer::_analize_call_expr(const AstFnCallExpr *in_fn_call
 }
 
 inline bool SemanticAnalyzer::_analize_unary_expr(const AstUnaryExpr *in_unary_expr) {
+  if (in_unary_expr->op == UnaryExprType::RET && in_unary_expr->node_type == AstNodeType::AST_LOOP_STMNT) {
+    add_semantic_error(this->errors, in_unary_expr, ERROR_RET_STMNT_INVALID_LOCATION, "direct loop");
+    return false;
+  }
+
   const AstType *expr_type = get_expr_type(this->errors, this->symbol_table, in_unary_expr->expr);
 
   if (!expr_type) {

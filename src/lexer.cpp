@@ -32,8 +32,8 @@ ALPHA:               \
 
 // [a-zA-Z_0-9]
 #define SYMBOL_CHAR \
-ALPHA:            \
-  case DIGIT:     \
+ALPHA:              \
+  case DIGIT:       \
   case '_'
 
 static void _set_token_id(Token &, const TokenId id) noexcept;
@@ -52,7 +52,7 @@ enum class TokenizerState
   SYMBOL,                              // [a-zA-Z_][a-zA-Z_0-9]*
   ZERO,                                // "0", which might lead to "0x"
   NUMBER,                              // "123", "0x123"
-  NUMBER_NO_UNDERSCORE,                // "12_", "0x12_" next i8 must be digit
+  NUMBER_NO_UNDERSCORE,                // "12_", "0x12_" next char must be digit
   NUMBER_DOT,                          // . inside a number
   FLOAT_FRACTION,                      // "123.456", "0x123.456"
   FLOAT_FRACTION_NO_UNDERSCORE,        // "123.45_", "0x123.45_"
@@ -62,10 +62,10 @@ enum class TokenizerState
   STRING,                              //
   STRING_ESCAPE,                       // saw \ inside a string
   STRING_ESCAPE_UNICODE_START,         // saw u inside string_escape
-  char_CODE,                             // saw x in string_escape or began the unicode escape
-  char_LITERAL,                          // saw '
-  char_LITERAL_UNICODE,                  // is 'uXXXX'
-  char_LITERAL_END,                      // saw ' after '
+  char_CODE,                           // saw x in string_escape or began the unicode escape
+  char_LITERAL,                        // saw '
+  char_LITERAL_UNICODE,                // is 'uXXXX'
+  char_LITERAL_END,                    // saw ' after '
   SAW_EQUALS,                          // saw =
   SAW_STAR,                            // saw *
   SAW_SLASH,                           // saw /
@@ -133,7 +133,7 @@ void Lexer::tokenize() noexcept {
         _begin_token(*this, TokenId::STRING);
         state = TokenizerState::STRING;
         break;
-        // we found the beginning of a i8 literal
+        // we found the beginning of a char literal
       case '\'':
         _begin_token(*this, TokenId::UNICODE_CHAR);
         state = TokenizerState::char_LITERAL;
@@ -189,10 +189,13 @@ void Lexer::tokenize() noexcept {
         _begin_token(*this, TokenId::HASH);
         _end_token(*this);
         break;
+      case ':':
+        _begin_token(*this, TokenId::COLON);
+        _end_token(*this);
+        break;
         // we found a semicolon
       case ';':
         _begin_token(*this, TokenId::SEMI);
-
         _end_token(*this);
         break;
       case '(':
@@ -256,7 +259,7 @@ void Lexer::tokenize() noexcept {
         state = TokenizerState::SAW_GREATER;
         break;
       default:
-        _tokenize_error(*this, "Unidentified i8acter in symbol %c", c);
+        _tokenize_error(*this, "Unidentified character in symbol %c", c);
         is_invalid_token = true;
         state = TokenizerState::SYMBOL;
         break;
@@ -433,7 +436,7 @@ void Lexer::tokenize() noexcept {
           break;
         } else {
           state = TokenizerState::START;
-          // not my i8
+          // not my char
           cursor_pos--;
 
           if (is_invalid_token) {
@@ -455,7 +458,7 @@ void Lexer::tokenize() noexcept {
         state = TokenizerState::START;
         break;
       } else {
-        // not my i8
+        // not my char
         cursor_pos--;
         _end_token(*this);
         state = TokenizerState::START;
@@ -522,7 +525,7 @@ void Lexer::tokenize() noexcept {
           _invalid_char_error(*this, c);
         }
 
-        // not my i8
+        // not my char
         cursor_pos--;
         _end_token(*this);
         state = TokenizerState::START;
@@ -577,7 +580,7 @@ void Lexer::tokenize() noexcept {
         if (_is_symbol_char(c)) {
           _invalid_char_error(*this, c);
         }
-        // not my i8
+        // not my char
         cursor_pos--;
         _end_token(*this);
         state = TokenizerState::START;
@@ -721,7 +724,7 @@ void Lexer::tokenize() noexcept {
       break;
     case TokenizerState::char_LITERAL:
       if (c == '\'') {
-        _tokenize_error(*this, "expected i8acter");
+        _tokenize_error(*this, "expected character");
         _set_token_id(current_token, TokenId::ERROR);
         _end_token(*this);
         state = TokenizerState::START;
@@ -1103,16 +1106,16 @@ void _invalid_char_error(Lexer &in_lexer, uint8_t c) noexcept {
 
   const char *sh = _get_escape_shorthand(c);
   if (sh) {
-    _tokenize_error(in_lexer, "invalid i8acter: '%s'", sh);
+    _tokenize_error(in_lexer, "invalid character: '%s'", sh);
     return;
   }
 
   if (isprint(c)) {
-    _tokenize_error(in_lexer, "invalid i8acter: '%c'", c);
+    _tokenize_error(in_lexer, "invalid character: '%c'", c);
     return;
   }
 
-  _tokenize_error(in_lexer, "invalid i8acter: '\\x%02x'", c);
+  _tokenize_error(in_lexer, "invalid character: '\\x%02x'", c);
 }
 
 void _tokenize_error(Lexer &in_lexer, const char *format, ...) noexcept {
@@ -1127,8 +1130,9 @@ void _tokenize_error(Lexer &in_lexer, const char *format, ...) noexcept {
 
   std::string msg;
   msg.reserve(len1 + 1);
+  msg.resize(len1);
 
-  s32 len2 = snprintf(msg.data(), msg.capacity(), format, ap2);
+  s32 len2 = snprintf(msg.data(), msg.size(), format, ap2);
   assert(len2 >= 0);
   assert(len2 == len1);
 
@@ -1192,9 +1196,16 @@ bool _is_symbol_char(uint8_t c) {
 bool _is_reserved_char(uint8_t c) {
   switch (c) {
   case WHITESPACE:
+  case '{':
+  case '}':
   case '(':
   case ')':
+  case '[':
+  case ']':
+  case '#':
   case ',':
+  case ';':
+  case ':':
     return true;
   default:
     return false;

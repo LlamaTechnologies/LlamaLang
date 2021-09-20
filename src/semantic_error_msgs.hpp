@@ -19,3 +19,4 @@ constexpr const char *ERROR_UNSUPPORTED_PARAM_INITIALIZER = "unsupported: param 
 constexpr const char *ERROR_EXPECTED_BOOL_EXPR = "expected boolean expression but got expression of type '%s'";
 constexpr const char *ERROR_CTRL_STMNT_INVALID_LOCATION =
   "invalid location '%s' for control statement (break/continue)";
+constexpr const char *ERROR_RET_STMNT_INVALID_LOCATION = "invalid location '%s' for return statement";

@@ -1643,10 +1643,20 @@ TEST(ParserHappyLoopStmntTests, ConstantExprTest) {
   ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
   ASSERT_TRUE(loop_stmnt->is_condition_checked);
 
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
   const AstConstValue *cond_expr = loop_stmnt->condition_expr->const_value();
   ASSERT_NE(cond_expr, nullptr);
   ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
   ASSERT_TRUE(cond_expr->boolean);
+
+  ASSERT_EQ(loop_stmnt->initializer_block, nullptr);
+  ASSERT_EQ(loop_stmnt->footer_block, nullptr);
 
   delete loop_stmnt;
 }
@@ -1671,15 +1681,35 @@ TEST(ParserHappyLoopStmntTests, ConstantExprBreakEmptyTest) {
   ASSERT_TRUE(loop_stmnt->is_condition_checked);
   ASSERT_EQ(loop_stmnt->content_block->statements.size(), 1L);
 
+  // condition expr
   const AstConstValue *cond_expr = loop_stmnt->condition_expr->const_value();
   ASSERT_NE(cond_expr, nullptr);
   ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
   ASSERT_TRUE(cond_expr->boolean);
 
-  const AstIfStmnt *if_stmnt = loop_stmnt->content_block->statements.at(0)->if_stmnt();
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
+  // other blocks
+  ASSERT_EQ(loop_stmnt->initializer_block, nullptr);
+  ASSERT_EQ(loop_stmnt->footer_block, nullptr);
+
+  // content block
+  const AstBlock *content_block = loop_stmnt->content_block;
+  ASSERT_NE(content_block, nullptr);
+  ASSERT_EQ(content_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(content_block->parent, loop_stmnt);
+  ASSERT_EQ(content_block->statements.size(), 1);
+
+  const AstIfStmnt *if_stmnt = content_block->statements.at(0)->if_stmnt();
   ASSERT_NE(if_stmnt, nullptr);
   ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
   ASSERT_EQ(if_stmnt->true_block->statements.size(), 1L);
+  ASSERT_EQ(if_stmnt->false_block, nullptr);
 
   const AstCtrlStmnt *ctrl_stmnt = if_stmnt->true_block->statements.at(0)->ctrl_stmnt();
   ASSERT_NE(ctrl_stmnt, nullptr);
@@ -1687,6 +1717,76 @@ TEST(ParserHappyLoopStmntTests, ConstantExprBreakEmptyTest) {
   ASSERT_EQ(ctrl_stmnt->ctrl_type, CtrlStmntType::BREAK);
   ASSERT_EQ(ctrl_stmnt->index, 0L);
   ASSERT_EQ(ctrl_stmnt->label, nullptr);
+
+  delete loop_stmnt;
+}
+
+TEST(ParserHappyLoopStmntTests, RangeConstantExprNoIncrExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop i = 0 : 10 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
+
+  // condition expr
+  const AstBinaryExpr *condition_expr = loop_stmnt->condition_expr->binary_expr();
+  ASSERT_EQ(condition_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(condition_expr->parent, loop_stmnt);
+  ASSERT_EQ(condition_expr->bin_op, BinaryExprType::LESS);
+
+  // initializer block
+  const AstBlock *init_block = loop_stmnt->initializer_block;
+  ASSERT_NE(init_block, nullptr);
+  ASSERT_EQ(init_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(init_block->parent, loop_stmnt);
+  ASSERT_EQ(init_block->statements.size(), 1);
+
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
+  // footer block
+  const AstBlock *footer_block = loop_stmnt->footer_block;
+  ASSERT_NE(footer_block, nullptr);
+  ASSERT_EQ(footer_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(footer_block->parent, loop_stmnt);
+  ASSERT_EQ(footer_block->statements.size(), 1);
+
+  // empty content block
+  const AstBlock *content_block = loop_stmnt->content_block;
+  ASSERT_NE(content_block, nullptr);
+  ASSERT_EQ(content_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(content_block->parent, loop_stmnt);
+  ASSERT_EQ(content_block->statements.size(), 0);
+
+  delete loop_stmnt;
+}
+
+TEST(ParserHappyLoopStmntTests, RangeConstantExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop i = 0 : 10; 2 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
 
   delete loop_stmnt;
 }
