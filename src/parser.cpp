@@ -735,20 +735,28 @@ AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loo
   }
 
   { // footer
+    // var += 1
     AstBlock *footer_block = new AstBlock(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
     footer_block->parent = loop_stmnt;
     loop_stmnt->footer_block = footer_block;
 
     if (incr_expr == nullptr) {
-      AstUnaryExpr *incr_1 = new AstUnaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
-      incr_1->op = UnaryExprType::INC;
-      incr_1->expr = new AstSymbol(*it_initializer->left_expr->symbol());
-      incr_1->expr->parent = incr_1;
-      incr_expr = incr_1;
+      AstUnaryExpr *_incr = new AstUnaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+      _incr->op = UnaryExprType::INC;
+      _incr->expr = new AstSymbol(*it_initializer->left_expr->symbol());
+      _incr->expr->parent = _incr;
+      incr_expr = _incr;
     }
 
-    incr_expr->parent = footer_block;
-    footer_block->statements.push_back(incr_expr);
+    AstBinaryExpr *_assign = new AstBinaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+    _assign->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
+    _assign->left_expr->parent = _assign;
+    _assign->bin_op = BinaryExprType::ASSIGN;
+    _assign->right_expr = incr_expr;
+    _assign->right_expr->parent = _assign;
+
+    _assign->parent = footer_block;
+    footer_block->statements.push_back(_assign);
   }
 
   return loop_stmnt;
@@ -1266,6 +1274,8 @@ consume_plus:
     _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
     return nullptr;
   }
+
+  // TODO(pablo96): Add an assign in the inc/dec operations
 
   // op primary_expr
   if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS,

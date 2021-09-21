@@ -180,15 +180,15 @@ llvm::Value *LlvmIrGenerator::gen_unary_expr(const AstUnaryExpr *in_unary_expr) 
   }
   case UnaryExprType::INC: {
     auto symbol_ref = gen_expr(in_unary_expr->expr);
-    return builder->CreateAdd(symbol_ref, llvm::ConstantInt::get(context, llvm::APInt(128, 1)));
+    return builder->CreateAdd(symbol_ref, llvm::ConstantInt::get(symbol_ref->getType(), 1));
   }
   case UnaryExprType::DEC: {
     auto symbol_ref = gen_expr(in_unary_expr->expr);
-    return builder->CreateSub(symbol_ref, llvm::ConstantInt::get(context, llvm::APInt(128, 1)));
+    return builder->CreateSub(symbol_ref, llvm::ConstantInt::get(symbol_ref->getType(), 1));
   }
   case UnaryExprType::NEG: {
     auto symbol_ref = gen_expr(in_unary_expr->expr);
-    return builder->CreateSub(symbol_ref, llvm::ConstantInt::get(context, llvm::APInt(128, 0)), "", false, true);
+    return builder->CreateSub(symbol_ref, llvm::ConstantInt::get(symbol_ref->getType(), 0), "", false, true);
   }
   case UnaryExprType::NOT:
   case UnaryExprType::BIT_INV: {

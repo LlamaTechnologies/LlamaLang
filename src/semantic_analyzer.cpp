@@ -257,6 +257,24 @@ bool SemanticAnalyzer::analize_loop_stmnt(const AstLoopStmnt *in_loop_stmnt) {
     }
   }
 
+  const AstBlock *init_block = in_loop_stmnt->initializer_block;
+  if (init_block && !analize_block(init_block)) {
+    // errors have been set inside analize_block so we just return false
+    return false;
+  }
+
+  const AstBlock *header_block = in_loop_stmnt->header_block;
+  if (!analize_block(header_block)) {
+    LL_UNREACHEABLE;
+  }
+
+  const AstBlock *footer_block = in_loop_stmnt->footer_block;
+  if (footer_block) {
+    if (!analize_block(footer_block)) {
+      LL_UNREACHEABLE;
+    }
+  }
+
   const AstBlock *content_block = in_loop_stmnt->content_block;
   if (!analize_block(content_block)) {
     // errors have been set inside analize_block so we just return false

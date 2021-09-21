@@ -1763,6 +1763,18 @@ TEST(ParserHappyLoopStmntTests, RangeConstantExprNoIncrExprTest) {
   ASSERT_EQ(footer_block->parent, loop_stmnt);
   ASSERT_EQ(footer_block->statements.size(), 1);
 
+  const AstBinaryExpr *assign_index = footer_block->statements.at(0)->binary_expr();
+  ASSERT_NE(assign_index, nullptr);
+  ASSERT_EQ(assign_index->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(assign_index->parent, footer_block);
+  ASSERT_EQ(assign_index->bin_op, BinaryExprType::ASSIGN);
+
+  const AstUnaryExpr *inc_index = assign_index->right_expr->unary_expr();
+  ASSERT_NE(inc_index, nullptr);
+  ASSERT_EQ(inc_index->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(inc_index->parent, assign_index);
+  ASSERT_EQ(inc_index->op, UnaryExprType::INC);
+
   // empty content block
   const AstBlock *content_block = loop_stmnt->content_block;
   ASSERT_NE(content_block, nullptr);
@@ -1787,6 +1799,52 @@ TEST(ParserHappyLoopStmntTests, RangeConstantExprTest) {
   ASSERT_NE(loop_stmnt, nullptr);
   ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
   ASSERT_TRUE(loop_stmnt->is_condition_checked);
+
+  // condition expr
+  const AstBinaryExpr *condition_expr = loop_stmnt->condition_expr->binary_expr();
+  ASSERT_EQ(condition_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(condition_expr->parent, loop_stmnt);
+  ASSERT_EQ(condition_expr->bin_op, BinaryExprType::LESS);
+
+  // initializer block
+  const AstBlock *init_block = loop_stmnt->initializer_block;
+  ASSERT_NE(init_block, nullptr);
+  ASSERT_EQ(init_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(init_block->parent, loop_stmnt);
+  ASSERT_EQ(init_block->statements.size(), 1);
+
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
+  // footer block
+  const AstBlock *footer_block = loop_stmnt->footer_block;
+  ASSERT_NE(footer_block, nullptr);
+  ASSERT_EQ(footer_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(footer_block->parent, loop_stmnt);
+  ASSERT_EQ(footer_block->statements.size(), 1);
+
+  const AstBinaryExpr *assign_index = footer_block->statements.at(0)->binary_expr();
+  ASSERT_NE(assign_index, nullptr);
+  ASSERT_EQ(assign_index->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(assign_index->parent, footer_block);
+  ASSERT_EQ(assign_index->bin_op, BinaryExprType::ASSIGN);
+
+  const AstBinaryExpr *add_index = assign_index->right_expr->binary_expr();
+  ASSERT_NE(add_index, nullptr);
+  ASSERT_EQ(add_index->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(add_index->parent, assign_index);
+  ASSERT_EQ(add_index->bin_op, BinaryExprType::ADD);
+
+  // empty content block
+  const AstBlock *content_block = loop_stmnt->content_block;
+  ASSERT_NE(content_block, nullptr);
+  ASSERT_EQ(content_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(content_block->parent, loop_stmnt);
+  ASSERT_EQ(content_block->statements.size(), 0);
 
   delete loop_stmnt;
 }
