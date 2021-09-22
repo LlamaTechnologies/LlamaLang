@@ -1174,7 +1174,7 @@ TEST(ParserHappyBranchStmntTests, IfConstantExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1197,7 +1197,7 @@ TEST(ParserHappyBranchStmntTests, IfBinaryExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1220,7 +1220,7 @@ TEST(ParserHappyBranchStmntTests, IfUnaryExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1243,7 +1243,7 @@ TEST(ParserHappyBranchStmntTests, IfComplexExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1266,7 +1266,7 @@ TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1289,7 +1289,7 @@ TEST(ParserHappyBranchStmntTests, IfSymbolExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1311,7 +1311,7 @@ TEST(ParserHappyBranchStmntTests, IfConstantWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1334,7 +1334,7 @@ TEST(ParserHappyBranchStmntTests, IfBinaryWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1357,7 +1357,7 @@ TEST(ParserHappyBranchStmntTests, IfUnaryWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1380,7 +1380,7 @@ TEST(ParserHappyBranchStmntTests, IfComplexWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1403,7 +1403,7 @@ TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1426,7 +1426,7 @@ TEST(ParserHappyBranchStmntTests, IfSymbolWithParentsExprTest) {
   lexer.tokenize();
 
   Parser parser(errors);
-  const AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(if_stmnt, nullptr);
@@ -1455,7 +1455,7 @@ TEST(ParserHappyBranchStmntTests, IfStmntFilledBlock) {
 
   // given: parsed source node
   Parser parser = Parser(errors);
-  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
@@ -1486,7 +1486,7 @@ TEST(ParserHappyBranchStmntTests, IfElseStmntFilledBlock) {
 
   // given: parsed source node
   Parser parser = Parser(errors);
-  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
@@ -1518,7 +1518,7 @@ TEST(ParserHappyBranchStmntTests, IfElifStmntFilledBlock) {
 
   // given: parsed source node
   Parser parser = Parser(errors);
-  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
@@ -1558,7 +1558,7 @@ TEST(ParserHappyBranchStmntTests, IfElifStmntWithParenFilledBlock) {
 
   // given: parsed source node
   Parser parser = Parser(errors);
-  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
@@ -1601,7 +1601,7 @@ TEST(ParserHappyBranchStmntTests, IfElifElseStmntFilledBlock) {
 
   // given: parsed source node
   Parser parser = Parser(errors);
-  AstIfStmnt *if_stmnt = parser.parse_if_stmnt(lexer);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
