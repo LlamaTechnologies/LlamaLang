@@ -244,6 +244,7 @@ struct AstConstValue : public AstNode {
     const char *number = nullptr;
   };
   ConstValueType type = ConstValueType::BOOL;
+  mutable ConstValueType child_type = ConstValueType::BOOL;
   mutable uint8_t bit_size = 1;
   bool is_negative = false;
 

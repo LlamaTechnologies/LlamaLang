@@ -418,6 +418,39 @@ TEST(ParserHappyStmntTests, StatementAssignStmntTest) {
   delete value_node;
 }
 
+TEST(ParserHappyStmntTests, StatementAssignAddressOfTest) {
+  std::vector<Error> errors;
+  Lexer lexer("myVar = &otherVar", "file/directory", "StatementAssignAddressOfTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstBinaryExpr *assign_node = parser.parse_statement(lexer)->binary_expr();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(assign_node, nullptr);
+  ASSERT_EQ(assign_node->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(assign_node->bin_op, BinaryExprType::ASSIGN);
+  ASSERT_NE(assign_node->left_expr, nullptr);
+  ASSERT_NE(assign_node->right_expr, nullptr);
+
+  const AstSymbol *myVar = assign_node->left_expr->symbol();
+  ASSERT_EQ(myVar->parent, assign_node);
+  ASSERT_EQ(myVar->node_type, AstNodeType::AST_SYMBOL);
+  ASSERT_EQ(myVar->token->id, TokenId::IDENTIFIER);
+
+  const AstUnaryExpr *address_of = assign_node->right_expr->unary_expr();
+  ASSERT_EQ(address_of->parent, assign_node);
+  ASSERT_EQ(address_of->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(address_of->op, UnaryExprType::ADDRESS_OF);
+
+  const AstSymbol *otherVar = address_of->expr->symbol();
+  ASSERT_EQ(otherVar->parent, address_of);
+  ASSERT_EQ(otherVar->node_type, AstNodeType::AST_SYMBOL);
+  ASSERT_EQ(otherVar->token->id, TokenId::IDENTIFIER);
+
+  delete assign_node;
+}
+
 TEST(ParserHappyStmntTests, StatementRetStmnt) {
   std::vector<Error> errors;
   Lexer lexer("ret myVar * (5 + 8)", "file/directory", "Ret stmnt", errors);

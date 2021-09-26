@@ -9,6 +9,19 @@
 #include <stdlib.h>
 
 //----- PRE DECLARATIONS - UTIL FUNCTIONS -----
+inline ConstValueType _get_const_type(const AstTypeId in_type_id) {
+  switch (in_type_id) {
+  case AstTypeId::VOID:
+  case AstTypeId::INTEGER:
+    return ConstValueType::INT;
+  case AstTypeId::FLOATING_POINT:
+    return ConstValueType::FLOAT;
+  case AstTypeId::BOOL:
+    return ConstValueType::BOOL;
+  default:
+    LL_UNREACHEABLE;
+  }
+}
 
 inline static bool _is_ret_statement(const AstNode *in_node) {
   return in_node->node_type == AstNodeType::AST_UNARY_EXPR && in_node->unary_expr()->op == UnaryExprType::RET;
@@ -16,6 +29,10 @@ inline static bool _is_ret_statement(const AstNode *in_node) {
 
 inline static bool _is_type_array_or_pointer(const AstType *in_type) {
   return in_type->type_info->type_id == AstTypeId::ARRAY || in_type->type_info->type_id == AstTypeId::POINTER;
+}
+
+inline static bool _is_type_number(const AstType *in_type) {
+  return in_type->type_info->type_id == AstTypeId::INTEGER || in_type->type_info->type_id == AstTypeId::FLOATING_POINT;
 }
 
 inline static bool _is_type(const AstType *in_type, AstTypeId in_type_id) {
@@ -439,11 +456,17 @@ inline bool SemanticAnalyzer::_analize_binary_expr(const AstBinaryExpr *in_binar
 
   if (_both_are_not_const_value(l_expr, r_expr))
     return check_types(this->errors, l_expr_type, r_expr_type, in_binary_expr);
-  else if (_is_only_one_node_const_value(l_expr, r_expr)) {
-    if (l_expr->node_type == AstNodeType::AST_CONST_VALUE)
-      _set_type_info(l_expr, r_expr_type);
-    else
-      _set_type_info(r_expr, l_expr_type);
+  else {
+    if (l_expr_type->child_type != nullptr && _is_type_number(l_expr_type->child_type)) {
+      l_expr_type = l_expr_type->child_type;
+    }
+
+    if (_is_only_one_node_const_value(l_expr, r_expr)) {
+      if (l_expr->node_type == AstNodeType::AST_CONST_VALUE)
+        _set_type_info(l_expr, r_expr_type);
+      else
+        _set_type_info(r_expr, l_expr_type);
+    }
   }
 
   return true;
@@ -647,8 +670,12 @@ void _set_type_info(const AstNode *in_expr_node, const AstType *in_type_node) {
         in_type_node->type_info->type_id == AstTypeId::VOID) {
       LL_UNREACHEABLE;
     }
-    in_expr_node->const_value()->bit_size = in_type_node->type_info->bit_size;
-
+    if (in_type_node->type_info->type_id == AstTypeId::POINTER) {
+      in_expr_node->const_value()->child_type = _get_const_type(in_type_node->child_type->type_info->type_id);
+      in_expr_node->const_value()->bit_size = in_type_node->child_type->type_info->bit_size;
+    } else {
+      in_expr_node->const_value()->bit_size = in_type_node->type_info->bit_size;
+    }
     LL_FALLTHROUGH
   default:
     break;
@@ -746,7 +773,14 @@ const AstType *_get_unary_expr_type(std::vector<Error> &errors, const Table *sym
   if (in_unary_expr->op == UnaryExprType::NOT)
     return TypesRepository::get().get_type_node("bool");
 
-  return get_expr_type(errors, symbol_table, in_unary_expr->expr);
+  const AstType *expr_type = get_expr_type(errors, symbol_table, in_unary_expr->expr);
+  if (in_unary_expr->op == UnaryExprType::ADDRESS_OF) {
+    AstType *ptr_type = TypesRepository::get().get_type_node("pointer");
+    ptr_type->child_type = const_cast<AstType *>(expr_type);
+    return ptr_type;
+  }
+
+  return expr_type;
 }
 
 const AstType *_get_const_value_type(std::vector<Error> &errors, const Table *symbol_table,

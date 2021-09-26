@@ -446,6 +446,18 @@ AstParamDef *Parser::parse_param_def(const Lexer &lexer) noexcept {
     LL_UNREACHEABLE;
   }
 
+  const Token &type_token = lexer.get_next_token();
+  switch (type_token.id) {
+  case TokenId::R_PAREN:
+  case TokenId::COMMA: {
+    _parse_error(errors, name_token, ERROR_UNNAMED_PARAM, lexer.get_token_value(name_token));
+    return nullptr;
+  }
+  default:
+    break;
+  }
+  lexer.get_back();
+
   AstType *type_node = parse_type(lexer);
 
   if (!type_node) {
@@ -1020,12 +1032,6 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
   case TokenId::_EOF: {
     const Token &prev_token = lexer.get_previous_token();
     _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
-    return nullptr;
-  }
-  case TokenId::R_PAREN:
-  case TokenId::COMMA: {
-    const Token &prev_token = lexer.get_previous_token();
-    _parse_error(errors, prev_token, ERROR_UNNAMED_PARAM, lexer.get_token_value(prev_token));
     return nullptr;
   }
   default:

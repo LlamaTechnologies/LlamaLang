@@ -7,6 +7,9 @@
 #include <string_view>
 #include <vector>
 
+/**
+ * NOTE: Update the token_id_names array in lexer.cpp
+ **/
 enum class TokenId
 {
   HASH,      // #

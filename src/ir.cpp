@@ -12,7 +12,18 @@
 #include <stdarg.h>
 
 static llvm::Constant *_getConstantDefaultValue(const AstType *in_type, llvm::Type *in_llvm_type);
-
+inline static AstTypeId _get_const_type(const ConstValueType in_type_id) {
+  switch (in_type_id) {
+  case ConstValueType::INT:
+    return AstTypeId::INTEGER;
+  case ConstValueType::FLOAT:
+    return AstTypeId::FLOATING_POINT;
+  case ConstValueType::BOOL:
+    return AstTypeId::BOOL;
+  default:
+    LL_UNREACHEABLE;
+  }
+}
 static const char *GetDataLayout() {
 #ifdef LL_VISUALSTUDIO
   return "e-m:w-p270:32:32-p271:32:32-p272:64:64-s64:64-f80:128-n8:16:32:64-S128";
@@ -195,6 +206,10 @@ llvm::Value *LlvmIrGenerator::gen_unary_expr(const AstUnaryExpr *in_unary_expr) 
   case UnaryExprType::NEG: {
     auto symbol_ref = gen_expr(in_unary_expr->expr);
     return builder->CreateSub(symbol_ref, llvm::ConstantInt::get(symbol_ref->getType(), 0), "", false, true);
+  }
+  case UnaryExprType::ADDRESS_OF: {
+    LL_ASSERT(in_unary_expr->expr->node_type == AstNodeType::AST_SYMBOL);
+    return in_unary_expr->expr->symbol()->data->var_def()->llvm_value;
   }
   case UnaryExprType::NOT:
   case UnaryExprType::BIT_INV: {
@@ -471,6 +486,7 @@ llvm::Type *LlvmIrGenerator::_translate_type(const AstType *in_type) {
     return llvm::Type::getInt1Ty(context);
   case AstTypeId::INTEGER: {
     switch (in_type->type_info->bit_size) {
+    case 0:
     case 8:
       return llvm::Type::getInt8Ty(context);
     case 16:
@@ -549,6 +565,19 @@ llvm::Constant *LlvmIrGenerator::_translate_constant(const AstConstValue *in_con
   case ConstValueType::CHAR: {
     const u32 char_val = in_const->unicode_char;
     return llvm::ConstantInt::get(context, llvm::APInt(32, char_val));
+  }
+  case ConstValueType::PTR: {
+    LL_ASSERT(strcmp(in_const->number, "0") == 0);
+
+    TypeInfo info;
+    info.type_id = _get_const_type(in_const->child_type);
+    info.bit_size = in_const->bit_size;
+    info.is_signed = in_const->is_negative;
+    AstType type;
+    type.type_info = &info;
+
+    llvm::PointerType *ptr_type = _translate_type(&type)->getPointerTo();
+    return llvm::ConstantPointerNull::get(ptr_type);
   }
   default:
     // wrong token

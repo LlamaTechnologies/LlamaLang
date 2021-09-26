@@ -370,10 +370,6 @@ TEST(SemanticAssignments, BinaryExprAssignPrimitiveTypeOperator) {
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
   bool is_valid_var_def = analizer.analize_var_def(var_def_node);
-
-  // when: call to analize_expr
-  // with: symbol as left expr
-  // with: constant as right expr
   bool is_valid = analizer.analize_expr(binary_epxr_node);
 
   // then:
@@ -383,6 +379,31 @@ TEST(SemanticAssignments, BinaryExprAssignPrimitiveTypeOperator) {
 
   delete binary_epxr_node;
   delete var_def_node;
+}
+
+TEST(SemanticAssignments, InitVoidPtrTypeNilValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *void = nil";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeNilValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  AstSourceCode *src_code = parser.parse(lexer);
+
+  AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
 }
 
 TEST(SemanticAssignments, InitPtrTypeNilValueOperator) {
@@ -403,10 +424,6 @@ TEST(SemanticAssignments, InitPtrTypeNilValueOperator) {
   SemanticAnalyzer analizer(errors);
   bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
 
-  // when: call to analize_expr
-  // with: symbol as left expr
-  // with: constant as right expr
-
   // then:
   ASSERT_TRUE(is_valid_ptr_def);
   ASSERT_EQ(errors.size(), 0L);
@@ -417,8 +434,8 @@ TEST(SemanticAssignments, InitPtrTypeNilValueOperator) {
 TEST(SemanticAssignments, InitPtrTypeAddressOfValueOperator) {
   TypesRepository types_repository = TypesRepository::get();
 
-  const char *src_code_str = "num s32 = 8\n"
-                             "ptr *s32 = &num\n";
+  const char *src_code_str = "num u64 = 8\n"
+                             "ptr *u64 = &num\n";
 
   std::vector<Error> errors;
   Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeAddressOfValueOperator", errors);
@@ -435,13 +452,45 @@ TEST(SemanticAssignments, InitPtrTypeAddressOfValueOperator) {
   bool is_valid_var_def = analizer.analize_var_def(var_def);
   bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
 
-  // when: call to analize_expr
-  // with: symbol as left expr
-  // with: constant as right expr
+  // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, AssignPtrTypeAddressOfValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "fn myFn () void {\n"
+                             "\tnum u64 = 32\n"
+                             "\tptr *u64 = nil\n"
+                             "\tptr = &num\n"
+                             "}\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeAddressOfValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  AstSourceCode *src_code = parser.parse(lexer);
+
+  AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
+  AstVarDef *ptr_assign = fn_def->block->statements.at(2)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assign = analizer.analize_expr(ptr_assign);
 
   // then:
   ASSERT_TRUE(is_valid_var_def);
   ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assign);
   ASSERT_EQ(errors.size(), 0L);
 
   delete src_code;
