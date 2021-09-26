@@ -1,7 +1,8 @@
 #pragma once
 constexpr const char *ERROR_UNEXPECTED_EOF_AFTER = "unexpected end of file after '%s'";
 constexpr const char *ERROR_EXPECTED_R_PAREN_AFTER = "expected ')' after '%s'";
-constexpr const char *ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN = "expected number, identifier or char instead of '%s'";
+constexpr const char *ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN =
+  "expected number, identifier or char instead of '%s'";
 constexpr const char *ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF =
   "expected type name, array type '[]' or pointer type '*' instead of '%s'";
 constexpr const char *ERROR_EXPECTED_CLOSING_BRAKET_BEFORE = "expected clossing bracket ']' before '%s'";
@@ -19,3 +20,4 @@ constexpr const char *ERROR_BRANCH_EXPECTED_RPAREN =
   "expected ')' at the end of the branch expression but got '%s' instead";
 constexpr const char *WARN_EMPTY_BRANCH = "empty branch";
 constexpr const char *ERROR_EXPECTED_COLON_LOOP = "expected ':' after loop initializer";
+constexpr const char *ERROR_UNNAMED_PARAM = "unnamed parameter of type '%s'";

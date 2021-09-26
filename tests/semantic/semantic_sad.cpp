@@ -1,6 +1,8 @@
 #include "../../src/Types.hpp"
 #include "../../src/ast_nodes.hpp"
 #include "../../src/error.hpp"
+#include "../../src/lexer.hpp"
+#include "../../src/parser.hpp"
 #include "../../src/semantic_analyzer.hpp"
 
 #include <gtest/gtest.h>
@@ -304,7 +306,11 @@ TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
   delete binary_expr_node;
 }
 
-TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
+//==================================================================================
+//          SEMANTIC ASSIGNMENTS
+//==================================================================================
+
+TEST(SadSemanticAssignments, VarTypesMismatch) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
@@ -347,7 +353,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
   delete binary_expr_node;
 }
 
-TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
+TEST(SadSemanticAssignments, VarOperatorWrongExpr) {
   // given: l_expr -> symbol node
   AstSymbol *symbol_node = new AstSymbol(0, 0, "");
   symbol_node->cached_name = "my_var";
@@ -376,6 +382,35 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
   ASSERT_FALSE(is_valid);
 
   delete binary_expr_node;
+}
+
+TEST(SadSemanticAssignments, InitPtrTypeConstValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *s32 = 0x0000000074FF7D25";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "BinaryExprAssignPtrTypeConstValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  AstSourceCode *src_code = parser.parse(lexer);
+
+  AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // when: call to analize_expr
+  // with: symbol as left expr
+  // with: constant as right expr
+
+  // then:
+  ASSERT_FALSE(is_valid_ptr_def);
+  ASSERT_NE(errors.size(), 0L);
+
+  delete src_code;
 }
 
 //==================================================================================

@@ -1,6 +1,7 @@
 #include "ir.hpp"
 
 #include "ast_nodes.hpp"
+#include "builtins.hpp"
 #include "common_defs.hpp"
 #include "console.hpp"
 #include "lexer.hpp"
@@ -49,6 +50,11 @@ void LlvmIrGenerator::gen_fn_proto(const AstFnProto *in_func_proto, AstFnDef *in
   // TODO(pablo96): Temp printf.
   if (in_func_proto->name == "printf") {
     _gen_printf_decl();
+    return;
+  }
+
+  BuiltInsRepository &builtins_repo = BuiltInsRepository::get(this);
+  if (builtins_repo.isBuiltInFn(in_func_proto->name)) {
     return;
   }
 
@@ -273,6 +279,7 @@ llvm::Value *LlvmIrGenerator::gen_symbol_expr(const AstSymbol *in_symbol) {
 }
 
 llvm::Value *LlvmIrGenerator::gen_fn_call_expr(const AstFnCallExpr *in_call_expr) {
+  // TODO(pablo96): temp solution to printf
   if (in_call_expr->fn_name == "printf") {
     std::vector<llvm::Value *> args;
     for (auto arg_node : in_call_expr->args) {
@@ -462,7 +469,7 @@ llvm::Type *LlvmIrGenerator::_translate_type(const AstType *in_type) {
     return llvm::Type::getVoidTy(context);
   case AstTypeId::BOOL:
     return llvm::Type::getInt1Ty(context);
-  case AstTypeId::INTEGER:
+  case AstTypeId::INTEGER: {
     switch (in_type->type_info->bit_size) {
     case 8:
       return llvm::Type::getInt8Ty(context);
@@ -477,15 +484,29 @@ llvm::Type *LlvmIrGenerator::_translate_type(const AstType *in_type) {
     default:
       LL_UNREACHEABLE;
     }
-    break;
-  case AstTypeId::FLOATING_POINT:
-    if (in_type->type_info->bit_size == 32)
+  }
+  case AstTypeId::FLOATING_POINT: {
+    u32 bit_size = in_type->type_info->bit_size;
+    switch (bit_size) {
+    case 32:
       return llvm::Type::getFloatTy(context);
-    if (in_type->type_info->bit_size == 64)
+    case 64:
       return llvm::Type::getDoubleTy(context);
-    if (in_type->type_info->bit_size == 128)
+    case 128:
       return llvm::Type::getFP128Ty(context);
-    LL_FALLTHROUGH
+    default:
+      LL_UNREACHEABLE;
+    }
+  }
+  case AstTypeId::POINTER: {
+    bool is_last_indir = in_type->child_type->child_type == nullptr;
+    AstTypeId child_type_id = in_type->child_type->type_info->type_id;
+
+    if (is_last_indir && child_type_id == AstTypeId::VOID)
+      return llvm::Type::getInt8PtrTy(context);
+    else
+      return _translate_type(in_type->child_type)->getPointerTo();
+  }
   default:
     LL_UNREACHEABLE;
   }

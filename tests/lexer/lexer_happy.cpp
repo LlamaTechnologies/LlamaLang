@@ -173,7 +173,7 @@ TEST(LexerHappyKeywordsTests, KeywordContinueTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordTrueTest) {
   std::vector<Error> errors;
-  Lexer lexer("true", "file/directory", "KeywordFnTest", errors);
+  Lexer lexer("true", "file/directory", "KeywordTrueTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -183,11 +183,21 @@ TEST(LexerHappyKeywordsTests, KeywordTrueTest) {
 
 TEST(LexerHappyKeywordsTests, KeywordFalseTest) {
   std::vector<Error> errors;
-  Lexer lexer("false", "file/directory", "KeywordFnTest", errors);
+  Lexer lexer("false", "file/directory", "KeywordFalseTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::FALSE);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordNilTest) {
+  std::vector<Error> errors;
+  Lexer lexer("nil", "file/directory", "KeywordNilTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::NIL);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
@@ -275,7 +285,7 @@ TEST(LexerHappyOperatorsTests, OperatorsTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::MUL_ASSIGN);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::DIV_ASSIGN);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::MOD_ASSIGN);
-  ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_AND);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::AMPERSAND);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_XOR);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_OR);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_NOT);
@@ -680,7 +690,7 @@ TEST(LexerHappyFloatTests, FloatCompleteUnderscoresTest) {
 }
 
 //==================================================================================
-//          STRING | charS
+//          STRING | CHARS
 //==================================================================================
 
 TEST(LexerHappyStringcharTests, EmptyStringTest) {
@@ -762,7 +772,3 @@ TEST(LexerHappyStringcharTests, EscapedcharUnicodeTest) {
   ASSERT_EQ(char_token.char_lit, L'\u00B6');
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
-
-//==================================================================================
-//          PRINT
-//==================================================================================

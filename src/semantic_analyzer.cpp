@@ -290,6 +290,7 @@ inline static bool _analize_const_value(const AstConstValue *in_const_value) {
   case ConstValueType::INT:
   case ConstValueType::FLOAT:
   case ConstValueType::CHAR:
+  case ConstValueType::PTR:
     return true;
   default:
     LL_UNREACHEABLE;
@@ -393,6 +394,12 @@ inline bool SemanticAnalyzer::_analize_unary_expr(const AstUnaryExpr *in_unary_e
   // If it is not boolean expr the NOT operator is invalid
   if (!_is_type(expr_type, AstTypeId::BOOL) && in_unary_expr->op == UnaryExprType::NOT) {
     add_semantic_error(this->errors, in_unary_expr, ERROR_UNSUPORTED_OP_NOT_BOOL_EXPR);
+    return false;
+  }
+
+  // if it is the address_of operator then only symbols are supported
+  if (in_unary_expr->op == UnaryExprType::ADDRESS_OF && in_unary_expr->expr->node_type != AstNodeType::AST_SYMBOL) {
+    add_semantic_error(this->errors, in_unary_expr, ERROR_UNSUPORTED_ADDRESSOF_NOT_SYMBOL_EXPR);
     return false;
   }
 
@@ -636,7 +643,7 @@ void _set_type_info(const AstNode *in_expr_node, const AstType *in_type_node) {
 
   switch (in_expr_node->node_type) {
   case AstNodeType::AST_CONST_VALUE:
-    if (_is_type_array_or_pointer(in_type_node) || in_type_node->type_info->type_id == AstTypeId::STRUCT ||
+    if (in_type_node->type_info->type_id == AstTypeId::ARRAY || in_type_node->type_info->type_id == AstTypeId::STRUCT ||
         in_type_node->type_info->type_id == AstTypeId::VOID) {
       LL_UNREACHEABLE;
     }
@@ -756,6 +763,8 @@ const AstType *_get_const_value_type(std::vector<Error> &errors, const Table *sy
     return types_repository.get_type_node("u128");
   case ConstValueType::CHAR:
     return types_repository.get_type_node("u32");
+  case ConstValueType::PTR:
+    return types_repository.get_type_node("*u8");
   default:
     LL_UNREACHEABLE;
   }
@@ -805,7 +814,7 @@ bool _check_integer_types(std::vector<Error> &errors, const AstNode *in_expr_nod
     return false;
   }
 
-  bool same_sign = in_type_0->type_info->is_signed & in_type_1->type_info->is_signed;
+  bool same_sign = in_type_0->type_info->is_signed == in_type_1->type_info->is_signed;
 
   if (!same_sign) {
     add_semantic_error(errors, in_expr_node, ERROR_INTEGERS_SIGN_MISMATCH);

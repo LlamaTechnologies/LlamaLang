@@ -165,7 +165,7 @@ struct AstFnDef : public AstNode {
 
 struct AstFnProto : public AstNode {
   std::vector<AstParamDef *> params;
-  std::string_view name;
+  std::string name;
   AstType *return_type = nullptr;
   bool is_extern = false;
 
@@ -233,7 +233,8 @@ enum class ConstValueType
   BOOL,
   INT,
   FLOAT,
-  CHAR
+  CHAR,
+  PTR
 };
 
 struct AstConstValue : public AstNode {
@@ -276,6 +277,8 @@ enum class BinaryExprType
   LESS_OR_EQUALS,    // expr <= expr
   GREATER,           // expr >  expr
   LESS,              // expr <  expr
+  AND,               // expr && expr
+  OR,                // expr || expr
   LSHIFT,            // expr << expr
   RSHIFT,            // expr >> expr
   BIT_XOR,           // expr ^  expr
@@ -299,13 +302,14 @@ struct AstBinaryExpr : public AstNode {
  */
 enum class UnaryExprType
 {
-  INC,     // ++  primaryExpr
-  DEC,     // --  primaryExpr
-  NEG,     // -   primaryExpr
-  NOT,     // !   primaryExpr
-  BIT_INV, // ~   primaryExpr
-  RET,     // ret Expr
-  JMP      // jmp block NOTE: this is used internally
+  INC,        // ++  primaryExpr
+  DEC,        // --  primaryExpr
+  NEG,        // -   primaryExpr
+  NOT,        // !   primaryExpr
+  BIT_INV,    // ~   primaryExpr
+  ADDRESS_OF, // &   primaryExpr
+  RET,        // ret Expr
+  JMP         // jmp block NOTE: this is used internally
 };
 
 const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept;

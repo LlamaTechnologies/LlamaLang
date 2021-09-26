@@ -35,10 +35,16 @@ const AstTypeId TypesRepository::get_type_id(std::string_view in_name) noexcept 
 }
 
 AstType *TypesRepository::get_type_node(std::string_view in_name) noexcept {
-  if (types_id.find(in_name) == types_id.end()) {
-    return nullptr;
+  if (in_name[0] == '*') {
+    AstType *ptr_node = new AstType(&types_id["pointer"]);
+    ptr_node->child_type = new AstType(&types_id[in_name.substr(1L, in_name.size() - 1L)]);
+    return ptr_node;
+  } else {
+    if (types_id.find(in_name) == types_id.end()) {
+      return nullptr;
+    }
+    return new AstType(&types_id[in_name]);
   }
-  return new AstType(&types_id[in_name]);
 }
 
 const TypeInfo *TypesRepository::get_type(std::string_view in_name) noexcept {

@@ -20,3 +20,5 @@ constexpr const char *ERROR_EXPECTED_BOOL_EXPR = "expected boolean expression bu
 constexpr const char *ERROR_CTRL_STMNT_INVALID_LOCATION =
   "invalid location '%s' for control statement (break/continue)";
 constexpr const char *ERROR_RET_STMNT_INVALID_LOCATION = "invalid location '%s' for return statement";
+constexpr const char *ERROR_UNSUPORTED_ADDRESSOF_NOT_SYMBOL_EXPR =
+  "unsupported 'address of' operator in expr. Expr should be a symbol";

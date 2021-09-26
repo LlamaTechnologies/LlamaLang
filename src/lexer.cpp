@@ -235,7 +235,7 @@ void Lexer::tokenize() noexcept {
         state = TokenizerState::SAW_VERTICAL_BAR;
         break;
       case '&':
-        _begin_token(*this, TokenId::BIT_AND);
+        _begin_token(*this, TokenId::AMPERSAND);
         state = TokenizerState::SAW_AMPERSAND;
         break;
       case '~':
@@ -1071,26 +1071,7 @@ void _end_token_check_is_keyword(Lexer &in_lexer) noexcept {
 
   _is_keyword(in_lexer.current_token, in_lexer.get_token_value(in_lexer.current_token));
 
-  switch (in_lexer.current_token.id) {
-  case TokenId::EXTERN:
-  case TokenId::FN:
-  case TokenId::RET:
-  case TokenId::IF:
-  case TokenId::ELSE:
-  case TokenId::ELIF:
-  case TokenId::LOOP:
-  case TokenId::BREAK:
-  case TokenId::CONTINUE:
-  case TokenId::AND:
-  case TokenId::OR:
-  case TokenId::TRUE:
-  case TokenId::FALSE:
-  case TokenId::IDENTIFIER:
-    in_lexer.tokens.push_back(in_lexer.current_token);
-    break;
-  default:
-    LL_UNREACHEABLE;
-  }
+  in_lexer.tokens.push_back(in_lexer.current_token);
 }
 
 void _reset_line(Lexer &in_lexer) noexcept {
@@ -1157,11 +1138,13 @@ void _handle_string_escape(Lexer &in_lexer, uint8_t c) noexcept {
 }
 
 static std::unordered_map<std::string_view, TokenId> keywords = {
-  { "extern", TokenId::EXTERN },    { "fn", TokenId::FN },       { "ret", TokenId::RET },
-  { "and", TokenId::AND },          { "if", TokenId::IF },       { "elif", TokenId::ELIF },
-  { "else", TokenId::ELSE },        { "loop", TokenId::LOOP },   { "or", TokenId::OR },
-  { "true", TokenId::TRUE },        { "false", TokenId::FALSE }, { "break", TokenId::BREAK },
-  { "continue", TokenId::CONTINUE }
+  { "extern", TokenId::EXTERN }, { "fn", TokenId::FN },
+  { "ret", TokenId::RET },       { "and", TokenId::AND },
+  { "if", TokenId::IF },         { "elif", TokenId::ELIF },
+  { "else", TokenId::ELSE },     { "loop", TokenId::LOOP },
+  { "or", TokenId::OR },         { "true", TokenId::TRUE },
+  { "false", TokenId::FALSE },   { "nil", TokenId::NIL },
+  { "break", TokenId::BREAK },   { "continue", TokenId::CONTINUE }
 };
 
 void _is_keyword(Token &in_token, std::string_view value) noexcept {

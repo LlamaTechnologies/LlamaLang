@@ -30,8 +30,11 @@ static bool _is_whitespace_char(const s8 _char) noexcept;
 static bool _get_directive_type(DirectiveType &, std::string_view in_directive_name);
 static bool _end_of_statement(const Lexer &lexer, std::vector<Error> errors, const TokenId terminator);
 static bool _is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos);
-static bool _is_forbiden_statement(const Token &token) noexcept;
+static bool _is_forbiden_statement(const Token &token, const Token &next_token) noexcept;
 static bool _is_var_def(const Lexer &lexer, const Token &token);
+static AstBlock *_create_block(const Token &token, AstNode *parent);
+static AstBinaryExpr *_create_bin_expr(const Token &token, const BinaryExprType bin_op, AstNode *parent, AstNode *left,
+                                       AstNode *right);
 
 //  ('=='|'!=' | '!' | '>=' | '<=' | '<' | '>')
 #define COMPARATIVE_OPERATOR                                                                       \
@@ -43,8 +46,8 @@ static bool _is_var_def(const Lexer &lexer, const Token &token);
   TokenId::PLUS : case TokenId::MINUS : case TokenId::MUL : case TokenId::DIV : case TokenId::MOD
 
 // ('<<' | '>>' | '&' | '^' | '~' | '|')
-#define BITWISE_OPERATOR                                                                                         \
-  TokenId::LSHIFT : case TokenId::RSHIFT : case TokenId::BIT_AND : case TokenId::BIT_XOR : case TokenId::BIT_NOT \
+#define BITWISE_OPERATOR                                                                                           \
+  TokenId::LSHIFT : case TokenId::RSHIFT : case TokenId::AMPERSAND : case TokenId::BIT_XOR : case TokenId::BIT_NOT \
       : case TokenId::BIT_OR
 
 Parser::Parser(std::vector<Error> &in_error_vec, const FileInput &_file_input)
@@ -155,9 +158,11 @@ bool _is_var_def(const Lexer &lexer, const Token &token) {
     return false;
   }
 
-  if (_is_forbiden_statement(next_token)) {
+  const Token &next_next_token = lexer.get_next_token();
+  if (_is_forbiden_statement(token, next_next_token)) {
     return false;
   }
+  lexer.get_back();
 
   if (_is_new_line_between(lexer, token.end_pos, next_token.start_pos)) {
     // ignore statement of type
@@ -570,7 +575,7 @@ AstIfStmnt *Parser::parse_elif_stmnt(const Lexer &lexer, AstIfStmnt *if_stmnt) n
     elif_stmnt->true_block = elif_block_node;
 
     // ELIF is an IF stmnt in a ELSE block
-    AstBlock *else_block = new AstBlock(elif_token.start_line, elif_token.start_column, elif_token.file_name);
+    AstBlock *else_block = _create_block(elif_token, prev_if_stmnt);
     else_block->statements.push_back(elif_stmnt);
 
     prev_if_stmnt->false_block = else_block;
@@ -695,9 +700,7 @@ AstLoopStmnt *Parser::parse_whileloop_stmnt(const Lexer &lexer, const Token &loo
   content_block_node->parent = loop_stmnt;
   loop_stmnt->content_block = content_block_node;
 
-  AstBlock *header_block = new AstBlock(conditional_expr->line, conditional_expr->column, conditional_expr->file_name);
-  header_block->parent = loop_stmnt;
-  loop_stmnt->header_block = header_block;
+  loop_stmnt->header_block = _create_block(loop_token, loop_stmnt);
 
   return loop_stmnt;
 }
@@ -712,8 +715,7 @@ AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loo
   }
 
   { // init block
-    AstBlock *init_block = new AstBlock(it_initializer->line, it_initializer->column, it_initializer->file_name);
-    init_block->parent = loop_stmnt;
+    AstBlock *init_block = _create_block(loop_token, loop_stmnt);
     loop_stmnt->initializer_block = init_block;
 
     init_block->statements.push_back(it_initializer);
@@ -737,13 +739,8 @@ AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loo
   const Token &semi_colon = lexer.get_next_token();
   if (semi_colon.id == TokenId::SEMI) {
     AstNode *_increment_amount = parse_primary_expr(lexer);
-    AstBinaryExpr *_add_expr = new AstBinaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
-    _add_expr->bin_op = BinaryExprType::ADD;
-    _add_expr->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
-    _add_expr->left_expr->parent = _add_expr;
-    _add_expr->right_expr = _increment_amount;
-    _add_expr->right_expr->parent = _add_expr;
-    incr_expr = _add_expr;
+    AstSymbol *_left = new AstSymbol(*it_initializer->left_expr->symbol());
+    incr_expr = _create_bin_expr(semi_colon, BinaryExprType::ADD, nullptr, _left, _increment_amount);
   } else {
     lexer.get_back();
   }
@@ -766,51 +763,32 @@ AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loo
   content_block_node->parent = loop_stmnt;
 
   // conditional expr
-  AstBinaryExpr *conditional_expr =
-    new AstBinaryExpr(it_initializer->line, it_initializer->column, it_initializer->file_name);
-  loop_stmnt->condition_expr = conditional_expr;
-  conditional_expr->parent = loop_stmnt;
-
-  conditional_expr->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
-  conditional_expr->left_expr->parent = conditional_expr;
-
-  conditional_expr->bin_op = BinaryExprType::LESS;
-
-  conditional_expr->right_expr = end_value;
-  end_value->parent = conditional_expr;
-
-  loop_stmnt->is_condition_checked = true;
+  {
+    AstSymbol *_left = new AstSymbol(*it_initializer->left_expr->symbol());
+    loop_stmnt->condition_expr = _create_bin_expr(semi_colon, BinaryExprType::LESS, loop_stmnt, _left, end_value);
+    loop_stmnt->is_condition_checked = true;
+  }
 
   { // header
-    AstBlock *header_block =
-      new AstBlock(conditional_expr->line, conditional_expr->column, conditional_expr->file_name);
-    header_block->parent = loop_stmnt;
-    loop_stmnt->header_block = header_block;
+    loop_stmnt->header_block = _create_block(loop_token, loop_stmnt);
   }
 
   { // footer
     // var += 1
-    AstBlock *footer_block = new AstBlock(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
-    footer_block->parent = loop_stmnt;
-    loop_stmnt->footer_block = footer_block;
+    AstBlock *_footer_block = loop_stmnt->footer_block = _create_block(semi_colon, loop_stmnt);
 
     if (incr_expr == nullptr) {
+      AstSymbol *_symbol = new AstSymbol(*it_initializer->left_expr->symbol());
       AstUnaryExpr *_incr = new AstUnaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
       _incr->op = UnaryExprType::INC;
-      _incr->expr = new AstSymbol(*it_initializer->left_expr->symbol());
+      _incr->expr = _symbol;
       _incr->expr->parent = _incr;
       incr_expr = _incr;
     }
 
-    AstBinaryExpr *_assign = new AstBinaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
-    _assign->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
-    _assign->left_expr->parent = _assign;
-    _assign->bin_op = BinaryExprType::ASSIGN;
-    _assign->right_expr = incr_expr;
-    _assign->right_expr->parent = _assign;
-
-    _assign->parent = footer_block;
-    footer_block->statements.push_back(_assign);
+    AstSymbol *_left = new AstSymbol(*it_initializer->left_expr->symbol());
+    AstBinaryExpr *_assign = _create_bin_expr(semi_colon, BinaryExprType::ASSIGN, _footer_block, _left, incr_expr);
+    _footer_block->statements.push_back(_assign);
   }
 
   return loop_stmnt;
@@ -991,7 +969,8 @@ AstVarDef *Parser::parse_vardef_stmnt(const Lexer &lexer) noexcept {
  */
 AstType *Parser::parse_type(const Lexer &lexer) noexcept {
   const Token &token = lexer.get_next_token();
-  if (token.id == TokenId::MUL) {
+  switch (token.id) {
+  case TokenId::MUL: {
     // POINTER TYPE
     const TypeInfo *type_info = TypesRepository::get().get_type("pointer");
     auto type_node = new AstType(type_info, token.start_line, token.start_column, token.file_name);
@@ -1008,7 +987,8 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
     type_node->child_type = data_type_node;
 
     return type_node;
-  } else if (token.id == TokenId::L_BRACKET) {
+  }
+  case TokenId::L_BRACKET: {
     // ARRAY TYPE
     const Token &r_braket_token = lexer.get_next_token();
     if (r_braket_token.id != TokenId::R_BRACKET) {
@@ -1032,16 +1012,26 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
     type_node->child_type = data_type_node;
 
     return type_node;
-  } else if (token.id == TokenId::IDENTIFIER) {
+  }
+  case TokenId::IDENTIFIER: {
     // TODO(pablo96): register new types
     return TypesRepository::get().get_type_node(lexer.get_token_value(token));
-  } else if (token.id == TokenId::_EOF) {
+  }
+  case TokenId::_EOF: {
     const Token &prev_token = lexer.get_previous_token();
     _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
     return nullptr;
   }
-  // Bad prediction
-  LL_UNREACHEABLE;
+  case TokenId::R_PAREN:
+  case TokenId::COMMA: {
+    const Token &prev_token = lexer.get_previous_token();
+    _parse_error(errors, prev_token, ERROR_UNNAMED_PARAM, lexer.get_token_value(prev_token));
+    return nullptr;
+  }
+  default:
+    // Bad prediction
+    LL_UNREACHEABLE;
+  }
 }
 
 /*
@@ -1065,13 +1055,7 @@ AstBinaryExpr *Parser::parse_assign_stmnt(const Lexer &lexer) noexcept {
       // TODO(pablo96): error in unary_expr => sync parsing
       return nullptr;
     }
-    AstBinaryExpr *node = new AstBinaryExpr(token.start_line, token.start_column, token.file_name);
-    expr->parent = node;
-    identifier_node->parent = node;
-    node->bin_op = BinaryExprType::ASSIGN;
-    node->left_expr = identifier_node;
-    node->right_expr = expr;
-    return node;
+    return _create_bin_expr(token, BinaryExprType::ASSIGN, nullptr, identifier_node, expr);
   }
 
   // Getting here means the prediction failed.
@@ -1169,12 +1153,12 @@ AstNode *Parser::parse_expr(const Lexer &lexer) noexcept {
 /*
  * Parses comparative expresions
  * compExpr
- *   : algebraicExpr ('==' | '!=' | '>='| '<=' | '<'| '>') algebraicExpr
+ *   : algebraicExpr ( '&&', '||', '==' | '!=' | '>='| '<=' | '<'| '>') algebraicExpr
  *   | algebraicExpr
  *   ;
  */
 AstNode *Parser::parse_comp_expr(const Lexer &lexer) noexcept {
-  auto root_node = parse_algebraic_expr(lexer);
+  AstNode *root_node = parse_algebraic_expr(lexer);
   if (!root_node) {
     // TODO(pablo96): error in primary expr => sync parsing
     return nullptr;
@@ -1183,8 +1167,8 @@ AstNode *Parser::parse_comp_expr(const Lexer &lexer) noexcept {
   while (true) {
     const Token &token = lexer.get_next_token();
 
-    if (!MATCH(&token, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER, TokenId::GREATER_OR_EQUALS,
-               TokenId::LESS, TokenId::LESS_OR_EQUALS)) {
+    if (!MATCH(&token, TokenId::AND, TokenId::OR, TokenId::EQUALS, TokenId::NOT_EQUALS, TokenId::GREATER,
+               TokenId::GREATER_OR_EQUALS, TokenId::LESS, TokenId::LESS_OR_EQUALS)) {
       // Not my token
       lexer.get_back();
       break;
@@ -1197,12 +1181,8 @@ AstNode *Parser::parse_comp_expr(const Lexer &lexer) noexcept {
     }
 
     // create binary node
-    AstBinaryExpr *binary_expr = new AstBinaryExpr(token.start_line, token.start_column, token.file_name);
-    unary_expr->parent = binary_expr;
-    root_node->parent = binary_expr;
-    binary_expr->left_expr = root_node;
-    binary_expr->bin_op = _get_binary_op(token);
-    binary_expr->right_expr = unary_expr;
+    BinaryExprType bin_op = _get_binary_op(token);
+    AstBinaryExpr *binary_expr = _create_bin_expr(token, bin_op, nullptr, root_node, unary_expr);
 
     // set the new node as root.
     root_node = binary_expr;
@@ -1218,7 +1198,7 @@ AstNode *Parser::parse_comp_expr(const Lexer &lexer) noexcept {
  *   | termExpr
  */
 AstNode *Parser::parse_algebraic_expr(const Lexer &lexer) noexcept {
-  auto root_node = parse_term_expr(lexer);
+  AstNode *root_node = parse_term_expr(lexer);
   if (!root_node) {
     // TODO(pablo96): error in primary expr => sync parsing
     return nullptr;
@@ -1232,19 +1212,15 @@ AstNode *Parser::parse_algebraic_expr(const Lexer &lexer) noexcept {
       break;
     }
 
-    auto term_expr = parse_term_expr(lexer);
+    AstNode *term_expr = parse_term_expr(lexer);
     if (!term_expr) {
       // TODO(pablo96): error in term_expr => sync parsing
       break;
     }
 
     // create binary node
-    auto binary_expr = new AstBinaryExpr(token.start_line, token.start_column, token.file_name);
-    term_expr->parent = binary_expr;
-    root_node->parent = binary_expr;
-    binary_expr->left_expr = root_node;
-    binary_expr->bin_op = _get_binary_op(token);
-    binary_expr->right_expr = term_expr;
+    BinaryExprType bin_op = _get_binary_op(token);
+    AstBinaryExpr *binary_expr = _create_bin_expr(token, bin_op, nullptr, root_node, term_expr);
 
     // set the new node as root.
     root_node = binary_expr;
@@ -1256,11 +1232,11 @@ AstNode *Parser::parse_algebraic_expr(const Lexer &lexer) noexcept {
 /*
  * Parses multiplication like expressions
  * termExpr
- *   : primaryExpr ('*' | '/' | '%' | '<<' | '>>' | '&' | '^') primaryExpr
- *   | primaryExpr
+ *   : unaryExpr ('*' | '/' | '%' | '<<' | '>>' | '&' | '^') unaryExpr
+ *   | unaryExpr
  */
 AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
-  auto root_node = parse_unary_expr(lexer);
+  AstNode *root_node = parse_unary_expr(lexer);
 
   if (!root_node) {
     // TODO(pablo96): error in primary expr => sync parsing
@@ -1269,26 +1245,22 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
 
   do {
     const Token &token = lexer.get_next_token();
-    if (!MATCH(&token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::BIT_AND,
+    if (!MATCH(&token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::AMPERSAND,
                TokenId::BIT_XOR)) {
       // Not my token
       lexer.get_back();
       break;
     }
 
-    auto symbol_token = parse_unary_expr(lexer);
+    AstNode *symbol_token = parse_unary_expr(lexer);
     if (!symbol_token) {
       // TODO(pablo96): error in primary expr => sync parsing
       break;
     }
 
     // create binary node
-    auto binary_expr = new AstBinaryExpr(token.start_line, token.start_column, token.file_name);
-    symbol_token->parent = binary_expr;
-    root_node->parent = binary_expr;
-    binary_expr->left_expr = root_node;
-    binary_expr->bin_op = _get_binary_op(token);
-    binary_expr->right_expr = symbol_token;
+    BinaryExprType bin_op = _get_binary_op(token);
+    AstBinaryExpr *binary_expr = _create_bin_expr(token, bin_op, nullptr, root_node, symbol_token);
 
     // set the new node as root.
     root_node = binary_expr;
@@ -1300,8 +1272,8 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
 /*
  * Parses unary expresions
  * unaryExpr
- *   : ('!' | '~' | '--' | '++' | '-') primaryExpr
- *   | primaryExpr ('!' | '~' | '--' | '++' | '-')
+ *   : ('!' | '~' | '--' | '++' | '-' | '&') primaryExpr
+ *   | primaryExpr ('--' | '++')
  *   | primaryExpr
  *   ;
  */
@@ -1322,10 +1294,15 @@ consume_plus:
   // TODO(pablo96): Add an assign in the inc/dec operations
 
   // op primary_expr
-  if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS,
-            TokenId::MINUS)) {
-    if (unary_op_token.id == TokenId::MINUS)
-      lexer.get_back();
+  if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS, TokenId::MINUS,
+            TokenId::AMPERSAND)) {
+    const Token &next_token = lexer.get_next_token();
+    if (unary_op_token.id == TokenId::MINUS && next_token.id != TokenId::IDENTIFIER) {
+      lexer.get_back(); // next_token
+      lexer.get_back(); // unary_op_token
+      return parse_primary_expr(lexer);
+    }
+    lexer.get_back(); // next_token
 
     AstUnaryExpr *node =
       new AstUnaryExpr(unary_op_token.start_line, unary_op_token.start_column, unary_op_token.file_name);
@@ -1353,7 +1330,7 @@ consume_plus:
 
   const Token &token = lexer.get_next_token();
   // primary_expr op
-  if (MATCH(&token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
+  if (MATCH(&token, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
     AstUnaryExpr *node = new AstUnaryExpr(token.start_line, token.start_column, token.file_name);
     primary_expr->parent = node;
     node->expr = primary_expr;
@@ -1366,6 +1343,7 @@ consume_plus:
 }
 
 /*
+
  * Parses primary expressions
  * primary_expr
  *   : expression
@@ -1410,8 +1388,8 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
   bool is_negative = token.id == TokenId::MINUS;
   const Token &number_token = is_negative ? lexer.get_next_token() : token;
 
-  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE,
-            TokenId::FALSE)) {
+  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE, TokenId::FALSE,
+            TokenId::NIL)) {
     return parse_const_expr(lexer, token, number_token);
   }
 
@@ -1429,19 +1407,28 @@ AstNode *Parser::parse_const_expr(const Lexer &lexer, const Token &token, const 
     auto number = const_value_node->number = number_token.int_lit.number;
     const_value_node->is_negative = number_token.int_lit.is_negative;
   } break;
-  case TokenId::FLOAT_LIT:
+  case TokenId::FLOAT_LIT: {
     const_value_node->type = ConstValueType::FLOAT;
     const_value_node->number = number_token.float_lit.number;
-    break;
-  case TokenId::UNICODE_CHAR:
+  } break;
+  case TokenId::UNICODE_CHAR: {
     const_value_node->type = ConstValueType::CHAR;
     const_value_node->unicode_char = number_token.char_lit;
-    break;
+  } break;
   case TokenId::FALSE:
-  case TokenId::TRUE:
+  case TokenId::TRUE: {
     const_value_node->type = ConstValueType::BOOL;
     const_value_node->boolean = number_token.id == TokenId::TRUE;
-    break;
+  } break;
+  case TokenId::NIL: {
+    /* NOTE:
+     * If it is another type of value for a pointer,
+     * the semantic analizer will resolve it
+     */
+    const_value_node->type = ConstValueType::PTR;
+    const_value_node->number = "0";
+    const_value_node->bit_size = 64;
+  } break;
   default:
     LL_UNREACHEABLE;
   }
@@ -1550,7 +1537,7 @@ bool _is_new_line_between(const Lexer &lexer, const size_t start_pos, const size
   return str_view.find_first_of('\n') != str_view.npos;
 }
 
-bool _is_forbiden_statement(const Token &token) noexcept {
+bool _is_forbiden_statement(const Token &token, const Token &next_token) noexcept {
   switch (token.id) {
   case TokenId::ASSIGN: {
     // IDENTIFIER = ...
@@ -1568,6 +1555,11 @@ bool _is_forbiden_statement(const Token &token) noexcept {
     return true;
   }
   case ARITHMETIC_OPERATOR: {
+    if (token.id == TokenId::MUL) {
+      if (match(&next_token, TokenId::IDENTIFIER, TokenId::MUL, TokenId::L_BRACKET)) {
+        return false;
+      }
+    }
     // IDENTIFIER +...
     // TODO(pablo96): Wrong place for arithmetic expr
     return true;
@@ -1600,10 +1592,14 @@ BinaryExprType _get_binary_op(const Token &token) noexcept {
     return BinaryExprType::RSHIFT;
   case TokenId::BIT_XOR:
     return BinaryExprType::BIT_XOR;
-  case TokenId::BIT_AND:
+  case TokenId::AMPERSAND:
     return BinaryExprType::BIT_AND;
   case TokenId::ASSIGN:
     return BinaryExprType::ASSIGN;
+  case TokenId::AND:
+    return BinaryExprType::AND;
+  case TokenId::OR:
+    return BinaryExprType::OR;
   case TokenId::EQUALS:
     return BinaryExprType::EQUALS;
   case TokenId::NOT_EQUALS:
@@ -1635,6 +1631,8 @@ UnaryExprType _get_unary_op(const Token &token) noexcept {
     return UnaryExprType::RET;
   case TokenId::NOT:
     return UnaryExprType::NOT;
+  case TokenId::AMPERSAND:
+    return UnaryExprType::ADDRESS_OF;
   default:
     LL_UNREACHEABLE;
   }
@@ -1666,7 +1664,7 @@ bool _is_expr_token(const Token &token) noexcept {
   case TokenId::MOD:
   case TokenId::LSHIFT:
   case TokenId::RSHIFT:
-  case TokenId::BIT_AND:
+  case TokenId::AMPERSAND:
   case TokenId::BIT_XOR:
   case TokenId::PLUS:
   case TokenId::MINUS:
@@ -1815,4 +1813,23 @@ bool _is_boolean_expression(const AstNode *in_expr, AstNode *in_stmnt_node) {
     return true;
   }
   return false;
+}
+
+AstBlock *_create_block(const Token &token, AstNode *parent) {
+  AstBlock *_block = new AstBlock(token.start_line, token.start_column, token.file_name);
+  _block->parent = parent;
+  return _block;
+}
+
+AstBinaryExpr *_create_bin_expr(const Token &token, const BinaryExprType bin_op, AstNode *parent, AstNode *left,
+                                AstNode *right) {
+  AstBinaryExpr *_bin_expr = new AstBinaryExpr(token.start_line, token.start_column, token.file_name);
+  _bin_expr->bin_op = bin_op;
+  _bin_expr->left_expr = left;
+  _bin_expr->right_expr = right;
+  _bin_expr->left_expr->parent = _bin_expr;
+  _bin_expr->right_expr->parent = _bin_expr;
+  _bin_expr->parent = parent;
+
+  return _bin_expr;
 }

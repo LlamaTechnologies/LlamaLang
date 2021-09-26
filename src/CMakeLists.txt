@@ -11,6 +11,9 @@ set(LLAMALANG_SRC
 ast_nodes.hpp
 ast_nodes.cpp
 
+builtins.hpp
+builtins.cpp
+
 common_defs.hpp
 common_defs.cpp
 
