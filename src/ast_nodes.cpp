@@ -36,9 +36,7 @@ const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcep
   return types_id_names_lower_case.at((size_t)in_type_id);
 }
 
-static const std::vector<const char *> unary_operators_symbols = {
-  "++", "--", "-", "!", "~",
-};
+static const std::vector<const char *> unary_operators_symbols = { "++", "--", "-", "!", "~", "&", "*", "ret" };
 
 const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept {
   LL_ASSERT(op_type < UnaryExprType::RET);

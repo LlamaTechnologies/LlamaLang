@@ -303,14 +303,14 @@ struct AstBinaryExpr : public AstNode {
  */
 enum class UnaryExprType
 {
-  INC,        // ++  primaryExpr
-  DEC,        // --  primaryExpr
-  NEG,        // -   primaryExpr
-  NOT,        // !   primaryExpr
-  BIT_INV,    // ~   primaryExpr
-  ADDRESS_OF, // &   primaryExpr
-  RET,        // ret Expr
-  JMP         // jmp block NOTE: this is used internally
+  INC,         // ++  primaryExpr
+  DEC,         // --  primaryExpr
+  NEG,         // -   primaryExpr
+  NOT,         // !   primaryExpr
+  BIT_INV,     // ~   primaryExpr
+  ADDRESS_OF,  // &   primaryExpr
+  DEREFERENCE, // *   primaryExpr
+  RET          // ret Expr
 };
 
 const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept;

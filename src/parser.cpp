@@ -902,6 +902,12 @@ stmnt_expr:
     lexer.get_back();
     return parse_branch_stmnt(lexer);
   }
+  case TokenId::MUL: {
+    // ptr dereference can only be an assignment of type
+    // *ptr = expr
+    lexer.get_back();
+    return parse_assign_stmnt(lexer);
+  }
   case TokenId::LOOP: {
     lexer.get_back();
     return parse_loop_stmnt(lexer);
@@ -1048,7 +1054,7 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
  *   ;
  */
 AstBinaryExpr *Parser::parse_assign_stmnt(const Lexer &lexer) noexcept {
-  auto identifier_node = parse_primary_expr(lexer);
+  auto identifier_node = parse_unary_expr(lexer);
   if (!identifier_node) {
     // TODO(pablo96): error in unary_expr => sync parsing
     return nullptr;
@@ -1301,7 +1307,7 @@ consume_plus:
 
   // op primary_expr
   if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS, TokenId::MINUS,
-            TokenId::AMPERSAND)) {
+            TokenId::AMPERSAND, TokenId::MUL)) {
     const Token &next_token = lexer.get_next_token();
     if (unary_op_token.id == TokenId::MINUS && next_token.id != TokenId::IDENTIFIER) {
       lexer.get_back(); // next_token
@@ -1639,6 +1645,8 @@ UnaryExprType _get_unary_op(const Token &token) noexcept {
     return UnaryExprType::NOT;
   case TokenId::AMPERSAND:
     return UnaryExprType::ADDRESS_OF;
+  case TokenId::MUL:
+    return UnaryExprType::DEREFERENCE;
   default:
     LL_UNREACHEABLE;
   }

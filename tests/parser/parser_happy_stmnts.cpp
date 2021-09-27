@@ -67,6 +67,37 @@ TEST(ParserHappyAssignStmntTests, ComplexExpr) {
   delete value_node;
 }
 
+TEST(ParserHappyAssignStmntTests, DereferencePtrAssignConstValue) {
+  std::vector<Error> errors;
+  Lexer lexer("*myPtr = 5", "file/directory", "DereferencePtrAssignConstValue", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstBinaryExpr *assign_node = parser.parse_assign_stmnt(lexer)->binary_expr();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(assign_node, nullptr);
+  ASSERT_EQ(assign_node->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(assign_node->bin_op, BinaryExprType::ASSIGN);
+
+  const AstUnaryExpr *deref_ptr = assign_node->left_expr->unary_expr();
+  ASSERT_EQ(deref_ptr->parent, assign_node);
+  ASSERT_EQ(deref_ptr->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(deref_ptr->op, UnaryExprType::DEREFERENCE);
+  ASSERT_NE(deref_ptr->expr, nullptr);
+
+  const AstSymbol *_ptr = deref_ptr->expr->symbol();
+  ASSERT_EQ(_ptr->parent, deref_ptr);
+  ASSERT_EQ(_ptr->node_type, AstNodeType::AST_SYMBOL);
+
+  const AstConstValue *const_val = assign_node->right_expr->const_value();
+  ASSERT_EQ(const_val->parent, assign_node);
+  ASSERT_EQ(const_val->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_EQ(const_val->type, ConstValueType::INT);
+
+  delete assign_node;
+}
+
 //==================================================================================
 //          PARSE TYPES
 //==================================================================================
