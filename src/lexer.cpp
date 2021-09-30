@@ -1031,6 +1031,8 @@ void Lexer::tokenize() noexcept {
 
 const bool Lexer::has_tokens() const noexcept { return tokens.size() - (curr_index + 1) != 0; }
 
+const size_t Lexer::get_current_pos() const noexcept { return curr_index; }
+
 const Token &Lexer::get_previous_token() const noexcept { return tokens.at(curr_index - 1); }
 
 const Token &Lexer::get_next_token() const noexcept { return tokens.at(++curr_index); }

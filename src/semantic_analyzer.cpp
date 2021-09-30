@@ -780,6 +780,10 @@ const AstType *_get_unary_expr_type(std::vector<Error> &errors, const Table *sym
     return ptr_type;
   }
 
+  if (in_unary_expr->op == UnaryExprType::DEREFERENCE) {
+    return expr_type->child_type;
+  }
+
   return expr_type;
 }
 

@@ -1035,6 +1035,56 @@ TEST(ParserHappyParseCompExprTests, AndIdentifierAddressOfIdentifierTest) {
   delete value_node;
 }
 
+TEST(ParserHappyParseCompExprTests, CombinedDereferencePtrExpr) {
+  std::vector<Error> errors;
+  Lexer lexer("*ptr = *ptr * num * *ptr", "file/directory", "CombinedDereferencePtrExpr", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstBinaryExpr *value_node = parser.parse_assign_stmnt(lexer);
+
+  ASSERT_NE(value_node, nullptr);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(value_node->bin_op, BinaryExprType::ASSIGN);
+
+  const AstUnaryExpr *ptr_lvalue = value_node->left_expr->unary_expr();
+  ASSERT_NE(ptr_lvalue, nullptr);
+  ASSERT_EQ(ptr_lvalue->parent, value_node);
+  ASSERT_EQ(ptr_lvalue->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(ptr_lvalue->op, UnaryExprType::DEREFERENCE);
+
+  const AstBinaryExpr *mul_ptr_num = value_node->right_expr->binary_expr();
+  ASSERT_NE(mul_ptr_num, nullptr);
+  ASSERT_EQ(mul_ptr_num->parent, value_node);
+  ASSERT_EQ(mul_ptr_num->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(mul_ptr_num->bin_op, BinaryExprType::MUL);
+
+  const AstBinaryExpr *mul_num_ptr = mul_ptr_num->left_expr->binary_expr();
+  ASSERT_NE(mul_num_ptr, nullptr);
+  ASSERT_EQ(mul_num_ptr->parent, mul_ptr_num);
+  ASSERT_EQ(mul_num_ptr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(mul_num_ptr->bin_op, BinaryExprType::MUL);
+
+  const AstUnaryExpr *ptr_rmul = mul_num_ptr->left_expr->unary_expr();
+  ASSERT_NE(ptr_rmul, nullptr);
+  ASSERT_EQ(ptr_rmul->parent, mul_num_ptr);
+  ASSERT_EQ(ptr_rmul->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(ptr_rmul->op, UnaryExprType::DEREFERENCE);
+
+  const AstSymbol *num_symbol = mul_num_ptr->right_expr->symbol();
+  ASSERT_NE(num_symbol, nullptr);
+  ASSERT_EQ(num_symbol->parent, mul_num_ptr);
+  ASSERT_EQ(num_symbol->node_type, AstNodeType::AST_SYMBOL);
+
+  const AstUnaryExpr *ptr_lmul = mul_ptr_num->right_expr->unary_expr();
+  ASSERT_NE(ptr_lmul, nullptr);
+  ASSERT_EQ(ptr_lmul->parent, mul_ptr_num);
+  ASSERT_EQ(ptr_lmul->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(ptr_lmul->op, UnaryExprType::DEREFERENCE);
+
+  delete value_node;
+}
+
 //==================================================================================
 //          UTILS
 //==================================================================================

@@ -391,9 +391,9 @@ TEST(SemanticAssignments, InitVoidPtrTypeNilValueOperator) {
   lexer.tokenize();
 
   Parser parser(errors);
-  AstSourceCode *src_code = parser.parse(lexer);
+  const AstSourceCode *src_code = parser.parse(lexer);
 
-  AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
 
   // given: analizer
   SemanticAnalyzer analizer(errors);
@@ -416,9 +416,9 @@ TEST(SemanticAssignments, InitPtrTypeNilValueOperator) {
   lexer.tokenize();
 
   Parser parser(errors);
-  AstSourceCode *src_code = parser.parse(lexer);
+  const AstSourceCode *src_code = parser.parse(lexer);
 
-  AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
 
   // given: analizer
   SemanticAnalyzer analizer(errors);
@@ -442,10 +442,10 @@ TEST(SemanticAssignments, InitPtrTypeAddressOfValueOperator) {
   lexer.tokenize();
 
   Parser parser(errors);
-  AstSourceCode *src_code = parser.parse(lexer);
+  const AstSourceCode *src_code = parser.parse(lexer);
 
-  AstVarDef *var_def = src_code->children.at(0)->var_def();
-  AstVarDef *ptr_def = src_code->children.at(1)->var_def();
+  const AstVarDef *var_def = src_code->children.at(0)->var_def();
+  const AstVarDef *ptr_def = src_code->children.at(1)->var_def();
 
   // given: analizer
   SemanticAnalyzer analizer(errors);
@@ -474,12 +474,88 @@ TEST(SemanticAssignments, AssignPtrTypeAddressOfValueOperator) {
   lexer.tokenize();
 
   Parser parser(errors);
-  AstSourceCode *src_code = parser.parse(lexer);
+  const AstSourceCode *src_code = parser.parse(lexer);
 
-  AstFnDef *fn_def = src_code->children.at(0)->fn_def();
-  AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
-  AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
-  AstVarDef *ptr_assign = fn_def->block->statements.at(2)->var_def();
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
+  const AstBinaryExpr *ptr_assign = fn_def->block->statements.at(2)->binary_expr();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assign = analizer.analize_expr(ptr_assign);
+
+  // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assign);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, AssignDereferencedPtrConstValue) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "fn myFn () void {\n"
+                             "\tnum u64 = 32\n"
+                             /** IMPORTANT: */
+                             // TODO(pablo96): end line with '*' to handle degenerate case.
+                             "\tptr *u64 = &num\n"
+                             "\t*ptr = 64\n"
+                             "}\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "AssignDereferencedPtrConstValue", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
+  const AstBinaryExpr *ptr_assign = fn_def->block->statements.at(2)->binary_expr();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assign = analizer.analize_expr(ptr_assign);
+
+  // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assign);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, AssignDereferencedPtrAndCombinedDereferencePtrExpr) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "fn myFn () void {\n"
+                             "\tnum u64 = 32\n"
+                             /** IMPORTANT: */
+                             // TODO(pablo96): end line with '*' to handle degenerate case.
+                             "\tptr *u64 = &num\n"
+                             "\t*ptr = *ptr * num * *ptr\n"
+                             "}\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "AssignDereferencedPtrAndCombinedDereferencePtrExpr", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
+  const AstBinaryExpr *ptr_assign = fn_def->block->statements.at(2)->binary_expr();
 
   // given: analizer
   SemanticAnalyzer analizer(errors);

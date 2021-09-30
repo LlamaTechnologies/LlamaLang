@@ -229,6 +229,8 @@ public:
 
   const bool has_tokens() const noexcept;
 
+  const size_t get_current_pos() const noexcept;
+
   const Token &get_previous_token() const noexcept;
 
   // should not be called after EOF token

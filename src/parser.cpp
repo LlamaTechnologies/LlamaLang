@@ -1256,6 +1256,7 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
   }
 
   do {
+    const Token *prev_token = lexer.get_current_pos() > 0 ? &lexer.get_previous_token() : nullptr;
     const Token &token = lexer.get_next_token();
     if (!MATCH(&token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT, TokenId::AMPERSAND,
                TokenId::BIT_XOR)) {
@@ -1264,15 +1265,36 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
       break;
     }
 
-    AstNode *symbol_token = parse_unary_expr(lexer);
-    if (!symbol_token) {
+    if (prev_token) {
+      const Token &identifier = lexer.get_next_token();
+      if (identifier.id == TokenId::IDENTIFIER) {
+        const Token &assign_token = lexer.get_next_token();
+        if (assign_token.id == TokenId::ASSIGN) {
+          if (_is_new_line_between(lexer, prev_token->end_pos, token.start_pos)) {
+            // is a new line with ptr dereference
+            // example:
+            // id = &id1
+            // *id2 = ...
+            lexer.get_back(); // = token
+            lexer.get_back(); // identifier
+            lexer.get_back(); // token
+            break;
+          }
+        }
+        lexer.get_back(); // = token
+      }
+      lexer.get_back(); // identifier
+    }
+
+    AstNode *symbol_node = parse_unary_expr(lexer);
+    if (!symbol_node) {
       // TODO(pablo96): error in primary expr => sync parsing
       break;
     }
 
     // create binary node
     BinaryExprType bin_op = _get_binary_op(token);
-    AstBinaryExpr *binary_expr = _create_bin_expr(token, bin_op, nullptr, root_node, symbol_token);
+    AstBinaryExpr *binary_expr = _create_bin_expr(token, bin_op, nullptr, root_node, symbol_node);
 
     // set the new node as root.
     root_node = binary_expr;
@@ -1308,13 +1330,15 @@ consume_plus:
   // op primary_expr
   if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS, TokenId::MINUS,
             TokenId::AMPERSAND, TokenId::MUL)) {
-    const Token &next_token = lexer.get_next_token();
-    if (unary_op_token.id == TokenId::MINUS && next_token.id != TokenId::IDENTIFIER) {
+    {
+      const Token &next_token = lexer.get_next_token();
+      if (unary_op_token.id == TokenId::MINUS && next_token.id != TokenId::IDENTIFIER) {
+        lexer.get_back(); // next_token
+        lexer.get_back(); // unary_op_token
+        return parse_primary_expr(lexer);
+      }
       lexer.get_back(); // next_token
-      lexer.get_back(); // unary_op_token
-      return parse_primary_expr(lexer);
     }
-    lexer.get_back(); // next_token
 
     AstUnaryExpr *node =
       new AstUnaryExpr(unary_op_token.start_line, unary_op_token.start_column, unary_op_token.file_name);
