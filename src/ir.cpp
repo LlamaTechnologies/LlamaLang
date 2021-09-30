@@ -211,6 +211,9 @@ llvm::Value *LlvmIrGenerator::gen_unary_expr(const AstUnaryExpr *in_unary_expr) 
     LL_ASSERT(in_unary_expr->expr->node_type == AstNodeType::AST_SYMBOL);
     return in_unary_expr->expr->symbol()->data->var_def()->llvm_value;
   }
+  case UnaryExprType::DEREFERENCE: {
+    return gen_expr(in_unary_expr->expr);
+  }
   case UnaryExprType::NOT:
   case UnaryExprType::BIT_INV: {
     auto symbol_ref = gen_expr(in_unary_expr->expr);
@@ -221,9 +224,25 @@ llvm::Value *LlvmIrGenerator::gen_unary_expr(const AstUnaryExpr *in_unary_expr) 
   }
 }
 
+llvm::Value *_get_symbol_var(const AstNode *in_node) {
+  const AstNode *symbol_node = in_node;
+  while (true) {
+    if (symbol_node->node_type == AstNodeType::AST_SYMBOL) {
+      return symbol_node->symbol()->data->var_def()->llvm_value;
+    }
+
+    if (symbol_node->node_type == AstNodeType::AST_UNARY_EXPR) {
+      symbol_node = symbol_node->unary_expr()->expr;
+    } else {
+      LL_UNREACHEABLE;
+    }
+  }
+}
 llvm::Value *LlvmIrGenerator::gen_binary_expr(const AstBinaryExpr *in_binary_expr) {
   if (in_binary_expr->bin_op == BinaryExprType::ASSIGN) {
-    llvm::Value *l_expr_llvm_value = in_binary_expr->left_expr->symbol()->data->var_def()->llvm_value;
+    LL_ASSERT(in_binary_expr->left_expr->node_type == AstNodeType::AST_SYMBOL ||
+              in_binary_expr->left_expr->node_type == AstNodeType::AST_UNARY_EXPR);
+    llvm::Value *l_expr_llvm_value = _get_symbol_var(in_binary_expr->left_expr);
     llvm::Value *r_expr_llvm_value = gen_expr(in_binary_expr->right_expr);
     LL_ASSERT(l_expr_llvm_value != nullptr);
     LL_ASSERT(r_expr_llvm_value != nullptr);

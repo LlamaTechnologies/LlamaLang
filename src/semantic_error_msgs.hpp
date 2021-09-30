@@ -22,3 +22,5 @@ constexpr const char *ERROR_CTRL_STMNT_INVALID_LOCATION =
 constexpr const char *ERROR_RET_STMNT_INVALID_LOCATION = "invalid location '%s' for return statement";
 constexpr const char *ERROR_UNSUPORTED_ADDRESSOF_NOT_SYMBOL_EXPR =
   "unsupported 'address of' operator in expr. Expr should be a symbol";
+constexpr const char *ERROR_UNSUPORTED_DEREFERENCE_NOT_SYMBOL_EXPR =
+  "unsupported dereference '*' operator in expr. Expr should be a symbol";

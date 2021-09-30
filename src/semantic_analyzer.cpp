@@ -420,6 +420,22 @@ inline bool SemanticAnalyzer::_analize_unary_expr(const AstUnaryExpr *in_unary_e
     return false;
   }
 
+  if (in_unary_expr->op == UnaryExprType::DEREFERENCE) {
+    // if it is a dereference of a unary expr
+    // then can only be a dereference of a dereference
+    if (in_unary_expr->expr->node_type == AstNodeType::AST_UNARY_EXPR &&
+        in_unary_expr->expr->unary_expr()->op != UnaryExprType::DEREFERENCE) {
+      add_semantic_error(this->errors, in_unary_expr, ERROR_UNSUPORTED_DEREFERENCE_NOT_SYMBOL_EXPR);
+      return false;
+    }
+
+    // else should be a dereference of a symbol
+    if (in_unary_expr->expr->node_type != AstNodeType::AST_SYMBOL) {
+      add_semantic_error(this->errors, in_unary_expr, ERROR_UNSUPORTED_DEREFERENCE_NOT_SYMBOL_EXPR);
+      return false;
+    }
+  }
+
   return analize_expr(in_unary_expr->expr);
 }
 
@@ -642,17 +658,16 @@ void add_semantic_error(std::vector<Error> &errors, const AstNode *in_node, cons
   s32 len1 = snprintf(nullptr, 0, in_msg, ap);
   LL_ASSERT(len1 >= 0);
 
-  const s32 CAPACITY = len1 + 1;
-  char *msg = new char[CAPACITY];
+  std::string msg;
+  msg.reserve(len1 + 1);
+  msg.resize(len1);
 
-  s32 len2 = snprintf(msg, CAPACITY, in_msg, ap2);
+  s32 len2 = snprintf(msg.data(), msg.capacity(), in_msg, ap2);
   LL_ASSERT(len2 >= 0);
   // assert(len2 == len1);
 
   Error error(ERROR_TYPE::ERROR, in_node->line, in_node->column, in_node->file_name, msg);
   errors.push_back(error);
-
-  delete[] msg;
 
   va_end(ap);
   va_end(ap2);
