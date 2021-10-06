@@ -224,20 +224,25 @@ llvm::Value *LlvmIrGenerator::gen_unary_expr(const AstUnaryExpr *in_unary_expr) 
   }
 }
 
-llvm::Value *_get_symbol_var(const AstNode *in_node) {
+llvm::Value *LlvmIrGenerator::_get_symbol_var(const AstNode *in_node) {
   const AstNode *symbol_node = in_node;
+  u64 load_counts = 0;
   while (true) {
     if (symbol_node->node_type == AstNodeType::AST_SYMBOL) {
-      return symbol_node->symbol()->data->var_def()->llvm_value;
+      llvm::Value *value = symbol_node->symbol()->data->var_def()->llvm_value;
+      for (u64 i = 0; i < load_counts; ++i) { value = builder->CreateLoad(value); }
+      return value;
     }
 
     if (symbol_node->node_type == AstNodeType::AST_UNARY_EXPR) {
       symbol_node = symbol_node->unary_expr()->expr;
+      load_counts++;
     } else {
       LL_UNREACHEABLE;
     }
   }
 }
+
 llvm::Value *LlvmIrGenerator::gen_binary_expr(const AstBinaryExpr *in_binary_expr) {
   if (in_binary_expr->bin_op == BinaryExprType::ASSIGN) {
     LL_ASSERT(in_binary_expr->left_expr->node_type == AstNodeType::AST_SYMBOL ||
