@@ -13,7 +13,7 @@
 static std::string get_current_dir();
 static std::vector<char *> *split_string(const std::string &in_str, const char in_separator);
 static std::string get_path_to_program_by_name(const std::string &in_name);
-static int run_process(const std::string &in_program_path, const std::string &in_program_args);
+static s32 run_process(const std::string &in_program_path, const std::string &in_program_args);
 
 constexpr const char *ARG_SRC_FILE = "-s";
 constexpr const char *ARG_OUT_NAME = "-o";
@@ -21,7 +21,7 @@ constexpr const char *ARG_OUT_DIR = "-O";
 
 Driver::Driver() : current_dir(get_current_dir()) {}
 
-bool Driver::setup(const char **argv, const int argc) {
+bool Driver::setup(const char **argv, const s32 argc) {
   if (!_parse_args(argv, argc)) {
     return false;
   }
@@ -60,7 +60,7 @@ bool Driver::run() {
 
   console::write_line(lld_args);
 
-  int lld_exit_code = run_process(this->lld_path, lld_args);
+  s32 lld_exit_code = run_process(this->lld_path, lld_args);
   if (lld_exit_code < 0) {
     console::write_line("error with lld");
     return false;
@@ -103,7 +103,7 @@ bool Driver::_verify_file_path() {
   }
 }
 
-bool Driver::_parse_args(const char **argv, const int argc) {
+bool Driver::_parse_args(const char **argv, const s32 argc) {
   std::string source_name;
 
   for (size_t i = 1; i < argc; i += 2) {
@@ -194,18 +194,18 @@ std::string get_path_to_program_by_name(const std::string &in_name) {
   return "";
 }
 
-int run_process(const std::string &in_program_path, const std::string &in_program_args) {
+s32 run_process(const std::string &in_program_path, const std::string &in_program_args) {
   return system(in_program_args.c_str());
 }
 #endif
 
 #ifdef LL_WIN32
 std::string get_path_to_program_by_name(const std::string &in_name) {
-  const unsigned int n_buffer_len = MAX_PATH;
+  const u32 n_buffer_len = MAX_PATH;
 
   char *buffer = new char[n_buffer_len];
   DWORD writen_chars = SearchPathA(NULL, // null to make it search on the registry
-                                   in_name.c_str(), ".exe", n_buffer_len, buffer, nullptr);
+                                 in_name.c_str(), ".exe", n_buffer_len, buffer, nullptr);
 
   if (writen_chars <= 0) {
     return "";
@@ -233,7 +233,7 @@ void handle_error() {
   }
 }
 
-int run_process(const std::string &in_program_path, std::string &in_program_args) {
+s32 run_process(const std::string &in_program_path, std::string &in_program_args) {
   PROCESS_INFORMATION process_info = {};
   STARTUPINFOA start_info = {};
   start_info.cb = sizeof(STARTUPINFOA);

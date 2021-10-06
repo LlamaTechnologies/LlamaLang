@@ -14,7 +14,7 @@
 //==================================================================================
 
 TEST(Integrations, FunctionDeclarationExternFile) {
-  static const char *external_file = "extern fn my_func() i32\n";
+  static const char *external_file = "extern fn my_func() s32\n";
 
   struct FileInputMock : FileInput {
     FILE_PATH_STATUS verify_file_path(std::filesystem::path &in_path) const { return FILE_PATH_STATUS::OK; }
@@ -27,7 +27,7 @@ TEST(Integrations, FunctionDeclarationExternFile) {
   // given: source code
   const char *source_code = "#load \"extern_file\"\n"
                             "\n"
-                            "fn main() i32 {\n"
+                            "fn main() s32 {\n"
                             "\tmy_func()\n"
                             "\tret 0\n"
                             "}\n";
@@ -57,9 +57,9 @@ TEST(Integrations, FromCompiler) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "f i32 = 0\n"
+  const char *source_code = "f s32 = 0\n"
                             "\n"
-                            "fn myProgramInit(param1 i32) i32 {\n"
+                            "fn myProgramInit(param1 s32) s32 {\n"
                             "\tret f\n"
                             "}\n";
 
@@ -72,13 +72,13 @@ TEST(Integrations, RetComplexExpression) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "f i32 = 0\n"
+  const char *source_code = "f s32 = 0\n"
                             "\n"
-                            "fn getX(x i32) i32 {\n"
+                            "fn getX(x s32) s32 {\n"
                             "\tret x\n"
                             "}\n"
                             "\n"
-                            "fn myProgramInit() i32 {\n"
+                            "fn myProgramInit() s32 {\n"
                             "\tret 85 + getX(5)\n"
                             "}\n";
 
@@ -91,13 +91,13 @@ TEST(Integrations, MultipleFuncDefinitions) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "f i32 = -645\n"
+  const char *source_code = "f s32 = -645\n"
                             "\n"
-                            "fn getX(x i32) i32 {\n"
+                            "fn getX(x s32) s32 {\n"
                             "\tret x\n"
                             "}\n"
                             "\n"
-                            "fn myProgramInit() i32 {\n"
+                            "fn myProgramInit() s32 {\n"
                             "\tret f\n"
                             "}\n";
 
@@ -110,13 +110,13 @@ TEST(Integrations, FuncCalls) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "f i32 = 1447\n"
+  const char *source_code = "f s32 = 1447\n"
                             "\n"
-                            "fn getX(x i32) i32 {\n"
+                            "fn getX(x s32) s32 {\n"
                             "\tret x\n"
                             "}\n"
                             "\n"
-                            "fn myProgramInit() i32 {\n"
+                            "fn myProgramInit() s32 {\n"
                             "\tf = getX(5)\n"
                             "\tret f\n"
                             "}\n";
@@ -130,14 +130,14 @@ TEST(Integrations, FuncCallsWithAritmeticsArgs) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "f i32 = 0\n"
+  const char *source_code = "f s32 = 0\n"
                             "\n"
-                            "fn getX(x i32) i32 {\n"
+                            "fn getX(x s32) s32 {\n"
                             "\tret x\n"
                             "}\n"
                             "\n"
-                            "fn myProgramInit() i32 {\n"
-                            "\tvar i32 = 85\n"
+                            "fn myProgramInit() s32 {\n"
+                            "\tvar s32 = 85\n"
                             "\tf = getX(5 + var)\n"
                             "\tret f\n"
                             "}\n";
@@ -151,13 +151,13 @@ TEST(Integrations, FuncCallsInAritmeticsArgs) {
   const char *output_path = "";
   const char *executable_name = "MyProgram";
   const char *source_name = "MyProgram.llang";
-  const char *source_code = "f i32 = 0\n"
+  const char *source_code = "f s32 = 0\n"
                             "\n"
-                            "fn getX(x i32) i32 {\n"
+                            "fn getX(x s32) s32 {\n"
                             "\tret x\n"
                             "}\n"
                             "\n"
-                            "fn myProgramInit() i32 {\n"
+                            "fn myProgramInit() s32 {\n"
                             "\tf = 85 + getX(5)\n"
                             "\tret f\n"
                             "}\n";

@@ -5,6 +5,8 @@
 #include <llvm/IR/Value.h>
 #include <string>
 
+struct BuiltInsRepository;
+
 struct GeneratorInterface {
   virtual void gen_fn_proto(const AstFnProto *in_func_proto, AstFnDef *in_function) = 0;
   virtual bool gen_fn_block(const AstBlock *in_func_block, AstFnDef *in_function) = 0;
@@ -49,6 +51,8 @@ struct LlvmIrGenerator : public GeneratorInterface {
   void flush() override;
 
 private:
+  friend struct BuiltInsRepository;
+
   llvm::LLVMContext context;
   llvm::IRBuilder<> *builder;
   // outputs one llvm module per executable
@@ -57,6 +61,11 @@ private:
   const std::string &output_file_name;
   const std::string &output_directory;
 
+  llvm::Value *_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt);
+  llvm::Value *_gen_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt);
+  llvm::Value *_gen_if_stmnt(const AstIfStmnt *in_if_stmnt);
+  llvm::Value *_get_symbol_var(const AstNode *in_node);
+  bool _gen_stmnts(const std::vector<AstNode *> &in_stmnts);
   llvm::Value *_gen_printf_call(const char *format, const std::vector<llvm::Value *> &args);
   llvm::Value *_gen_printf_decl();
   llvm::Type *_translate_type(const AstType *in_type);

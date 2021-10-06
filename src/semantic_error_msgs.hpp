@@ -16,3 +16,11 @@ constexpr const char *ERROR_ARGUMENT_COUNT_MISMATCH = "function takes %zu and %z
 constexpr const char *ERROR_SYMBOL_NOT_A_FN = "symbol '%s' is not a function";
 constexpr const char *ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR = "unsuported operator %s on expresion of type struct";
 constexpr const char *ERROR_UNSUPPORTED_PARAM_INITIALIZER = "unsupported: param default initializer";
+constexpr const char *ERROR_EXPECTED_BOOL_EXPR = "expected boolean expression but got expression of type '%s'";
+constexpr const char *ERROR_CTRL_STMNT_INVALID_LOCATION =
+  "invalid location '%s' for control statement (break/continue)";
+constexpr const char *ERROR_RET_STMNT_INVALID_LOCATION = "invalid location '%s' for return statement";
+constexpr const char *ERROR_UNSUPORTED_ADDRESSOF_NOT_SYMBOL_EXPR =
+  "unsupported 'address of' operator in expr. Expr should be a symbol";
+constexpr const char *ERROR_UNSUPORTED_DEREFERENCE_NOT_SYMBOL_EXPR =
+  "unsupported dereference '*' operator in expr. Expr should be a symbol";

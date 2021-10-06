@@ -11,10 +11,8 @@ set(LLAMALANG_SRC
 ast_nodes.hpp
 ast_nodes.cpp
 
-bigfloat.hpp
-
-bigint.hpp
-bigint.cpp
+builtins.hpp
+builtins.cpp
 
 common_defs.hpp
 common_defs.cpp

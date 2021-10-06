@@ -7,9 +7,9 @@
 #include "semantic_analyzer.hpp"
 #include "src_code_repository.hpp"
 
-static void _print_errors(const std::vector<Error> &errors);
-static bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInterface *in_generator,
-                                            AstSourceCode *const in_source_code);
+inline static void _print_errors(const std::vector<Error> &errors);
+inline static bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInterface *in_generator,
+                                                   AstSourceCode *const in_source_code);
 
 bool compiler::compile(const std::string &in_input_directory, const std::string &in_output_directory,
                        const std::string &in_executable_name, const std::string &in_source_code,
@@ -61,11 +61,11 @@ bool compiler::compile_node(GeneratorInterface *in_generator, std::vector<Error>
   return true;
 }
 
-bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInterface *in_generator,
-                                     AstSourceCode *const in_source_code) {
+inline bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInterface *in_generator,
+                                            AstSourceCode *const in_source_code) {
   bool has_no_errors = true;
   // first pass
-  for (int32_t i = 0; i < in_source_code->source_code()->children.size(); ++i) {
+  for (s32 i = 0; i < in_source_code->source_code()->children.size(); ++i) {
     AstNode *child = in_source_code->source_code()->children.at(i);
 
     switch (child->node_type) {
@@ -85,34 +85,47 @@ bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInt
         } // if loaded file
       }   // if load directive
     } break;
-    case AstNodeType::AST_FN_DEF:
+    case AstNodeType::AST_FN_DEF: {
       if (in_analyzer.analize_fn_proto(child->fn_def()->proto))
         in_generator->gen_fn_proto(child->fn_def()->proto->fn_proto(), child->fn_def());
-      break;
-    case AstNodeType::AST_FN_PROTO:
+    } break;
+    case AstNodeType::AST_FN_PROTO: {
       if (in_analyzer.analize_fn_proto(child->fn_proto()))
         in_generator->gen_fn_proto(child->fn_proto(), nullptr);
-      break;
-    case AstNodeType::AST_VAR_DEF:
+    } break;
+    case AstNodeType::AST_VAR_DEF: {
       // global variables
-      if (in_analyzer.analize_var_def(child->var_def(), true))
+      if (in_analyzer.analize_global_var_def(child->var_def()))
         in_generator->gen_var_def(child->var_def(), true);
-      break;
+    } break;
+    case AstNodeType::AST_IF_STMNT: {
+      // TODO(pablo96): IF should always be inside a block!
+    }
+      LL_FALLTHROUGH
+    case AstNodeType::AST_BLOCK: {
+      // TODO(pablo96): blocks should never be alone in global scope!
+    }
+      LL_FALLTHROUGH
     default:
       break;
-    }
-  }
+    } // end switch
+  }   // end for
 
   // second pass
   for (auto child : in_source_code->source_code()->children) {
     switch (child->node_type) {
-    case AstNodeType::AST_FN_DEF:
-      if (in_analyzer.analize_fn_block(child->fn_def()->block, child->fn_def())) {
+    case AstNodeType::AST_FN_DEF: {
+      in_analyzer.enter_fn_scope(child->fn_def());
+
+      bool block_ok = in_analyzer.analize_fn_block(child->fn_def()->block);
+
+      in_analyzer.exit_fn_scope();
+
+      if (block_ok) {
         bool block_no_error = in_generator->gen_fn_block(child->fn_def()->block->block(), child->fn_def());
         has_no_errors = has_no_errors && block_no_error;
       }
-      break;
-
+    } break;
     default:
       continue;
     }
@@ -124,7 +137,7 @@ bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInt
   return has_no_errors;
 }
 
-void _print_errors(const std::vector<Error> &errors) {
+inline void _print_errors(const std::vector<Error> &errors) {
   for (const Error &error : errors) {
     std::string str;
     to_string(error, str);

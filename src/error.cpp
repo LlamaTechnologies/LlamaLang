@@ -1,11 +1,8 @@
 #include "error.hpp"
 
-static const char *error_type_strings[] = {
-  "WARNING_0",
-  "WARNING_1",
-  "WARNING_2",
-  "ERROR",
-};
+#include "common_defs.hpp"
+
+static const char *error_type_strings[] = { "WARNING", "ERROR" };
 
 std::string get_error_type_string(const ERROR_TYPE error_type) { return error_type_strings[(size_t)error_type]; }
 

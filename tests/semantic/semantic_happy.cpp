@@ -32,8 +32,8 @@ TEST(SemanticTypes, Integer) {
 
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
-  const AstType *node_type_0 = types_repository.get_type_node("i32");
-  const AstType *node_type_1 = types_repository.get_type_node("i32");
+  const AstType *node_type_0 = types_repository.get_type_node("s32");
+  const AstType *node_type_1 = types_repository.get_type_node("s32");
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
@@ -60,6 +60,23 @@ TEST(SemanticTypes, Float) {
   delete node_expr;
 }
 
+TEST(SemanticTypes, Pointers) {
+  std::vector<Error> errors;
+  TypesRepository types_repository = TypesRepository::get();
+
+  auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
+
+  auto node_type_0 = types_repository.get_type_node("*f32");
+  auto node_type_1 = types_repository.get_type_node("*f32");
+
+  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_TRUE(is_ok);
+
+  delete node_expr;
+}
+
 //==================================================================================
 //          SEMANTIC VARIABLES DEFINITION
 //==================================================================================
@@ -69,7 +86,7 @@ TEST(SemanticVariableDefinitions, GlobalVariable) {
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
-  auto i32_type_node = types_repository.get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("s32");
 
   auto const_value_node = new AstConstValue(0, 0, "");
   const_value_node->type = ConstValueType::INT;
@@ -81,7 +98,7 @@ TEST(SemanticVariableDefinitions, GlobalVariable) {
   var_def_node->initializer = const_value_node;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
+  bool is_valid = analizer.analize_global_var_def(var_def_node);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_TRUE(is_valid);
@@ -95,7 +112,7 @@ TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
-  auto i32_type_node = types_repository.get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -103,7 +120,7 @@ TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
   var_def_node->initializer = nullptr;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
+  bool is_valid = analizer.analize_var_def(var_def_node);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_TRUE(is_valid);
@@ -136,7 +153,7 @@ TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
-  auto i32_type_node = types_repository.get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -149,7 +166,7 @@ TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
   // given: configured analizer
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  analizer.analize_var_def(var_def_node, false);
+  analizer.analize_var_def(var_def_node);
 
   // when: call to analize_expr
   bool is_valid = analizer.analize_expr(symbol_node);
@@ -282,7 +299,7 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
-  auto i32_type_node = types_repository.get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -305,7 +322,7 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
   // given: analizer
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analize_var_def(var_def_node, false);
+  bool is_valid_var_def = analizer.analize_var_def(var_def_node);
 
   // when: call to analize_expr
   // with: symbol as left expr
@@ -321,11 +338,15 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
   delete var_def_node;
 }
 
-TEST(SemanticExpressions, BinaryExprAssignOperator) {
+//==================================================================================
+//          SEMANTIC ASSIGNMENTS
+//==================================================================================
+
+TEST(SemanticAssignments, BinaryExprAssignPrimitiveTypeOperator) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
-  auto i32_type_node = types_repository.get_type_node("i32");
+  auto i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -348,11 +369,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperator) {
   // given: analizer
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analize_var_def(var_def_node, false);
-
-  // when: call to analize_expr
-  // with: symbol as left expr
-  // with: constant as right expr
+  bool is_valid_var_def = analizer.analize_var_def(var_def_node);
   bool is_valid = analizer.analize_expr(binary_epxr_node);
 
   // then:
@@ -364,6 +381,197 @@ TEST(SemanticExpressions, BinaryExprAssignOperator) {
   delete var_def_node;
 }
 
+TEST(SemanticAssignments, InitVoidPtrTypeNilValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *void = nil";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeNilValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, InitPtrTypeNilValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *s32 = nil";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeNilValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, InitPtrTypeAddressOfValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "num u64 = 8\n"
+                             "ptr *u64 = &num\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeAddressOfValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *var_def = src_code->children.at(0)->var_def();
+  const AstVarDef *ptr_def = src_code->children.at(1)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, AssignPtrTypeAddressOfValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "fn myFn () void {\n"
+                             "\tnum u64 = 32\n"
+                             "\tptr *u64 = nil\n"
+                             "\tptr = &num\n"
+                             "}\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeAddressOfValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
+  const AstBinaryExpr *ptr_assign = fn_def->block->statements.at(2)->binary_expr();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assign = analizer.analize_expr(ptr_assign);
+
+  // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assign);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, AssignDereferencedPtrConstValue) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "fn myFn () void {\n"
+                             "\tnum u64 = 32\n"
+                             /** IMPORTANT: */
+                             // TODO(pablo96): end line with '*' to handle degenerate case.
+                             "\tptr *u64 = &num\n"
+                             "\t*ptr = 64\n"
+                             "}\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "AssignDereferencedPtrConstValue", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
+  const AstBinaryExpr *ptr_assign = fn_def->block->statements.at(2)->binary_expr();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assign = analizer.analize_expr(ptr_assign);
+
+  // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assign);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, AssignDereferencedPtrAndCombinedDereferencePtrExpr) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "fn myFn () void {\n"
+                             "\tnum u64 = 32\n"
+                             /** IMPORTANT: */
+                             // TODO(pablo96): end line with '*' to handle degenerate case.
+                             "\tptr *u64 = &num\n"
+                             "\t*ptr = *ptr * num * *ptr\n"
+                             "}\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "AssignDereferencedPtrAndCombinedDereferencePtrExpr", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstVarDef *ptr_def = fn_def->block->statements.at(1)->var_def();
+  const AstBinaryExpr *ptr_assign = fn_def->block->statements.at(2)->binary_expr();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assign = analizer.analize_expr(ptr_assign);
+
+  // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assign);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
 //==================================================================================
 //          SEMANTIC FUNCTIONS
 //==================================================================================
@@ -373,7 +581,7 @@ TEST(SemanticFunctions, FunctionNoRet) {
 
   // given: source_file
   const char *source_file = "fn my_func() void {\n"
-                            "my_var i32\n"
+                            "my_var s32\n"
                             "my_var = 34\n"
                             "}";
 
@@ -400,7 +608,9 @@ TEST(SemanticFunctions, FunctionNoRet) {
   AstFnProto *function_proto_node = fn_def_node->proto;
   AstBlock *function_block_node = fn_def_node->block;
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid = analizer.analize_fn_block(function_block_node, fn_def_node);
+  analizer.enter_fn_scope(fn_def_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -413,7 +623,7 @@ TEST(SemanticFunctions, FunctionNoRet) {
 TEST(SemanticFunctions, FunctionRetConstant) {
   // given: code
   const char *source_name = "function_ret.llama";
-  const char *source_code = "fn function_ret() i32 {\n"
+  const char *source_code = "fn function_ret() s32 {\n"
                             "\tret 5\n"
                             "}\n";
 
@@ -440,7 +650,9 @@ TEST(SemanticFunctions, FunctionRetConstant) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(fn_proto);
-  bool is_valid = analizer.analize_fn_block(block_node, fn_def_node);
+  analizer.enter_fn_scope(fn_def_node);
+  bool is_valid = analizer.analize_fn_block(block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_EQ(errors.size(), 0L);
@@ -507,19 +719,19 @@ TEST(SemanticFunctionsCalls, FunctionCallWithParams) {
 
   // given: types
   AstType *void_type_node = types_repository.get_type_node("void");
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   // given: arg -> constant integer
   AstConstValue *const_value_node = new AstConstValue(0, 0, "");
   const_value_node->type = ConstValueType::INT;
 
-  // given: param -> param1 i32
+  // given: param -> param1 s32
   AstParamDef *param_node = new AstParamDef(0, 0, "");
   param_node->name = "param1";
   param_node->type = i32_type_node;
   param_node->initializer = nullptr;
 
-  // given: function proto -> fn my_func(param1 i32) void
+  // given: function proto -> fn my_func(param1 s32) void
   AstFnProto *function_proto_node = new AstFnProto(0, 0, "");
   function_proto_node->name = "my_func";
   function_proto_node->return_type = void_type_node;
@@ -544,7 +756,9 @@ TEST(SemanticFunctionsCalls, FunctionCallWithParams) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid_block = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
   bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
@@ -556,4 +770,221 @@ TEST(SemanticFunctionsCalls, FunctionCallWithParams) {
   // clean:
   delete function_node;
   delete function_call_node;
+}
+
+//==================================================================================
+//          SEMANTIC BRANCHES
+//==================================================================================
+
+TEST(SemanticBranches, SimpleIfBoolVar) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "fn my_condition() void {\n"
+                            "\tmy_condition bool = false\n"
+                            "\n"
+                            "\tif my_condition {\n"
+                            "\t\tmy_var s32\n"
+                            "\t\tmy_var = 34\n"
+                            "\t}\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "SimpleIfBoolVar", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstFnDef *fn_def = parser.parse_function_def(lexer)->fn_def();
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(fn_def, nullptr);
+
+  // and given: analizer
+  SemanticAnalyzer analizer(errors);
+
+  bool is_valid_proto = analizer.analize_fn_proto(fn_def->proto);
+
+  analizer.enter_fn_scope(fn_def);
+
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+
+  const AstIfStmnt *if_stmnt = fn_def->block->statements.at(1)->if_stmnt();
+  bool is_valid_if_stmnt = analizer.analize_if_stmnt(if_stmnt);
+
+  analizer.exit_fn_scope();
+
+  // then:
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_if_stmnt);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete fn_def;
+}
+
+TEST(SemanticBranches, IfElseBoolVar) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "fn my_condition() void {\n"
+                            "\tmy_condition bool = false\n"
+                            "\n"
+                            "\tif my_condition {\n"
+                            "\t\tmy_var s32\n"
+                            "\t\tmy_var = 34\n"
+                            "\t} else {\n"
+                            "\t\tmy_var s32\n"
+                            "\t\tmy_var = 43\n"
+                            "\t}\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElseBoolVar", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstFnDef *fn_def = parser.parse_function_def(lexer)->fn_def();
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(fn_def, nullptr);
+
+  // and given: analizer
+  SemanticAnalyzer analizer(errors);
+
+  bool is_valid_proto = analizer.analize_fn_proto(fn_def->proto);
+
+  analizer.enter_fn_scope(fn_def);
+
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+
+  const AstIfStmnt *if_stmnt = fn_def->block->statements.at(1)->if_stmnt();
+  bool is_valid_if_stmnt = analizer.analize_if_stmnt(if_stmnt);
+
+  analizer.exit_fn_scope();
+
+  // then:
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_if_stmnt);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete fn_def;
+}
+
+//==================================================================================
+//          SEMANTIC LOOPS
+//==================================================================================
+
+TEST(SemanticLoops, SimpleBoolVar) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "fn my_condition() void {\n"
+                            "\tmy_condition bool = false\n"
+                            "\n"
+                            "\tloop my_condition {\n"
+                            "\t\tmy_var s32\n"
+                            "\t\tmy_var = 34\n"
+                            "\t}\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "SimpleBoolVar", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstFnDef *fn_def = parser.parse_function_def(lexer)->fn_def();
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(fn_def, nullptr);
+
+  // and given: analizer
+  SemanticAnalyzer analizer(errors);
+
+  bool is_valid_proto = analizer.analize_fn_proto(fn_def->proto);
+
+  analizer.enter_fn_scope(fn_def);
+
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+
+  const AstLoopStmnt *loop_stmnt = fn_def->block->statements.at(1)->loop_stmnt();
+  bool is_valid_loop_stmnt = analizer.analize_loop_stmnt(loop_stmnt);
+
+  analizer.exit_fn_scope();
+
+  // then:
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_loop_stmnt);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete fn_def;
+}
+
+TEST(SemanticLoops, SimpleBoolVarBreakStmnt) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "fn my_condition() void {\n"
+                            "\tmy_condition bool = false\n"
+                            "\n"
+                            "\tloop my_condition {\n"
+                            "\t\tmy_var s32\n"
+                            "\t\tif my_var == 42 {\n"
+                            "\t\t\tbreak\n"
+                            "\t\t}\n"
+                            "\t}\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "SimpleBoolVarBreakStmnt", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstFnDef *fn_def = parser.parse_function_def(lexer)->fn_def();
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(fn_def, nullptr);
+
+  // and given: analizer
+  SemanticAnalyzer analizer(errors);
+
+  bool is_valid_proto = analizer.analize_fn_proto(fn_def->proto);
+
+  analizer.enter_fn_scope(fn_def);
+
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+
+  const AstLoopStmnt *loop_stmnt = fn_def->block->statements.at(1)->loop_stmnt();
+  bool is_valid_loop_stmnt = analizer.analize_loop_stmnt(loop_stmnt);
+
+  analizer.exit_fn_scope();
+
+  // then:
+  ASSERT_TRUE(is_valid_proto);
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_loop_stmnt);
+  ASSERT_EQ(errors.size(), 0L);
+
+  const AstIfStmnt *if_stmnt = loop_stmnt->content_block->statements.at(1)->if_stmnt();
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 1);
+
+  const AstCtrlStmnt *ctrl_stmnt = if_stmnt->true_block->statements.at(0)->ctrl_stmnt();
+  ASSERT_EQ(ctrl_stmnt->node_type, AstNodeType::AST_CTRL_STMNT);
+  ASSERT_EQ(ctrl_stmnt->loop_ref, loop_stmnt);
+
+  delete fn_def;
 }

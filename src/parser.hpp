@@ -13,13 +13,16 @@ struct AstSourceCode;
 struct AstDirective;
 struct AstFnDef;
 struct AstFnProto;
+struct AstIfStmnt;
+struct AstLoopStmnt;
+struct AstBlock;
 struct AstParamDef;
 struct AstVarDef;
-struct AstBlock;
 struct AstType;
 struct AstBinaryExpr;
 struct AstUnaryExpr;
 struct AstFnCallExpr;
+struct AstCtrlStmnt;
 struct FileInput;
 
 bool match(const Token *token, ...) noexcept;
@@ -46,6 +49,10 @@ public:
 
   LL_NODISCARD AstParamDef *parse_param_def(const Lexer &lexer) noexcept;
 
+  LL_NODISCARD AstIfStmnt *parse_branch_stmnt(const Lexer &lexer) noexcept;
+
+  LL_NODISCARD AstLoopStmnt *parse_loop_stmnt(const Lexer &lexer) noexcept;
+
   LL_NODISCARD AstBlock *parse_block(const Lexer &lexer) noexcept;
 
   // returns AstSymbol | AstBinaryExpr | AstUnaryExpr
@@ -58,6 +65,8 @@ public:
   LL_NODISCARD AstBinaryExpr *parse_assign_stmnt(const Lexer &lexer) noexcept;
 
   LL_NODISCARD AstUnaryExpr *parse_ret_stmnt(const Lexer &lexer) noexcept;
+
+  LL_NODISCARD AstCtrlStmnt *parse_ctrl_stmnt(const Lexer &lexer) noexcept;
 
   LL_NODISCARD AstFnCallExpr *parse_function_call(const Lexer &lexer) noexcept;
 
@@ -79,8 +88,13 @@ public:
   // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_primary_expr(const Lexer &lexer) noexcept;
 
-  bool is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos);
-
-  // consumes the forbiden statement, report the error and return true else returns false
-  bool is_forbiden_statement(const Token &token) noexcept;
+private:
+  LL_NODISCARD bool _parse_load_directive(const Lexer &lexer, AstDirective *directive_node) noexcept;
+  LL_NODISCARD AstIfStmnt *parse_if_stmnt(const Lexer &lexer) noexcept;
+  LL_NODISCARD AstIfStmnt *parse_elif_stmnt(const Lexer &lexer, AstIfStmnt *if_stmnt) noexcept;
+  LL_NODISCARD bool parse_else_stmnt(const Lexer &lexer, AstIfStmnt *elif_stmnt) noexcept;
+  LL_NODISCARD AstNode *parse_const_expr(const Lexer &lexer, const Token &token, const Token &number_token) noexcept;
+  LL_NODISCARD AstLoopStmnt *parse_whileloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept;
+  LL_NODISCARD AstLoopStmnt *parse_eachloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept;
+  LL_NODISCARD AstLoopStmnt *parse_rangeloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept;
 };

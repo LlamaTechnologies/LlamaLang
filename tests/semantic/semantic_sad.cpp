@@ -1,6 +1,8 @@
 #include "../../src/Types.hpp"
 #include "../../src/ast_nodes.hpp"
 #include "../../src/error.hpp"
+#include "../../src/lexer.hpp"
+#include "../../src/parser.hpp"
 #include "../../src/semantic_analyzer.hpp"
 
 #include <gtest/gtest.h>
@@ -16,7 +18,7 @@ TEST(SemanticTypes, DistinctTypes) {
   auto node_expr = new AstNode(AstNodeType::AST_VAR_DEF, 0, 0, "");
 
   auto node_type_0 = types_repository.get_type_node("bool");
-  auto node_type_1 = types_repository.get_type_node("i32");
+  auto node_type_1 = types_repository.get_type_node("s32");
 
   bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
 
@@ -28,7 +30,7 @@ TEST(SemanticTypes, PointerDistinctTypes) {
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
-  AstType *node_child_type_0 = types_repository.get_type_node("i32");
+  AstType *node_child_type_0 = types_repository.get_type_node("s32");
   AstType *node_child_type_1 = types_repository.get_type_node("f32");
 
   AstVarDef *node_expr = new AstVarDef(0, 0, "");
@@ -55,7 +57,7 @@ TEST(SemanticTypes, ArrayDistinctTypes) {
 
   AstVarDef *node_expr = new AstVarDef(0, 0, "");
 
-  AstType *node_child_type_0 = types_repository.get_type_node("i32");
+  AstType *node_child_type_0 = types_repository.get_type_node("s32");
   AstType *node_child_type_1 = types_repository.get_type_node("f32");
 
   AstType *node_type_0 = types_repository.get_type_node("array");
@@ -78,11 +80,10 @@ TEST(SemanticTypes, ArrayDistinctTypes) {
 //==================================================================================
 
 TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
-  bool is_global = true;
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -90,7 +91,7 @@ TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
   var_def_node->initializer = nullptr;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
+  bool is_valid = analizer.analize_global_var_def(var_def_node);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_FALSE(is_valid);
@@ -99,7 +100,6 @@ TEST(SemanticVariableDefinitions, GlobalVariableNoInit) {
 }
 
 TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
-  bool is_global = false;
   std::vector<Error> errors;
   TypesRepository types_repository = TypesRepository::get();
 
@@ -116,7 +116,7 @@ TEST(SemanticVariableDefinitions, LocalVariableTypeMismatch) {
   var_def_node->initializer = const_value_node;
 
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analize_var_def(var_def_node, is_global);
+  bool is_valid = analizer.analize_var_def(var_def_node);
 
   ASSERT_EQ(errors.size(), 1L);
   ASSERT_FALSE(is_valid);
@@ -306,11 +306,15 @@ TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
   delete binary_expr_node;
 }
 
-TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
+//==================================================================================
+//          SEMANTIC ASSIGNMENTS
+//==================================================================================
+
+TEST(SadSemanticAssignments, VarTypesMismatch) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -333,7 +337,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
   // given: analizer
   std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analize_var_def(var_def_node, false);
+  bool is_valid_var_def = analizer.analize_var_def(var_def_node);
 
   // when: call to analize_expr
   // with: symbol as left expr
@@ -349,7 +353,7 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorTypesMismatch) {
   delete binary_expr_node;
 }
 
-TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
+TEST(SadSemanticAssignments, VarOperatorWrongExpr) {
   // given: l_expr -> symbol node
   AstSymbol *symbol_node = new AstSymbol(0, 0, "");
   symbol_node->cached_name = "my_var";
@@ -378,6 +382,35 @@ TEST(SemanticExpressions, BinaryExprAssignOperatorWrongExpr) {
   ASSERT_FALSE(is_valid);
 
   delete binary_expr_node;
+}
+
+TEST(SadSemanticAssignments, InitPtrTypeConstValueOperator) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *s32 = 0x0000000074FF7D25";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "BinaryExprAssignPtrTypeConstValueOperator", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  AstSourceCode *src_code = parser.parse(lexer);
+
+  AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // when: call to analize_expr
+  // with: symbol as left expr
+  // with: constant as right expr
+
+  // then:
+  ASSERT_FALSE(is_valid_ptr_def);
+  ASSERT_NE(errors.size(), 0L);
+
+  delete src_code;
 }
 
 //==================================================================================
@@ -421,7 +454,9 @@ TEST(SemanticFunctions, FunctionInvalidStmnt) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -435,7 +470,7 @@ TEST(SemanticFunctions, FunctionNoReqRet) {
   TypesRepository types_repository = TypesRepository::get();
 
   // given: variable definition
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   AstVarDef *var_def_node = new AstVarDef(0, 0, "");
   var_def_node->type = i32_type_node;
@@ -455,7 +490,7 @@ TEST(SemanticFunctions, FunctionNoReqRet) {
   binary_epxr_node->left_expr = symbol_node;
   binary_epxr_node->right_expr = const_value_node;
 
-  // given: function proto -> fn my_func() i32
+  // given: function proto -> fn my_func() s32
   AstFnProto *function_proto_node = new AstFnProto(0, 0, "");
   function_proto_node->name = "my_func";
   function_proto_node->return_type = i32_type_node;
@@ -476,7 +511,9 @@ TEST(SemanticFunctions, FunctionNoReqRet) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
 
   // then:
   ASSERT_TRUE(is_valid_proto);
@@ -564,7 +601,9 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsCountMismatch) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid_block = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
   bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:
@@ -582,19 +621,19 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsTypeMismatch) {
 
   // given: types
   AstType *void_type_node = types_repository.get_type_node("void");
-  AstType *i32_type_node = types_repository.get_type_node("i32");
+  AstType *i32_type_node = types_repository.get_type_node("s32");
 
   // given: arg -> constant integer
   AstConstValue *const_value_node = new AstConstValue(0, 0, "");
   const_value_node->type = ConstValueType::FLOAT;
 
-  // given: param -> param1 i32
+  // given: param -> param1 s32
   AstParamDef *param_node = new AstParamDef(0, 0, "");
   param_node->name = "param1";
   param_node->type = i32_type_node;
   param_node->initializer = nullptr;
 
-  // given: function proto -> fn my_func(param1 i32) void
+  // given: function proto -> fn my_func(param1 s32) void
   AstFnProto *function_proto_node = new AstFnProto(0, 0, "");
   function_proto_node->name = "my_func";
   function_proto_node->return_type = void_type_node;
@@ -608,7 +647,7 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsTypeMismatch) {
   function_node->proto = function_proto_node;
   function_node->block = function_block_node;
 
-  // given: call with argument float constant
+  // given: call with argument f32 constant
   AstFnCallExpr *function_call_node = new AstFnCallExpr(0, 0, "");
   function_call_node->fn_name = "my_func";
   function_call_node->fn_ref = nullptr;
@@ -620,7 +659,9 @@ TEST(SemanticFunctionsCalls, FunctionCallParamsTypeMismatch) {
 
   // when: call to analize_expr
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  bool is_valid_block = analizer.analize_fn_block(function_block_node, function_node);
+  analizer.enter_fn_scope(function_node);
+  bool is_valid_block = analizer.analize_fn_block(function_block_node);
+  analizer.exit_fn_scope();
   bool is_valid_call = analizer.analize_expr(function_call_node);
 
   // then:

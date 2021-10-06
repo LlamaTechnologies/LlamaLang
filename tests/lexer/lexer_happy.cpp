@@ -111,6 +111,96 @@ TEST(LexerHappyKeywordsTests, KeywordOrTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+TEST(LexerHappyKeywordsTests, KeywordIfTest) {
+  std::vector<Error> errors;
+  Lexer lexer("if", "file/directory", "KeywordIfTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::IF);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordElseTest) {
+  std::vector<Error> errors;
+  Lexer lexer("else", "file/directory", "KeywordElseTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ELSE);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordElifTest) {
+  std::vector<Error> errors;
+  Lexer lexer("elif", "file/directory", "KeywordElifTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::ELIF);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordLoopTest) {
+  std::vector<Error> errors;
+  Lexer lexer("loop", "file/directory", "KeywordLoopTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::LOOP);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordBreakTest) {
+  std::vector<Error> errors;
+  Lexer lexer("break", "file/directory", "KeywordBreakTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::BREAK);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordContinueTest) {
+  std::vector<Error> errors;
+  Lexer lexer("continue", "file/directory", "KeywordContinueTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::CONTINUE);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordTrueTest) {
+  std::vector<Error> errors;
+  Lexer lexer("true", "file/directory", "KeywordTrueTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::TRUE);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordFalseTest) {
+  std::vector<Error> errors;
+  Lexer lexer("false", "file/directory", "KeywordFalseTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::FALSE);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
+TEST(LexerHappyKeywordsTests, KeywordNilTest) {
+  std::vector<Error> errors;
+  Lexer lexer("nil", "file/directory", "KeywordNilTest", errors);
+  lexer.tokenize();
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::NIL);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
+}
+
 TEST(LexerHappyKeywordsTests, KeywordFnNewLineTest) {
   std::vector<Error> errors;
   Lexer lexer("fn\n", "file/directory", "KeywordFnNewLineTest", errors);
@@ -167,7 +257,8 @@ TEST(LexerHappyOperatorsTests, HashOperatorTest) {
 
 TEST(LexerHappyOperatorsTests, OperatorsTest) {
   std::vector<Error> errors;
-  Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory", "OperatorsTest", errors);
+  Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory",
+              "OperatorsTest", errors);
   lexer.tokenize();
 
   // do not change order
@@ -194,7 +285,7 @@ TEST(LexerHappyOperatorsTests, OperatorsTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::MUL_ASSIGN);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::DIV_ASSIGN);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::MOD_ASSIGN);
-  ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_AND);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::AMPERSAND);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_XOR);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_OR);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::BIT_NOT);
@@ -602,7 +693,7 @@ TEST(LexerHappyFloatTests, FloatCompleteUnderscoresTest) {
 //          STRING | CHARS
 //==================================================================================
 
-TEST(LexerHappyStringCharTests, EmptyStringTest) {
+TEST(LexerHappyStringcharTests, EmptyStringTest) {
   std::vector<Error> errors;
   Lexer lexer("\"\"", "file/directory", "EmptyStringTest", errors);
   lexer.tokenize();
@@ -612,7 +703,7 @@ TEST(LexerHappyStringCharTests, EmptyStringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, StringTest) {
+TEST(LexerHappyStringcharTests, StringTest) {
   std::vector<Error> errors;
   Lexer lexer(" \"Hello world for 1st time!\" ", "file/directory", "StringTest", errors);
   lexer.tokenize();
@@ -622,7 +713,7 @@ TEST(LexerHappyStringCharTests, StringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
+TEST(LexerHappyStringcharTests, CommentInsideStringTest) {
   std::vector<Error> errors;
   Lexer lexer(" \"Hello world for /*1st*/ time!\" ", "file/directory", "CommentInsideStringTest", errors);
   lexer.tokenize();
@@ -632,9 +723,9 @@ TEST(LexerHappyStringCharTests, CommentInsideStringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
+TEST(LexerHappyStringcharTests, EscapedcharStringTest) {
   std::vector<Error> errors;
-  Lexer lexer(" \"\'Hello world\\' \\n \\'for 1st time!\'\" ", "file/directory", "EscapedCharStringTest", errors);
+  Lexer lexer(" \"\'Hello world\\' \\n \\'for 1st time!\'\" ", "file/directory", "EscapedcharStringTest", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -642,9 +733,9 @@ TEST(LexerHappyStringCharTests, EscapedCharStringTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharTest) {
+TEST(LexerHappyStringcharTests, EscapedcharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\r\'", "file/directory", "EscapedCharTest", errors);
+  Lexer lexer("\'\\r\'", "file/directory", "EscapedcharTest", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();
@@ -655,9 +746,9 @@ TEST(LexerHappyStringCharTests, EscapedCharTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
+TEST(LexerHappyStringcharTests, EscapedcharCodeTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\x42\'", "file/directory", "EscapedCharTest", errors);
+  Lexer lexer("\'\\x42\'", "file/directory", "EscapedcharTest", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();
@@ -669,9 +760,9 @@ TEST(LexerHappyStringCharTests, EscapedCharCodeTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
-TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
+TEST(LexerHappyStringcharTests, EscapedcharUnicodeTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'\\u{00B6}\'", "file/directory", "EscapedCharUnicodeTest", errors);
+  Lexer lexer("\'\\u{00B6}\'", "file/directory", "EscapedcharUnicodeTest", errors);
   lexer.tokenize();
 
   auto char_token = lexer.get_next_token();
@@ -681,7 +772,3 @@ TEST(LexerHappyStringCharTests, EscapedCharUnicodeTest) {
   ASSERT_EQ(char_token.char_lit, L'\u00B6');
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
-
-//==================================================================================
-//          PRINT
-//==================================================================================
