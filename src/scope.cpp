@@ -3,8 +3,8 @@
 #include "ast_nodes.hpp"
 #include "common_defs.hpp"
 
-Table *Table::create_child(const std::string &in_name) {
-  auto child = new Table(in_name, this);
+Table *Table::create_child(const std::string &in_name, const AstFnProto *in_fn_proto) {
+  auto child = new Table(in_name, in_fn_proto, this);
   last_child_key = in_name;
   children_scopes.emplace(in_name, child);
   return child;

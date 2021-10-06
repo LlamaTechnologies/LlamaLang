@@ -64,9 +64,9 @@ TEST(ParserHappyParseValueTests, IntTest) {
   delete node;
 }
 
-TEST(ParserHappyParseValueTests, UnicodeCharTest) {
+TEST(ParserHappyParseValueTests, UnicodecharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodecharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -79,6 +79,44 @@ TEST(ParserHappyParseValueTests, UnicodeCharTest) {
   const AstConstValue *const_value_node = node->const_value();
   ASSERT_EQ(const_value_node->type, ConstValueType::CHAR);
   ASSERT_EQ(const_value_node->unicode_char, 'g');
+
+  delete node;
+}
+
+TEST(ParserHappyParseValueTests, BooleanTrueTest) {
+  std::vector<Error> errors;
+  Lexer lexer("true", "file/directory", "UnicodecharTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstNode *node = parser.parse_primary_expr(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_CONST_VALUE);
+
+  const AstConstValue *const_value_node = node->const_value();
+  ASSERT_EQ(const_value_node->type, ConstValueType::BOOL);
+  ASSERT_TRUE(const_value_node->boolean);
+
+  delete node;
+}
+
+TEST(ParserHappyParseValueTests, BooleanFalseTest) {
+  std::vector<Error> errors;
+  Lexer lexer("false", "file/directory", "UnicodecharTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstNode *node = parser.parse_primary_expr(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_CONST_VALUE);
+
+  const AstConstValue *const_value_node = node->const_value();
+  ASSERT_EQ(const_value_node->type, ConstValueType::BOOL);
+  ASSERT_FALSE(const_value_node->boolean);
 
   delete node;
 }
@@ -250,9 +288,9 @@ TEST(ParserHappyParseUnaryExprTests, ExplicitPositiveIntTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseUnaryExprTests, UnicodeCharTest) {
+TEST(ParserHappyParseUnaryExprTests, UnicodecharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodecharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -440,9 +478,9 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseMulExprTests, Mul2NumbersAndCharTest) {
+TEST(ParserHappyParseMulExprTests, Mul2NumbersAndcharTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndCharTest", errors);
+  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndcharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -533,9 +571,9 @@ TEST(ParserHappyParseMulExprTests, IntTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseMulExprTests, UnicodeCharTest) {
+TEST(ParserHappyParseMulExprTests, UnicodecharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodecharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -671,9 +709,9 @@ TEST(ParserHappyParseAddExprTests, Add2NumbersTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseAddExprTests, Add2NumberAndCharTest) {
+TEST(ParserHappyParseAddExprTests, Add2NumberAndcharTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25 - 'g'", "file/directory", "Add2NumberAndCharTest", errors);
+  Lexer lexer(".25f + 25 - 'g'", "file/directory", "Add2NumberAndcharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -923,9 +961,9 @@ TEST(ParserHappyParseAddExprTests, Mul2NumbersTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseAddExprTests, Mul2NumbersAndCharTest) {
+TEST(ParserHappyParseAddExprTests, Mul2NumbersAndcharTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndCharTest", errors);
+  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndcharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1016,9 +1054,9 @@ TEST(ParserHappyParseAddExprTests, IntTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseAddExprTests, UnicodeCharTest) {
+TEST(ParserHappyParseAddExprTests, UnicodecharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodecharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1217,9 +1255,9 @@ TEST(ParserHappyParseCompExprTests, Add2NumbersTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseCompExprTests, Add2NumberAndCharTest) {
+TEST(ParserHappyParseCompExprTests, Add2NumberAndcharTest) {
   std::vector<Error> errors;
-  Lexer lexer(".25f + 25 - 'g'", "file/directory", "Add2NumberAndCharTest", errors);
+  Lexer lexer(".25f + 25 - 'g'", "file/directory", "Add2NumberAndcharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1469,9 +1507,9 @@ TEST(ParserHappyParseCompExprTests, Mul2NumbersTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseCompExprTests, Mul2NumbersAndCharTest) {
+TEST(ParserHappyParseCompExprTests, Mul2NumbersAndcharTest) {
   std::vector<Error> errors;
-  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndCharTest", errors);
+  Lexer lexer("25 * 21.5f / 'g'", "file/directory", "Mul2NumbersAndcharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -1562,9 +1600,9 @@ TEST(ParserHappyParseCompExprTests, IntTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseCompExprTests, UnicodeCharTest) {
+TEST(ParserHappyParseCompExprTests, UnicodecharTest) {
   std::vector<Error> errors;
-  Lexer lexer("\'g\'", "file/directory", "UnicodeCharTest", errors);
+  Lexer lexer("\'g\'", "file/directory", "UnicodecharTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);

@@ -57,6 +57,10 @@ private:
   const std::string &output_file_name;
   const std::string &output_directory;
 
+  llvm::Value *_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt);
+  llvm::Value *_gen_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt);
+  llvm::Value *_gen_if_stmnt(const AstIfStmnt *in_if_stmnt);
+  bool _gen_stmnts(const std::vector<AstNode *> &in_stmnts);
   llvm::Value *_gen_printf_call(const char *format, const std::vector<llvm::Value *> &args);
   llvm::Value *_gen_printf_decl();
   llvm::Type *_translate_type(const AstType *in_type);

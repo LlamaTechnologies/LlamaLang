@@ -3,9 +3,7 @@
 
 enum class ERROR_TYPE
 {
-  WARNING_0,
-  WARNING_1,
-  WARNING_2,
+  WARNING,
   ERROR,
 };
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "common_defs.hpp"
 #include "error.hpp"
 
 #include <string.h>
@@ -12,6 +13,14 @@ enum class TokenId
   EXTERN,    // extern
   FN,        // fn
   RET,       // ret
+  IF,        // if
+  ELIF,      // elif
+  ELSE,      // else
+  LOOP,      // loop
+  TRUE,      // true
+  FALSE,     // false
+  BREAK,     // break
+  CONTINUE,  // continue
   L_PAREN,   // (
   R_PAREN,   // )
   L_CURLY,   // {
@@ -69,7 +78,7 @@ enum class TokenId
 
   ESCAPED_VALUE, // \[value]
   STRING,        // " (~["\\] | ESCAPED_VALUE)* "
-  UNICODE_CHAR,  // " (~["\\] | ESCAPED_VALUE)* "
+  UNICODE_CHAR,    // " (~["\\] | ESCAPED_VALUE)* "
 
   WS,           // [\t \r \n ' ']
   DOC_COMMENT,  // '/*' . '*/'
@@ -79,14 +88,14 @@ enum class TokenId
 };
 
 const char *token_id_name(TokenId id);
-typedef uint32_t Char;
+typedef u32 CharToken;
 
 enum class INT_BASE
 {
-  BINARY,
-  OCTAL,
-  DECIMAL,
-  HEXADECIMAL
+  BINARY = 2,
+  OCTAL = 8,
+  DECIMAL = 10,
+  HEXADECIMAL = 16
 };
 
 constexpr const size_t MAX_NUMBER_DIGITS = 40;
@@ -116,7 +125,7 @@ struct Token {
   std::string_view file_name;
 
   union {
-    Char char_lit;
+    CharToken char_lit;
     FloatToken float_lit;
     IntToken int_lit;
   };
@@ -196,10 +205,10 @@ private:
   size_t current_column;
   mutable size_t curr_index; // used to consume tokens
 
-  size_t char_code_index;      // char_code char counter
+  size_t char_code_index;        // char_code char counter
   size_t remaining_code_units; // used to count bytes in unicode char
-  uint32_t radix;              // used for getting number value.
-  uint32_t char_code;          // char_code used accros the char_code state
+  u32 radix;                   // used for getting number value.
+  u32 char_code;                 // char_code used accros the char_code state
   bool unicode;                // is unicode char code
   bool is_trailing_underscore; // used to interpret number_number
   bool is_invalid_token;       // used to finish tokenizing a error tokens

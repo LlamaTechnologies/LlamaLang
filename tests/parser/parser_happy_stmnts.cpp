@@ -8,7 +8,7 @@
 //          PARSE RETURN STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, RetStmnt) {
+TEST(ParserHappyRetStmntTests, ComplexExpr) {
   std::vector<Error> errors;
   Lexer lexer("ret myVar * (5 + 8)", "file/directory", "Ret stmnt", errors);
   lexer.tokenize();
@@ -26,7 +26,7 @@ TEST(ParserHappyStmntTests, RetStmnt) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, RetEmptyStmnt) {
+TEST(ParserHappyRetStmntTests, EmptyExpr) {
   std::vector<Error> errors;
   Lexer lexer("ret ", "file/directory", "RetEmptyStmnt", errors);
   lexer.tokenize();
@@ -47,7 +47,7 @@ TEST(ParserHappyStmntTests, RetEmptyStmnt) {
 //          PARSE ASSIGN STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, AssignStmntTest) {
+TEST(ParserHappyAssignStmntTests, ComplexExpr) {
   std::vector<Error> errors;
   Lexer lexer("myVar = 5 * (6 + 9)", "file/directory", "AssignStmntTest", errors);
   lexer.tokenize();
@@ -71,9 +71,9 @@ TEST(ParserHappyStmntTests, AssignStmntTest) {
 //          PARSE TYPES
 //==================================================================================
 
-TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
+TEST(ParserHappyTypeStmntTests, NameIsPrimitiveParse) {
   std::vector<Error> errors;
-  Lexer lexer("i32", "file/directory", "TypeNameIsPrimitiveParse", errors);
+  Lexer lexer("s32", "file/directory", "TypeNameIsPrimitiveParse", errors);
   lexer.tokenize();
 
   ASSERT_EQ(errors.size(), 0L);
@@ -85,15 +85,15 @@ TEST(ParserHappyStmntTests, TypeNameIsPrimitiveParse) {
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(value_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(value_node->type_info->name, "i32");
+  ASSERT_EQ(value_node->type_info->name, "s32");
   ASSERT_EQ(value_node->type_info->bit_size, 32);
   ASSERT_EQ(value_node->type_info->llvm_type, nullptr);
   ASSERT_TRUE(value_node->type_info->is_signed);
 }
 
-TEST(ParserHappyStmntTests, TypeArrayParse) {
+TEST(ParserHappyTypeStmntTests, ArrayParse) {
   std::vector<Error> errors;
-  Lexer lexer("[]i32", "file/directory", "TypeArrayParse", errors);
+  Lexer lexer("[]s32", "file/directory", "TypeArrayParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -107,15 +107,15 @@ TEST(ParserHappyStmntTests, TypeArrayParse) {
   ASSERT_EQ(value_node->child_type->parent, value_node);
   ASSERT_EQ(value_node->child_type->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(value_node->child_type->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(value_node->child_type->type_info->name, "i32");
+  ASSERT_EQ(value_node->child_type->type_info->name, "s32");
   ASSERT_EQ(value_node->child_type->type_info->bit_size, 32);
   ASSERT_EQ(value_node->child_type->type_info->llvm_type, nullptr);
   ASSERT_TRUE(value_node->child_type->type_info->is_signed);
 }
 
-TEST(ParserHappyStmntTests, TypePointerParse) {
+TEST(ParserHappyTypeStmntTests, PointerParse) {
   std::vector<Error> errors;
-  Lexer lexer("*i32", "file/directory", "TypePointerParse", errors);
+  Lexer lexer("*s32", "file/directory", "TypePointerParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -129,7 +129,7 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
   ASSERT_EQ(value_node->child_type->parent, value_node);
   ASSERT_EQ(value_node->child_type->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(value_node->child_type->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(value_node->child_type->type_info->name, "i32");
+  ASSERT_EQ(value_node->child_type->type_info->name, "s32");
   ASSERT_EQ(value_node->child_type->type_info->bit_size, 32);
   ASSERT_EQ(value_node->child_type->type_info->llvm_type, nullptr);
   ASSERT_TRUE(value_node->child_type->type_info->is_signed);
@@ -139,9 +139,9 @@ TEST(ParserHappyStmntTests, TypePointerParse) {
 //          PARSE VARIABLE DEFINITION STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
+TEST(ParserHappyVarDefStmntTests, SimpleTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32", "file/directory", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar s32", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -157,7 +157,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_TRUE(type_node->type_info->is_signed);
@@ -165,9 +165,9 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
+TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32 = -65", "file/directory", "VarDefSimpleTypeInitializerParse", errors);
+  Lexer lexer("myVar s32 = -65", "file/directory", "VarDefSimpleTypeInitializerParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -183,7 +183,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   ASSERT_EQ(type_node->parent, value_node);
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
@@ -200,9 +200,9 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
+TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerAddParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32 = 65 + PI", "file/directory", "VarDefSimpleTypeInitializerAddParse", errors);
+  Lexer lexer("myVar s32 = 65 + PI", "file/directory", "VarDefSimpleTypeInitializerAddParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -218,7 +218,7 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
   ASSERT_EQ(type_node->parent, value_node);
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
@@ -240,9 +240,9 @@ TEST(ParserHappyStmntTests, VarDefSimpleTypeInitializerAddParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
+TEST(ParserHappyVarDefStmntTests, ArrayTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar []i32", "file/directory", "VarDefArrayTypeParse", errors);
+  Lexer lexer("myVar []s32", "file/directory", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -262,7 +262,7 @@ TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
   ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
   ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->name, "s32");
   ASSERT_EQ(data_type_node->type_info->bit_size, 32);
   ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(data_type_node->type_info->is_signed, true);
@@ -270,9 +270,9 @@ TEST(ParserHappyStmntTests, VarDefArrayTypeParse) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
+TEST(ParserHappyVarDefStmntTests, PointerTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar *i32", "file/directory", "VarDefPointerTypeParse", errors);
+  Lexer lexer("myVar *s32", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -292,7 +292,7 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
   ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
   ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->name, "s32");
   ASSERT_EQ(data_type_node->type_info->bit_size, 32);
   ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(data_type_node->type_info->is_signed, true);
@@ -306,7 +306,7 @@ TEST(ParserHappyStmntTests, VarDefPointerTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar i32", "file/directory", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar s32", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -322,7 +322,7 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
@@ -332,7 +332,7 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar []i32", "file/directory", "VarDefArrayTypeParse", errors);
+  Lexer lexer("myVar []s32", "file/directory", "VarDefArrayTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -353,7 +353,7 @@ TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
   ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
   ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->name, "s32");
   ASSERT_EQ(data_type_node->type_info->bit_size, 32);
   ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(data_type_node->type_info->is_signed, true);
@@ -363,7 +363,7 @@ TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar *i32", "file/directory", "VarDefPointerTypeParse", errors);
+  Lexer lexer("myVar *s32", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -386,7 +386,7 @@ TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
   ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(data_type_node->parent, type_node);
   ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(data_type_node->type_info->name, "i32");
+  ASSERT_EQ(data_type_node->type_info->name, "s32");
   ASSERT_EQ(data_type_node->type_info->bit_size, 32);
   ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(data_type_node->type_info->is_signed, true);
@@ -461,7 +461,7 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
 //          PARSE BLOCK STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, BlockEmptyTest) {
+TEST(ParserHappyBlockStmntTests, EmptyTest) {
   std::vector<Error> errors;
   Lexer lexer("{}", "file/directory", "BlockEmptyTest", errors);
   lexer.tokenize();
@@ -477,9 +477,9 @@ TEST(ParserHappyStmntTests, BlockEmptyTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
+TEST(ParserHappyBlockStmntTests, NoSpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{myVar i32\nret myvar}", "file/directory", "BlockNoSpaceNearCurliesTest", errors);
+  Lexer lexer("{myVar s32\nret myvar}", "file/directory", "BlockNoSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -500,7 +500,7 @@ TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
   AstType *type_node = var_def_node->type;
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
@@ -514,9 +514,9 @@ TEST(ParserHappyStmntTests, BlockNoSpaceNearCurliesTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
+TEST(ParserHappyBlockStmntTests, SpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ myVar i32\nret myvar }", "file/directory", "BlockSpaceNearCurliesTest", errors);
+  Lexer lexer("{ myVar s32\nret myvar }", "file/directory", "BlockSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -537,7 +537,7 @@ TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
   AstType *type_node = var_def_node->type;
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
@@ -551,9 +551,9 @@ TEST(ParserHappyStmntTests, BlockSpaceNearCurliesTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
+TEST(ParserHappyBlockStmntTests, NewlinesNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{\n\tmyVar i32\n\tret myvar\n}", "file/directory", "BlockNewlinesNearCurliesTest", errors);
+  Lexer lexer("{\n\tmyVar s32\n\tret myvar\n}", "file/directory", "BlockNewlinesNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -573,7 +573,7 @@ TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
   AstType *type_node = var_def_node->type;
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
@@ -587,9 +587,9 @@ TEST(ParserHappyStmntTests, BlockNewlinesNearCurliesTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
+TEST(ParserHappyBlockStmntTests, SpacesBetweenNewlinesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ \n  \t myVar i32   \n  \t  ret myvar  \n   }", "file/directory", "BlockSpacesBetweenNewlinesTest",
+  Lexer lexer("{ \n  \t myVar s32   \n  \t  ret myvar  \n   }", "file/directory", "BlockSpacesBetweenNewlinesTest",
               errors);
   lexer.tokenize();
 
@@ -610,7 +610,7 @@ TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
   AstType *type_node = var_def_node->type;
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
@@ -628,7 +628,7 @@ TEST(ParserHappyStmntTests, BlockSpacesBetweenNewlinesTest) {
 //          PARSE FUNCTION DECLARATION STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
+TEST(ParserHappyFnDeclStmntTests, EmptyParamTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc() void", "file/directory", "FuncProtoEmptyParamTest", errors);
   lexer.tokenize();
@@ -652,9 +652,9 @@ TEST(ParserHappyStmntTests, FuncProtoEmptyParamTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
+TEST(ParserHappyFnDeclStmntTests, SingleParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) void", "file/directory", "FuncProtoSingleParamTest", errors);
+  Lexer lexer("fn myFunc(param1 s32) void", "file/directory", "FuncProtoSingleParamTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -674,7 +674,7 @@ TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
   ASSERT_NE(param_node->type, nullptr);
   ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(param_node->type->parent, param_node);
-  ASSERT_EQ(param_node->type->type_info->name, "i32");
+  ASSERT_EQ(param_node->type->type_info->name, "s32");
   ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
 
   AstType *ret_type_node = value_node->return_type;
@@ -686,9 +686,9 @@ TEST(ParserHappyStmntTests, FuncProtoSingleParamTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
+TEST(ParserHappyFnDeclStmntTests, MultiParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32", "file/directory", "FuncProtoMultiParamTest", errors);
+  Lexer lexer("fn myFunc(param1 s32, param1 s32, param1 s32) s32", "file/directory", "FuncProtoMultiParamTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -708,22 +708,22 @@ TEST(ParserHappyStmntTests, FuncProtoMultiParamTest) {
     ASSERT_NE(param_node->type, nullptr);
     ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
     ASSERT_EQ(param_node->type->parent, param_node);
-    ASSERT_EQ(param_node->type->type_info->name, "i32");
+    ASSERT_EQ(param_node->type->type_info->name, "s32");
     ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
   }
 
   AstType *ret_type_node = value_node->return_type;
   ASSERT_EQ(ret_type_node->parent, value_node);
   ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->name, "s32");
   ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
+TEST(ParserHappyFnDeclStmntTests, MultiLineTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn\nmyFunc\n(param1 i32\n, param1 i32,\n param1\ni32)\ni32", " file / directory ",
+  Lexer lexer("fn\nmyFunc\n(param1 s32\n, param1 s32,\n param1\ns32)\ns32", " file / directory ",
               "FuncProtoMultiLineTest", errors);
   lexer.tokenize();
 
@@ -744,14 +744,14 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
     ASSERT_NE(param_node->type, nullptr);
     ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
     ASSERT_EQ(param_node->type->parent, param_node);
-    ASSERT_EQ(param_node->type->type_info->name, "i32");
+    ASSERT_EQ(param_node->type->type_info->name, "s32");
     ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
   }
 
   AstType *ret_type_node = value_node->return_type;
   ASSERT_EQ(ret_type_node->parent, value_node);
   ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->name, "s32");
   ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
@@ -761,7 +761,7 @@ TEST(ParserHappyStmntTests, FuncProtoMultiLineTest) {
 //          PARSE FUNCTION DEFINITION STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
+TEST(ParserHappyFnDefStmntTests, NoParamsVoidBlockTest) {
   std::vector<Error> errors;
   Lexer lexer("fn myFunc() void {}", "file/directory", "FuncDefNoParamsVoidBlockTest", errors);
   lexer.tokenize();
@@ -798,9 +798,9 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsVoidBlockTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
+TEST(ParserHappyFnDefStmntTests, OneParamVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) i32 {}", "file/directory", "FuncDefSingleParamsVoidBlockTest", errors);
+  Lexer lexer("fn myFunc(param1 s32) s32 {}", "file/directory", "FuncDefSingleParamsVoidBlockTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -833,22 +833,22 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsVoidBlockTest) {
   ASSERT_NE(param_node->type, nullptr);
   ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(param_node->type->parent, param_node);
-  ASSERT_EQ(param_node->type->type_info->name, "i32");
+  ASSERT_EQ(param_node->type->type_info->name, "s32");
   ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
 
   AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
   ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->name, "s32");
   ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
+TEST(ParserHappyFnDefStmntTests, MultiParamsVoidBlockTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32, param1 i32, param1 i32) i32 {}", "file/directory",
+  Lexer lexer("fn myFunc(param1 s32, param1 s32, param1 s32) s32 {}", "file/directory",
               "FuncDefMultiParamsVoidBlockTest", errors);
   lexer.tokenize();
 
@@ -882,7 +882,7 @@ TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
     ASSERT_NE(param_node->type, nullptr);
     ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
     ASSERT_EQ(param_node->type->parent, param_node);
-    ASSERT_EQ(param_node->type->type_info->name, "i32");
+    ASSERT_EQ(param_node->type->type_info->name, "s32");
     ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
   }
 
@@ -890,15 +890,15 @@ TEST(ParserHappyStmntTests, FuncDefMultiParamsVoidBlockTest) {
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
   ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->name, "s32");
   ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
+TEST(ParserHappyFnDefStmntTests, NoParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void {\nmyVar i32\n}", "file/directory", "FuncDefNoParamsTest", errors);
+  Lexer lexer("fn myFunc() void {\nmyVar s32\n}", "file/directory", "FuncDefNoParamsTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -929,7 +929,7 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
   ASSERT_EQ(type_node->parent, var_def_node);
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(type_node->type_info->name, "i32");
+  ASSERT_EQ(type_node->type_info->name, "s32");
 
   AstFnProto *proto_node = value_node->proto;
   ASSERT_EQ(proto_node->parent, value_node);
@@ -947,9 +947,9 @@ TEST(ParserHappyStmntTests, FuncDefNoParamsTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
+TEST(ParserHappyFnDefStmntTests, OneParamTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc(param1 i32) i32 {\nret param1 + 5\n}", "file/directory", "FuncDefSingleParamsTest", errors);
+  Lexer lexer("fn myFunc(param1 s32) s32 {\nret param1 + 5\n}", "file/directory", "FuncDefSingleParamsTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -992,14 +992,14 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
   ASSERT_NE(param_node->type, nullptr);
   ASSERT_EQ(param_node->type->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(param_node->type->parent, param_node);
-  ASSERT_EQ(param_node->type->type_info->name, "i32");
+  ASSERT_EQ(param_node->type->type_info->name, "s32");
   ASSERT_EQ(param_node->type->type_info->type_id, AstTypeId::INTEGER);
 
   AstType *ret_type_node = proto_node->return_type;
   ASSERT_NE(ret_type_node, nullptr);
   ASSERT_EQ(ret_type_node->parent, proto_node);
   ASSERT_EQ(ret_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(ret_type_node->type_info->name, "i32");
+  ASSERT_EQ(ret_type_node->type_info->name, "s32");
   ASSERT_EQ(ret_type_node->type_info->type_id, AstTypeId::INTEGER);
 
   delete value_node;
@@ -1009,7 +1009,7 @@ TEST(ParserHappyStmntTests, FuncDefSingleParamsTest) {
 //          PARSE FUNCTION CALL STATEMENT
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
+TEST(ParserHappyCallStmntTests, NoParamsTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc()", "file/directory", "FuncCallNoParamsTest", errors);
   lexer.tokenize();
@@ -1026,7 +1026,7 @@ TEST(ParserHappyStmntTests, FuncCallNoParamsTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
+TEST(ParserHappyCallStmntTests, OneParamTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
@@ -1049,7 +1049,7 @@ TEST(ParserHappyStmntTests, FuncCall1ParamTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
+TEST(ParserHappyCallStmntTests, OneParamAddOpTest) {
   std::vector<Error> errors;
   Lexer lexer("85 + myFunc(5)", "file/directory", "FuncCall1ParamTest", errors);
   lexer.tokenize();
@@ -1092,7 +1092,7 @@ TEST(ParserHappyStmntTests, FuncCall1ParamAddOpTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCallNestedTest) {
+TEST(ParserHappyCallStmntTests, NestedCallsTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc(myFunc2(5))", "file/directory", "FuncCallNestedTest", errors);
   lexer.tokenize();
@@ -1124,7 +1124,7 @@ TEST(ParserHappyStmntTests, FuncCallNestedTest) {
   delete value_node;
 }
 
-TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
+TEST(ParserHappyCallStmntTests, MultiParamsTest) {
   std::vector<Error> errors;
   Lexer lexer("myFunc(myVar, myFunc2(5))", "file/directory", "FuncCallMultiParamsTest", errors);
   lexer.tokenize();
@@ -1163,15 +1163,702 @@ TEST(ParserHappyStmntTests, FuncCallMultiParamsTest) {
 }
 
 //==================================================================================
+//          PARSE BRANCHES STATEMENT
+//==================================================================================
+
+TEST(ParserHappyBranchStmntTests, IfConstantExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if true {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstConstValue *cond_expr = if_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfBinaryExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if false == true {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfUnaryExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if !false {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstUnaryExpr *cond_expr = if_stmnt->condition_expr->unary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(cond_expr->op, UnaryExprType::NOT);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfComplexExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if true == false < 1 + 2 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::LESS);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if 5 * 9 == 40 + 5 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfSymbolExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if my_var {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_FALSE(if_stmnt->is_condition_checked);
+
+  const AstSymbol *cond_expr = if_stmnt->condition_expr->symbol();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_SYMBOL);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfConstantWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (true) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstConstValue *cond_expr = if_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfBinaryWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (false == true) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfUnaryWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (!false) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstUnaryExpr *cond_expr = if_stmnt->condition_expr->unary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(cond_expr->op, UnaryExprType::NOT);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfComplexWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (true == false < 1 + 2) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::LESS);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfArithmeticEqualityWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if (5 * 9 == 40 + 5) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_TRUE(if_stmnt->is_condition_checked);
+
+  const AstBinaryExpr *cond_expr = if_stmnt->condition_expr->binary_expr();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(cond_expr->bin_op, BinaryExprType::EQUALS);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfSymbolWithParentsExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "if ( my_var ) {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_FALSE(if_stmnt->is_condition_checked);
+
+  const AstSymbol *cond_expr = if_stmnt->condition_expr->symbol();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_SYMBOL);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfStmntFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 34\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+  ASSERT_EQ(if_stmnt->false_block, nullptr);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfElseStmntFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 34\n"
+                            "} else {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 43\n"
+                            "}\n";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElseStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+  ASSERT_NE(if_stmnt->false_block, nullptr);
+  ASSERT_EQ(if_stmnt->false_block->statements.size(), 2);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfElifStmntFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 34\n"
+                            "} elif !my_condition {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 43\n"
+                            "}\n";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElifStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+
+  ASSERT_NE(if_stmnt->false_block, nullptr);
+  ASSERT_EQ(if_stmnt->false_block->statements.size(), 1);
+
+  const AstIfStmnt *elif_stmnt = if_stmnt->false_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(elif_stmnt, nullptr);
+  ASSERT_EQ(elif_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(elif_stmnt->true_block, nullptr);
+  ASSERT_EQ(elif_stmnt->true_block->statements.size(), 2);
+  ASSERT_EQ(elif_stmnt->false_block, nullptr);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfElifStmntWithParenFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 34\n"
+                            "} elif (!my_condition) {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 43\n"
+                            "}\n";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElifStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+
+  ASSERT_NE(if_stmnt->false_block, nullptr);
+  ASSERT_EQ(if_stmnt->false_block->statements.size(), 1);
+
+  const AstIfStmnt *elif_stmnt = if_stmnt->false_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(elif_stmnt, nullptr);
+  ASSERT_EQ(elif_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(elif_stmnt->true_block, nullptr);
+  ASSERT_EQ(elif_stmnt->true_block->statements.size(), 2);
+  ASSERT_EQ(elif_stmnt->false_block, nullptr);
+
+  delete if_stmnt;
+}
+
+TEST(ParserHappyBranchStmntTests, IfElifElseStmntFilledBlock) {
+  std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "if my_condition {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 34\n"
+                            "} elif !my_condition {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 43\n"
+                            "} else {\n"
+                            "\tmy_var s32\n"
+                            "\tmy_var = 43\n"
+                            "}\n";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "IfElifElseStmntFilledBlock", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstIfStmnt *if_stmnt = parser.parse_branch_stmnt(lexer);
+
+  // then:
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(if_stmnt->true_block, nullptr);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 2);
+
+  ASSERT_NE(if_stmnt->false_block, nullptr);
+  ASSERT_EQ(if_stmnt->false_block->statements.size(), 1);
+
+  const AstIfStmnt *elif_stmnt = if_stmnt->false_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(elif_stmnt, nullptr);
+  ASSERT_EQ(elif_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_NE(elif_stmnt->true_block, nullptr);
+  ASSERT_EQ(elif_stmnt->true_block->statements.size(), 2);
+  ASSERT_NE(elif_stmnt->false_block, nullptr);
+  ASSERT_EQ(elif_stmnt->false_block->statements.size(), 2);
+
+  delete if_stmnt;
+}
+
+//==================================================================================
+//          PARSE LOOP STATEMENT
+//==================================================================================
+
+TEST(ParserHappyLoopStmntTests, ConstantExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop true {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
+
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
+  const AstConstValue *cond_expr = loop_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  ASSERT_EQ(loop_stmnt->initializer_block, nullptr);
+  ASSERT_EQ(loop_stmnt->footer_block, nullptr);
+
+  delete loop_stmnt;
+}
+
+TEST(ParserHappyLoopStmntTests, ConstantExprBreakEmptyTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop true {\n"
+                            "\tif true {\n"
+                            "\t\tbreak\n"
+                            "\t}\n"
+                            "}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
+  ASSERT_EQ(loop_stmnt->content_block->statements.size(), 1L);
+
+  // condition expr
+  const AstConstValue *cond_expr = loop_stmnt->condition_expr->const_value();
+  ASSERT_NE(cond_expr, nullptr);
+  ASSERT_EQ(cond_expr->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_TRUE(cond_expr->boolean);
+
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
+  // other blocks
+  ASSERT_EQ(loop_stmnt->initializer_block, nullptr);
+  ASSERT_EQ(loop_stmnt->footer_block, nullptr);
+
+  // content block
+  const AstBlock *content_block = loop_stmnt->content_block;
+  ASSERT_NE(content_block, nullptr);
+  ASSERT_EQ(content_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(content_block->parent, loop_stmnt);
+  ASSERT_EQ(content_block->statements.size(), 1);
+
+  const AstIfStmnt *if_stmnt = content_block->statements.at(0)->if_stmnt();
+  ASSERT_NE(if_stmnt, nullptr);
+  ASSERT_EQ(if_stmnt->node_type, AstNodeType::AST_IF_STMNT);
+  ASSERT_EQ(if_stmnt->true_block->statements.size(), 1L);
+  ASSERT_EQ(if_stmnt->false_block, nullptr);
+
+  const AstCtrlStmnt *ctrl_stmnt = if_stmnt->true_block->statements.at(0)->ctrl_stmnt();
+  ASSERT_NE(ctrl_stmnt, nullptr);
+  ASSERT_EQ(ctrl_stmnt->node_type, AstNodeType::AST_CTRL_STMNT);
+  ASSERT_EQ(ctrl_stmnt->ctrl_type, CtrlStmntType::BREAK);
+  ASSERT_EQ(ctrl_stmnt->index, 0L);
+  ASSERT_EQ(ctrl_stmnt->label, nullptr);
+
+  delete loop_stmnt;
+}
+
+TEST(ParserHappyLoopStmntTests, RangeConstantExprNoIncrExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop i = 0 : 10 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
+
+  // condition expr
+  const AstBinaryExpr *condition_expr = loop_stmnt->condition_expr->binary_expr();
+  ASSERT_EQ(condition_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(condition_expr->parent, loop_stmnt);
+  ASSERT_EQ(condition_expr->bin_op, BinaryExprType::LESS);
+
+  // initializer block
+  const AstBlock *init_block = loop_stmnt->initializer_block;
+  ASSERT_NE(init_block, nullptr);
+  ASSERT_EQ(init_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(init_block->parent, loop_stmnt);
+  ASSERT_EQ(init_block->statements.size(), 1);
+
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
+  // footer block
+  const AstBlock *footer_block = loop_stmnt->footer_block;
+  ASSERT_NE(footer_block, nullptr);
+  ASSERT_EQ(footer_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(footer_block->parent, loop_stmnt);
+  ASSERT_EQ(footer_block->statements.size(), 1);
+
+  const AstBinaryExpr *assign_index = footer_block->statements.at(0)->binary_expr();
+  ASSERT_NE(assign_index, nullptr);
+  ASSERT_EQ(assign_index->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(assign_index->parent, footer_block);
+  ASSERT_EQ(assign_index->bin_op, BinaryExprType::ASSIGN);
+
+  const AstUnaryExpr *inc_index = assign_index->right_expr->unary_expr();
+  ASSERT_NE(inc_index, nullptr);
+  ASSERT_EQ(inc_index->node_type, AstNodeType::AST_UNARY_EXPR);
+  ASSERT_EQ(inc_index->parent, assign_index);
+  ASSERT_EQ(inc_index->op, UnaryExprType::INC);
+
+  // empty content block
+  const AstBlock *content_block = loop_stmnt->content_block;
+  ASSERT_NE(content_block, nullptr);
+  ASSERT_EQ(content_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(content_block->parent, loop_stmnt);
+  ASSERT_EQ(content_block->statements.size(), 0);
+
+  delete loop_stmnt;
+}
+
+TEST(ParserHappyLoopStmntTests, RangeConstantExprTest) {
+  std::vector<Error> errors;
+  const char *source_code = "loop i = 0 : 10; 2 {}\n";
+
+  Lexer lexer(source_code, "file/directory", "BranchIfRetTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstLoopStmnt *loop_stmnt = parser.parse_loop_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(loop_stmnt, nullptr);
+  ASSERT_EQ(loop_stmnt->node_type, AstNodeType::AST_LOOP_STMNT);
+  ASSERT_TRUE(loop_stmnt->is_condition_checked);
+
+  // condition expr
+  const AstBinaryExpr *condition_expr = loop_stmnt->condition_expr->binary_expr();
+  ASSERT_EQ(condition_expr->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(condition_expr->parent, loop_stmnt);
+  ASSERT_EQ(condition_expr->bin_op, BinaryExprType::LESS);
+
+  // initializer block
+  const AstBlock *init_block = loop_stmnt->initializer_block;
+  ASSERT_NE(init_block, nullptr);
+  ASSERT_EQ(init_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(init_block->parent, loop_stmnt);
+  ASSERT_EQ(init_block->statements.size(), 1);
+
+  // empty header block
+  const AstBlock *header_block = loop_stmnt->header_block;
+  ASSERT_NE(header_block, nullptr);
+  ASSERT_EQ(header_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(header_block->parent, loop_stmnt);
+  ASSERT_EQ(header_block->statements.size(), 0);
+
+  // footer block
+  const AstBlock *footer_block = loop_stmnt->footer_block;
+  ASSERT_NE(footer_block, nullptr);
+  ASSERT_EQ(footer_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(footer_block->parent, loop_stmnt);
+  ASSERT_EQ(footer_block->statements.size(), 1);
+
+  const AstBinaryExpr *assign_index = footer_block->statements.at(0)->binary_expr();
+  ASSERT_NE(assign_index, nullptr);
+  ASSERT_EQ(assign_index->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(assign_index->parent, footer_block);
+  ASSERT_EQ(assign_index->bin_op, BinaryExprType::ASSIGN);
+
+  const AstBinaryExpr *add_index = assign_index->right_expr->binary_expr();
+  ASSERT_NE(add_index, nullptr);
+  ASSERT_EQ(add_index->node_type, AstNodeType::AST_BINARY_EXPR);
+  ASSERT_EQ(add_index->parent, assign_index);
+  ASSERT_EQ(add_index->bin_op, BinaryExprType::ADD);
+
+  // empty content block
+  const AstBlock *content_block = loop_stmnt->content_block;
+  ASSERT_NE(content_block, nullptr);
+  ASSERT_EQ(content_block->node_type, AstNodeType::AST_BLOCK);
+  ASSERT_EQ(content_block->parent, loop_stmnt);
+  ASSERT_EQ(content_block->statements.size(), 0);
+
+  delete loop_stmnt;
+}
+
+//==================================================================================
 //          PARSE FULL PROGRAM
 //==================================================================================
 
-TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
+TEST(ParserHappyFullProgramStmntTests, NoNewLineEnd) {
   const char *source_code = "/* Test program */\n" // multiline comment
                             "\n"
                             ";\n"         // empty statement : discarded
                             ";"           // empty statement : discarded
-                            "myVar i32\n" // variable definition
+                            "myVar s32\n" // variable definition
                             "myVar\n"     // unused variable reference : discarded
                             "myVar;\n"    // unused variable reference : discarded
                             "\n"
@@ -1205,7 +1892,7 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
   ASSERT_EQ(var_type->parent, var_def_expr);
   ASSERT_EQ(var_type->type_info->type_id, AstTypeId::INTEGER);
   ASSERT_EQ(var_type->child_type, nullptr);
-  ASSERT_EQ(var_type->type_info->name, "i32");
+  ASSERT_EQ(var_type->type_info->name, "s32");
   ASSERT_EQ(var_type->type_info->bit_size, 32);
   ASSERT_EQ(var_type->type_info->is_signed, true);
 
@@ -1229,12 +1916,10 @@ TEST(ParserHappyStmntTests, FullProgramNoNewLineEnd) {
   ASSERT_EQ(block_node->node_type, AstNodeType::AST_BLOCK);
   ASSERT_EQ(block_node->statements.size(), 1L);
 
-  const AstNode *ret_node = block_node->statements.at(0);
-  ASSERT_NE(ret_node, nullptr);
-  ASSERT_EQ(ret_node->node_type, AstNodeType::AST_UNARY_EXPR);
-
-  const AstUnaryExpr *ret_expr = ret_node->unary_expr();
+  const AstUnaryExpr *ret_expr = block_node->statements.at(0)->unary_expr();
+  ASSERT_NE(ret_expr, nullptr);
   ASSERT_EQ(ret_expr->parent, block_node);
+  ASSERT_EQ(ret_expr->node_type, AstNodeType::AST_UNARY_EXPR);
   ASSERT_EQ(ret_expr->op, UnaryExprType::RET);
   ASSERT_EQ(ret_expr->expr, nullptr);
 

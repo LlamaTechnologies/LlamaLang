@@ -1,8 +1,9 @@
 #pragma once
+#include "common_defs.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <string>
-
 struct Token;
 
 namespace console {
@@ -30,6 +31,6 @@ inline bool write_line(std::istream &msg) {
   return true;
 }
 
-inline char read_key() { return std::cin.get(); }
+inline u8 read_key() { return (u8)std::cin.get(); }
 
 } // namespace console

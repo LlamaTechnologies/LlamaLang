@@ -38,13 +38,13 @@ ALPHA:              \
 
 static void _set_token_id(Token &, const TokenId id) noexcept;
 static void _is_keyword(Token &, std::string_view) noexcept;
-static uint32_t _get_digit_value(uint8_t);
+static u32 _get_digit_value(uint8_t);
 static const char *_get_escape_shorthand(uint8_t);
 static bool _is_symbol_char(uint8_t);
 static bool _is_reserved_char(uint8_t);
 static bool _is_float_specifier(uint8_t);
 static bool _is_sign_or_type_specifier(uint8_t);
-static bool _is_exponent_signifier(uint8_t, int);
+static bool _is_exponent_signifier(uint8_t, s32);
 
 enum class TokenizerState
 {
@@ -62,10 +62,10 @@ enum class TokenizerState
   STRING,                              //
   STRING_ESCAPE,                       // saw \ inside a string
   STRING_ESCAPE_UNICODE_START,         // saw u inside string_escape
-  CHAR_CODE,                           // saw x in string_escape or began the unicode escape
-  CHAR_LITERAL,                        // saw '
-  CHAR_LITERAL_UNICODE,                // is 'uXXXX'
-  CHAR_LITERAL_END,                    // saw ' after '
+  char_CODE,                           // saw x in string_escape or began the unicode escape
+  char_LITERAL,                        // saw '
+  char_LITERAL_UNICODE,                // is 'uXXXX'
+  char_LITERAL_END,                    // saw ' after '
   SAW_EQUALS,                          // saw =
   SAW_STAR,                            // saw *
   SAW_SLASH,                           // saw /
@@ -94,7 +94,7 @@ Lexer::Lexer(const std::string &_src_file, const std::string_view &_file_directo
 void Lexer::tokenize() noexcept {
   // reading file while no errors in it
   for (/*cursor_pos = 0*/; cursor_pos < source.size(); cursor_pos++) {
-    unsigned char c = source[cursor_pos];
+    u8 c = source[cursor_pos];
 
     switch (state) {
       // begining of the source file
@@ -136,7 +136,7 @@ void Lexer::tokenize() noexcept {
         // we found the beginning of a char literal
       case '\'':
         _begin_token(*this, TokenId::UNICODE_CHAR);
-        state = TokenizerState::CHAR_LITERAL;
+        state = TokenizerState::char_LITERAL;
         break;
         // we found
         // ASSIGN =
@@ -189,10 +189,13 @@ void Lexer::tokenize() noexcept {
         _begin_token(*this, TokenId::HASH);
         _end_token(*this);
         break;
+      case ':':
+        _begin_token(*this, TokenId::COLON);
+        _end_token(*this);
+        break;
         // we found a semicolon
       case ';':
         _begin_token(*this, TokenId::SEMI);
-
         _end_token(*this);
         break;
       case '(':
@@ -416,7 +419,7 @@ void Lexer::tokenize() noexcept {
 
         break;
       }
-      uint32_t digit_value = _get_digit_value(c);
+      u32 digit_value = _get_digit_value(c);
       if (digit_value >= radix) {
         if (_is_sign_or_type_specifier(c)) {
           state = TokenizerState::SAW_SIGN_TYPE_SPEC;
@@ -505,7 +508,7 @@ void Lexer::tokenize() noexcept {
         radix = 10; // exponent is always base 10
         break;
       }
-      uint32_t digit_value = _get_digit_value(c);
+      u32 digit_value = _get_digit_value(c);
       if (digit_value >= radix) {
         if (is_trailing_underscore) {
           _invalid_char_error(*this, c);
@@ -528,7 +531,7 @@ void Lexer::tokenize() noexcept {
         state = TokenizerState::START;
         continue;
       }
-      // we use parse_f128 to generate the float literal, so just
+      // we use parse_f128 to generate the f32 literal, so just
       // need to get to the end of the token
 
     } break;
@@ -561,7 +564,7 @@ void Lexer::tokenize() noexcept {
         state = TokenizerState::FLOAT_EXPONENT_NUMBER_NO_UNDERSCORE;
         break;
       }
-      uint32_t digit_value = _get_digit_value(c);
+      u32 digit_value = _get_digit_value(c);
       if (digit_value >= radix) {
         if (is_trailing_underscore) {
           _invalid_char_error(*this, c);
@@ -584,7 +587,7 @@ void Lexer::tokenize() noexcept {
         continue;
       }
 
-      // we use parse_f128 to generate the float literal, so just
+      // we use parse_f128 to generate the f32 literal, so just
       // need to get to the end of the token
 
     } break;
@@ -719,7 +722,7 @@ void Lexer::tokenize() noexcept {
         break;
       }
       break;
-    case TokenizerState::CHAR_LITERAL:
+    case TokenizerState::char_LITERAL:
       if (c == '\'') {
         _tokenize_error(*this, "expected character");
         _set_token_id(current_token, TokenId::ERROR);
@@ -735,23 +738,23 @@ void Lexer::tokenize() noexcept {
         // 110xxxxx
         current_token.char_lit = c & 0x1f;
         remaining_code_units = 1;
-        state = TokenizerState::CHAR_LITERAL_UNICODE;
+        state = TokenizerState::char_LITERAL_UNICODE;
       } else if (c >= 0xe0 && c <= 0xef) {
         // 1110xxxx
         current_token.char_lit = c & 0x0f;
         remaining_code_units = 2;
-        state = TokenizerState::CHAR_LITERAL_UNICODE;
+        state = TokenizerState::char_LITERAL_UNICODE;
       } else if (c >= 0xf0 && c <= 0xf7) {
         // 11110xxx
         current_token.char_lit = c & 0x07;
         remaining_code_units = 3;
-        state = TokenizerState::CHAR_LITERAL_UNICODE;
+        state = TokenizerState::char_LITERAL_UNICODE;
       } else {
         current_token.char_lit = c;
-        state = TokenizerState::CHAR_LITERAL_END;
+        state = TokenizerState::char_LITERAL_END;
       }
       break;
-    case TokenizerState::CHAR_LITERAL_UNICODE:
+    case TokenizerState::char_LITERAL_UNICODE:
       if (c <= 0x7f || c >= 0xc0) {
         _invalid_char_error(*this, c);
       }
@@ -759,10 +762,10 @@ void Lexer::tokenize() noexcept {
       current_token.char_lit += c & 0x3f;
       remaining_code_units--;
       if (remaining_code_units == 0) {
-        state = TokenizerState::CHAR_LITERAL_END;
+        state = TokenizerState::char_LITERAL_END;
       }
       break;
-    case TokenizerState::CHAR_LITERAL_END:
+    case TokenizerState::char_LITERAL_END:
       switch (c) {
       case '\'':
         _end_token(*this);
@@ -775,7 +778,7 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::STRING_ESCAPE:
       switch (c) {
       case 'x':
-        state = TokenizerState::CHAR_CODE;
+        state = TokenizerState::char_CODE;
         radix = 16;
         char_code = 0;
         char_code_index = 0;
@@ -809,7 +812,7 @@ void Lexer::tokenize() noexcept {
     case TokenizerState::STRING_ESCAPE_UNICODE_START:
       switch (c) {
       case '{':
-        state = TokenizerState::CHAR_CODE;
+        state = TokenizerState::char_CODE;
         radix = 16;
         char_code = 0;
         char_code_index = 0;
@@ -819,7 +822,7 @@ void Lexer::tokenize() noexcept {
         _invalid_char_error(*this, c);
       }
       break;
-    case TokenizerState::CHAR_CODE: {
+    case TokenizerState::char_CODE: {
       if (unicode && c == '}') {
         if (char_code_index == 0) {
           _tokenize_error(*this, "empty unicode escape sequence");
@@ -831,7 +834,7 @@ void Lexer::tokenize() noexcept {
         }
         if (current_token.id == TokenId::UNICODE_CHAR) {
           current_token.char_lit = char_code;
-          state = TokenizerState::CHAR_LITERAL_END;
+          state = TokenizerState::char_LITERAL_END;
         } else if (char_code <= 0x7f) {
           // 00000000 00000000 00000000 0xxxxxxx
           _handle_string_escape(*this, (uint8_t)char_code);
@@ -862,7 +865,7 @@ void Lexer::tokenize() noexcept {
         break;
       }
 
-      uint32_t digit_value = _get_digit_value(c);
+      u32 digit_value = _get_digit_value(c);
       if (digit_value >= radix) {
         _tokenize_error(*this, "invalid digit: '%c'", c);
         break;
@@ -1012,8 +1015,8 @@ void Lexer::tokenize() noexcept {
   case TokenizerState::STRING:
     _tokenize_error(*this, "unterminated string literal");
     break;
-  case TokenizerState::CHAR_LITERAL:
-    _tokenize_error(*this, "unterminated Unicode point literal");
+  case TokenizerState::char_LITERAL:
+    _tokenize_error(*this, "unterminated Unicode poi32 literal");
     break;
   case TokenizerState::SAW_STAR_DOC_COMMENT:
     _tokenize_error(*this, "unexpected EOF");
@@ -1072,8 +1075,16 @@ void _end_token_check_is_keyword(Lexer &in_lexer) noexcept {
   case TokenId::EXTERN:
   case TokenId::FN:
   case TokenId::RET:
+  case TokenId::IF:
+  case TokenId::ELSE:
+  case TokenId::ELIF:
+  case TokenId::LOOP:
+  case TokenId::BREAK:
+  case TokenId::CONTINUE:
   case TokenId::AND:
   case TokenId::OR:
+  case TokenId::TRUE:
+  case TokenId::FALSE:
   case TokenId::IDENTIFIER:
     in_lexer.tokens.push_back(in_lexer.current_token);
     break;
@@ -1114,13 +1125,14 @@ void _tokenize_error(Lexer &in_lexer, const char *format, ...) noexcept {
   va_start(ap, format);
   va_copy(ap2, ap);
 
-  int len1 = snprintf(nullptr, 0, format, ap);
+  s32 len1 = snprintf(nullptr, 0, format, ap);
   assert(len1 >= 0);
 
   std::string msg;
   msg.reserve(len1 + 1);
+  msg.resize(len1);
 
-  int len2 = snprintf(msg.data(), msg.capacity(), format, ap2);
+  s32 len2 = snprintf(msg.data(), msg.size(), format, ap2);
   assert(len2 >= 0);
   assert(len2 == len1);
 
@@ -1136,7 +1148,7 @@ void _handle_string_escape(Lexer &in_lexer, uint8_t c) noexcept {
   if (in_lexer.current_token.id == TokenId::UNICODE_CHAR) {
     in_lexer.current_token.char_lit = c;
 
-    in_lexer.state = TokenizerState::CHAR_LITERAL_END;
+    in_lexer.state = TokenizerState::char_LITERAL_END;
   } else if (in_lexer.current_token.id == TokenId::STRING) {
     in_lexer.state = TokenizerState::STRING;
   } else {
@@ -1144,11 +1156,13 @@ void _handle_string_escape(Lexer &in_lexer, uint8_t c) noexcept {
   }
 }
 
-static std::unordered_map<std::string_view, TokenId> keywords = { { "extern", TokenId::EXTERN },
-                                                                  { "fn", TokenId::FN },
-                                                                  { "ret", TokenId::RET },
-                                                                  { "and", TokenId::AND },
-                                                                  { "or", TokenId::OR } };
+static std::unordered_map<std::string_view, TokenId> keywords = {
+  { "extern", TokenId::EXTERN },    { "fn", TokenId::FN },       { "ret", TokenId::RET },
+  { "and", TokenId::AND },          { "if", TokenId::IF },       { "elif", TokenId::ELIF },
+  { "else", TokenId::ELSE },        { "loop", TokenId::LOOP },   { "or", TokenId::OR },
+  { "true", TokenId::TRUE },        { "false", TokenId::FALSE }, { "break", TokenId::BREAK },
+  { "continue", TokenId::CONTINUE }
+};
 
 void _is_keyword(Token &in_token, std::string_view value) noexcept {
   auto len = in_token.end_pos - in_token.start_pos + 1;
@@ -1157,7 +1171,7 @@ void _is_keyword(Token &in_token, std::string_view value) noexcept {
   }
 }
 
-uint32_t _get_digit_value(uint8_t c) {
+u32 _get_digit_value(uint8_t c) {
   if ('0' <= c && c <= '9') {
     return c - '0';
   }
@@ -1182,9 +1196,16 @@ bool _is_symbol_char(uint8_t c) {
 bool _is_reserved_char(uint8_t c) {
   switch (c) {
   case WHITESPACE:
+  case '{':
+  case '}':
   case '(':
   case ')':
+  case '[':
+  case ']':
+  case '#':
   case ',':
+  case ';':
+  case ':':
     return true;
   default:
     return false;
@@ -1205,7 +1226,7 @@ bool _is_sign_or_type_specifier(uint8_t c) {
   }
 }
 
-bool _is_exponent_signifier(uint8_t c, int radix) {
+bool _is_exponent_signifier(uint8_t c, s32 radix) {
   if (radix == 16) {
     return c == 'p' || c == 'P';
   } else {
@@ -1322,7 +1343,7 @@ std::string create_values_line(const std::string &source, const size_t start, co
     auto token_value = std::string_view(source.data() + token.start_pos, len);
 
     if (token.id == TokenId::DOC_COMMENT) {
-      for (char c : token_value) {
+      for (s8 c : token_value) {
         switch (c) {
         case '\a':
           value.append("\\a");

@@ -11,11 +11,17 @@ struct AstType;
 struct AstVarDef;
 struct AstFnProto;
 struct AstFnDef;
+struct AstFnCallExpr;
+struct AstUnaryExpr;
+struct AstBinaryExpr;
 struct AstBlock;
+struct AstIfStmnt;
+struct AstLoopStmnt;
+struct AstCtrlStmnt;
 enum class SymbolType;
 
 class SemanticAnalyzer {
-  Table *global_symbol_table = new Table("global_scope", nullptr);
+  Table *global_symbol_table = new Table("global_scope", nullptr, nullptr);
   Table *symbol_table = global_symbol_table;
   std::vector<Error> &errors;
 
@@ -23,22 +29,57 @@ public:
   SemanticAnalyzer(std::vector<Error> &in_errors) : errors(in_errors) {}
 
   /* Returns true if:
-   * - global variable has initializer.
    * - initializer expr is compatible with variable's type.
    * - variable is not shadowing another in the same scope.
    */
-  bool analize_var_def(const AstVarDef *in_node, const bool is_global);
+  bool analize_var_def(const AstVarDef *in_node);
 
-  /* TEMP: Returns true.
+  /* Returns true if:
+   * - variable has initializer.
+   * - initializer expr is compatible with variable's type.
+   * - variable is not shadowing another in the same scope.
+   */
+  bool analize_global_var_def(const AstVarDef *in_node);
+
+  /**
+   * TEMP: Returns true.
    * NOTE: Here we will check fn_type
    */
-  bool analize_fn_proto(const AstFnProto *in_func_proto);
+  bool analize_fn_proto(const AstFnProto *in_fn_proto);
+
+  /**
+   * set current scope to be the one of the function passed
+   */
+  void enter_fn_scope(AstFnDef *in_function);
+
+  /**
+   * set current scope to be the parent of the current scope
+   */
+  void exit_fn_scope();
 
   /* Returns true if:
    * - all middle statements are OK.
    * - return statment type match function's return type
    */
-  bool analize_fn_block(const AstBlock *in_func_block, AstFnDef *in_function);
+  bool analize_fn_block(const AstBlock *in_fn_block);
+
+  /* Returns true if:
+   * - all middle statements are OK.
+   */
+  bool analize_block(const AstBlock *in_block, bool is_first_level_block = false);
+
+  /* Returns true if:
+   * - conditional expression is of boolean type
+   * - block has no errors
+   * - none of its else block has errors
+   */
+  bool analize_if_stmnt(const AstIfStmnt *in_expr);
+
+  /* Returns true if:
+   * - conditional expression is of boolean type
+   * - block has no errors
+   */
+  bool analize_loop_stmnt(const AstLoopStmnt *in_expr);
 
   /* Returns true if:
    * - all refered variables had been defined
@@ -47,6 +88,12 @@ public:
   bool analize_expr(const AstNode *in_expr);
 
   bool check_and_set_type(const AstNode *in_node, const AstType *l_type_node, const AstNode *expr_node);
+
+private:
+  inline bool _analize_call_expr(const AstFnCallExpr *in_fn_call);
+  inline bool _analize_unary_expr(const AstUnaryExpr *in_unary_expr);
+  inline bool _analize_binary_expr(const AstBinaryExpr *in_binary_expr);
+  inline bool _analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt);
 };
 
 /* Returns true if:

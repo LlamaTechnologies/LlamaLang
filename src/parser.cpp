@@ -9,9 +9,12 @@
 
 #include <cassert>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <unordered_map>
 
+static bool _is_boolean_expression(const AstNode *in_expr, AstNode *if_stmnt_node);
 static void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
+static void _parse_warning(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in_errors,
                                     const Token &in_string_token, const std::string_view in_relative_file_name,
                                     const std::string &in_file_directory, std::string &out_file_path,
@@ -21,10 +24,14 @@ static BinaryExprType _get_binary_op(const Token &token) noexcept;
 static UnaryExprType _get_unary_op(const Token &token) noexcept;
 static bool _is_type_start_token(const Token &token) noexcept;
 static bool _is_expr_token(const Token &token) noexcept;
-static bool _is_symbol_start_char(const char _char) noexcept;
-static bool _is_whitespace_char(const char _char) noexcept;
+static bool _is_symbol_start_char(const s8 _char) noexcept;
+static bool _is_whitespace_char(const s8 _char) noexcept;
 /* Returns true if it is a valid directive type */
 static bool _get_directive_type(DirectiveType &, std::string_view in_directive_name);
+static bool _end_of_statement(const Lexer &lexer, std::vector<Error> errors, const TokenId terminator);
+static bool _is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos);
+static bool _is_forbiden_statement(const Token &token) noexcept;
+static bool _is_var_def(const Lexer &lexer, const Token &token);
 
 //  ('=='|'!=' | '!' | '>=' | '<=' | '<' | '>')
 #define COMPARATIVE_OPERATOR                                                                       \
@@ -91,25 +98,10 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
       }
     } break;
     case TokenId::IDENTIFIER: {
-      const Token &next_token = lexer.get_next_token();
-      lexer.get_back(); // next_token
-
-      if (next_token.id == TokenId::SEMI) {
-        // ignore statement
+      if (!_is_var_def(lexer, token)) {
         continue;
       }
 
-      if (is_forbiden_statement(next_token)) {
-        continue;
-      }
-
-      if (is_new_line_between(lexer, token.end_pos, next_token.start_pos)) {
-        // ignore statement of type
-        // IDENTIFIER\n
-        continue;
-      }
-
-      lexer.get_back(); // token
       node = parse_vardef_stmnt(lexer);
       if (!node) {
         // TODO: handle error
@@ -124,20 +116,9 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
     }
 
     // handle EOS (end of statement)
-    const Token &semicolon_token = lexer.get_next_token();
-    const Token &prev_semi_token = lexer.get_previous_token();
-    if (semicolon_token.id != TokenId::SEMI) {
-      if (semicolon_token.id != TokenId::_EOF &&
-          !is_new_line_between(lexer, prev_semi_token.end_pos, semicolon_token.start_pos)) {
-        // statement wrong ending
-        _parse_error(errors, prev_semi_token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER,
-                     lexer.get_token_value(prev_semi_token));
-        delete node;
-        continue;
-      }
-
-      // was not a semicolon.
-      lexer.get_back();
+    if (_end_of_statement(lexer, errors, TokenId::_EOF) == false) {
+      delete node;
+      continue;
     }
 
     node->parent = source_code_node;
@@ -145,6 +126,47 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
   }
 
   return source_code_node;
+}
+
+bool _end_of_statement(const Lexer &lexer, std::vector<Error> errors, const TokenId terminator) {
+  const Token &semicolon_token = lexer.get_next_token();
+  const Token &prev_semi_token = lexer.get_previous_token();
+  if (semicolon_token.id != TokenId::SEMI) {
+    if (semicolon_token.id != terminator &&
+        !_is_new_line_between(lexer, prev_semi_token.end_pos, semicolon_token.start_pos)) {
+      // statement wrong ending
+      _parse_error(errors, prev_semi_token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER,
+                   lexer.get_token_value(prev_semi_token));
+      return false;
+    }
+
+    // was not a semicolon.
+    lexer.get_back();
+  }
+  return true;
+}
+
+bool _is_var_def(const Lexer &lexer, const Token &token) {
+  const Token &next_token = lexer.get_next_token();
+  lexer.get_back(); // next_token
+
+  if (next_token.id == TokenId::SEMI) {
+    // ignore statement
+    return false;
+  }
+
+  if (_is_forbiden_statement(next_token)) {
+    return false;
+  }
+
+  if (_is_new_line_between(lexer, token.end_pos, next_token.start_pos)) {
+    // ignore statement of type
+    // IDENTIFIER\n
+    return false;
+  }
+
+  lexer.get_back(); // token
+  return true;
 }
 
 /*
@@ -184,66 +206,73 @@ AstDirective *Parser::parse_directive(const Lexer &lexer) noexcept {
 
   switch (dir_type) {
   case DirectiveType::LOAD: {
-    const Token &file_name_token = lexer.get_next_token();
-    std::string_view relative_file_path = lexer.get_token_value(file_name_token);
-
-    if (file_name_token.id != TokenId::STRING) {
-      _parse_error(errors, file_name_token, ERROR_DIRECTIVE_EXPECTED_STRING, std::string(relative_file_path).c_str());
+    if (_parse_load_directive(lexer, directive_node) == false) {
       delete directive_node;
       return nullptr;
     }
-
-    std::string file_name;
-    std::string file_directory;
-    if (_get_file_name_and_path(this->file_input, this->errors, file_name_token, relative_file_path,
-                                lexer.file_directory, file_directory, file_name) == false) {
-      // path was not a file, file did not exist or file was no ".llama"
-      delete directive_node;
-      return nullptr;
-    }
-
-    std::string file_path = file_directory + std::filesystem::path::preferred_separator + file_name;
-    // copy file_path to directive argument
-    {
-      char *str = (char *)malloc(file_path.size() + 1);
-      ::memcpy(str, file_path.c_str(), file_path.size() + 1);
-      directive_node->argument.str = str;
-    }
-
-    RepositorySrcCode &code_repository = RepositorySrcCode::get();
-    // only parse the file if not in the code repository
-    if (!code_repository.has_file(file_path)) {
-      size_t errors_before = errors.size();
-
-      std::string source_code_str = this->file_input.open_and_read_file(file_path);
-
-      // create new lexer and tokenize.
-      Lexer *loaded_file_lexer = new Lexer(source_code_str, file_directory, file_name, errors);
-      loaded_file_lexer->tokenize();
-
-      // there were errors in lexing.
-      if (errors_before > errors.size()) {
-        // TODO(pablo96): error handling
-        delete directive_node;
-        return nullptr;
-      };
-
-      // parse source code.
-      AstSourceCode *src_code_node = parse(*loaded_file_lexer);
-
-      /* NOTE(pablo96): Since AstSourceCode owns the lexer pointer
-       * only loaded SourceCodes have the lexer pointer.
-       */
-      src_code_node->lexer = loaded_file_lexer;
-
-      // add parsed source code to the repository.
-      code_repository._add_source_code(file_path, src_code_node);
-    }
+    return directive_node;
   } break;
   default:
     LL_UNREACHEABLE; // unimplemented directive
   }
-  return directive_node;
+}
+
+bool Parser::_parse_load_directive(const Lexer &lexer, AstDirective *directive_node) noexcept {
+  const Token &file_name_token = lexer.get_next_token();
+  std::string_view relative_file_path = lexer.get_token_value(file_name_token);
+
+  if (file_name_token.id != TokenId::STRING) {
+    _parse_error(this->errors, file_name_token, ERROR_DIRECTIVE_EXPECTED_STRING,
+                 std::string(relative_file_path).c_str());
+    return false;
+  }
+
+  std::string file_name;
+  std::string file_directory;
+  if (_get_file_name_and_path(this->file_input, this->errors, file_name_token, relative_file_path, lexer.file_directory,
+                              file_directory, file_name) == false) {
+    // path was not a file, file did not exist or file was no ".llama"
+    return false;
+  }
+
+  std::string file_path = file_directory + std::filesystem::path::preferred_separator + file_name;
+  // copy file_path to directive argument
+  {
+    char *str = (char *)malloc(file_path.size() + 1);
+    ::memcpy(str, file_path.c_str(), file_path.size() + 1);
+    directive_node->argument.str = str;
+  }
+
+  RepositorySrcCode &code_repository = RepositorySrcCode::get();
+  // only parse the file if not in the code repository
+  if (!code_repository.has_file(file_path)) {
+    size_t errors_before = this->errors.size();
+
+    std::string source_code_str = this->file_input.open_and_read_file(file_path);
+
+    // create new lexer and tokenize.
+    Lexer *loaded_file_lexer = new Lexer(source_code_str, file_directory, file_name, this->errors);
+    loaded_file_lexer->tokenize();
+
+    // there were errors in lexing.
+    if (errors_before > this->errors.size()) {
+      // TODO(pablo96): error handling
+      return false;
+    };
+
+    // parse source code.
+    AstSourceCode *src_code_node = this->parse(*loaded_file_lexer);
+
+    /* NOTE(pablo96): Since AstSourceCode owns the lexer pointer
+     * only loaded SourceCodes have the lexer pointer.
+     */
+    src_code_node->lexer = loaded_file_lexer;
+
+    // add parsed source code to the repository.
+    code_repository._add_source_code(file_path, src_code_node);
+  }
+
+  return true;
 }
 
 /*
@@ -429,6 +458,367 @@ AstParamDef *Parser::parse_param_def(const Lexer &lexer) noexcept {
 }
 
 /*
+ * Parses an if/elif/else statement
+ * if_stmnt
+ *   : 'if' expr block ('elif' expr block)* ('else' block)?
+ *   ;
+ */
+AstIfStmnt *Parser::parse_branch_stmnt(const Lexer &lexer) noexcept {
+  AstIfStmnt *if_stmnt_node = parse_if_stmnt(lexer);
+  if (if_stmnt_node == nullptr) {
+    return nullptr;
+  }
+
+  // PARSE ELIF
+  AstIfStmnt *last_elif_stmnt = parse_elif_stmnt(lexer, if_stmnt_node);
+  if (last_elif_stmnt == nullptr) {
+    delete if_stmnt_node;
+    return nullptr;
+  }
+
+  // PARSE ELSE
+  if (parse_else_stmnt(lexer, last_elif_stmnt) == false) {
+    delete if_stmnt_node;
+    return nullptr;
+  }
+
+  return if_stmnt_node;
+}
+
+AstIfStmnt *Parser::parse_if_stmnt(const Lexer &lexer) noexcept {
+  const Token &if_token = lexer.get_next_token();
+
+  if (if_token.id != TokenId::IF) {
+    // compiler bug! we did not predict correctly
+    LL_UNREACHEABLE;
+  }
+
+  AstNode *conditional_expr = parse_expr(lexer);
+
+  AstIfStmnt *if_stmnt_node = new AstIfStmnt(if_token.start_line, if_token.start_column, if_token.file_name);
+
+  if (!_is_boolean_expression(conditional_expr, if_stmnt_node)) {
+    _parse_error(errors, if_token, ERROR_BRANCH_EXPR_NOT_BOOL);
+    // NOTE(pablo96): we dont break here since we want to parse as much as we can
+  }
+
+  if_stmnt_node->condition_expr = conditional_expr;
+
+  // PARSE BLOCK
+  const Token &true_lcurly_token = lexer.get_next_token();
+  if (true_lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty branch
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return if_stmnt_node;
+  }
+
+  lexer.get_back();
+  AstBlock *true_block_node = parse_block(lexer);
+  if (true_block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    delete if_stmnt_node;
+    return nullptr;
+  }
+
+  true_block_node->parent = if_stmnt_node;
+  if_stmnt_node->true_block = true_block_node;
+
+  return if_stmnt_node;
+}
+
+AstIfStmnt *Parser::parse_elif_stmnt(const Lexer &lexer, AstIfStmnt *if_stmnt) noexcept {
+  // PARSE ELIFs
+  AstIfStmnt *prev_if_stmnt = if_stmnt;
+  while (true) {
+    const Token &elif_token = lexer.get_next_token();
+    if (elif_token.id != TokenId::ELIF) {
+      lexer.get_back();
+      break;
+    }
+
+    AstNode *elif_conditional_expr = parse_expr(lexer);
+    if (elif_conditional_expr == nullptr) {
+      // TODO(pablo96): handle error
+      return nullptr;
+    }
+
+    AstIfStmnt *elif_stmnt = new AstIfStmnt(elif_token.start_line, elif_token.start_column, elif_token.file_name);
+
+    if (!_is_boolean_expression(elif_conditional_expr, elif_stmnt)) {
+      _parse_error(errors, elif_token, ERROR_BRANCH_EXPR_NOT_BOOL);
+      // NOTE(pablo96): we dont break here since we want to parse as much as we can
+    }
+
+    elif_stmnt->condition_expr = elif_conditional_expr;
+
+    // PARSE ELIF BLOCK
+    const Token &elif_lcurly_token = lexer.get_next_token();
+    if (elif_lcurly_token.id != TokenId::L_CURLY) {
+      // Warning: empty branch
+      _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+      continue;
+    }
+
+    lexer.get_back();
+    AstBlock *elif_block_node = parse_block(lexer);
+    if (elif_block_node == nullptr) {
+      // TODO(pablo96): handle error in block parsing
+      return nullptr;
+    }
+
+    elif_block_node->parent = elif_stmnt;
+    elif_stmnt->true_block = elif_block_node;
+
+    // ELIF is an IF stmnt in a ELSE block
+    AstBlock *else_block = new AstBlock(elif_token.start_line, elif_token.start_column, elif_token.file_name);
+    else_block->statements.push_back(elif_stmnt);
+
+    prev_if_stmnt->false_block = else_block;
+    prev_if_stmnt = elif_stmnt;
+  }
+
+  LL_ASSERT(prev_if_stmnt->false_block == nullptr);
+
+  return prev_if_stmnt;
+}
+
+bool Parser::parse_else_stmnt(const Lexer &lexer, AstIfStmnt *last_elif_stmnt) noexcept {
+  const Token &else_token = lexer.get_next_token();
+  if (else_token.id != TokenId::ELSE) {
+    lexer.get_back();
+    return true;
+  }
+
+  // PARSE ELSE BLOCK
+  const Token &false_lcurly_token = lexer.get_next_token();
+  if (false_lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty branch
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return true;
+  }
+
+  lexer.get_back();
+  AstBlock *false_block_node = parse_block(lexer);
+  if (false_block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    return false;
+  }
+
+  false_block_node->parent = last_elif_stmnt;
+  last_elif_stmnt->false_block = false_block_node;
+
+  return true;
+}
+
+/*
+ * Parses a loop statement
+ * loop_stmnt
+ *   : 'loop' expr  block #while
+ *   | 'loop' IDENTIFIER ('=' INTEGER)? ':' (IDENTIFIER | INTEGER) (';' INTEGER)? #range
+ *   | 'loop' IDENTIFIER ':' IDENTIFIER (';' ( (IDENTIFIER (, INTEGER)?) | INTEGER) )? #each
+ *   ;
+ */
+AstLoopStmnt *Parser::parse_loop_stmnt(const Lexer &lexer) noexcept {
+  const Token &loop_token = lexer.get_next_token();
+  if (loop_token.id != TokenId::LOOP) {
+    // compiler bug! we did not predict correctly
+    LL_UNREACHEABLE;
+  }
+
+  // try to predict loop type
+  const Token &token = lexer.get_next_token();
+  if (token.id == TokenId::IDENTIFIER) {
+    const Token &eq_colon_token = lexer.get_next_token();
+    if (eq_colon_token.id == TokenId::ASSIGN) {
+      lexer.get_back(); // '=' token
+      lexer.get_back(); // IDENTIFIER token
+      return parse_rangeloop_stmnt(lexer, loop_token);
+    }
+
+    if (eq_colon_token.id == TokenId::COLON) {
+      const Token &id_num_token = lexer.get_next_token();
+      if (id_num_token.id == TokenId::INT_LIT) {
+        lexer.get_back(); // IDENTIFIER | NUMBER token
+        lexer.get_back(); // ':' token
+        lexer.get_back(); // IDENTIFIER token
+        return parse_rangeloop_stmnt(lexer, loop_token);
+      }
+
+      // else we parse it as a each loop and let the semantic phase check the syntax
+      lexer.get_back(); // IDENTIFIER | NUMBER token
+      lexer.get_back(); // ':' token
+      lexer.get_back(); // IDENTIFIER token
+      return parse_eachloop_stmnt(lexer, loop_token);
+    }
+
+    // else is a while loop
+    lexer.get_back(); // '=' or ':' token
+  }
+
+  lexer.get_back(); // IDENTIFIER token
+
+  return parse_whileloop_stmnt(lexer, loop_token);
+}
+
+/*
+ * Parses a loop statement
+ * loop_stmnt
+ *   : 'loop' boolExpr  block
+ */
+AstLoopStmnt *Parser::parse_whileloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept {
+  AstNode *conditional_expr = parse_expr(lexer);
+
+  AstLoopStmnt *loop_stmnt = new AstLoopStmnt(loop_token.start_line, loop_token.start_column, loop_token.file_name);
+  loop_stmnt->condition_expr = conditional_expr;
+  conditional_expr->parent = loop_stmnt;
+
+  if (!_is_boolean_expression(conditional_expr, loop_stmnt)) {
+    _parse_error(errors, loop_token, ERROR_BRANCH_EXPR_NOT_BOOL);
+    // NOTE(pablo96): we dont break here since we want to parse as much as we can
+  }
+
+  const Token &true_lcurly_token = lexer.get_next_token();
+  if (true_lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty loop
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return loop_stmnt;
+  }
+
+  lexer.get_back();
+  AstBlock *content_block_node = parse_block(lexer);
+  if (content_block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  content_block_node->parent = loop_stmnt;
+  loop_stmnt->content_block = content_block_node;
+
+  AstBlock *header_block = new AstBlock(conditional_expr->line, conditional_expr->column, conditional_expr->file_name);
+  header_block->parent = loop_stmnt;
+  loop_stmnt->header_block = header_block;
+
+  return loop_stmnt;
+}
+
+AstLoopStmnt *Parser::parse_rangeloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept {
+  AstLoopStmnt *loop_stmnt = new AstLoopStmnt(loop_token.start_line, loop_token.start_column, loop_token.file_name);
+
+  AstBinaryExpr *it_initializer = parse_assign_stmnt(lexer);
+  if (it_initializer == nullptr) {
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  { // init block
+    AstBlock *init_block = new AstBlock(it_initializer->line, it_initializer->column, it_initializer->file_name);
+    init_block->parent = loop_stmnt;
+    loop_stmnt->initializer_block = init_block;
+
+    init_block->statements.push_back(it_initializer);
+  }
+
+  const Token &colon = lexer.get_next_token();
+  if (colon.id != TokenId::COLON) {
+    std::string value = std::string(lexer.get_token_value(colon));
+    _parse_error(this->errors, colon, ERROR_EXPECTED_COLON_LOOP, value.c_str());
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  AstNode *end_value = parse_primary_expr(lexer);
+  if (end_value == nullptr) {
+    delete loop_stmnt;
+    return nullptr;
+  }
+
+  AstNode *incr_expr = nullptr;
+  const Token &semi_colon = lexer.get_next_token();
+  if (semi_colon.id == TokenId::SEMI) {
+    AstNode *_increment_amount = parse_primary_expr(lexer);
+    AstBinaryExpr *_add_expr = new AstBinaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+    _add_expr->bin_op = BinaryExprType::ADD;
+    _add_expr->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
+    _add_expr->left_expr->parent = _add_expr;
+    _add_expr->right_expr = _increment_amount;
+    _add_expr->right_expr->parent = _add_expr;
+    incr_expr = _add_expr;
+  } else {
+    lexer.get_back();
+  }
+
+  const Token &true_lcurly_token = lexer.get_next_token();
+  if (true_lcurly_token.id != TokenId::L_CURLY) {
+    // Warning: empty loop
+    _parse_warning(errors, lexer.get_previous_token(), WARN_EMPTY_BRANCH);
+    return loop_stmnt;
+  }
+
+  lexer.get_back();
+  AstBlock *content_block_node = parse_block(lexer);
+  if (content_block_node == nullptr) {
+    // TODO(pablo96): handle error in block parsing
+    delete loop_stmnt;
+    return nullptr;
+  }
+  loop_stmnt->content_block = content_block_node;
+  content_block_node->parent = loop_stmnt;
+
+  // conditional expr
+  AstBinaryExpr *conditional_expr =
+    new AstBinaryExpr(it_initializer->line, it_initializer->column, it_initializer->file_name);
+  loop_stmnt->condition_expr = conditional_expr;
+  conditional_expr->parent = loop_stmnt;
+
+  conditional_expr->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
+  conditional_expr->left_expr->parent = conditional_expr;
+
+  conditional_expr->bin_op = BinaryExprType::LESS;
+
+  conditional_expr->right_expr = end_value;
+  end_value->parent = conditional_expr;
+
+  loop_stmnt->is_condition_checked = true;
+
+  { // header
+    AstBlock *header_block =
+      new AstBlock(conditional_expr->line, conditional_expr->column, conditional_expr->file_name);
+    header_block->parent = loop_stmnt;
+    loop_stmnt->header_block = header_block;
+  }
+
+  { // footer
+    // var += 1
+    AstBlock *footer_block = new AstBlock(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+    footer_block->parent = loop_stmnt;
+    loop_stmnt->footer_block = footer_block;
+
+    if (incr_expr == nullptr) {
+      AstUnaryExpr *_incr = new AstUnaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+      _incr->op = UnaryExprType::INC;
+      _incr->expr = new AstSymbol(*it_initializer->left_expr->symbol());
+      _incr->expr->parent = _incr;
+      incr_expr = _incr;
+    }
+
+    AstBinaryExpr *_assign = new AstBinaryExpr(semi_colon.start_line, semi_colon.start_column, semi_colon.file_name);
+    _assign->left_expr = new AstSymbol(*it_initializer->left_expr->symbol());
+    _assign->left_expr->parent = _assign;
+    _assign->bin_op = BinaryExprType::ASSIGN;
+    _assign->right_expr = incr_expr;
+    _assign->right_expr->parent = _assign;
+
+    _assign->parent = footer_block;
+    footer_block->statements.push_back(_assign);
+  }
+
+  return loop_stmnt;
+}
+
+AstLoopStmnt *Parser::parse_eachloop_stmnt(const Lexer &lexer, const Token &loop_token) noexcept { return nullptr; }
+
+/*
  * Parses a (function | if-else stmnt) block
  * block
  *   : '{' (statement eos)* '}'
@@ -465,20 +855,10 @@ AstBlock *Parser::parse_block(const Lexer &lexer) noexcept {
       return nullptr;
     }
 
-    const Token &semicolon_token = lexer.get_next_token();
-    if (semicolon_token.id != TokenId::SEMI) {
-      bool has_new_line = is_new_line_between(lexer, token.end_pos, semicolon_token.start_pos);
-      // checking for r_curly allows for '{stmnt}' as block
-      if (semicolon_token.id != TokenId::R_CURLY && !has_new_line) {
-        // statement wrong ending
-        _parse_error(errors, token, ERROR_EXPECTED_NEWLINE_OR_SEMICOLON_AFTER, lexer.get_token_value(token));
-        delete stmnt;
-        delete block_node;
-        return nullptr;
-      }
-
-      // was not a semicolon.
-      lexer.get_back();
+    if (_end_of_statement(lexer, errors, TokenId::R_CURLY) == false) {
+      delete stmnt;
+      delete block_node;
+      return nullptr;
     }
 
     stmnt->parent = block_node;
@@ -524,16 +904,32 @@ stmnt_expr:
     lexer.get_back(); // token
     return parse_expr(lexer);
   }
-  case TokenId::RET:
+  case TokenId::RET: {
     lexer.get_back();
     return parse_ret_stmnt(lexer);
-  case TokenId::L_CURLY:
+  }
+  case TokenId::IF: {
+    lexer.get_back();
+    return parse_branch_stmnt(lexer);
+  }
+  case TokenId::LOOP: {
+    lexer.get_back();
+    return parse_loop_stmnt(lexer);
+  }
+  case TokenId::CONTINUE:
+  case TokenId::BREAK: {
+    lexer.get_back();
+    return parse_ctrl_stmnt(lexer);
+  }
+  case TokenId::L_CURLY: {
     // TODO(pablo96): parse local block
     return nullptr;
-  case TokenId::SEMI:
+  }
+  case TokenId::SEMI: {
     // empty_statement
     // consume the token and predict again
     return parse_statement(lexer);
+  }
   case TokenId::_EOF:
     return nullptr;
   default:
@@ -672,7 +1068,7 @@ AstBinaryExpr *Parser::parse_assign_stmnt(const Lexer &lexer) noexcept {
     AstBinaryExpr *node = new AstBinaryExpr(token.start_line, token.start_column, token.file_name);
     expr->parent = node;
     identifier_node->parent = node;
-    node->bin_op = _get_binary_op(token);
+    node->bin_op = BinaryExprType::ASSIGN;
     node->left_expr = identifier_node;
     node->right_expr = expr;
     return node;
@@ -685,7 +1081,7 @@ AstBinaryExpr *Parser::parse_assign_stmnt(const Lexer &lexer) noexcept {
 /*
  * Parses a return statement
  * returnStmt
- *   | 'ret' expression?
+ *   : 'ret' expression?
  *   ;
  */
 AstUnaryExpr *Parser::parse_ret_stmnt(const Lexer &lexer) noexcept {
@@ -720,6 +1116,35 @@ AstUnaryExpr *Parser::parse_ret_stmnt(const Lexer &lexer) noexcept {
 }
 
 /*
+ * Parses a break or continue statement
+ * ctrlStmnt
+ *   : 'break' (IDENTIFIER | INTEGER)?
+ *   | 'continue' (IDENTIFIER | INTEGER)?
+ */
+AstCtrlStmnt *Parser::parse_ctrl_stmnt(const Lexer &lexer) noexcept {
+  const Token &keyword = lexer.get_next_token();
+  if (!match(&keyword, TokenId::BREAK, TokenId::CONTINUE)) {
+    LL_UNREACHEABLE;
+  }
+
+  AstCtrlStmnt *ctrl_stmnt = new AstCtrlStmnt(keyword.start_line, keyword.start_column, keyword.file_name);
+  ctrl_stmnt->ctrl_type = keyword.id == TokenId::BREAK ? CtrlStmntType::BREAK : CtrlStmntType::CONTINUE;
+
+  const Token &label_index = lexer.get_next_token();
+  if (match(&label_index, TokenId::IDENTIFIER, TokenId::INT_LIT)) {
+    if (label_index.id == TokenId::IDENTIFIER) {
+      ctrl_stmnt->label = std::string(lexer.get_token_value(label_index)).c_str();
+    } else {
+      ctrl_stmnt->index = strtoul(label_index.int_lit.number, nullptr, (int)label_index.int_lit.base);
+    }
+  } else {
+    lexer.get_back();
+  }
+
+  return ctrl_stmnt;
+}
+
+/*
  * Parses any supported expresion
  * expression
  *   : '(' expression ')'
@@ -744,7 +1169,7 @@ AstNode *Parser::parse_expr(const Lexer &lexer) noexcept {
 /*
  * Parses comparative expresions
  * compExpr
- *   : algebraicExpr ('=='|'!=' | '>='| '<=' | '<'| '>') algebraicExpr
+ *   : algebraicExpr ('==' | '!=' | '>='| '<=' | '<'| '>') algebraicExpr
  *   | algebraicExpr
  *   ;
  */
@@ -894,6 +1319,8 @@ consume_plus:
     return nullptr;
   }
 
+  // TODO(pablo96): Add an assign in the inc/dec operations
+
   // op primary_expr
   if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS,
             TokenId::MINUS)) {
@@ -981,36 +1408,45 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
   }
 
   bool is_negative = token.id == TokenId::MINUS;
-
   const Token &number_token = is_negative ? lexer.get_next_token() : token;
 
-  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR)) {
-    AstConstValue *const_value_node = new AstConstValue(token.start_line, token.start_column, token.file_name);
-    switch (number_token.id) {
-    case TokenId::INT_LIT: {
-      const_value_node->type = ConstValueType::INT;
-      auto number = const_value_node->number = number_token.int_lit.number;
-      const_value_node->is_negative = number_token.int_lit.is_negative;
-    } break;
-    case TokenId::FLOAT_LIT:
-      const_value_node->type = ConstValueType::FLOAT;
-      const_value_node->number = number_token.float_lit.number;
-      break;
-    case TokenId::UNICODE_CHAR:
-      const_value_node->type = ConstValueType::CHAR;
-      const_value_node->unicode_char = number_token.char_lit;
-      break;
-    default:
-      LL_UNREACHEABLE;
-    }
-
-    return const_value_node;
+  if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE,
+            TokenId::FALSE)) {
+    return parse_const_expr(lexer, token, number_token);
   }
 
   auto token_value = lexer.get_token_value(number_token);
   _parse_error(errors, number_token, ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN, token_value,
                token_id_name(number_token.id));
   return nullptr;
+}
+
+AstNode *Parser::parse_const_expr(const Lexer &lexer, const Token &token, const Token &number_token) noexcept {
+  AstConstValue *const_value_node = new AstConstValue(token.start_line, token.start_column, token.file_name);
+  switch (number_token.id) {
+  case TokenId::INT_LIT: {
+    const_value_node->type = ConstValueType::INT;
+    auto number = const_value_node->number = number_token.int_lit.number;
+    const_value_node->is_negative = number_token.int_lit.is_negative;
+  } break;
+  case TokenId::FLOAT_LIT:
+    const_value_node->type = ConstValueType::FLOAT;
+    const_value_node->number = number_token.float_lit.number;
+    break;
+  case TokenId::UNICODE_CHAR:
+    const_value_node->type = ConstValueType::CHAR;
+    const_value_node->unicode_char = number_token.char_lit;
+    break;
+  case TokenId::FALSE:
+  case TokenId::TRUE:
+    const_value_node->type = ConstValueType::BOOL;
+    const_value_node->boolean = number_token.id == TokenId::TRUE;
+    break;
+  default:
+    LL_UNREACHEABLE;
+  }
+
+  return const_value_node;
 }
 
 /*
@@ -1066,29 +1502,47 @@ AstFnCallExpr *Parser::parse_function_call(const Lexer &lexer) noexcept {
   return func_call_node;
 }
 
-void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept {
-  va_list ap, ap2;
-  va_start(ap, format);
+static void _parse_msg(std::vector<Error> &in_errors, ERROR_TYPE in_msg_type, const Token &in_token,
+                       const char *in_format, va_list ap) noexcept {
+  va_list ap2;
   va_copy(ap2, ap);
 
-  int len1 = snprintf(nullptr, 0, format, ap);
+  s32 len1 = snprintf(nullptr, 0, in_format, ap);
   assert(len1 >= 0);
 
   std::string msg;
   msg.reserve(len1 + 1);
+  msg.resize(len1);
 
-  int len2 = snprintf(msg.data(), msg.capacity(), format, ap2);
+  s32 len2 = snprintf(msg.data(), msg.capacity(), in_format, ap2);
   assert(len2 >= 0);
   assert(len2 == len1);
 
-  Error error(ERROR_TYPE::ERROR, token.start_line, token.start_column, token.file_name, msg);
+  Error error(in_msg_type, in_token.start_line, in_token.start_column, in_token.file_name, msg);
   in_errors.push_back(error);
 
-  va_end(ap);
   va_end(ap2);
 }
 
-bool Parser::is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos) {
+void _parse_error(std::vector<Error> &in_errors, const Token &in_token, const char *in_format, ...) noexcept {
+  va_list args;
+  va_start(args, in_format);
+
+  _parse_msg(in_errors, ERROR_TYPE::ERROR, in_token, in_format, args);
+
+  va_end(args);
+}
+
+void _parse_warning(std::vector<Error> &in_errors, const Token &in_token, const char *in_format, ...) noexcept {
+  va_list args;
+  va_start(args, in_format);
+
+  _parse_msg(in_errors, ERROR_TYPE::WARNING, in_token, in_format, args);
+
+  va_end(args);
+}
+
+bool _is_new_line_between(const Lexer &lexer, const size_t start_pos, const size_t end_pos) {
   auto start_it = lexer.source.data();
   auto len = end_pos - start_pos;
   auto str_view = std::string_view(start_it + start_pos, len);
@@ -1096,7 +1550,7 @@ bool Parser::is_new_line_between(const Lexer &lexer, const size_t start_pos, con
   return str_view.find_first_of('\n') != str_view.npos;
 }
 
-bool Parser::is_forbiden_statement(const Token &token) noexcept {
+bool _is_forbiden_statement(const Token &token) noexcept {
   switch (token.id) {
   case TokenId::ASSIGN: {
     // IDENTIFIER = ...
@@ -1179,6 +1633,8 @@ UnaryExprType _get_unary_op(const Token &token) noexcept {
     return UnaryExprType::BIT_INV;
   case TokenId::RET:
     return UnaryExprType::RET;
+  case TokenId::NOT:
+    return UnaryExprType::NOT;
   default:
     LL_UNREACHEABLE;
   }
@@ -1228,11 +1684,11 @@ bool _is_expr_token(const Token &token) noexcept {
   }
 }
 
-bool _is_symbol_start_char(const char next_char) noexcept {
+bool _is_symbol_start_char(const s8 next_char) noexcept {
   return (next_char >= 'a' && next_char <= 'z') || (next_char >= 'A' && next_char <= 'Z') || next_char == '_';
 }
 
-bool _is_whitespace_char(const char _char) noexcept {
+bool _is_whitespace_char(const s8 _char) noexcept {
   switch (_char) {
   case '\t':
   case '\r':
@@ -1322,4 +1778,41 @@ bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in
   out_file_path = file_path.parent_path();
 
   return true;
+}
+
+bool _is_boolean_expression(const AstNode *in_expr, AstNode *in_stmnt_node) {
+  LL_ASSERT(in_stmnt_node->node_type == AstNodeType::AST_IF_STMNT ||
+            in_stmnt_node->node_type == AstNodeType::AST_LOOP_STMNT);
+  bool &is_condition_checked = in_stmnt_node->node_type == AstNodeType::AST_IF_STMNT
+                                 ? in_stmnt_node->if_stmnt()->is_condition_checked
+                                 : in_stmnt_node->loop_stmnt()->is_condition_checked;
+  is_condition_checked = true;
+
+  if (in_expr->node_type == AstNodeType::AST_UNARY_EXPR) {
+    switch (in_expr->unary_expr()->op) {
+    case UnaryExprType::NOT:
+      return true;
+    default:
+      return false;
+    }
+  } else if (in_expr->node_type == AstNodeType::AST_BINARY_EXPR) {
+    switch (in_expr->binary_expr()->bin_op) {
+    case BinaryExprType::GREATER:
+    case BinaryExprType::GREATER_OR_EQUALS:
+    case BinaryExprType::LESS:
+    case BinaryExprType::LESS_OR_EQUALS:
+    case BinaryExprType::EQUALS:
+    case BinaryExprType::NOT_EQUALS:
+      return true;
+    default:
+      return false;
+    }
+  } else if (in_expr->node_type == AstNodeType::AST_CONST_VALUE) {
+    return in_expr->const_value()->type == ConstValueType::BOOL;
+  } else if (in_expr->node_type == AstNodeType::AST_SYMBOL) {
+    // if it is a symbol is up to the semantic analyzer to know its type.
+    is_condition_checked = false;
+    return true;
+  }
+  return false;
 }
