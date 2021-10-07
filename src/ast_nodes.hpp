@@ -72,39 +72,135 @@ struct AstNode {
 
   virtual ~AstNode() {}
 
-  AstSourceCode *source_code() { return (AstSourceCode *)this; }
-  AstDirective *directive() { return (AstDirective *)this; }     // # dir_name args*
-  AstFnDef *fn_def() { return (AstFnDef *)this; }                // function definition
-  AstFnProto *fn_proto() { return (AstFnProto *)this; }          // fn name L_PAREN param_decl (, param_decl)* R_PAREN
-  AstParamDef *param_decl() { return (AstParamDef *)this; }      // name type
-  AstBlock *block() { return (AstBlock *)this; }                 // L_CURLY statements R_CURLY
-  AstVarDef *var_def() { return (AstVarDef *)this; }             // name type
-  AstType *ast_type() { return (AstType *)this; }                // type
-  AstUnaryExpr *unary_expr() { return (AstUnaryExpr *)this; }    // unary_op expr
-  AstBinaryExpr *binary_expr() { return (AstBinaryExpr *)this; } // expr binary_op expr
-  AstSymbol *symbol() { return (AstSymbol *)this; }              // symbol_name
-  AstConstValue *const_value() { return (AstConstValue *)this; } // constant value
-  AstFnCallExpr *fn_call() { return (AstFnCallExpr *)this; }     // func_name L_PAREN (expr (, expr)*)? R_PAREN
-  AstIfStmnt *if_stmnt() { return (AstIfStmnt *)this; }          // if elif? else
-  AstLoopStmnt *loop_stmnt() { return (AstLoopStmnt *)this; }    // loop
-  AstCtrlStmnt *ctrl_stmnt() { return (AstCtrlStmnt *)this; }    // continue | break
+  AstSourceCode *source_code() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_SOURCE_CODE);
+    return (AstSourceCode *)this;
+  }
+  AstDirective *directive() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_DIRECTIVE);
+    return (AstDirective *)this;
+  }
+  AstFnDef *fn_def() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_FN_DEF);
+    return (AstFnDef *)this;
+  }
+  AstFnProto *fn_proto() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_FN_PROTO);
+    return (AstFnProto *)this;
+  }
+  AstParamDef *param_decl() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_PARAM_DEF);
+    return (AstParamDef *)this;
+  }
+  AstBlock *block() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_BLOCK);
+    return (AstBlock *)this;
+  }
+  AstVarDef *var_def() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_VAR_DEF);
+    return (AstVarDef *)this;
+  }
+  AstType *ast_type() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_TYPE);
+    return (AstType *)this;
+  }
+  AstUnaryExpr *unary_expr() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_UNARY_EXPR);
+    return (AstUnaryExpr *)this;
+  }
+  AstBinaryExpr *binary_expr() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_BINARY_EXPR);
+    return (AstBinaryExpr *)this;
+  }
+  AstSymbol *symbol() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_SYMBOL);
+    return (AstSymbol *)this;
+  }
+  AstConstValue *const_value() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_CONST_VALUE);
+    return (AstConstValue *)this;
+  }
+  AstFnCallExpr *fn_call() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_FN_CALL_EXPR);
+    return (AstFnCallExpr *)this;
+  }
+  AstIfStmnt *if_stmnt() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_IF_STMNT);
+    return (AstIfStmnt *)this;
+  }
+  AstLoopStmnt *loop_stmnt() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_LOOP_STMNT);
+    return (AstLoopStmnt *)this;
+  }
+  AstCtrlStmnt *ctrl_stmnt() {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_CTRL_STMNT);
+    return (AstCtrlStmnt *)this;
+  }
 
-  const AstSourceCode *source_code() const { return (AstSourceCode *)this; }
-  const AstDirective *directive() const { return (AstDirective *)this; }
-  const AstFnDef *fn_def() const { return (AstFnDef *)this; }
-  const AstFnProto *fn_proto() const { return (AstFnProto *)this; }
-  const AstParamDef *param_decl() const { return (AstParamDef *)this; }
-  const AstBlock *block() const { return (AstBlock *)this; }
-  const AstVarDef *var_def() const { return (AstVarDef *)this; }
-  const AstType *ast_type() const { return (AstType *)this; }
-  const AstUnaryExpr *unary_expr() const { return (AstUnaryExpr *)this; }
-  const AstBinaryExpr *binary_expr() const { return (AstBinaryExpr *)this; }
-  const AstSymbol *symbol() const { return (AstSymbol *)this; }
-  const AstConstValue *const_value() const { return (AstConstValue *)this; }
-  const AstFnCallExpr *fn_call() const { return (AstFnCallExpr *)this; }
-  const AstIfStmnt *if_stmnt() const { return (AstIfStmnt *)this; }
-  const AstLoopStmnt *loop_stmnt() const { return (AstLoopStmnt *)this; }
-  const AstCtrlStmnt *ctrl_stmnt() const { return (AstCtrlStmnt *)this; }
+  const AstSourceCode *source_code() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_SOURCE_CODE);
+    return (AstSourceCode *)this;
+  }
+  const AstDirective *directive() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_DIRECTIVE);
+    return (AstDirective *)this;
+  }
+  const AstFnDef *fn_def() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_FN_DEF);
+    return (AstFnDef *)this;
+  }
+  const AstFnProto *fn_proto() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_FN_PROTO);
+    return (AstFnProto *)this;
+  }
+  const AstParamDef *param_decl() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_PARAM_DEF);
+    return (AstParamDef *)this;
+  }
+  const AstBlock *block() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_BLOCK);
+    return (AstBlock *)this;
+  }
+  const AstVarDef *var_def() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_VAR_DEF);
+    return (AstVarDef *)this;
+  }
+  const AstType *ast_type() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_TYPE);
+    return (AstType *)this;
+  }
+  const AstUnaryExpr *unary_expr() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_UNARY_EXPR);
+    return (AstUnaryExpr *)this;
+  }
+  const AstBinaryExpr *binary_expr() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_BINARY_EXPR);
+    return (AstBinaryExpr *)this;
+  }
+  const AstSymbol *symbol() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_SYMBOL);
+    return (AstSymbol *)this;
+  }
+  const AstConstValue *const_value() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_CONST_VALUE);
+    return (AstConstValue *)this;
+  }
+  const AstFnCallExpr *fn_call() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_FN_CALL_EXPR);
+    return (AstFnCallExpr *)this;
+  }
+  const AstIfStmnt *if_stmnt() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_IF_STMNT);
+    return (AstIfStmnt *)this;
+  }
+  const AstLoopStmnt *loop_stmnt() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_LOOP_STMNT);
+    return (AstLoopStmnt *)this;
+  }
+  const AstCtrlStmnt *ctrl_stmnt() const {
+    LL_ASSERT(this == nullptr || node_type == AstNodeType::AST_CTRL_STMNT);
+    return (AstCtrlStmnt *)this;
+  }
 };
 
 struct AstVarDef : public AstNode {
@@ -374,14 +470,21 @@ const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcep
 struct TypeInfo {
   std::string_view name;
   LLVMTypeRef llvm_type;
-  u32 bit_size;
   AstTypeId type_id;
+
+  mutable union {
+    AstNode *expr; // invalid after semantic phase
+    u64 count;     // valid only after semantic phase
+  } array_length;
+
+  u32 bit_size;
   bool is_signed;
 
   TypeInfo() : name(""), llvm_type(nullptr), bit_size(0), type_id(AstTypeId::VOID), is_signed(false) {}
 
   TypeInfo(const AstTypeId in_type_id, const std::string_view in_name, const u32 in_bit_size, const bool in_is_signed)
-      : name(in_name), llvm_type(nullptr), bit_size(in_bit_size), type_id(in_type_id), is_signed(in_is_signed) {}
+      : name(in_name), llvm_type(nullptr), bit_size(in_bit_size), type_id(in_type_id), is_signed(in_is_signed),
+        array_length({}) {}
 
   virtual ~TypeInfo();
 };

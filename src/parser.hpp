@@ -89,6 +89,8 @@ public:
   LL_NODISCARD AstNode *parse_primary_expr(const Lexer &lexer) noexcept;
 
 private:
+  LL_NODISCARD AstType *_parse_ptr_type(const Lexer &lexer) noexcept;
+  LL_NODISCARD AstType *_parse_array_type(const Lexer &lexer) noexcept;
   LL_NODISCARD bool _parse_load_directive(const Lexer &lexer, AstDirective *directive_node) noexcept;
   LL_NODISCARD AstIfStmnt *parse_if_stmnt(const Lexer &lexer) noexcept;
   LL_NODISCARD AstIfStmnt *parse_elif_stmnt(const Lexer &lexer, AstIfStmnt *if_stmnt) noexcept;

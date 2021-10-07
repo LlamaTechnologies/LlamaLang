@@ -110,7 +110,7 @@ TEST(ParserHappyTypeStmntTests, NameIsPrimitiveParse) {
   ASSERT_EQ(errors.size(), 0L);
 
   Parser parser(errors);
-  auto value_node = parser.parse_type(lexer);
+  const AstType *value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -120,15 +120,17 @@ TEST(ParserHappyTypeStmntTests, NameIsPrimitiveParse) {
   ASSERT_EQ(value_node->type_info->bit_size, 32);
   ASSERT_EQ(value_node->type_info->llvm_type, nullptr);
   ASSERT_TRUE(value_node->type_info->is_signed);
+
+  delete value_node;
 }
 
-TEST(ParserHappyTypeStmntTests, ArrayParse) {
+TEST(ParserHappyTypeStmntTests, ArrayUnspecifiedSize) {
   std::vector<Error> errors;
   Lexer lexer("[]s32", "file/directory", "TypeArrayParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
-  auto value_node = parser.parse_type(lexer);
+  const AstType *value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
@@ -142,6 +144,74 @@ TEST(ParserHappyTypeStmntTests, ArrayParse) {
   ASSERT_EQ(value_node->child_type->type_info->bit_size, 32);
   ASSERT_EQ(value_node->child_type->type_info->llvm_type, nullptr);
   ASSERT_TRUE(value_node->child_type->type_info->is_signed);
+
+  delete value_node;
+}
+
+TEST(ParserHappyTypeStmntTests, ArrayVarSize) {
+  std::vector<Error> errors;
+  Lexer lexer("[array_size]s32", "file/directory", "TypeArrayParse", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstType *value_node = parser.parse_type(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(value_node, nullptr);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->type_info->type_id, AstTypeId::ARRAY);
+  ASSERT_EQ(value_node->type_info->bit_size, 64);
+  ASSERT_EQ(value_node->type_info->name, "array");
+  ASSERT_FALSE(value_node->type_info->is_signed);
+
+  const AstSymbol *array_size = value_node->type_info->array_length.expr->symbol();
+  ASSERT_EQ(array_size->token->id, TokenId::IDENTIFIER);
+
+  const AstType *s32_node = value_node->child_type;
+  ASSERT_NE(s32_node, nullptr);
+  ASSERT_EQ(s32_node->parent, value_node);
+  ASSERT_EQ(s32_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(s32_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(s32_node->type_info->name, "s32");
+  ASSERT_EQ(s32_node->type_info->bit_size, 32);
+  ASSERT_EQ(s32_node->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(s32_node->type_info->is_signed);
+
+  delete array_size;
+  delete value_node;
+}
+
+TEST(ParserHappyTypeStmntTests, ArrayLitSize) {
+  std::vector<Error> errors;
+  Lexer lexer("[25]s32", "file/directory", "TypeArrayParse", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstType *value_node = parser.parse_type(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(value_node, nullptr);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->type_info->type_id, AstTypeId::ARRAY);
+  ASSERT_EQ(value_node->type_info->bit_size, 64);
+  ASSERT_EQ(value_node->type_info->name, "array");
+  ASSERT_FALSE(value_node->type_info->is_signed);
+
+  const AstConstValue *array_size = value_node->type_info->array_length.expr->const_value();
+  ASSERT_EQ(array_size->type, ConstValueType::INT);
+
+  const AstType *s32_node = value_node->child_type;
+  ASSERT_NE(s32_node, nullptr);
+  ASSERT_EQ(s32_node->parent, value_node);
+  ASSERT_EQ(s32_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(s32_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(s32_node->type_info->name, "s32");
+  ASSERT_EQ(s32_node->type_info->bit_size, 32);
+  ASSERT_EQ(s32_node->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(s32_node->type_info->is_signed);
+
+  delete array_size;
+  delete value_node;
 }
 
 TEST(ParserHappyTypeStmntTests, PointerParse) {
@@ -150,20 +220,27 @@ TEST(ParserHappyTypeStmntTests, PointerParse) {
   lexer.tokenize();
 
   Parser parser(errors);
-  auto value_node = parser.parse_type(lexer);
+  const AstType *value_node = parser.parse_type(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(value_node->type_info->type_id, AstTypeId::POINTER);
-  ASSERT_NE(value_node->child_type, nullptr);
-  ASSERT_EQ(value_node->child_type->parent, value_node);
-  ASSERT_EQ(value_node->child_type->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(value_node->child_type->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(value_node->child_type->type_info->name, "s32");
-  ASSERT_EQ(value_node->child_type->type_info->bit_size, 32);
-  ASSERT_EQ(value_node->child_type->type_info->llvm_type, nullptr);
-  ASSERT_TRUE(value_node->child_type->type_info->is_signed);
+  ASSERT_EQ(value_node->type_info->bit_size, 64);
+  ASSERT_EQ(value_node->type_info->name, "pointer");
+  ASSERT_FALSE(value_node->type_info->is_signed);
+
+  const AstType *s32_node = value_node->child_type;
+  ASSERT_NE(s32_node, nullptr);
+  ASSERT_EQ(s32_node->parent, value_node);
+  ASSERT_EQ(s32_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(s32_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(s32_node->type_info->name, "s32");
+  ASSERT_EQ(s32_node->type_info->bit_size, 32);
+  ASSERT_EQ(s32_node->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(s32_node->type_info->is_signed);
+
+  delete value_node;
 }
 
 //==================================================================================

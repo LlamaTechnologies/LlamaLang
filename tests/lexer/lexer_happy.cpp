@@ -255,6 +255,32 @@ TEST(LexerHappyOperatorsTests, HashOperatorTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::_EOF);
 }
 
+TEST(LexerHappyOperatorsTests, ClosableTest) {
+  std::vector<Error> errors;
+  Lexer lexer("[]{}() [ ] { } ( ) [\n]{\n}(\n)\n", "file/directory", "OperatorsTest", errors);
+  lexer.tokenize();
+  // do not change order
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_BRACKET);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_BRACKET);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_CURLY);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_CURLY);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_PAREN);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_PAREN);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_BRACKET);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_BRACKET);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_CURLY);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_CURLY);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_PAREN);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_PAREN);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_BRACKET);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_BRACKET);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_CURLY);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_CURLY);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::L_PAREN);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::R_PAREN);
+}
+
 TEST(LexerHappyOperatorsTests, OperatorsTest) {
   std::vector<Error> errors;
   Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory",

@@ -978,10 +978,88 @@ AstVarDef *Parser::parse_vardef_stmnt(const Lexer &lexer) noexcept {
   return var_def_node;
 }
 
+/**
+ *
+ * type_name
+ *   : '*' type_name
+ *   ;
+ */
+AstType *Parser::_parse_ptr_type(const Lexer &lexer) noexcept {
+  const Token &star_token = lexer.get_next_token();
+  LL_ASSERT(star_token.id == TokenId::MUL);
+
+  const TypeInfo *type_info = TypesRepository::get().get_type("pointer");
+  AstType *type_node = new AstType(type_info, star_token.start_line, star_token.start_column, star_token.file_name);
+
+  const Token &next_token = lexer.get_next_token();
+  if (!_is_type_start_token(next_token)) {
+    _parse_error(errors, next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
+    lexer.get_back();
+    delete type_node;
+    return nullptr;
+  }
+
+  lexer.get_back();
+  auto data_type_node = parse_type(lexer);
+
+  data_type_node->parent = type_node;
+  type_node->child_type = data_type_node;
+
+  return type_node;
+}
+
+/**
+ *
+ * type_name
+ *   : '[' (IDENTIFIER | INT_LIT)? ']' type_name
+ *   ;
+ */
+AstType *Parser::_parse_array_type(const Lexer &lexer) noexcept {
+  const Token &l_bracket_token = lexer.get_next_token();
+  LL_ASSERT(l_bracket_token.id == TokenId::L_BRACKET);
+
+  const TypeInfo *type_info = TypesRepository::get().get_type("array");
+  AstType *type_node =
+    new AstType(type_info, l_bracket_token.start_line, l_bracket_token.start_column, l_bracket_token.file_name);
+
+  const Token &id_or_int_token = lexer.get_next_token();
+  const Token *r_bracket_token = nullptr;
+
+  if (MATCH(&id_or_int_token, TokenId::IDENTIFIER, TokenId::INT_LIT)) {
+    lexer.get_back();
+    type_node->type_info->array_length.expr = parse_primary_expr(lexer);
+    r_bracket_token = &lexer.get_next_token();
+  } else {
+    r_bracket_token = &id_or_int_token;
+  }
+
+  if (r_bracket_token->id != TokenId::R_BRACKET) {
+    _parse_error(errors, *r_bracket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE,
+                 lexer.get_token_value(*r_bracket_token));
+    lexer.get_back();
+    return nullptr;
+  }
+
+  const Token &next_token = lexer.get_next_token();
+  if (!_is_type_start_token(next_token)) {
+    _parse_error(errors, next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
+    lexer.get_back();
+    delete type_node;
+    return nullptr;
+  }
+
+  lexer.get_back();
+  AstType *data_type_node = parse_type(lexer);
+  data_type_node->parent = type_node;
+  type_node->child_type = data_type_node;
+
+  return type_node;
+}
+
 /*
  * type_name
  *   : '*' type_name
- *   | '[' ']' type_name
+ *   | '[' (IDENTIFIER | INT_LIT)? ']' type_name
  *   | IDENTIFIER
  *   ;
  */
@@ -989,47 +1067,12 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
   const Token &token = lexer.get_next_token();
   switch (token.id) {
   case TokenId::MUL: {
-    // POINTER TYPE
-    const TypeInfo *type_info = TypesRepository::get().get_type("pointer");
-    auto type_node = new AstType(type_info, token.start_line, token.start_column, token.file_name);
-    const Token &next_token = lexer.get_next_token();
-    if (!_is_type_start_token(next_token)) {
-      _parse_error(errors, next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
-      lexer.get_back();
-      delete type_node;
-      return nullptr;
-    }
     lexer.get_back();
-    auto data_type_node = parse_type(lexer);
-    data_type_node->parent = type_node;
-    type_node->child_type = data_type_node;
-
-    return type_node;
+    return _parse_ptr_type(lexer);
   }
   case TokenId::L_BRACKET: {
-    // ARRAY TYPE
-    const Token &r_braket_token = lexer.get_next_token();
-    if (r_braket_token.id != TokenId::R_BRACKET) {
-      _parse_error(errors, r_braket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(r_braket_token));
-      lexer.get_back();
-      return nullptr;
-    }
-    const TypeInfo *type_info = TypesRepository::get().get_type("array");
-    AstType *type_node = new AstType(type_info, token.start_line, token.start_column, token.file_name);
-
-    const Token &next_token = lexer.get_next_token();
-    if (!_is_type_start_token(next_token)) {
-      _parse_error(errors, next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
-      lexer.get_back();
-      delete type_node;
-      return nullptr;
-    }
     lexer.get_back();
-    auto data_type_node = parse_type(lexer);
-    data_type_node->parent = type_node;
-    type_node->child_type = data_type_node;
-
-    return type_node;
+    return _parse_array_type(lexer);
   }
   case TokenId::IDENTIFIER: {
     // TODO(pablo96): register new types
@@ -1119,7 +1162,7 @@ AstUnaryExpr *Parser::parse_ret_stmnt(const Lexer &lexer) noexcept {
  */
 AstCtrlStmnt *Parser::parse_ctrl_stmnt(const Lexer &lexer) noexcept {
   const Token &keyword = lexer.get_next_token();
-  if (!match(&keyword, TokenId::BREAK, TokenId::CONTINUE)) {
+  if (!MATCH(&keyword, TokenId::BREAK, TokenId::CONTINUE)) {
     LL_UNREACHEABLE;
   }
 
@@ -1127,7 +1170,7 @@ AstCtrlStmnt *Parser::parse_ctrl_stmnt(const Lexer &lexer) noexcept {
   ctrl_stmnt->ctrl_type = keyword.id == TokenId::BREAK ? CtrlStmntType::BREAK : CtrlStmntType::CONTINUE;
 
   const Token &label_index = lexer.get_next_token();
-  if (match(&label_index, TokenId::IDENTIFIER, TokenId::INT_LIT)) {
+  if (MATCH(&label_index, TokenId::IDENTIFIER, TokenId::INT_LIT)) {
     if (label_index.id == TokenId::IDENTIFIER) {
       ctrl_stmnt->label = std::string(lexer.get_token_value(label_index)).c_str();
     } else {
@@ -1306,7 +1349,7 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
 /*
  * Parses unary expresions
  * unaryExpr
- *   : ('!' | '~' | '--' | '++' | '-' | '&') primaryExpr
+ *   : ('!' | '~' | '--' | '++' | '-' | '&' | '*' ) primaryExpr
  *   | primaryExpr ('--' | '++')
  *   | primaryExpr
  *   ;
