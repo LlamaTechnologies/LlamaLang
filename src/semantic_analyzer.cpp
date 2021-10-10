@@ -43,18 +43,19 @@ inline static bool _are_type_compatible(const AstType *in_type0, const AstType *
   return in_type0->type_info->type_id == in_type1->type_info->type_id;
 }
 
-inline bool _is_boolean_bin_op(const AstBinaryExpr *in_bin_expr);
+inline static bool _is_boolean_bin_op(const AstBinaryExpr *in_bin_expr);
 
-inline bool _is_shift_bin_op(const AstBinaryExpr *in_bin_expr);
+inline static bool _is_shift_bin_op(const AstBinaryExpr *in_bin_expr);
 
-inline bool _is_only_one_node_const_value(const AstNode *in_left_expr, const AstNode *in_right_expr);
+inline static bool _is_only_one_node_const_value(const AstNode *in_left_expr, const AstNode *in_right_expr);
 
-inline bool _both_are_not_const_value(const AstNode *in_left_expr, const AstNode *in_right_expr);
+inline static bool _both_are_not_const_value(const AstNode *in_left_expr, const AstNode *in_right_expr);
 
-inline bool _check_integer_types(std::vector<Error> &errors, const AstNode *in_expr_node, const AstType *in_type_0,
-                                 const AstType *in_type_1);
-inline bool _check_floating_point_types(std::vector<Error> &errors, const AstNode *in_expr_node,
+inline static bool _check_integer_types(std::vector<Error> &errors, const AstNode *in_expr_node,
                                         const AstType *in_type_0, const AstType *in_type_1);
+inline static bool _check_floating_point_types(std::vector<Error> &errors, const AstNode *in_expr_node,
+                                               const AstType *in_type_0, const AstType *in_type_1);
+
 inline static const AstType *_get_binary_expr_type(std::vector<Error> &errors, const Table *symbol_table,
                                                    const AstBinaryExpr *in_bin_expr);
 inline static const AstType *_get_unary_expr_type(std::vector<Error> &errors, const Table *symbol_table,
@@ -75,6 +76,13 @@ bool SemanticAnalyzer::analize_var_def(const AstVarDef *in_var_def) {
   LL_ASSERT((in_var_def->node_type == AstNodeType::AST_VAR_DEF));
 
   auto var_name = std::string(in_var_def->name);
+
+  // TODO(pablo96): Should I add the symbol even if it is not a valid array?
+  if (in_var_def->type->type_info->type_id == AstTypeId::ARRAY) {
+    if (!_is_valid_array(in_var_def, in_var_def->type)) {
+      return false;
+    }
+  }
 
   // local variable declaration
   symbol_table->add_symbol(var_name, SymbolType::VAR, in_var_def);
@@ -122,6 +130,12 @@ bool SemanticAnalyzer::analize_global_var_def(const AstVarDef *in_var_def) {
     add_semantic_error(errors, in_var_def, ERROR_TYPES_MISMATCH, var_name.c_str());
     global_symbol_table->remove_last_symbol();
     return false;
+  }
+
+  if (in_var_def->type->type_info->type_id == AstTypeId::ARRAY) {
+    if (!_is_valid_array(in_var_def, in_var_def->type)) {
+      return false;
+    }
   }
 
   _set_type_info(in_var_def->initializer, in_var_def->type);
@@ -597,8 +611,9 @@ bool check_types(std::vector<Error> &errors, const AstType *type_node0, const As
   LL_ASSERT(expr_node->node_type != AstNodeType::AST_TYPE);
 
   if (_are_type_compatible(type_node0, type_node1)) {
-    if (_is_type_array_or_pointer(type_node0))
+    if (_is_type_array_or_pointer(type_node0)) {
       return check_types(errors, type_node0->child_type, type_node1->child_type, expr_node);
+    }
 
     if (_is_type(type_node0, AstTypeId::STRUCT))
       // NOTE: Structs No Supported
@@ -884,6 +899,56 @@ bool _check_floating_point_types(std::vector<Error> &errors, const AstNode *in_e
   if (!are_same) {
     add_semantic_error(errors, in_expr_node, ERROR_TYPES_SIZE_MISMATCH);
     return false;
+  }
+
+  return true;
+}
+
+bool SemanticAnalyzer::_is_valid_array(const AstNode *expr_node, const AstType *type_node) {
+  if (type_node->type_info->array_length == nullptr)
+    return true;
+
+  const AstNode *length_expr = type_node->type_info->array_length->expr;
+  LL_ASSERT(length_expr != nullptr);
+
+  if (analize_expr(length_expr) == false) {
+    return false;
+  }
+
+  if (length_expr->node_type != AstNodeType::AST_CONST_VALUE && length_expr->node_type != AstNodeType::AST_SYMBOL) {
+    add_semantic_error(errors, expr_node, ERROR_ARRAY_LENGTH_NOT_SYMBOL_OR_CONST);
+    return false;
+  }
+
+  if (length_expr->node_type == AstNodeType::AST_CONST_VALUE) {
+    const AstConstValue *const_value = length_expr->const_value();
+    if (const_value->type != ConstValueType::INT) {
+      add_semantic_error(errors, expr_node, ERROR_ARRAY_LENGTH_NOT_CONST_INT, get_const_type_name(const_value->type));
+      return false;
+    } else if (const_value->is_negative) {
+      add_semantic_error(errors, expr_node, ERROR_ARRAY_LENGTH_NOT_POSITIVE);
+      return false;
+    }
+
+    const_value->bit_size = 64;
+  } else if (length_expr->node_type == AstNodeType::AST_SYMBOL) {
+    const AstSymbol *symbol = length_expr->symbol();
+    LL_ASSERT(symbol->data != nullptr);
+    if (symbol->type == SymbolType::FUNC) {
+      add_semantic_error(errors, expr_node, ERROR_ARRAY_LENGTH_NOT_VAR_SYMBOL);
+      return false;
+    }
+
+    const AstVarDef *variable = symbol->data->var_def();
+    if (variable->type->type_info->type_id != AstTypeId::INTEGER) {
+      add_semantic_error(errors, expr_node, ERROR_ARRAY_LENGTH_NOT_SYMBOL_INT);
+      return false;
+    } else if (variable->type->type_info->is_signed) {
+      add_semantic_error(errors, expr_node, ERROR_ARRAY_LENGTH_NOT_POSITIVE);
+      return false;
+    }
+
+    variable->type->type_info = TypesRepository::get().get_type("u64", nullptr);
   }
 
   return true;

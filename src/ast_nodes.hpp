@@ -59,6 +59,9 @@ enum class AstNodeType
   AST_UNARY_EXPR
 };
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-undefined-compare"
+
 // base ast node
 struct AstNode {
   AstNode *parent = nullptr;
@@ -203,6 +206,8 @@ struct AstNode {
   }
 };
 
+#pragma clang diagnostic pop
+
 struct AstVarDef : public AstNode {
   std::string_view name;
   AstType *type = nullptr; // OWNED BY TYPE REPOSITORY
@@ -332,6 +337,8 @@ enum class ConstValueType
   CHAR,
   PTR
 };
+
+const char *get_const_type_name(ConstValueType type);
 
 struct AstConstValue : public AstNode {
   union {
@@ -467,16 +474,16 @@ enum class AstTypeId
 const std::string_view get_type_id_name(AstTypeId in_type_id) noexcept;
 const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcept;
 
+union ArrayLength {
+  AstNode *expr = nullptr; // invalid after semantic phase
+  u64 count;               // valid only after semantic phase
+};
+
 struct TypeInfo {
   std::string_view name;
+  const ArrayLength *array_length;
   LLVMTypeRef llvm_type;
   AstTypeId type_id;
-
-  mutable union {
-    AstNode *expr; // invalid after semantic phase
-    u64 count;     // valid only after semantic phase
-  } array_length;
-
   u32 bit_size;
   bool is_signed;
 
@@ -484,7 +491,7 @@ struct TypeInfo {
 
   TypeInfo(const AstTypeId in_type_id, const std::string_view in_name, const u32 in_bit_size, const bool in_is_signed)
       : name(in_name), llvm_type(nullptr), bit_size(in_bit_size), type_id(in_type_id), is_signed(in_is_signed),
-        array_length({}) {}
+        array_length(nullptr) {}
 
   virtual ~TypeInfo();
 };

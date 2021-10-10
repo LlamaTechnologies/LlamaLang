@@ -307,6 +307,122 @@ TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
 }
 
 //==================================================================================
+//          SEMANTIC DECLARATIONS
+//==================================================================================
+
+TEST(SemanticDeclarations, InitArraySizeConstNegNum) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "array [-5]s32";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitArraySizeConstNegNum", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *array_decl = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_array_decl = analizer.analize_var_def(array_decl);
+
+  // then:
+  ASSERT_FALSE(is_valid_array_decl);
+  ASSERT_EQ(errors.size(), 1L);
+
+  delete src_code;
+}
+
+TEST(SemanticDeclarations, InitArraySizeVariableSignedInt) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "size s32 = 5\n"
+                             "array [size]s32";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitArraySizeVariableSignedInt", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *size_decl = src_code->children.at(0)->var_def();
+  const AstVarDef *array_decl = src_code->children.at(1)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_int_def = analizer.analize_var_def(size_decl);
+  bool is_valid_array_decl = analizer.analize_var_def(array_decl);
+
+  // then:
+  ASSERT_TRUE(is_valid_int_def);
+  ASSERT_FALSE(is_valid_array_decl);
+  ASSERT_EQ(errors.size(), 1L);
+
+  delete src_code;
+}
+
+TEST(SemanticDeclarations, InitArraySizeVariableFP) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "size f32 = 5.0\n"
+                             "array [size]s32";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitArraySizeVariableFP", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *size_decl = src_code->children.at(0)->var_def();
+  const AstVarDef *array_decl = src_code->children.at(1)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_float_def = analizer.analize_var_def(size_decl);
+  bool is_valid_array_decl = analizer.analize_var_def(array_decl);
+
+  // then:
+  ASSERT_TRUE(is_valid_float_def);
+  ASSERT_FALSE(is_valid_array_decl);
+  ASSERT_EQ(errors.size(), 1L);
+
+  delete src_code;
+}
+
+TEST(SemanticDeclarations, InitArraySizeVariableBool) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "size bool = true\n"
+                             "array [size]s32";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitArraySizeConst", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *size_decl = src_code->children.at(0)->var_def();
+  const AstVarDef *array_decl = src_code->children.at(1)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_bool_def = analizer.analize_var_def(size_decl);
+  bool is_valid_array_decl = analizer.analize_var_def(array_decl);
+
+  // then:
+  ASSERT_TRUE(is_valid_bool_def);
+  ASSERT_FALSE(is_valid_array_decl);
+  ASSERT_EQ(errors.size(), 1L);
+
+  delete src_code;
+}
+
+//==================================================================================
 //          SEMANTIC ASSIGNMENTS
 //==================================================================================
 

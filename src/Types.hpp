@@ -19,7 +19,7 @@ struct TypesRepository {
   /**
    * Get the type information of the type with name 'in_name'
    **/
-  const TypeInfo *get_type(std::string_view in_name) noexcept;
+  const TypeInfo *get_type(std::string_view in_name, const ArrayLength *array_length) noexcept;
 
   /**
    * Register a new type

@@ -164,7 +164,7 @@ TEST(ParserHappyTypeStmntTests, ArrayVarSize) {
   ASSERT_EQ(value_node->type_info->name, "array");
   ASSERT_FALSE(value_node->type_info->is_signed);
 
-  const AstSymbol *array_size = value_node->type_info->array_length.expr->symbol();
+  const AstSymbol *array_size = value_node->type_info->array_length->expr->symbol();
   ASSERT_EQ(array_size->token->id, TokenId::IDENTIFIER);
 
   const AstType *s32_node = value_node->child_type;
@@ -197,7 +197,40 @@ TEST(ParserHappyTypeStmntTests, ArrayLitSize) {
   ASSERT_EQ(value_node->type_info->name, "array");
   ASSERT_FALSE(value_node->type_info->is_signed);
 
-  const AstConstValue *array_size = value_node->type_info->array_length.expr->const_value();
+  const AstConstValue *array_size = value_node->type_info->array_length->expr->const_value();
+  ASSERT_EQ(array_size->type, ConstValueType::INT);
+
+  const AstType *s32_node = value_node->child_type;
+  ASSERT_NE(s32_node, nullptr);
+  ASSERT_EQ(s32_node->parent, value_node);
+  ASSERT_EQ(s32_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(s32_node->type_info->type_id, AstTypeId::INTEGER);
+  ASSERT_EQ(s32_node->type_info->name, "s32");
+  ASSERT_EQ(s32_node->type_info->bit_size, 32);
+  ASSERT_EQ(s32_node->type_info->llvm_type, nullptr);
+  ASSERT_TRUE(s32_node->type_info->is_signed);
+
+  delete array_size;
+  delete value_node;
+}
+
+TEST(ParserHappyTypeStmntTests, ArrayLitUnsignedDeclSize) {
+  std::vector<Error> errors;
+  Lexer lexer("[25_u]s32", "file/directory", "TypeArrayParse", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstType *value_node = parser.parse_type(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(value_node, nullptr);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
+  ASSERT_EQ(value_node->type_info->type_id, AstTypeId::ARRAY);
+  ASSERT_EQ(value_node->type_info->bit_size, 64);
+  ASSERT_EQ(value_node->type_info->name, "array");
+  ASSERT_FALSE(value_node->type_info->is_signed);
+
+  const AstConstValue *array_size = value_node->type_info->array_length->expr->const_value();
   ASSERT_EQ(array_size->type, ConstValueType::INT);
 
   const AstType *s32_node = value_node->child_type;

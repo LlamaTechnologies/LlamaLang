@@ -10,6 +10,7 @@ set(LLAMATEST_SRC
 lexer/lexer_happy.cpp
 lexer/lexer_sad.cpp
 parser/parser_happy_expr.cpp
+parser/parser_sad_expr.cpp
 parser/parser_happy_stmnts.cpp
 semantic/semantic_happy.cpp
 semantic/semantic_sad.cpp

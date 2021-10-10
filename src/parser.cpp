@@ -87,7 +87,7 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
       lexer.get_back(); // token
       node = parse_directive(lexer);
       if (!node) {
-        // TODO: handle error
+        _find_next_stmnt(lexer);
         continue;
       }
     } break;
@@ -96,7 +96,7 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
       lexer.get_back(); // token
       node = parse_function_def(lexer);
       if (!node) {
-        // TODO: handle error
+        _find_next_stmnt(lexer);
         continue;
       }
     } break;
@@ -107,7 +107,7 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
 
       node = parse_vardef_stmnt(lexer);
       if (!node) {
-        // TODO: handle error
+        _find_next_stmnt(lexer);
         continue;
       }
     } break;
@@ -129,6 +129,29 @@ AstSourceCode *Parser::parse_source_code(const Lexer &lexer) noexcept {
   }
 
   return source_code_node;
+}
+
+void Parser::_find_next_stmnt(const Lexer &lexer) noexcept {
+  if (lexer.has_tokens() == false) {
+    lexer.get_back();
+    return;
+  }
+
+  while (true) {
+    const Token &token = lexer.get_next_token();
+    switch (token.id) {
+    case TokenId::HASH:
+    case TokenId::FN:
+    case TokenId::EXTERN:
+    case TokenId::IDENTIFIER:
+    case TokenId::SEMI:
+    case TokenId::_EOF:
+      lexer.get_back();
+      return;
+    default:
+      continue;
+    }
+  }
 }
 
 bool _end_of_statement(const Lexer &lexer, std::vector<Error> errors, const TokenId terminator) {
@@ -988,7 +1011,7 @@ AstType *Parser::_parse_ptr_type(const Lexer &lexer) noexcept {
   const Token &star_token = lexer.get_next_token();
   LL_ASSERT(star_token.id == TokenId::MUL);
 
-  const TypeInfo *type_info = TypesRepository::get().get_type("pointer");
+  const TypeInfo *type_info = TypesRepository::get().get_type("pointer", nullptr);
   AstType *type_node = new AstType(type_info, star_token.start_line, star_token.start_column, star_token.file_name);
 
   const Token &next_token = lexer.get_next_token();
@@ -1018,27 +1041,27 @@ AstType *Parser::_parse_array_type(const Lexer &lexer) noexcept {
   const Token &l_bracket_token = lexer.get_next_token();
   LL_ASSERT(l_bracket_token.id == TokenId::L_BRACKET);
 
-  const TypeInfo *type_info = TypesRepository::get().get_type("array");
-  AstType *type_node =
-    new AstType(type_info, l_bracket_token.start_line, l_bracket_token.start_column, l_bracket_token.file_name);
-
   const Token &id_or_int_token = lexer.get_next_token();
-  const Token *r_bracket_token = nullptr;
+  ArrayLength *array_length = nullptr;
 
   if (MATCH(&id_or_int_token, TokenId::IDENTIFIER, TokenId::INT_LIT)) {
     lexer.get_back();
-    type_node->type_info->array_length.expr = parse_primary_expr(lexer);
-    r_bracket_token = &lexer.get_next_token();
+    array_length = new ArrayLength();
+    array_length->expr = parse_primary_expr(lexer);
   } else {
-    r_bracket_token = &id_or_int_token;
+    lexer.get_back();
   }
 
-  if (r_bracket_token->id != TokenId::R_BRACKET) {
-    _parse_error(errors, *r_bracket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE,
-                 lexer.get_token_value(*r_bracket_token));
+  const Token &r_bracket_token = lexer.get_next_token();
+  if (r_bracket_token.id != TokenId::R_BRACKET) {
+    _parse_error(errors, r_bracket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(r_bracket_token));
     lexer.get_back();
     return nullptr;
   }
+
+  const TypeInfo *type_info = TypesRepository::get().get_type("array", array_length);
+  AstType *type_node =
+    new AstType(type_info, l_bracket_token.start_line, l_bracket_token.start_column, l_bracket_token.file_name);
 
   const Token &next_token = lexer.get_next_token();
   if (!_is_type_start_token(next_token)) {

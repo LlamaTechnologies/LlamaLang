@@ -47,11 +47,18 @@ AstType *TypesRepository::get_type_node(std::string_view in_name) noexcept {
   }
 }
 
-const TypeInfo *TypesRepository::get_type(std::string_view in_name) noexcept {
+const TypeInfo *TypesRepository::get_type(std::string_view in_name, const ArrayLength *array_length) noexcept {
   // FIX(pablo96): if the map bucket grows the pointers become invalid!!
   if (types_id.find(in_name) == types_id.end()) {
     return nullptr;
   }
+
+  if (in_name == "array") {
+    TypeInfo *type_info = new TypeInfo(types_id[in_name]);
+    type_info->array_length = array_length;
+    return type_info;
+  }
+
   return &types_id[in_name];
 }
 

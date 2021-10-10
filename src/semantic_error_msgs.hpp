@@ -24,3 +24,9 @@ constexpr const char *ERROR_UNSUPORTED_ADDRESSOF_NOT_SYMBOL_EXPR =
   "unsupported 'address of' operator in expr. Expr should be a symbol";
 constexpr const char *ERROR_UNSUPORTED_DEREFERENCE_NOT_SYMBOL_EXPR =
   "unsupported dereference '*' operator in expr. Expr should be a symbol";
+constexpr const char *ERROR_ARRAY_LENGTH_NOT_SYMBOL_OR_CONST = "array length should be a variable or a constant!";
+constexpr const char *ERROR_ARRAY_LENGTH_NOT_CONST_INT =
+  "array length should be a constant of type integer instead of %s";
+constexpr const char *ERROR_ARRAY_LENGTH_NOT_POSITIVE = "array length should be an unsigned value";
+constexpr const char *ERROR_ARRAY_LENGTH_NOT_SYMBOL_INT = "array length variable should be of type integer";
+constexpr const char *ERROR_ARRAY_LENGTH_NOT_VAR_SYMBOL = "array length symbol should be a variable name";

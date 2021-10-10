@@ -94,6 +94,7 @@ private:
   inline bool _analize_unary_expr(const AstUnaryExpr *in_unary_expr);
   inline bool _analize_binary_expr(const AstBinaryExpr *in_binary_expr);
   inline bool _analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_stmnt);
+  inline bool _is_valid_array(const AstNode *expr_node, const AstType *type_node);
 };
 
 /* Returns true if:

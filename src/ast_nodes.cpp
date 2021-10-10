@@ -5,7 +5,14 @@
 
 #include <algorithm>
 
-#define LL_DEFAULT_TYPE TypesRepository::get().get_type("void")
+#define LL_DEFAULT_TYPE TypesRepository::get().get_type("void", nullptr)
+
+static const std::vector<const char *> const_value_type_names = { "BOOL", "INT", "FLOAT", "CHAR", "PTR" };
+
+const char *get_const_type_name(ConstValueType type) {
+  LL_ASSERT(type <= ConstValueType::PTR);
+  return const_value_type_names.at((size_t)type);
+}
 
 static const std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
 
