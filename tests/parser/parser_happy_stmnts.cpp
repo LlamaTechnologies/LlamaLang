@@ -122,28 +122,6 @@ TEST(ParserHappyTypeStmntTests, NameIsPrimitiveParse) {
   ASSERT_TRUE(value_node->type_info->is_signed);
 }
 
-TEST(ParserHappyTypeStmntTests, ArrayParse) {
-  std::vector<Error> errors;
-  Lexer lexer("[]s32", "file/directory", "TypeArrayParse", errors);
-  lexer.tokenize();
-
-  Parser parser(errors);
-  auto value_node = parser.parse_type(lexer);
-
-  ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(value_node->type_info->type_id, AstTypeId::ARRAY);
-  ASSERT_NE(value_node->child_type, nullptr);
-  ASSERT_EQ(value_node->child_type->parent, value_node);
-  ASSERT_EQ(value_node->child_type->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(value_node->child_type->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(value_node->child_type->type_info->name, "s32");
-  ASSERT_EQ(value_node->child_type->type_info->bit_size, 32);
-  ASSERT_EQ(value_node->child_type->type_info->llvm_type, nullptr);
-  ASSERT_TRUE(value_node->child_type->type_info->is_signed);
-}
-
 TEST(ParserHappyTypeStmntTests, PointerParse) {
   std::vector<Error> errors;
   Lexer lexer("*s32", "file/directory", "TypePointerParse", errors);
@@ -271,36 +249,6 @@ TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerAddParse) {
   delete value_node;
 }
 
-TEST(ParserHappyVarDefStmntTests, ArrayTypeParse) {
-  std::vector<Error> errors;
-  Lexer lexer("myVar []s32", "file/directory", "VarDefArrayTypeParse", errors);
-  lexer.tokenize();
-
-  Parser parser(errors);
-  auto value_node = parser.parse_vardef_stmnt(lexer);
-
-  ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
-  ASSERT_EQ(value_node->name, "myVar");
-  ASSERT_EQ(value_node->initializer, nullptr);
-  ASSERT_NE(value_node->type, nullptr);
-  auto type_node = value_node->type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::ARRAY);
-  ASSERT_NE(type_node->child_type, nullptr);
-  auto data_type_node = type_node->child_type;
-  ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(data_type_node->parent, type_node);
-  ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(data_type_node->type_info->name, "s32");
-  ASSERT_EQ(data_type_node->type_info->bit_size, 32);
-  ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
-  ASSERT_EQ(data_type_node->type_info->is_signed, true);
-
-  delete value_node;
-}
-
 TEST(ParserHappyVarDefStmntTests, PointerTypeParse) {
   std::vector<Error> errors;
   Lexer lexer("myVar *s32", "file/directory", "VarDefPointerTypeParse", errors);
@@ -357,37 +305,6 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   ASSERT_EQ(type_node->type_info->bit_size, 32);
   ASSERT_EQ(type_node->type_info->llvm_type, nullptr);
   ASSERT_EQ(type_node->type_info->is_signed, true);
-
-  delete value_node;
-}
-
-TEST(ParserHappyStmntTests, StatementVarDefArrayTypeParse) {
-  std::vector<Error> errors;
-  Lexer lexer("myVar []s32", "file/directory", "VarDefArrayTypeParse", errors);
-  lexer.tokenize();
-
-  Parser parser(errors);
-  auto node = parser.parse_statement(lexer);
-
-  ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(node->node_type, AstNodeType::AST_VAR_DEF);
-  auto value_node = node->var_def();
-  ASSERT_EQ(value_node->name, "myVar");
-  ASSERT_EQ(value_node->initializer, nullptr);
-  ASSERT_NE(value_node->type, nullptr);
-  auto type_node = value_node->type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::ARRAY);
-  ASSERT_NE(type_node->child_type, nullptr);
-  auto data_type_node = type_node->child_type;
-  ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(data_type_node->parent, type_node);
-  ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(data_type_node->type_info->name, "s32");
-  ASSERT_EQ(data_type_node->type_info->bit_size, 32);
-  ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
-  ASSERT_EQ(data_type_node->type_info->is_signed, true);
 
   delete value_node;
 }

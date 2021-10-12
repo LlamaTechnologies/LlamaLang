@@ -100,7 +100,7 @@ private:
  * - types are the same type_id
  * - types are the same bit size
  * - both integers are signed or uinsigned
- * - pointers|arrays types have the same sub type_id
+ * - pointers types have the same sub type_id
  */
 bool check_types(std::vector<Error> &errors, const AstType *type_node0, const AstType *type_node1,
                  const AstNode *expr_node);
@@ -108,7 +108,7 @@ bool check_types(std::vector<Error> &errors, const AstType *type_node0, const As
 /* Returns true if:
  * - types are the same bit size
  * - both integers are signed or uinsigned
- * - pointers|arrays types have the same sub type_id
+ * - pointers types have the same sub type_id
  */
 bool check_compatible_types(std::vector<Error> &errors, const AstType *type_node0, const AstType *type_node1,
                             const AstNode *expr_node);

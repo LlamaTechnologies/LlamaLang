@@ -4,43 +4,59 @@
 #include "lexer.hpp"
 
 #include <algorithm>
+#include <unordered_map>
 
 #define LL_DEFAULT_TYPE TypesRepository::get().get_type("void")
 
-static const std::vector<const char *> directives_keywords = { "LOAD", "MAIN", "RUN", "COMPILE", "FN_TYPE" };
+static const std::unordered_map<DirectiveType, const char *> directives_keywords = {
+  { DirectiveType::LOAD, "LOAD" },
+  { DirectiveType::MAIN, "MAIN" },
+  { DirectiveType::RUN, "RUN" },
+  { DirectiveType::COMPILE, "COMPILE" },
+  { DirectiveType::FN_TYPE, "FN_TYPE" }
+};
 
 const std::string get_directive_type_name(const DirectiveType directive_type) noexcept {
   LL_ASSERT(directive_type <= DirectiveType::FN_TYPE);
-  return directives_keywords.at((size_t)directive_type);
+  return directives_keywords.at(directive_type);
 }
 
-static const std::vector<const char *> types_id_names = { "VOID",    "BOOL",  "INTEGER", "FLOATING_POINT",
-                                                          "POINTER", "ARRAY", "STRUCT",  "UNKNOWN" };
+static const std::unordered_map<AstTypeId, const char *> types_id_names = {
+  { AstTypeId::VOID, "VOID" },       { AstTypeId::BOOL, "BOOL" },
+  { AstTypeId::INTEGER, "INTEGER" }, { AstTypeId::FLOATING_POINT, "FLOATING_POINT" },
+  { AstTypeId::POINTER, "POINTER" }, { AstTypeId::STRUCT, "STRUCT" },
+  { AstTypeId::UNKNOWN, "UNKNOWN" }
+};
 
 const std::string_view get_type_id_name(AstTypeId in_type_id) noexcept {
   LL_ASSERT(in_type_id <= AstTypeId::UNKNOWN);
-  return types_id_names.at((size_t)in_type_id);
+  return types_id_names.at(in_type_id);
 }
 
 const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcept {
   LL_ASSERT(in_type_id <= AstTypeId::UNKNOWN);
 
-  static std::vector<std::string> types_id_names_lower_case;
+  static std::unordered_map<AstTypeId, std::string> types_id_names_lower_case;
   if (types_id_names_lower_case.empty()) {
-    for (std::string str : types_id_names) {
+    for (auto [k, v] : types_id_names) {
+      std::string str(v);
       std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-      types_id_names_lower_case.push_back(str);
+      types_id_names_lower_case.emplace(k, str);
     }
   }
 
-  return types_id_names_lower_case.at((size_t)in_type_id);
+  return types_id_names_lower_case.at(in_type_id);
 }
 
-static const std::vector<const char *> unary_operators_symbols = { "++", "--", "-", "!", "~", "&", "*", "ret" };
+static const std::unordered_map<UnaryExprType, const char *> unary_operators_symbols = {
+  { UnaryExprType::INC, "++" },        { UnaryExprType::DEC, "--" },    { UnaryExprType::NEG, "-" },
+  { UnaryExprType::NOT, "!" },         { UnaryExprType::BIT_INV, "~" }, { UnaryExprType::ADDRESS_OF, "&" },
+  { UnaryExprType::DEREFERENCE, "*" }, { UnaryExprType::RET, "ret" }
+};
 
 const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept {
   LL_ASSERT(op_type < UnaryExprType::RET);
-  return unary_operators_symbols[(size_t)op_type];
+  return unary_operators_symbols.at(op_type);
 }
 
 AstType::AstType()

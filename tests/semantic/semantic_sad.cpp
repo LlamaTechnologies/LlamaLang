@@ -51,30 +51,6 @@ TEST(SemanticTypes, PointerDistinctTypes) {
   delete node_type_1;
 }
 
-TEST(SemanticTypes, ArrayDistinctTypes) {
-  std::vector<Error> errors;
-  TypesRepository types_repository = TypesRepository::get();
-
-  AstVarDef *node_expr = new AstVarDef(0, 0, "");
-
-  AstType *node_child_type_0 = types_repository.get_type_node("s32");
-  AstType *node_child_type_1 = types_repository.get_type_node("f32");
-
-  AstType *node_type_0 = types_repository.get_type_node("array");
-  node_type_0->child_type = node_child_type_0;
-
-  AstType *node_type_1 = types_repository.get_type_node("array");
-  node_type_1->child_type = node_child_type_1;
-
-  bool is_ok = check_types(errors, node_type_0, node_type_1, node_expr);
-
-  ASSERT_EQ(errors.size(), 1L);
-  ASSERT_FALSE(is_ok);
-
-  delete node_type_0;
-  delete node_type_1;
-}
-
 //==================================================================================
 //          SEMANTIC VARIABLES DEFINITION
 //==================================================================================

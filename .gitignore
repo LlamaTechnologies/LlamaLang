@@ -131,3 +131,4 @@ bin/*
 #Except
 !/scripts/windows/*.exe
 !/bin/README.md
+!/wiki/**.ll

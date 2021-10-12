@@ -27,10 +27,6 @@ inline static bool _is_ret_statement(const AstNode *in_node) {
   return in_node->node_type == AstNodeType::AST_UNARY_EXPR && in_node->unary_expr()->op == UnaryExprType::RET;
 }
 
-inline static bool _is_type_array_or_pointer(const AstType *in_type) {
-  return in_type->type_info->type_id == AstTypeId::ARRAY || in_type->type_info->type_id == AstTypeId::POINTER;
-}
-
 inline static bool _is_type_number(const AstType *in_type) {
   return in_type->type_info->type_id == AstTypeId::INTEGER || in_type->type_info->type_id == AstTypeId::FLOATING_POINT;
 }
@@ -597,7 +593,7 @@ bool check_types(std::vector<Error> &errors, const AstType *type_node0, const As
   LL_ASSERT(expr_node->node_type != AstNodeType::AST_TYPE);
 
   if (_are_type_compatible(type_node0, type_node1)) {
-    if (_is_type_array_or_pointer(type_node0))
+    if (_is_type(type_node0, AstTypeId::POINTER))
       return check_types(errors, type_node0->child_type, type_node1->child_type, expr_node);
 
     if (_is_type(type_node0, AstTypeId::STRUCT))
@@ -681,8 +677,7 @@ void _set_type_info(const AstNode *in_expr_node, const AstType *in_type_node) {
 
   switch (in_expr_node->node_type) {
   case AstNodeType::AST_CONST_VALUE:
-    if (in_type_node->type_info->type_id == AstTypeId::ARRAY || in_type_node->type_info->type_id == AstTypeId::STRUCT ||
-        in_type_node->type_info->type_id == AstTypeId::VOID) {
+    if (in_type_node->type_info->type_id == AstTypeId::STRUCT || in_type_node->type_info->type_id == AstTypeId::VOID) {
       LL_UNREACHEABLE;
     }
     if (in_type_node->type_info->type_id == AstTypeId::POINTER) {

@@ -20,7 +20,6 @@ TypesRepository &TypesRepository::get() {
                              { "f128", TypeInfo(AstTypeId::FLOATING_POINT, "f128", 128, true) },
                              { "void", TypeInfo(AstTypeId::VOID, "void", 0, false) },
                              { "bool", TypeInfo(AstTypeId::BOOL, "bool", 1, false) },
-                             { "array", TypeInfo(AstTypeId::ARRAY, "array", 64, false) },
                              { "pointer", TypeInfo(AstTypeId::POINTER, "pointer", 64, false) } };
   }
 

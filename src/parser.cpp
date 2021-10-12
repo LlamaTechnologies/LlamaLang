@@ -1006,31 +1006,6 @@ AstType *Parser::parse_type(const Lexer &lexer) noexcept {
 
     return type_node;
   }
-  case TokenId::L_BRACKET: {
-    // ARRAY TYPE
-    const Token &r_braket_token = lexer.get_next_token();
-    if (r_braket_token.id != TokenId::R_BRACKET) {
-      _parse_error(errors, r_braket_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(r_braket_token));
-      lexer.get_back();
-      return nullptr;
-    }
-    const TypeInfo *type_info = TypesRepository::get().get_type("array");
-    AstType *type_node = new AstType(type_info, token.start_line, token.start_column, token.file_name);
-
-    const Token &next_token = lexer.get_next_token();
-    if (!_is_type_start_token(next_token)) {
-      _parse_error(errors, next_token, ERROR_EXPECTED_TYPE_EXPR_INSTEAD_OF, lexer.get_token_value(next_token));
-      lexer.get_back();
-      delete type_node;
-      return nullptr;
-    }
-    lexer.get_back();
-    auto data_type_node = parse_type(lexer);
-    data_type_node->parent = type_node;
-    type_node->child_type = data_type_node;
-
-    return type_node;
-  }
   case TokenId::IDENTIFIER: {
     // TODO(pablo96): register new types
     return TypesRepository::get().get_type_node(lexer.get_token_value(token));

@@ -128,9 +128,6 @@ struct AstParamDef : public AstVarDef {
       : AstVarDef(AstNodeType::AST_PARAM_DEF, in_line, in_column, in_file_name) {}
 };
 
-/**
- * IMPORTANT: DO NOT CHANGE ORDER OF LABELS!
- */
 enum class DirectiveType
 {
   LOAD,    // load file (first directive in the file)
@@ -298,9 +295,6 @@ struct AstBinaryExpr : public AstNode {
   virtual ~AstBinaryExpr();
 };
 
-/**
- * IMPORTANT: DO NOT CHANGE ORDER OF LABELS!
- */
 enum class UnaryExprType
 {
   INC,         // ++  primaryExpr
@@ -353,9 +347,6 @@ struct AstCtrlStmnt : public AstNode {
   virtual ~AstCtrlStmnt();
 };
 
-/**
- * IMPORTANT: DO NOT CHANGE ORDER OF LABELS!
- */
 enum class AstTypeId
 {
   VOID,
@@ -363,7 +354,6 @@ enum class AstTypeId
   INTEGER,
   FLOATING_POINT,
   POINTER,
-  ARRAY,
   STRUCT,
   UNKNOWN
 };
@@ -387,8 +377,8 @@ struct TypeInfo {
 };
 
 struct AstType : public AstNode {
-  const TypeInfo *type_info;     // null if type == (pointer | array)
-  AstType *child_type = nullptr; // Not null if type == (pointer | array)
+  const TypeInfo *type_info;     // null if type == pointer
+  AstType *child_type = nullptr; // Not null if type == pointer
 
   AstType();
 
