@@ -85,6 +85,11 @@ bool SemanticAnalyzer::analize_var_def(const AstVarDef *in_var_def) {
     return false;
 
   const AstType *expr_type = get_expr_type(errors, symbol_table, in_var_def->initializer);
+  if (expr_type == nullptr && in_var_def->initializer->node_type == AstNodeType::AST_CONST_VALUE &&
+      in_var_def->initializer->const_value()->type == ConstValueType::UNDEF) {
+    return true;
+  }
+
   if (!_are_type_compatible(in_var_def->type, expr_type)) {
     add_semantic_error(errors, in_var_def, ERROR_TYPES_MISMATCH, var_name.c_str());
     symbol_table->remove_last_symbol();
@@ -114,6 +119,11 @@ bool SemanticAnalyzer::analize_global_var_def(const AstVarDef *in_var_def) {
   global_symbol_table->add_symbol(var_name, SymbolType::VAR, in_var_def);
 
   const AstType *expr_type = get_expr_type(errors, symbol_table, in_var_def->initializer);
+  if (expr_type == nullptr && in_var_def->initializer->node_type == AstNodeType::AST_CONST_VALUE &&
+      in_var_def->initializer->const_value()->type == ConstValueType::UNDEF) {
+    return true;
+  }
+
   if (in_var_def->type->type_info->type_id != expr_type->type_info->type_id) {
     add_semantic_error(errors, in_var_def, ERROR_TYPES_MISMATCH, var_name.c_str());
     global_symbol_table->remove_last_symbol();
@@ -304,6 +314,7 @@ inline static bool _analize_const_value(const AstConstValue *in_const_value) {
   case ConstValueType::FLOAT:
   case ConstValueType::CHAR:
   case ConstValueType::PTR:
+  case ConstValueType::UNDEF:
     return true;
   default:
     LL_UNREACHEABLE;
@@ -813,6 +824,8 @@ const AstType *_get_const_value_type(std::vector<Error> &errors, const Table *sy
     return types_repository.get_type_node("u32");
   case ConstValueType::PTR:
     return types_repository.get_type_node("*u8");
+  case ConstValueType::UNDEF:
+    return nullptr;
   default:
     LL_UNREACHEABLE;
   }

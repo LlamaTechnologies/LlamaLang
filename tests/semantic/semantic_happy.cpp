@@ -581,7 +581,7 @@ TEST(SemanticFunctions, FunctionNoRet) {
 
   // given: source_file
   const char *source_file = "fn my_func() void {\n"
-                            "my_var s32\n"
+                            "my_var s32 = ---\n"
                             "my_var = 34\n"
                             "}";
 
@@ -784,7 +784,7 @@ TEST(SemanticBranches, SimpleIfBoolVar) {
                             "\tmy_condition bool = false\n"
                             "\n"
                             "\tif my_condition {\n"
-                            "\t\tmy_var s32\n"
+                            "\t\tmy_var s32 = ---\n"
                             "\t\tmy_var = 34\n"
                             "\t}\n"
                             "}";
@@ -833,10 +833,10 @@ TEST(SemanticBranches, IfElseBoolVar) {
                             "\tmy_condition bool = false\n"
                             "\n"
                             "\tif my_condition {\n"
-                            "\t\tmy_var s32\n"
+                            "\t\tmy_var s32 = ---\n"
                             "\t\tmy_var = 34\n"
                             "\t} else {\n"
-                            "\t\tmy_var s32\n"
+                            "\t\tmy_var s32 = ---\n"
                             "\t\tmy_var = 43\n"
                             "\t}\n"
                             "}";
@@ -889,7 +889,7 @@ TEST(SemanticLoops, SimpleBoolVar) {
                             "\tmy_condition bool = false\n"
                             "\n"
                             "\tloop my_condition {\n"
-                            "\t\tmy_var s32\n"
+                            "\t\tmy_var s32 = ---\n"
                             "\t\tmy_var = 34\n"
                             "\t}\n"
                             "}";
@@ -938,7 +938,7 @@ TEST(SemanticLoops, SimpleBoolVarBreakStmnt) {
                             "\tmy_condition bool = false\n"
                             "\n"
                             "\tloop my_condition {\n"
-                            "\t\tmy_var s32\n"
+                            "\t\tmy_var s32 = ---\n"
                             "\t\tif my_var == 42 {\n"
                             "\t\t\tbreak\n"
                             "\t\t}\n"

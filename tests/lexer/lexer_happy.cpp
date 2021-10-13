@@ -257,7 +257,7 @@ TEST(LexerHappyOperatorsTests, HashOperatorTest) {
 
 TEST(LexerHappyOperatorsTests, OperatorsTest) {
   std::vector<Error> errors;
-  Lexer lexer("= ++ -- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory",
+  Lexer lexer("= ++ -- --- ! || && == != < <= > >= + - * / % += -= *= /= %= & ^ | ~ << >>", "file/directory",
               "OperatorsTest", errors);
   lexer.tokenize();
 
@@ -266,6 +266,7 @@ TEST(LexerHappyOperatorsTests, OperatorsTest) {
   ASSERT_EQ(lexer.get_next_token().id, TokenId::ASSIGN);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::PLUS_PLUS);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::MINUS_MINUS);
+  ASSERT_EQ(lexer.get_next_token().id, TokenId::UNDEF);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::NOT);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::OR);
   ASSERT_EQ(lexer.get_next_token().id, TokenId::AND);

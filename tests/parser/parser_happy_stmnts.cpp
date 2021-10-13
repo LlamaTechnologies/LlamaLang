@@ -148,21 +148,26 @@ TEST(ParserHappyTypeStmntTests, PointerParse) {
 //          PARSE VARIABLE DEFINITION STATEMENT
 //==================================================================================
 
-TEST(ParserHappyVarDefStmntTests, SimpleTypeParse) {
+TEST(ParserHappyVarDefStmntTests, SimpleTypeParseUndef) {
   std::vector<Error> errors;
-  Lexer lexer("myVar s32", "file/directory", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar s32 = ---", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
-  auto value_node = parser.parse_vardef_stmnt(lexer);
+  const AstVarDef *value_node = parser.parse_vardef_stmnt(lexer);
 
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_NE(value_node, nullptr);
   ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
   ASSERT_EQ(value_node->name, "myVar");
-  ASSERT_EQ(value_node->initializer, nullptr);
-  ASSERT_NE(value_node->type, nullptr);
-  auto type_node = value_node->type;
+
+  const AstConstValue *init = value_node->initializer->const_value();
+  ASSERT_NE(init, nullptr);
+  ASSERT_EQ(init->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_EQ(init->type, ConstValueType::UNDEF);
+
+  const AstType *type_node = value_node->type;
+  ASSERT_NE(type_node, nullptr);
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
   ASSERT_EQ(type_node->parent, value_node);
   ASSERT_EQ(type_node->type_info->type_id, AstTypeId::INTEGER);
@@ -172,6 +177,42 @@ TEST(ParserHappyVarDefStmntTests, SimpleTypeParse) {
   ASSERT_TRUE(type_node->type_info->is_signed);
 
   delete value_node;
+}
+
+TEST(ParserSadVarDefStmntTests, SimpleTypeParseUndefInExpr) {
+  std::vector<Error> errors;
+  Lexer lexer("myVar s32 = --- + 5", "file/directory", "VarDefSimpleTypeParse", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstVarDef *value_node = parser.parse_vardef_stmnt(lexer);
+
+  ASSERT_NE(errors.size(), 0L);
+  ASSERT_EQ(value_node, nullptr);
+}
+
+TEST(ParserSadVarDefStmntTests, SimpleTypeParseUndefInExprAsSecondTerm) {
+  std::vector<Error> errors;
+  Lexer lexer("myVar s32 = 5 * ---", "file/directory", "VarDefSimpleTypeParse", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstVarDef *value_node = parser.parse_vardef_stmnt(lexer);
+
+  ASSERT_NE(errors.size(), 0L);
+  ASSERT_EQ(value_node, nullptr);
+}
+
+TEST(ParserSadVarDefStmntTests, SimpleTypeParseUndefInUnaryExpr) {
+  std::vector<Error> errors;
+  Lexer lexer("myVar s32 = ++ ---", "file/directory", "VarDefSimpleTypeParse", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstVarDef *value_node = parser.parse_vardef_stmnt(lexer);
+
+  ASSERT_NE(errors.size(), 0L);
+  ASSERT_EQ(value_node, nullptr);
 }
 
 TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerParse) {
@@ -249,43 +290,13 @@ TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerAddParse) {
   delete value_node;
 }
 
-TEST(ParserHappyVarDefStmntTests, PointerTypeParse) {
-  std::vector<Error> errors;
-  Lexer lexer("myVar *s32", "file/directory", "VarDefPointerTypeParse", errors);
-  lexer.tokenize();
-
-  Parser parser(errors);
-  auto value_node = parser.parse_vardef_stmnt(lexer);
-
-  ASSERT_EQ(errors.size(), 0L);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
-  ASSERT_EQ(value_node->name, "myVar");
-  ASSERT_EQ(value_node->initializer, nullptr);
-  ASSERT_NE(value_node->type, nullptr);
-  auto type_node = value_node->type;
-  ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(type_node->parent, value_node);
-  ASSERT_EQ(type_node->type_info->type_id, AstTypeId::POINTER);
-  ASSERT_NE(type_node->child_type, nullptr);
-  auto data_type_node = type_node->child_type;
-  ASSERT_EQ(data_type_node->node_type, AstNodeType::AST_TYPE);
-  ASSERT_EQ(data_type_node->parent, type_node);
-  ASSERT_EQ(data_type_node->type_info->type_id, AstTypeId::INTEGER);
-  ASSERT_EQ(data_type_node->type_info->name, "s32");
-  ASSERT_EQ(data_type_node->type_info->bit_size, 32);
-  ASSERT_EQ(data_type_node->type_info->llvm_type, nullptr);
-  ASSERT_EQ(data_type_node->type_info->is_signed, true);
-
-  delete value_node;
-}
-
 //==================================================================================
 //          PARSE ANY STATEMENT
 //==================================================================================
 
 TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar s32", "file/directory", "VarDefSimpleTypeParse", errors);
+  Lexer lexer("myVar s32 = ---", "file/directory", "VarDefSimpleTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -295,7 +306,7 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
   ASSERT_EQ(node->node_type, AstNodeType::AST_VAR_DEF);
   auto value_node = node->var_def();
   ASSERT_EQ(value_node->name, "myVar");
-  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->initializer, nullptr);
   ASSERT_NE(value_node->type, nullptr);
   auto type_node = value_node->type;
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
@@ -311,7 +322,7 @@ TEST(ParserHappyStmntTests, StatementVarDefSimpleTypeParse) {
 
 TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
   std::vector<Error> errors;
-  Lexer lexer("myVar *s32", "file/directory", "VarDefPointerTypeParse", errors);
+  Lexer lexer("myVar *s32 = ---", "file/directory", "VarDefPointerTypeParse", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -323,7 +334,7 @@ TEST(ParserHappyStmntTests, StatementVarDefPointerTypeParse) {
 
   auto value_node = node->var_def();
   ASSERT_EQ(value_node->name, "myVar");
-  ASSERT_EQ(value_node->initializer, nullptr);
+  ASSERT_NE(value_node->initializer, nullptr);
   ASSERT_NE(value_node->type, nullptr);
   auto type_node = value_node->type;
   ASSERT_EQ(type_node->node_type, AstNodeType::AST_TYPE);
@@ -460,7 +471,7 @@ TEST(ParserHappyBlockStmntTests, EmptyTest) {
 
 TEST(ParserHappyBlockStmntTests, NoSpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{myVar s32\nret myvar}", "file/directory", "BlockNoSpaceNearCurliesTest", errors);
+  Lexer lexer("{myVar s32 = ---\nret myvar}", "file/directory", "BlockNoSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -497,7 +508,7 @@ TEST(ParserHappyBlockStmntTests, NoSpaceNearCurliesTest) {
 
 TEST(ParserHappyBlockStmntTests, SpaceNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ myVar s32\nret myvar }", "file/directory", "BlockSpaceNearCurliesTest", errors);
+  Lexer lexer("{ myVar s32 = ---\nret myvar }", "file/directory", "BlockSpaceNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -534,7 +545,7 @@ TEST(ParserHappyBlockStmntTests, SpaceNearCurliesTest) {
 
 TEST(ParserHappyBlockStmntTests, NewlinesNearCurliesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{\n\tmyVar s32\n\tret myvar\n}", "file/directory", "BlockNewlinesNearCurliesTest", errors);
+  Lexer lexer("{\n\tmyVar s32 = ---\n\tret myvar\n}", "file/directory", "BlockNewlinesNearCurliesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -570,8 +581,8 @@ TEST(ParserHappyBlockStmntTests, NewlinesNearCurliesTest) {
 
 TEST(ParserHappyBlockStmntTests, SpacesBetweenNewlinesTest) {
   std::vector<Error> errors;
-  Lexer lexer("{ \n  \t myVar s32   \n  \t  ret myvar  \n   }", "file/directory", "BlockSpacesBetweenNewlinesTest",
-              errors);
+  Lexer lexer("{ \n  \t myVar s32  = ---  \n  \t  ret myvar  \n   }", "file/directory",
+              "BlockSpacesBetweenNewlinesTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -879,7 +890,7 @@ TEST(ParserHappyFnDefStmntTests, MultiParamsVoidBlockTest) {
 
 TEST(ParserHappyFnDefStmntTests, NoParamsTest) {
   std::vector<Error> errors;
-  Lexer lexer("fn myFunc() void {\nmyVar s32\n}", "file/directory", "FuncDefNoParamsTest", errors);
+  Lexer lexer("fn myFunc() void {\nmyVar s32 = ---\n}", "file/directory", "FuncDefNoParamsTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -904,7 +915,7 @@ TEST(ParserHappyFnDefStmntTests, NoParamsTest) {
   ASSERT_EQ(var_def_node->node_type, AstNodeType::AST_VAR_DEF);
   ASSERT_EQ(var_def_node->name, "myVar");
   ASSERT_NE(var_def_node->type, nullptr);
-  ASSERT_EQ(var_def_node->initializer, nullptr);
+  ASSERT_NE(var_def_node->initializer, nullptr);
 
   AstType *type_node = var_def_node->type;
   ASSERT_EQ(type_node->parent, var_def_node);
@@ -1426,7 +1437,7 @@ TEST(ParserHappyBranchStmntTests, IfStmntFilledBlock) {
 
   // given: source_file
   const char *source_file = "if my_condition {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 34\n"
                             "}";
 
@@ -1454,10 +1465,10 @@ TEST(ParserHappyBranchStmntTests, IfElseStmntFilledBlock) {
 
   // given: source_file
   const char *source_file = "if my_condition {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 34\n"
                             "} else {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 43\n"
                             "}\n";
 
@@ -1486,10 +1497,10 @@ TEST(ParserHappyBranchStmntTests, IfElifStmntFilledBlock) {
 
   // given: source_file
   const char *source_file = "if my_condition {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 34\n"
                             "} elif !my_condition {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 43\n"
                             "}\n";
 
@@ -1526,10 +1537,10 @@ TEST(ParserHappyBranchStmntTests, IfElifStmntWithParenFilledBlock) {
 
   // given: source_file
   const char *source_file = "if my_condition {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 34\n"
                             "} elif (!my_condition) {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 43\n"
                             "}\n";
 
@@ -1566,13 +1577,13 @@ TEST(ParserHappyBranchStmntTests, IfElifElseStmntFilledBlock) {
 
   // given: source_file
   const char *source_file = "if my_condition {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 34\n"
                             "} elif !my_condition {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 43\n"
                             "} else {\n"
-                            "\tmy_var s32\n"
+                            "\tmy_var s32 = ---\n"
                             "\tmy_var = 43\n"
                             "}\n";
 
@@ -1837,11 +1848,11 @@ TEST(ParserHappyLoopStmntTests, RangeConstantExprTest) {
 TEST(ParserHappyFullProgramStmntTests, NoNewLineEnd) {
   const char *source_code = "/* Test program */\n" // multiline comment
                             "\n"
-                            ";\n"         // empty statement : discarded
-                            ";"           // empty statement : discarded
-                            "myVar s32\n" // variable definition
-                            "myVar\n"     // unused variable reference : discarded
-                            "myVar;\n"    // unused variable reference : discarded
+                            ";\n"               // empty statement : discarded
+                            ";"                 // empty statement : discarded
+                            "myVar s32 = ---\n" // variable definition
+                            "myVar\n"           // unused variable reference : discarded
+                            "myVar;\n"          // unused variable reference : discarded
                             "\n"
                             "fn myFunc() void {\n"
                             "\tret\n"

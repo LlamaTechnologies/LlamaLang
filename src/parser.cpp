@@ -13,6 +13,9 @@
 #include <unordered_map>
 
 static bool _is_boolean_expression(const AstNode *in_expr, AstNode *if_stmnt_node);
+static bool _is_after_undef(const Lexer &lexer, std::vector<Error> &in_errors, AstNode *in_node,
+                            bool (*predicate)(const Token &)) noexcept;
+static bool _is_before_undef(const Lexer &lexer, std::vector<Error> &in_errors, AstNode *in_node) noexcept;
 static void _parse_error(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static void _parse_warning(std::vector<Error> &in_errors, const Token &token, const char *format, ...) noexcept;
 static bool _get_file_name_and_path(const FileInput &file_input, std::vector<Error> &in_errors,
@@ -936,7 +939,7 @@ stmnt_expr:
 /*
  * parses a variable definition/initialization
  * varDef
- *   : IDENTIFIER type_name ('=' expression)?
+ *   : IDENTIFIER type_name '=' expression
  *   ;
  */
 AstVarDef *Parser::parse_vardef_stmnt(const Lexer &lexer) noexcept {
@@ -961,19 +964,19 @@ AstVarDef *Parser::parse_vardef_stmnt(const Lexer &lexer) noexcept {
   var_def_node->type = type_node;
 
   const Token &assign_token = lexer.get_next_token();
-  if (assign_token.id == TokenId::ASSIGN) {
-    auto expr = parse_expr(lexer);
-    if (!expr) {
-      // TODO(pablo96): handle error in unary_expr => sync parsing
-      return nullptr;
-    }
-
-    expr->parent = var_def_node;
-    var_def_node->initializer = expr;
-  } else {
-    lexer.get_back();
-    var_def_node->initializer = nullptr;
+  if (assign_token.id != TokenId::ASSIGN) {
+    _parse_error(errors, token_symbol_name, ERROR_IMPLICIT_UNDEFINED_VAR);
+    return nullptr;
   }
+
+  auto expr = parse_expr(lexer);
+  if (!expr) {
+    // TODO(pablo96): handle error in unary_expr => sync parsing
+    return nullptr;
+  }
+
+  expr->parent = var_def_node;
+  var_def_node->initializer = expr;
 
   return var_def_node;
 }
@@ -1151,6 +1154,15 @@ AstNode *Parser::parse_comp_expr(const Lexer &lexer) noexcept {
     return nullptr;
   }
 
+  // check if operator is after a UNDEF(---) value
+  if (_is_after_undef(lexer, this->errors, root_node, [](const Token &token) {
+        return !MATCH(&token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT,
+                      TokenId::AMPERSAND, TokenId::BIT_XOR);
+      })) {
+    delete root_node;
+    return nullptr;
+  }
+
   while (true) {
     const Token &token = lexer.get_next_token();
 
@@ -1165,6 +1177,13 @@ AstNode *Parser::parse_comp_expr(const Lexer &lexer) noexcept {
     if (!unary_expr) {
       // TODO(pablo96): error in unary_expr => sync parsing
       break;
+    }
+
+    if (_is_before_undef(lexer, this->errors, unary_expr)) {
+      delete root_node;
+      delete unary_expr;
+
+      return nullptr;
     }
 
     // create binary node
@@ -1191,6 +1210,14 @@ AstNode *Parser::parse_algebraic_expr(const Lexer &lexer) noexcept {
     return nullptr;
   }
 
+  // check if operator is after a UNDEF(---) value
+  if (_is_after_undef(lexer, this->errors, root_node, [](const Token &token) {
+        return !MATCH(&token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR);
+      })) {
+    delete root_node;
+    return nullptr;
+  }
+
   do {
     const Token &token = lexer.get_next_token();
     if (!MATCH(&token, TokenId::PLUS, TokenId::MINUS, TokenId::BIT_OR)) {
@@ -1203,6 +1230,13 @@ AstNode *Parser::parse_algebraic_expr(const Lexer &lexer) noexcept {
     if (!term_expr) {
       // TODO(pablo96): error in term_expr => sync parsing
       break;
+    }
+
+    if (_is_before_undef(lexer, this->errors, term_expr)) {
+      delete root_node;
+      delete term_expr;
+
+      return nullptr;
     }
 
     // create binary node
@@ -1227,6 +1261,15 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
 
   if (!root_node) {
     // TODO(pablo96): error in primary expr => sync parsing
+    return nullptr;
+  }
+
+  // check if operator is after a UNDEF(---) value
+  if (_is_after_undef(lexer, this->errors, root_node, [](const Token &token) {
+        return !MATCH(&token, TokenId::MUL, TokenId::DIV, TokenId::MOD, TokenId::LSHIFT, TokenId::RSHIFT,
+                      TokenId::AMPERSAND, TokenId::BIT_XOR);
+      })) {
+    delete root_node;
     return nullptr;
   }
 
@@ -1265,6 +1308,13 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
     if (!symbol_node) {
       // TODO(pablo96): error in primary expr => sync parsing
       break;
+    }
+
+    if (_is_before_undef(lexer, this->errors, symbol_node)) {
+      delete root_node;
+      delete symbol_node;
+
+      return nullptr;
     }
 
     // create binary node
@@ -1307,6 +1357,14 @@ consume_plus:
             TokenId::AMPERSAND, TokenId::MUL)) {
     {
       const Token &next_token = lexer.get_next_token();
+      if (next_token.id == TokenId::UNDEF) {
+        lexer.get_back(); // next_token
+        lexer.get_back(); // unary_op_token
+
+        _parse_error(errors, unary_op_token, ERROR_UNEXPECTED_UNDEF_AFTER, lexer.get_token_value(unary_op_token));
+        return nullptr;
+      }
+
       if (unary_op_token.id == TokenId::MINUS && next_token.id != TokenId::IDENTIFIER) {
         lexer.get_back(); // next_token
         lexer.get_back(); // unary_op_token
@@ -1315,8 +1373,6 @@ consume_plus:
       lexer.get_back(); // next_token
     }
 
-    AstUnaryExpr *node =
-      new AstUnaryExpr(unary_op_token.start_line, unary_op_token.start_column, unary_op_token.file_name);
     AstNode *primary_expr = parse_primary_expr(lexer);
     if (!primary_expr) {
       // TODO(pablo96): error in algebraic_expr => sync parsing
@@ -1326,6 +1382,9 @@ consume_plus:
       // for that we need to go back a step up into algebraic
       return nullptr;
     }
+
+    AstUnaryExpr *node =
+      new AstUnaryExpr(unary_op_token.start_line, unary_op_token.start_column, unary_op_token.file_name);
     primary_expr->parent = node;
     node->op = _get_unary_op(unary_op_token);
     node->expr = primary_expr;
@@ -1334,7 +1393,7 @@ consume_plus:
 
   lexer.get_back();
   AstNode *primary_expr = parse_primary_expr(lexer);
-  if (!primary_expr) {
+  if (primary_expr == nullptr) {
     // TODO(pablo96): error in algebraic_expr => sync parsing
     return nullptr;
   }
@@ -1342,6 +1401,11 @@ consume_plus:
   const Token &token = lexer.get_next_token();
   // primary_expr op
   if (MATCH(&token, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
+    if (_is_before_undef(lexer, this->errors, primary_expr)) {
+      delete primary_expr;
+      return nullptr;
+    }
+
     AstUnaryExpr *node = new AstUnaryExpr(token.start_line, token.start_column, token.file_name);
     primary_expr->parent = node;
     node->expr = primary_expr;
@@ -1351,6 +1415,35 @@ consume_plus:
   lexer.get_back();
 
   return primary_expr;
+}
+
+bool _is_after_undef(const Lexer &lexer, std::vector<Error> &in_errors, AstNode *in_node,
+                     bool (*in_predicate)(const Token &)) noexcept {
+  const Token &token = lexer.get_next_token();
+  if (in_predicate(token)) {
+    // Not my token
+    lexer.get_back();
+    return false;
+  }
+
+  if (in_node->node_type == AstNodeType::AST_CONST_VALUE && in_node->const_value()->type == ConstValueType::UNDEF) {
+    _parse_error(in_errors, token, ERROR_FORBIDEN_OP_AFTER_UNDEF, lexer.get_token_value(token));
+
+    lexer.get_back();
+    return true;
+  }
+
+  lexer.get_back();
+  return false;
+}
+
+bool _is_before_undef(const Lexer &lexer, std::vector<Error> &in_errors, AstNode *in_node) noexcept {
+  const Token &token = lexer.get_previous_token();
+  if (in_node->node_type == AstNodeType::AST_CONST_VALUE && in_node->const_value()->type == ConstValueType::UNDEF) {
+    _parse_error(in_errors, token, ERROR_UNEXPECTED_AFTER_UNDEF, lexer.get_token_value(token));
+    return true;
+  }
+  return false;
 }
 
 /*
@@ -1400,7 +1493,7 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
   const Token &number_token = is_negative ? lexer.get_next_token() : token;
 
   if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE, TokenId::FALSE,
-            TokenId::NIL)) {
+            TokenId::NIL, TokenId::UNDEF)) {
     return parse_const_expr(lexer, token, number_token);
   }
 
@@ -1430,6 +1523,9 @@ AstNode *Parser::parse_const_expr(const Lexer &lexer, const Token &token, const 
   case TokenId::TRUE: {
     const_value_node->type = ConstValueType::BOOL;
     const_value_node->boolean = number_token.id == TokenId::TRUE;
+  } break;
+  case TokenId::UNDEF: {
+    const_value_node->type = ConstValueType::UNDEF;
   } break;
   case TokenId::NIL: {
     /* NOTE:

@@ -7,9 +7,6 @@
 #include <string_view>
 #include <vector>
 
-/**
- * NOTE: Update the token_id_names array in lexer.cpp
- **/
 enum class TokenId
 {
   HASH,      // #
@@ -36,7 +33,7 @@ enum class TokenId
   COLON,     // :
   DOT,       // .
   ASSIGN,    // =
-
+  UNDEF,     // ---
   // UNARY OPERATORS
   PLUS_PLUS,   // ++
   MINUS_MINUS, // --

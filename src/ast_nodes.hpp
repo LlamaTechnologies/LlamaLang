@@ -231,7 +231,8 @@ enum class ConstValueType
   INT,
   FLOAT,
   CHAR,
-  PTR
+  PTR,
+  UNDEF
 };
 
 struct AstConstValue : public AstNode {

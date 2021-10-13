@@ -72,6 +72,7 @@ enum class TokenizerState
   SAW_PERCENT,                         // saw %
   SAW_PLUS,                            // saw +
   SAW_DASH,                            // saw -
+  SAW_DASHDASH,                        // saw --
   SAW_NOT,                             // saw !
   SAW_VERTICAL_BAR,                    // saw |
   SAW_AMPERSAND,                       // saw &
@@ -634,9 +635,7 @@ void Lexer::tokenize() noexcept {
         state = TokenizerState::START;
         break;
       case '-':
-        _set_token_id(current_token, TokenId::MINUS_MINUS);
-        _end_token(*this);
-        state = TokenizerState::START;
+        state = TokenizerState::SAW_DASHDASH;
         break;
       case '0':
         // negative number
@@ -952,6 +951,18 @@ void Lexer::tokenize() noexcept {
       _end_token(*this);
       state = TokenizerState::START;
       continue;
+    case TokenizerState::SAW_DASHDASH:
+      if (c == '-') {
+        _set_token_id(current_token, TokenId::UNDEF);
+        _end_token(*this);
+        state = TokenizerState::START;
+      } else {
+        cursor_pos--;
+        _set_token_id(current_token, TokenId::MINUS_MINUS);
+        _end_token(*this);
+        state = TokenizerState::START;
+      }
+      break;
     // If error just get to the next token
     case TokenizerState::ERROR:
       break;
@@ -1242,69 +1253,70 @@ static const char *_get_escape_shorthand(uint8_t c) {
   }
 }
 
-static const char *token_id_names[] = { "HASH",
-                                        "EXTERN",
-                                        "FN",
-                                        "RET",
-                                        "IF",
-                                        "ELIF",
-                                        "ELSE",
-                                        "LOOP",
-                                        "TRUE",
-                                        "FALSE",
-                                        "NIL",
-                                        "BREAK",
-                                        "CONTINUE",
-                                        "L_PAREN",
-                                        "R_PAREN",
-                                        "L_CURLY",
-                                        "R_CURLY",
-                                        "L_BRACKET",
-                                        "R_BRACKET",
-                                        "COMMA",
-                                        "SEMI",
-                                        "COLON",
-                                        "DOT",
-                                        "ASSIGN",
-                                        "PLUS_PLUS",
-                                        "MINUS_MINUS",
-                                        "NOT",
-                                        "OR",
-                                        "AND",
-                                        "EQUALS",
-                                        "NOT_EQUALS",
-                                        "LESS",
-                                        "LESS_OR_EQUALS",
-                                        "GREATER",
-                                        "GREATER_OR_EQUALS",
-                                        "PLUS",
-                                        "MINUS",
-                                        "MUL",
-                                        "DIV",
-                                        "MOD",
-                                        "PLUS_ASSIGN",
-                                        "MINUS_ASSIGN",
-                                        "MUL_ASSIGN",
-                                        "DIV_ASSIGN",
-                                        "MOD_ASSIGN",
-                                        "AMPERSAND",
-                                        "BIT_XOR",
-                                        "BIT_OR",
-                                        "BIT_NOT",
-                                        "LSHIFT",
-                                        "RSHIFT",
-                                        "IDENTIFIER",
-                                        "FLOAT_LIT",
-                                        "ESCAPED_VALUE",
-                                        "STRING",
-                                        "UNICODE_CHAR",
-                                        "WS",
-                                        "DOC_COMMENT",
-                                        "LINE_COMMENT",
-                                        "ERROR",
-                                        "_EOF" };
+static std::unordered_map<TokenId, const char *> token_id_names = { { TokenId::HASH, "HASH" },
+                                                                    { TokenId::EXTERN, "EXTERN" },
+                                                                    { TokenId::FN, "FN" },
+                                                                    { TokenId::RET, "RET" },
+                                                                    { TokenId::IF, "IF" },
+                                                                    { TokenId::ELIF, "ELIF" },
+                                                                    { TokenId::ELSE, "ELSE" },
+                                                                    { TokenId::LOOP, "LOOP" },
+                                                                    { TokenId::TRUE, "TRUE" },
+                                                                    { TokenId::FALSE, "FALSE" },
+                                                                    { TokenId::NIL, "NIL" },
+                                                                    { TokenId::BREAK, "BREAK" },
+                                                                    { TokenId::CONTINUE, "CONTINUE" },
+                                                                    { TokenId::L_PAREN, "L_PAREN" },
+                                                                    { TokenId::R_PAREN, "R_PAREN" },
+                                                                    { TokenId::L_CURLY, "L_CURLY" },
+                                                                    { TokenId::R_CURLY, "R_CURLY" },
+                                                                    { TokenId::L_BRACKET, "L_BRACKET" },
+                                                                    { TokenId::R_BRACKET, "R_BRACKET" },
+                                                                    { TokenId::COMMA, "COMMA" },
+                                                                    { TokenId::SEMI, "SEMI" },
+                                                                    { TokenId::COLON, "COLON" },
+                                                                    { TokenId::DOT, "DOT" },
+                                                                    { TokenId::ASSIGN, "ASSIGN" },
+                                                                    { TokenId::UNDEF, "UNDEF" },
+                                                                    { TokenId::PLUS_PLUS, "PLUS_PLUS" },
+                                                                    { TokenId::MINUS_MINUS, "MINUS_MINUS" },
+                                                                    { TokenId::NOT, "NOT" },
+                                                                    { TokenId::OR, "OR" },
+                                                                    { TokenId::AND, "AND" },
+                                                                    { TokenId::EQUALS, "EQUALS" },
+                                                                    { TokenId::NOT_EQUALS, "NOT_EQUALS" },
+                                                                    { TokenId::LESS, "LESS" },
+                                                                    { TokenId::LESS_OR_EQUALS, "LESS_OR_EQUALS" },
+                                                                    { TokenId::GREATER, "GREATER" },
+                                                                    { TokenId::GREATER_OR_EQUALS, "GREATER_OR_EQUALS" },
+                                                                    { TokenId::PLUS, "PLUS" },
+                                                                    { TokenId::MINUS, "MINUS" },
+                                                                    { TokenId::MUL, "MUL" },
+                                                                    { TokenId::DIV, "DIV" },
+                                                                    { TokenId::MOD, "MOD" },
+                                                                    { TokenId::PLUS_ASSIGN, "PLUS_ASSIGN" },
+                                                                    { TokenId::MINUS_ASSIGN, "MINUS_ASSIGN" },
+                                                                    { TokenId::MUL_ASSIGN, "MUL_ASSIGN" },
+                                                                    { TokenId::DIV_ASSIGN, "DIV_ASSIGN" },
+                                                                    { TokenId::MOD_ASSIGN, "MOD_ASSIGN" },
+                                                                    { TokenId::AMPERSAND, "AMPERSAND" },
+                                                                    { TokenId::BIT_XOR, "BIT_XOR" },
+                                                                    { TokenId::BIT_OR, "BIT_OR" },
+                                                                    { TokenId::BIT_NOT, "BIT_NOT" },
+                                                                    { TokenId::LSHIFT, "LSHIFT" },
+                                                                    { TokenId::RSHIFT, "RSHIFT" },
+                                                                    { TokenId::IDENTIFIER, "IDENTIFIER" },
+                                                                    { TokenId::FLOAT_LIT, "FLOAT_LIT" },
+                                                                    { TokenId::ESCAPED_VALUE, "ESCAPED_VALUE" },
+                                                                    { TokenId::STRING, "STRING" },
+                                                                    { TokenId::UNICODE_CHAR, "UNICODE_CHAR" },
+                                                                    { TokenId::WS, "WS" },
+                                                                    { TokenId::DOC_COMMENT, "DOC_COMMENT" },
+                                                                    { TokenId::LINE_COMMENT, "LINE_COMMENT" },
+                                                                    { TokenId::ERROR, "ERROR" },
+                                                                    { TokenId::_EOF, "_EOF" } };
 
-inline const char *token_id_name(TokenId id) { return token_id_names[(size_t)id]; }
+inline const char *token_id_name(TokenId id) { return token_id_names[id]; }
 
 size_t token_spaces(const size_t value_size, const size_t id_name_size) {
   return value_size >= id_name_size ? value_size - id_name_size : id_name_size - value_size;
