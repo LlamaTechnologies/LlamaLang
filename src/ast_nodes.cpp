@@ -236,3 +236,7 @@ AstConstValue::~AstConstValue() {
   }
   */
 }
+
+AstConstArray::~AstConstArray() {
+  for (AstNode *elem : this->elements) { delete elem; }
+}

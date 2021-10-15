@@ -290,6 +290,33 @@ TEST(ParserHappyVarDefStmntTests, SimpleTypeInitializerAddParse) {
   delete value_node;
 }
 
+TEST(ParserHappyVarDefStmntTests, ConstArrayInitializer) {
+  std::vector<Error> errors;
+  Lexer lexer("myVar *u64 = [3]{ 4, 255, 65000 }\n", "file/directory", "VarDefSimpleTypeParse", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstVarDef *value_node = parser.parse_vardef_stmnt(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(value_node, nullptr);
+  ASSERT_EQ(value_node->node_type, AstNodeType::AST_VAR_DEF);
+  ASSERT_EQ(value_node->name, "myVar");
+
+  const AstConstArray *const_array = value_node->initializer->const_array();
+  ASSERT_NE(const_array, nullptr);
+  ASSERT_EQ(const_array->parent, value_node);
+  ASSERT_EQ(const_array->node_type, AstNodeType::AST_CONST_ARRAY);
+  ASSERT_EQ(const_array->elements.size(), 3);
+
+  for (const AstNode *elem_node : const_array->elements) {
+    const AstConstValue *elem = elem_node->const_value();
+    ASSERT_EQ(elem->node_type, AstNodeType::AST_CONST_VALUE);
+    ASSERT_EQ(elem->type, ConstValueType::INT);
+  }
+
+  delete value_node;
+}
 //==================================================================================
 //          PARSE ANY STATEMENT
 //==================================================================================

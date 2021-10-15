@@ -37,6 +37,7 @@ struct AstFnCallExpr;
 struct AstBinaryExpr;
 struct AstUnaryExpr;
 struct AstConstValue;
+struct AstConstArray;
 
 // ast nodes enum
 enum class AstNodeType
@@ -54,6 +55,7 @@ enum class AstNodeType
   AST_VAR_DEF,
   AST_SYMBOL,
   AST_CONST_VALUE,
+  AST_CONST_ARRAY,
   AST_FN_CALL_EXPR,
   AST_BINARY_EXPR,
   AST_UNARY_EXPR
@@ -88,6 +90,7 @@ struct AstNode {
   AstIfStmnt *if_stmnt() { return (AstIfStmnt *)this; }          // if elif? else
   AstLoopStmnt *loop_stmnt() { return (AstLoopStmnt *)this; }    // loop
   AstCtrlStmnt *ctrl_stmnt() { return (AstCtrlStmnt *)this; }    // continue | break
+  AstConstArray *const_array() { return (AstConstArray *)this; }
 
   const AstSourceCode *source_code() const { return (AstSourceCode *)this; }
   const AstDirective *directive() const { return (AstDirective *)this; }
@@ -105,6 +108,7 @@ struct AstNode {
   const AstIfStmnt *if_stmnt() const { return (AstIfStmnt *)this; }
   const AstLoopStmnt *loop_stmnt() const { return (AstLoopStmnt *)this; }
   const AstCtrlStmnt *ctrl_stmnt() const { return (AstCtrlStmnt *)this; }
+  const AstConstArray *const_array() const { return (AstConstArray *)this; }
 };
 
 struct AstVarDef : public AstNode {
@@ -241,15 +245,29 @@ struct AstConstValue : public AstNode {
     u32 unicode_char;
     const char *number = nullptr;
   };
-  ConstValueType type = ConstValueType::BOOL;
-  mutable ConstValueType child_type = ConstValueType::BOOL;
-  mutable uint8_t bit_size = 1;
-  bool is_negative = false;
+  ConstValueType type;
+  mutable ConstValueType child_type;
+  mutable uint8_t bit_size;
+  bool is_negative;
 
   AstConstValue(size_t in_line, size_t in_column, std::string_view in_file_name)
-      : AstNode(AstNodeType::AST_CONST_VALUE, in_line, in_column, in_file_name) {}
+      : AstNode(AstNodeType::AST_CONST_VALUE, in_line, in_column, in_file_name), type(ConstValueType::BOOL),
+        child_type(ConstValueType::BOOL), bit_size(1), is_negative(false) {}
 
   virtual ~AstConstValue();
+};
+
+/**
+ * Used to represent static sized stack arrays
+ */
+struct AstConstArray : public AstNode {
+  mutable AstType *inferred_subtype;
+  std::vector<AstNode *> elements;
+
+  AstConstArray(size_t in_line, size_t in_column, std::string_view in_file_name)
+      : AstNode(AstNodeType::AST_CONST_ARRAY, in_line, in_column, in_file_name), inferred_subtype(nullptr) {}
+
+  virtual ~AstConstArray();
 };
 
 struct AstFnCallExpr : public AstNode {

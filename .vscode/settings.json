@@ -100,11 +100,7 @@
     "cmake.debugConfig": {
         "args": [
             "-s",
-<<<<<<< HEAD
             "./examples/TestMem.llama"
-=======
-            "./examples/TestLoop.llama"
->>>>>>> c3f0762eedfacc6d88721a8eb5a5db8725abe98e
         ]
     },
     "[cpp]": {

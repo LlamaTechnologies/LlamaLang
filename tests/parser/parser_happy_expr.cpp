@@ -142,6 +142,66 @@ TEST(ParserHappyParseValueTests, PtrNilTest) {
   delete node;
 }
 
+TEST(ParserHappyParseValueTests, ConstArrayInitializerUnespecifiedSizeTest) {
+  std::vector<Error> errors;
+  Lexer lexer("[]{'h', 'e', 'l', 'l', 'o'}", "file/directory", "ConstArrayInitializerUnespecifiedSizeTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstConstArray *node = parser.parse_const_array(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_CONST_ARRAY);
+
+  for (const AstNode *elem_node : node->elements) {
+    const AstConstValue *elem = elem_node->const_value();
+
+    ASSERT_NE(elem, nullptr);
+    ASSERT_EQ(elem->node_type, AstNodeType::AST_CONST_VALUE);
+    ASSERT_EQ(elem->type, ConstValueType::CHAR);
+  }
+
+  delete node;
+}
+
+TEST(ParserHappyParseValueTests, ZeroedConstArrayInitializerEspecifiedSizeTest) {
+  std::vector<Error> errors;
+  Lexer lexer("[3]{ }", "file/directory", "ZeroedConstArrayInitializerEspecifiedSizeTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstConstArray *node = parser.parse_const_array(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_CONST_ARRAY);
+  ASSERT_EQ(node->elements.size(), 0L);
+
+  delete node;
+}
+
+TEST(ParserHappyParseValueTests, UnitializedConstArrayInitializerEspecifiedSizeTest) {
+  std::vector<Error> errors;
+  Lexer lexer("[3]{ --- }", "file/directory", "UnitializedConstArrayInitializerEspecifiedSizeTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstConstArray *node = parser.parse_const_array(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_CONST_ARRAY);
+  ASSERT_EQ(node->elements.size(), 1L);
+
+  const AstConstValue *elem = node->elements.at(0)->const_value();
+  ASSERT_NE(elem, nullptr);
+  ASSERT_EQ(elem->node_type, AstNodeType::AST_CONST_VALUE);
+  ASSERT_EQ(elem->type, ConstValueType::UNDEF);
+
+  delete node;
+}
+
 //==================================================================================
 //          PARSE UNARY EXPRESSIONS
 //==================================================================================
@@ -449,6 +509,7 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersAndcharTest) {
 //==================================================================================
 //          PARSE ADDITION EXPRESSIONS
 //==================================================================================
+
 TEST(ParserHappyParseAddExprTests, Add2IdentifierAndIncTest) {
   std::vector<Error> errors;
   Lexer lexer("myVar++ + myVar2", "file/directory", "Add2IdentifierAndIncTest", errors);

@@ -984,7 +984,6 @@ AstVarDef *Parser::parse_vardef_stmnt(const Lexer &lexer) noexcept {
 /*
  * type_name
  *   : '*' type_name
- *   | '[' ']' type_name
  *   | IDENTIFIER
  *   ;
  */
@@ -1452,6 +1451,7 @@ bool _is_before_undef(const Lexer &lexer, std::vector<Error> &in_errors, AstNode
  * primary_expr
  *   : expression
  *   | call_expr
+ *   | arrayConstExpr
  *   | IDENTIFIER
  *   | FLOAT_LIT
  *   | INT_LIT
@@ -1470,6 +1470,11 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
     // group expression
     lexer.get_back();
     return parse_expr(lexer);
+  }
+
+  if (token.id == TokenId::L_BRACKET) {
+    lexer.get_back();
+    return parse_const_array(lexer);
   }
 
   if (token.id == TokenId::IDENTIFIER) {
@@ -1493,7 +1498,7 @@ AstNode *Parser::parse_primary_expr(const Lexer &lexer) noexcept {
   const Token &number_token = is_negative ? lexer.get_next_token() : token;
 
   if (MATCH(&number_token, TokenId::FLOAT_LIT, TokenId::INT_LIT, TokenId::UNICODE_CHAR, TokenId::TRUE, TokenId::FALSE,
-            TokenId::NIL, TokenId::UNDEF)) {
+            TokenId::NIL, TokenId::UNDEF, TokenId::L_BRACKET)) {
     return parse_const_expr(lexer, token, number_token);
   }
 
@@ -1545,7 +1550,7 @@ AstNode *Parser::parse_const_expr(const Lexer &lexer, const Token &token, const 
 
 /*
  * functionCallExpr
- *   : IDENTIFIER '(' (expression (, expression))? ')'
+ *   : IDENTIFIER '(' (expression (, expression)*)? ')'
  *   ;
  */
 AstFnCallExpr *Parser::parse_function_call(const Lexer &lexer) noexcept {
@@ -1594,6 +1599,118 @@ AstFnCallExpr *Parser::parse_function_call(const Lexer &lexer) noexcept {
   }
 
   return func_call_node;
+}
+
+/*
+ * arrayConstExpr
+ *   : '[' INT_LIT? ']' '{' (expression (',' expression)*) '}'
+ *   | '[' INT_LIT ']' '{' '---'? '}'
+ *   ;
+ */
+AstConstArray *Parser::parse_const_array(const Lexer &lexer) noexcept {
+  const Token &l_bracket = lexer.get_next_token();
+  LL_ASSERT(l_bracket.id == TokenId::L_BRACKET);
+
+  const Token &int_lit = lexer.get_next_token();
+  const bool require_elements = int_lit.id != TokenId::INT_LIT;
+
+  u64 *expected_size = nullptr;
+  if (int_lit.id == TokenId::INT_LIT) {
+    std::string number_str = int_lit.int_lit.number;
+    u64 number = strtoull(number_str.c_str(), nullptr, (s32)int_lit.int_lit.base);
+    expected_size = new u64(number);
+  } else {
+    lexer.get_back();
+  }
+
+  // ']'
+  {
+    const Token &r_bracket = lexer.get_next_token();
+    if (r_bracket.id != TokenId::R_BRACKET) {
+      _parse_error(this->errors, r_bracket, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(r_bracket));
+      return nullptr;
+    }
+  }
+
+  // '{'
+  {
+    const Token &l_curly = lexer.get_next_token();
+    if (l_curly.id != TokenId::L_CURLY) {
+      _parse_error(this->errors, l_curly, ERROR_EXPECTED_OPENING_CURLY_AFTER);
+      return nullptr;
+    }
+  }
+
+  std::vector<AstNode *> array_elements;
+  if (expected_size != nullptr) {
+    array_elements.reserve(*expected_size);
+  }
+
+  for (u64 element_index = 0; true; ++element_index) {
+    const Token &element_token = lexer.get_next_token();
+
+    if (element_token.id == TokenId::R_CURLY) {
+      if (require_elements && element_index == 0) {
+        _parse_error(this->errors, element_token, ERROR_EXPECTED_ELEMENTS_IN_CONST_ARRAY);
+        return nullptr;
+      }
+      lexer.get_back();
+      break;
+    } else {
+      if (element_index != 0) {
+        const AstNode *elem = array_elements[element_index - 1];
+        if (elem->node_type == AstNodeType::AST_CONST_VALUE) {
+          const AstConstValue *const_value = elem->const_value();
+          if (const_value->type == ConstValueType::UNDEF) {
+            _parse_error(this->errors, element_token, ERROR_EXPECTED_NO_ELEMENTS_AFTER_UNDEF);
+            return nullptr;
+          }
+        }
+      }
+      lexer.get_back();
+    }
+
+    AstNode *element_node = parse_expr(lexer);
+    if (element_node == nullptr) {
+      continue;
+    }
+
+    array_elements.push_back(element_node);
+
+    const Token &comma = lexer.get_next_token();
+    if (comma.id != TokenId::COMMA) {
+      lexer.get_back();
+      break;
+    }
+  }
+
+  // '}'
+  {
+    const Token &r_curly = lexer.get_next_token();
+    if (r_curly.id != TokenId::R_CURLY) {
+      const Token &type_name = lexer.get_previous_token();
+      _parse_error(this->errors, r_curly, ERROR_EXPECTED_OPENING_CURLY_AFTER, lexer.get_token_value(type_name));
+      return nullptr;
+    }
+  }
+
+  if (expected_size != nullptr && *expected_size != array_elements.size()) {
+    bool array_has_elements = array_elements.size() != 0;
+    if (array_has_elements) {
+      const AstConstValue *first_elem = array_elements.at(0)->const_value();
+      bool is_const_val = first_elem->node_type == AstNodeType::AST_CONST_VALUE;
+      bool is_uninit_array = is_const_val && first_elem->type == ConstValueType::UNDEF;
+      if (!is_uninit_array) {
+        _parse_error(this->errors, int_lit, ERROR_EXPECTED_ARRAY_SIZE_BUT_GOT, *expected_size, array_elements.size());
+        return nullptr;
+      }
+    }
+  }
+
+  AstConstArray *const_array = new AstConstArray(l_bracket.start_line, l_bracket.start_column, l_bracket.file_name);
+  const_array->elements = array_elements;
+
+  return const_array;
 }
 
 static void _parse_msg(std::vector<Error> &in_errors, ERROR_TYPE in_msg_type, const Token &in_token,

@@ -24,6 +24,7 @@ struct AstUnaryExpr;
 struct AstFnCallExpr;
 struct AstCtrlStmnt;
 struct FileInput;
+struct AstConstArray;
 
 bool match(const Token *token, ...) noexcept;
 #define MATCH(token, ...) match(token, __VA_ARGS__, TokenId(size_t(TokenId::_EOF) + 1))
@@ -69,6 +70,8 @@ public:
   LL_NODISCARD AstCtrlStmnt *parse_ctrl_stmnt(const Lexer &lexer) noexcept;
 
   LL_NODISCARD AstFnCallExpr *parse_function_call(const Lexer &lexer) noexcept;
+
+  LL_NODISCARD AstConstArray *parse_const_array(const Lexer &lexer) noexcept;
 
   // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_expr(const Lexer &lexer) noexcept;
