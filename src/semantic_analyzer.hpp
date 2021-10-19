@@ -18,6 +18,7 @@ struct AstBlock;
 struct AstIfStmnt;
 struct AstLoopStmnt;
 struct AstCtrlStmnt;
+struct AstConstArray;
 enum class SymbolType;
 
 class SemanticAnalyzer {
@@ -90,6 +91,7 @@ public:
   bool check_and_set_type(const AstNode *in_node, const AstType *l_type_node, const AstNode *expr_node);
 
 private:
+  inline bool _analize_const_array_elements(const AstConstArray *in_const_array);
   inline bool _analize_call_expr(const AstFnCallExpr *in_fn_call);
   inline bool _analize_unary_expr(const AstUnaryExpr *in_unary_expr);
   inline bool _analize_binary_expr(const AstBinaryExpr *in_binary_expr);

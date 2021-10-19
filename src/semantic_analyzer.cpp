@@ -61,6 +61,9 @@ inline static const AstType *_get_fn_call_expr_type(std::vector<Error> &errors, 
                                                     const AstFnCallExpr *in_fn_call_expr);
 inline static const AstType *_get_symbol_type(std::vector<Error> &errors, const Table *symbol_table,
                                               const AstSymbol *in_symbol);
+inline static const AstType *_get_const_array_type(const AstConstArray *in_bin_expr);
+inline static const bool _analize_const_array_type(std::vector<Error> &errors, const Table *symbol_table,
+                                                   const AstConstArray *in_const_array, const AstType *in_array_type);
 inline static bool _analize_param(std::vector<Error> &errors, Table *symbol_table, const AstParamDef *in_node);
 inline static void _set_type_info(const AstNode *expr_node, const AstType *type_node);
 
@@ -75,28 +78,42 @@ bool SemanticAnalyzer::analize_var_def(const AstVarDef *in_var_def) {
   // local variable declaration
   symbol_table->add_symbol(var_name, SymbolType::VAR, in_var_def);
 
-  if (in_var_def->initializer == nullptr) {
-    return true;
-  }
+  const AstNode *initializer = in_var_def->initializer;
+  LL_ASSERT(initializer != nullptr);
 
   // variable declaration and definition
-  bool is_valid_init = analize_expr(in_var_def->initializer);
+  bool is_valid_init = analize_expr(initializer);
   if (!is_valid_init)
     return false;
 
-  const AstType *expr_type = get_expr_type(errors, symbol_table, in_var_def->initializer);
-  if (expr_type == nullptr && in_var_def->initializer->node_type == AstNodeType::AST_CONST_VALUE &&
-      in_var_def->initializer->const_value()->type == ConstValueType::UNDEF) {
+  const AstType *expr_type = get_expr_type(errors, symbol_table, initializer);
+
+  // if it is '---' return true
+  if (expr_type == nullptr && initializer->node_type == AstNodeType::AST_CONST_VALUE &&
+      initializer->const_value()->type == ConstValueType::UNDEF) {
     return true;
   }
 
-  if (!_are_type_compatible(in_var_def->type, expr_type)) {
+  if (_are_type_compatible(in_var_def->type, expr_type) == false) {
     add_semantic_error(errors, in_var_def, ERROR_TYPES_MISMATCH, var_name.c_str());
     symbol_table->remove_last_symbol();
     return false;
   }
 
-  _set_type_info(in_var_def->initializer, in_var_def->type);
+  _set_type_info(initializer, in_var_def->type);
+
+  const AstType *var_type = in_var_def->type;
+
+  // if it is a const array check all types are expr_type's type
+  if (initializer->node_type == AstNodeType::AST_CONST_ARRAY) {
+    if (var_type->type_info->type_id != AstTypeId::POINTER) {
+      LL_UNREACHEABLE;
+    }
+    if (_analize_const_array_type(errors, symbol_table, initializer->const_array(), var_type->child_type) == false) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -524,6 +541,15 @@ inline bool SemanticAnalyzer::_analize_ctrl_stmnt(const AstCtrlStmnt *in_ctrl_st
   return true;
 }
 
+inline bool SemanticAnalyzer::_analize_const_array_elements(const AstConstArray *in_const_array) {
+  for (const AstNode *elem_node : in_const_array->elements) {
+    if (analize_expr(elem_node) == false) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
   switch (in_expr->node_type) {
   case AstNodeType::AST_BINARY_EXPR:
@@ -542,6 +568,8 @@ bool SemanticAnalyzer::analize_expr(const AstNode *in_expr) {
     return analize_loop_stmnt(in_expr->loop_stmnt());
   case AstNodeType::AST_CTRL_STMNT:
     return _analize_ctrl_stmnt(in_expr->ctrl_stmnt());
+  case AstNodeType::AST_CONST_ARRAY:
+    return _analize_const_array_elements(in_expr->const_array());
   default:
     LL_UNREACHEABLE;
   }
@@ -652,6 +680,8 @@ const AstType *get_expr_type(std::vector<Error> &errors, const Table *symbol_tab
     return expr->fn_def()->proto->return_type;
   case AstNodeType::AST_FN_PROTO:
     return expr->fn_proto()->return_type;
+  case AstNodeType::AST_CONST_ARRAY:
+    return _get_const_array_type(expr->const_array());
   default:
     LL_UNREACHEABLE;
   }
@@ -715,6 +745,18 @@ bool _analize_param(std::vector<Error> &errors, Table *symbol_table, const AstPa
   }
 
   // just an unitialized variable
+  return true;
+}
+
+const bool _analize_const_array_type(std::vector<Error> &errors, const Table *symbol_table,
+                                     const AstConstArray *in_const_array, const AstType *in_array_type) {
+  for (const AstNode *elem_node : in_const_array->elements) {
+    const AstType *elem_type = get_expr_type(errors, symbol_table, elem_node);
+    if (false == _are_type_compatible(elem_type, in_array_type)) {
+      return false;
+    }
+    _set_type_info(elem_node, in_array_type);
+  }
   return true;
 }
 
@@ -895,4 +937,11 @@ bool _check_floating_point_types(std::vector<Error> &errors, const AstNode *in_e
   }
 
   return true;
+}
+
+const AstType *_get_const_array_type(const AstConstArray *in_const_array) {
+  TypesRepository &repo = TypesRepository::get();
+  AstType *ptr_type = repo.get_type_node("pointer");
+  ptr_type->child_type = in_const_array->subtype;
+  return ptr_type;
 }

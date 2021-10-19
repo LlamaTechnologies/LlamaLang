@@ -11,6 +11,7 @@ constexpr const char *ERROR_EXPECTED_COLON_LOOP = "expected ':' after loop initi
 constexpr const char *ERROR_EXPECTED_ELEMENTS_IN_CONST_ARRAY =
   "expected elements in the array but got an empty array. Empty arrays are not admited in this language. Use nil ptr instead.";
 constexpr const char *ERROR_EXPECTED_ARRAY_SIZE_BUT_GOT = "expected array of size %llu but got %llu elements";
+constexpr const char *ERROR_EXPECTED_POSITIVE_ARRAY_SIZE = "expected array of positive size";
 constexpr const char *ERROR_EXPECTED_NO_ELEMENTS_AFTER_UNDEF = "expected no element after '---'";
 constexpr const char *ERROR_EXTERN_FN_HAS_BODY = "extern function declaration should not have a body.";
 constexpr const char *ERROR_UNEXPECTED_EXTERN = "extern only goes behind a 'fn' token, received token '%s'";

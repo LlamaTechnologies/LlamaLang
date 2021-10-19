@@ -181,6 +181,20 @@ TEST(ParserHappyParseValueTests, ZeroedConstArrayInitializerEspecifiedSizeTest) 
   delete node;
 }
 
+TEST(ParserSadParseValueTests, ZeroedConstArrayInitializerEspecifiedNegativeSizeTest) {
+  std::vector<Error> errors;
+  Lexer lexer("[-3]{ }", "file/directory", "ZeroedConstArrayInitializerEspecifiedSizeTest", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstConstArray *node = parser.parse_const_array(lexer);
+
+  ASSERT_NE(errors.size(), 0L);
+  ASSERT_EQ(node, nullptr);
+
+  delete node;
+}
+
 TEST(ParserHappyParseValueTests, UnitializedConstArrayInitializerEspecifiedSizeTest) {
   std::vector<Error> errors;
   Lexer lexer("[3]{ --- }", "file/directory", "UnitializedConstArrayInitializerEspecifiedSizeTest", errors);

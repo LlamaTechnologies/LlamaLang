@@ -107,26 +107,25 @@ TEST(SemanticVariableDefinitions, GlobalVariable) {
   delete var_def_node;
 }
 
-TEST(SemanticVariableDefinitions, LocalVariableNoInit) {
-  bool is_global = false;
+TEST(SemanticVariableDefinitions, LocalVariableUndef) {
+  const char *src_code_str = "myVar s32 = ---";
+
   std::vector<Error> errors;
-  TypesRepository types_repository = TypesRepository::get();
+  Lexer lexer(src_code_str, "internal/tests", "LocalVariableUndef", errors);
+  lexer.tokenize();
 
-  auto i32_type_node = types_repository.get_type_node("s32");
+  Parser parser(errors);
+  const AstVarDef *var_def = parser.parse_vardef_stmnt(lexer);
 
-  AstVarDef *var_def_node = new AstVarDef(0, 0, "");
-  var_def_node->type = i32_type_node;
-  var_def_node->name = "local_var";
-  var_def_node->initializer = nullptr;
-
+  // given: analizer
   SemanticAnalyzer analizer(errors);
-  bool is_valid = analizer.analize_var_def(var_def_node);
+  bool is_valid = analizer.analize_var_def(var_def);
 
-  ASSERT_EQ(errors.size(), 0L);
+  // then:
   ASSERT_TRUE(is_valid);
+  ASSERT_EQ(errors.size(), 0L);
 
-  // clean:
-  delete var_def_node;
+  delete var_def;
 }
 
 //==================================================================================
@@ -150,35 +149,36 @@ TEST(SemanticExpressions, ConstantValue) {
 }
 
 TEST(SemanticExpressions, ResolveKnownVariableSymbol) {
-  TypesRepository types_repository = TypesRepository::get();
+  const char *src_code_str = "fn tmp() void {\n"
+                             "\tmy_var s32 = ---\n"
+                             "\tmy_var = 0\n"
+                             "}\n";
 
-  // given: variable definition
-  auto i32_type_node = types_repository.get_type_node("s32");
-
-  AstVarDef *var_def_node = new AstVarDef(0, 0, "");
-  var_def_node->type = i32_type_node;
-  auto var_name = var_def_node->name = "my_var";
-
-  // given: symbol node
-  AstSymbol *symbol_node = new AstSymbol(0, 0, "");
-  symbol_node->cached_name = std::string_view(var_name.data(), var_name.size());
-
-  // given: configured analizer
   std::vector<Error> errors;
-  SemanticAnalyzer analizer(errors);
-  analizer.analize_var_def(var_def_node);
+  Lexer lexer(src_code_str, "internal/tests", "ResolveKnownVariableSymbol", errors);
+  lexer.tokenize();
 
-  // when: call to analize_expr
-  bool is_valid = analizer.analize_expr(symbol_node);
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstBinaryExpr *assign_node = fn_def->block->statements.at(1)->binary_expr();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+
+  // when: analize
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid_symbol_ref = analizer.analize_expr(assign_node);
 
   // then:
+  ASSERT_TRUE(is_valid_var_def);
+  ASSERT_TRUE(is_valid_symbol_ref);
   ASSERT_EQ(errors.size(), 0L);
-  ASSERT_TRUE(is_valid);
-  ASSERT_EQ(symbol_node->type, SymbolType::VAR);
+  ASSERT_EQ(assign_node->left_expr->symbol()->type, SymbolType::VAR);
 
   // clean:
-  delete var_def_node;
-  delete symbol_node;
+  delete src_code;
 }
 
 TEST(SemanticExpressions, UnaryExprBool) {
@@ -296,46 +296,35 @@ TEST(SemanticExpressions, BinaryExprBitShift) {
 }
 
 TEST(SemanticExpressions, BinaryExprBoolOperator) {
-  TypesRepository types_repository = TypesRepository::get();
+  const char *src_code_str = "fn tmp() void {\n"
+                             "\tmy_var s32 = ---\n"
+                             "\tmy_var == 0\n"
+                             "}\n";
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "BinaryExprBoolOperator", errors);
+  lexer.tokenize();
 
-  // given: variable definition
-  auto i32_type_node = types_repository.get_type_node("s32");
-
-  AstVarDef *var_def_node = new AstVarDef(0, 0, "");
-  var_def_node->type = i32_type_node;
-  auto var_name = var_def_node->name = "my_var";
-
-  // given: l_expr -> symbol node
-  AstSymbol *symbol_node = new AstSymbol(0, 0, "");
-  symbol_node->cached_name = std::string_view(var_name.data(), var_name.size());
-
-  // given: r_expr -> constant integer
-  AstConstValue *const_value_node = new AstConstValue(0, 0, "");
-  const_value_node->type = ConstValueType::INT;
-
-  // given: biary expr -> my_var == SOME_INT
-  AstBinaryExpr *binary_epxr_node = new AstBinaryExpr(0, 0, "");
-  binary_epxr_node->bin_op = BinaryExprType::EQUALS;
-  binary_epxr_node->left_expr = symbol_node;
-  binary_epxr_node->right_expr = const_value_node;
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstBinaryExpr *cmp_node = fn_def->block->statements.at(1)->binary_expr();
 
   // given: analizer
-  std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analize_var_def(var_def_node);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
 
   // when: call to analize_expr
   // with: symbol as left expr
   // with: constant as right expr
-  bool is_valid = analizer.analize_expr(binary_epxr_node);
+  bool is_valid = analizer.analize_expr(cmp_node);
 
   // then:
   ASSERT_TRUE(is_valid_var_def);
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_TRUE(is_valid);
 
-  delete binary_epxr_node;
-  delete var_def_node;
+  delete src_code;
 }
 
 //==================================================================================
@@ -343,42 +332,31 @@ TEST(SemanticExpressions, BinaryExprBoolOperator) {
 //==================================================================================
 
 TEST(SemanticAssignments, BinaryExprAssignPrimitiveTypeOperator) {
-  TypesRepository types_repository = TypesRepository::get();
+  const char *src_code_str = "fn tmp() void {\n"
+                             "\tmy_var s32 = ---\n"
+                             "\tmy_var = 0\n"
+                             "}\n";
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "BinaryExprAssignPrimitiveTypeOperator", errors);
+  lexer.tokenize();
 
-  // given: variable definition
-  auto i32_type_node = types_repository.get_type_node("s32");
-
-  AstVarDef *var_def_node = new AstVarDef(0, 0, "");
-  var_def_node->type = i32_type_node;
-  auto var_name = var_def_node->name = "my_var";
-
-  // given: l_expr -> symbol node
-  AstSymbol *symbol_node = new AstSymbol(0, 0, "");
-  symbol_node->cached_name = std::string_view(var_name.data(), var_name.size());
-
-  // given: r_expr -> constant integer
-  AstConstValue *const_value_node = new AstConstValue(0, 0, "");
-  const_value_node->type = ConstValueType::INT;
-
-  // given: biary expr -> my_var = SOME_INT
-  AstBinaryExpr *binary_epxr_node = new AstBinaryExpr(0, 0, "");
-  binary_epxr_node->bin_op = BinaryExprType::ASSIGN;
-  binary_epxr_node->left_expr = symbol_node;
-  binary_epxr_node->right_expr = const_value_node;
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+  const AstFnDef *fn_def = src_code->children.at(0)->fn_def();
+  const AstVarDef *var_def = fn_def->block->statements.at(0)->var_def();
+  const AstBinaryExpr *assign_node = fn_def->block->statements.at(1)->binary_expr();
 
   // given: analizer
-  std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analize_var_def(var_def_node);
-  bool is_valid = analizer.analize_expr(binary_epxr_node);
+  bool is_valid_var_def = analizer.analize_var_def(var_def);
+  bool is_valid = analizer.analize_expr(assign_node);
 
   // then:
   ASSERT_TRUE(is_valid_var_def);
   ASSERT_EQ(errors.size(), 0L);
   ASSERT_TRUE(is_valid);
 
-  delete binary_epxr_node;
-  delete var_def_node;
+  delete src_code;
 }
 
 TEST(SemanticAssignments, InitVoidPtrTypeNilValueOperator) {
@@ -470,7 +448,7 @@ TEST(SemanticAssignments, AssignPtrTypeAddressOfValueOperator) {
                              "}\n";
 
   std::vector<Error> errors;
-  Lexer lexer(src_code_str, "internal/tests", "InitPtrTypeAddressOfValueOperator", errors);
+  Lexer lexer(src_code_str, "internal/tests", "AssignPtrTypeAddressOfValueOperator", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -567,6 +545,54 @@ TEST(SemanticAssignments, AssignDereferencedPtrAndCombinedDereferencePtrExpr) {
   ASSERT_TRUE(is_valid_var_def);
   ASSERT_TRUE(is_valid_ptr_def);
   ASSERT_TRUE(is_valid_ptr_assign);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, InitPtrWithEmptyConstArray) {
+  const char *src_code_str = "ptr *s32 = [3]{}";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrWithEmptyConstArray", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticAssignments, InitPtrWithFilledConstArray) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *s32 = [4]{54, -65, 26, -85}";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrWithEmptyConstArray", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
   ASSERT_EQ(errors.size(), 0L);
 
   delete src_code;

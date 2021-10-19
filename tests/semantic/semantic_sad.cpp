@@ -287,46 +287,28 @@ TEST(SemanticExpressions, BinaryExprBoolOperatorWrongExpr) {
 //==================================================================================
 
 TEST(SadSemanticAssignments, VarTypesMismatch) {
-  TypesRepository types_repository = TypesRepository::get();
+  const char *src_code_str = "myVar s32 = ---\n"
+                             "myVar = 5.2";
 
-  // given: variable definition
-  AstType *i32_type_node = types_repository.get_type_node("s32");
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "LocalVariableUndef", errors);
+  lexer.tokenize();
 
-  AstVarDef *var_def_node = new AstVarDef(0, 0, "");
-  var_def_node->type = i32_type_node;
-  auto var_name = var_def_node->name = "my_var";
-
-  // given: l_expr -> symbol node
-  AstSymbol *symbol_node = new AstSymbol(0, 0, "");
-  symbol_node->cached_name = std::string_view(var_name.data(), var_name.size());
-
-  // given: r_expr -> constant integer
-  AstConstValue *const_value_node = new AstConstValue(0, 0, "");
-  const_value_node->type = ConstValueType::FLOAT;
-
-  // given: biary expr -> my_var = SOME_INT
-  AstBinaryExpr *binary_expr_node = new AstBinaryExpr(0, 0, "");
-  binary_expr_node->bin_op = BinaryExprType::ASSIGN;
-  binary_expr_node->left_expr = symbol_node;
-  binary_expr_node->right_expr = const_value_node;
+  Parser parser(errors);
+  const AstVarDef *var_def = parser.parse_vardef_stmnt(lexer);
+  const AstBinaryExpr *assign_node = parser.parse_assign_stmnt(lexer);
 
   // given: analizer
-  std::vector<Error> errors;
   SemanticAnalyzer analizer(errors);
-  bool is_valid_var_def = analizer.analize_var_def(var_def_node);
-
-  // when: call to analize_expr
-  // with: symbol as left expr
-  // with: constant as right expr
-  bool is_valid = analizer.analize_expr(binary_expr_node);
+  bool is_valid = analizer.analize_var_def(var_def);
+  bool is_assign_valid = analizer.analize_expr(assign_node);
 
   // then:
-  ASSERT_EQ(is_valid_var_def, true);
+  ASSERT_TRUE(is_valid);
+  ASSERT_FALSE(is_assign_valid);
   ASSERT_EQ(errors.size(), 1L);
-  ASSERT_FALSE(is_valid);
 
-  delete var_def_node;
-  delete binary_expr_node;
+  delete var_def;
 }
 
 TEST(SadSemanticAssignments, VarOperatorWrongExpr) {
@@ -389,6 +371,31 @@ TEST(SadSemanticAssignments, InitPtrTypeConstValueOperator) {
   delete src_code;
 }
 
+TEST(SemanticAssignments, InitPtrWithFilledMismatchedTypesInConstArray) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *s32 = [4]{54, -65, 2.6, -85.0f}";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrWithEmptyConstArray", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+
+  // then:
+  ASSERT_FALSE(is_valid_ptr_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
 //==================================================================================
 //          SEMANTIC FUNCTIONS
 //==================================================================================
@@ -443,51 +450,40 @@ TEST(SemanticFunctions, FunctionInvalidStmnt) {
 }
 
 TEST(SemanticFunctions, FunctionNoReqRet) {
-  TypesRepository types_repository = TypesRepository::get();
-
-  // given: variable definition
-  AstType *i32_type_node = types_repository.get_type_node("s32");
-
-  AstVarDef *var_def_node = new AstVarDef(0, 0, "");
-  var_def_node->type = i32_type_node;
-  auto var_name = var_def_node->name = "my_var";
-
-  // given: l_expr -> symbol node
-  AstSymbol *symbol_node = new AstSymbol(0, 0, "");
-  symbol_node->cached_name = std::string_view(var_name.data(), var_name.size());
-
-  // given: r_expr -> constant integer
-  AstConstValue *const_value_node = new AstConstValue(0, 0, "");
-  const_value_node->type = ConstValueType::INT;
-
-  // given: binary expr -> my_var = SOME_INT
-  AstBinaryExpr *binary_epxr_node = new AstBinaryExpr(0, 0, "");
-  binary_epxr_node->bin_op = BinaryExprType::ASSIGN;
-  binary_epxr_node->left_expr = symbol_node;
-  binary_epxr_node->right_expr = const_value_node;
-
-  // given: function proto -> fn my_func() s32
-  AstFnProto *function_proto_node = new AstFnProto(0, 0, "");
-  function_proto_node->name = "my_func";
-  function_proto_node->return_type = i32_type_node;
-
-  // given: function block
-  AstBlock *function_block_node = new AstBlock(0, 0, "");
-  function_block_node->statements.push_back(var_def_node);
-  function_block_node->statements.push_back(binary_epxr_node);
-
-  // given: function
-  AstFnDef *function_node = new AstFnDef(0, 0, "");
-  function_node->proto = function_proto_node;
-  function_node->block = function_block_node;
-
-  // given: analizer
   std::vector<Error> errors;
+
+  // given: source_file
+  const char *source_file = "fn my_func() s32 {\n"
+                            "my_var s32 = ---\n"
+                            "my_var = 34\n"
+                            "}";
+
+  // given: tokens
+  Lexer lexer = Lexer(source_file, "file/directory", "FunctionNoRet", errors);
+  lexer.tokenize();
+
+  // given: parsed source node
+  Parser parser = Parser(errors);
+  AstNode *function_node = parser.parse_function_def(lexer);
+
+  // then:
+  ASSERT_NE(function_node, nullptr);
+  ASSERT_EQ(function_node->node_type, AstNodeType::AST_FN_DEF);
+
+  AstFnDef *fn_def_node = function_node->fn_def();
+  ASSERT_NE(fn_def_node->proto, nullptr);
+  ASSERT_NE(fn_def_node->block, nullptr);
+  ASSERT_EQ(errors.size(), 0L);
+
+  // and given: analizer
   SemanticAnalyzer analizer(errors);
 
-  // when: call to analize_expr
+  AstFnProto *function_proto_node = fn_def_node->proto;
+  AstBlock *function_block_node = fn_def_node->block;
+
   bool is_valid_proto = analizer.analize_fn_proto(function_proto_node);
-  analizer.enter_fn_scope(function_node);
+  analizer.enter_fn_scope(fn_def_node);
+
   bool is_valid = analizer.analize_fn_block(function_block_node);
   analizer.exit_fn_scope();
 

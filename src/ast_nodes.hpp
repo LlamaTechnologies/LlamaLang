@@ -261,11 +261,11 @@ struct AstConstValue : public AstNode {
  * Used to represent static sized stack arrays
  */
 struct AstConstArray : public AstNode {
-  mutable AstType *inferred_subtype;
+  mutable AstType *subtype;
   std::vector<AstNode *> elements;
 
   AstConstArray(size_t in_line, size_t in_column, std::string_view in_file_name)
-      : AstNode(AstNodeType::AST_CONST_ARRAY, in_line, in_column, in_file_name), inferred_subtype(nullptr) {}
+      : AstNode(AstNodeType::AST_CONST_ARRAY, in_line, in_column, in_file_name), subtype(nullptr) {}
 
   virtual ~AstConstArray();
 };

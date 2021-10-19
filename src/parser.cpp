@@ -1616,6 +1616,10 @@ AstConstArray *Parser::parse_const_array(const Lexer &lexer) noexcept {
 
   u64 *expected_size = nullptr;
   if (int_lit.id == TokenId::INT_LIT) {
+    if (int_lit.int_lit.is_negative) {
+      _parse_error(this->errors, int_lit, ERROR_EXPECTED_POSITIVE_ARRAY_SIZE);
+      return nullptr;
+    }
     std::string number_str = int_lit.int_lit.number;
     u64 number = strtoull(number_str.c_str(), nullptr, (s32)int_lit.int_lit.base);
     expected_size = new u64(number);
