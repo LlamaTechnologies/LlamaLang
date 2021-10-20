@@ -262,10 +262,11 @@ struct AstConstValue : public AstNode {
  */
 struct AstConstArray : public AstNode {
   mutable AstType *subtype;
+  size_t elem_count;
   std::vector<AstNode *> elements;
 
   AstConstArray(size_t in_line, size_t in_column, std::string_view in_file_name)
-      : AstNode(AstNodeType::AST_CONST_ARRAY, in_line, in_column, in_file_name), subtype(nullptr) {}
+      : AstNode(AstNodeType::AST_CONST_ARRAY, in_line, in_column, in_file_name), subtype(nullptr), elem_count(0L) {}
 
   virtual ~AstConstArray();
 };

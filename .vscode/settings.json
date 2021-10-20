@@ -100,7 +100,7 @@
     "cmake.debugConfig": {
         "args": [
             "-s",
-            "./examples/TestMem.llama"
+            "./examples/TestArrays.llama"
         ]
     },
     "[cpp]": {

@@ -109,9 +109,12 @@ bool SemanticAnalyzer::analize_var_def(const AstVarDef *in_var_def) {
     if (var_type->type_info->type_id != AstTypeId::POINTER) {
       LL_UNREACHEABLE;
     }
-    if (_analize_const_array_type(errors, symbol_table, initializer->const_array(), var_type->child_type) == false) {
+    const AstConstArray *const_array = initializer->const_array();
+    if (_analize_const_array_type(errors, symbol_table, const_array, var_type->child_type) == false) {
       return false;
     }
+
+    const_array->subtype = var_type->child_type;
   }
 
   return true;

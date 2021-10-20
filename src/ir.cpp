@@ -24,6 +24,16 @@ inline static AstTypeId _get_const_type(const ConstValueType in_type_id) {
     LL_UNREACHEABLE;
   }
 }
+
+inline static bool _is_undef(const AstNode *initializer) {
+  return initializer->node_type == AstNodeType::AST_CONST_VALUE &&
+         initializer->const_value()->type == ConstValueType::UNDEF;
+}
+
+inline static bool _is_const_array(const AstNode *initializer) {
+  return initializer->node_type == AstNodeType::AST_CONST_ARRAY;
+}
+
 static const char *GetDataLayout() {
 #ifdef LL_VISUALSTUDIO
   return "e-m:w-p270:32:32-p271:32:32-p272:64:64-s64:64-f80:128-n8:16:32:64-S128";
@@ -152,6 +162,8 @@ llvm::Value *LlvmIrGenerator::gen_expr(const AstNode *in_expr) {
     return gen_symbol_expr(in_expr->symbol());
   case AstNodeType::AST_CONST_VALUE:
     return _translate_constant(in_expr->const_value());
+  case AstNodeType::AST_CONST_ARRAY:
+    return _gen_const_array_expr(in_expr->const_array());
   default:
     LL_UNREACHEABLE;
   }
@@ -161,25 +173,34 @@ void LlvmIrGenerator::gen_var_def(const AstVarDef *in_var_def, const bool is_glo
   auto type = _translate_type(in_var_def->type);
   std::string name = std::string(in_var_def->name);
 
+  LL_ASSERT(nullptr != in_var_def->initializer);
+
   if (is_global) {
     code_module->getOrInsertGlobal(name, type);
     auto global_var = code_module->getNamedGlobal(name);
     in_var_def->llvm_value = global_var;
 
     llvm::Constant *init_value;
-    if (in_var_def->initializer) {
-      assert(in_var_def->initializer->node_type == AstNodeType::AST_CONST_VALUE);
-      init_value = _translate_constant(in_var_def->initializer->const_value());
-    } else {
+    LL_ASSERT(in_var_def->initializer->node_type == AstNodeType::AST_CONST_VALUE);
+
+    if (in_var_def->initializer->const_value()->type == ConstValueType::UNDEF) {
       init_value = _getConstantDefaultValue(in_var_def->type, type);
+    } else {
+      init_value = _translate_constant(in_var_def->initializer->const_value());
     }
 
     global_var->setInitializer(init_value);
   } else {
-    in_var_def->llvm_value = builder->CreateAlloca(type, nullptr, name);
+    LL_ASSERT(nullptr != in_var_def->initializer);
+    if (_is_undef(in_var_def->initializer)) {
+      return;
+    }
 
-    if (in_var_def->initializer) {
-      llvm::Value *init_value = gen_expr(in_var_def->initializer);
+    llvm::Value *init_value = gen_expr(in_var_def->initializer);
+    if (_is_const_array(in_var_def->initializer)) {
+      in_var_def->llvm_value = init_value;
+    } else {
+      in_var_def->llvm_value = builder->CreateAlloca(type, nullptr, name);
       builder->CreateStore(init_value, in_var_def->llvm_value);
     }
   }
@@ -340,6 +361,33 @@ llvm::Value *LlvmIrGenerator::gen_fn_call_expr(const AstFnCallExpr *in_call_expr
   }
 
   return builder->CreateCall(llvm_fn, args);
+}
+
+llvm::Value *LlvmIrGenerator::_gen_const_array_expr(const AstConstArray *in_const_array) {
+  LL_ASSERT(nullptr != in_const_array->subtype);
+
+  llvm::Type *elementsType = _translate_type(in_const_array->subtype);
+
+  if (0 == in_const_array->elements.size()) {
+    llvm::ArrayType *array_type = llvm::ArrayType::get(elementsType, in_const_array->elem_count);
+    return builder->CreateAlloca(array_type);
+  } else {
+    llvm::ArrayType *array_type = llvm::ArrayType::get(elementsType, in_const_array->elem_count);
+    llvm::Value *array_ptr = builder->CreateAlloca(array_type);
+
+    for (size_t index = 0; index < in_const_array->elements.size(); ++index) {
+      AstNode *elem = in_const_array->elements.at(index);
+      llvm::Value *elem_value = gen_expr(elem);
+      LL_ASSERT(nullptr != elem_value);
+      llvm::Value *array_element_mem = builder->CreateGEP(
+        array_ptr,
+        std::vector<llvm::Value *>{ llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), llvm::APInt(64, 0)),
+                                    llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), llvm::APInt(64, index)) });
+      builder->CreateStore(elem_value, array_element_mem);
+    }
+
+    return array_ptr;
+  }
 }
 
 llvm::Value *LlvmIrGenerator::_gen_loop_stmnt(const AstLoopStmnt *in_loop_stmnt) {

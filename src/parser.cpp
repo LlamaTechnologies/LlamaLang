@@ -1713,6 +1713,7 @@ AstConstArray *Parser::parse_const_array(const Lexer &lexer) noexcept {
 
   AstConstArray *const_array = new AstConstArray(l_bracket.start_line, l_bracket.start_column, l_bracket.file_name);
   const_array->elements = array_elements;
+  const_array->elem_count = nullptr == expected_size ? array_elements.size() : *expected_size;
 
   return const_array;
 }
