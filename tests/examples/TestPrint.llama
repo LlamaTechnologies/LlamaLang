@@ -1,0 +1,6 @@
+#load "built-ins.llama"
+
+fn main() s32 {
+    printf(5)
+    ret 0
+}

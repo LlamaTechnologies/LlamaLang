@@ -1,0 +1,23 @@
+#load "built-ins.llama"
+
+fn main() s32 {
+    size u64 = 32
+    printf(size)
+    
+    ptr *void = nil
+    
+    size_addr *u64 = nil
+    size_addr = &size
+    *size_addr = 64
+    printf(size_addr)
+    printf(size)
+
+    printf(ptr)
+    ptr = malloc(size)
+    printf(ptr)
+    
+    ptr = memset(ptr, 0, size)
+    free(ptr)
+
+    ret 0
+}

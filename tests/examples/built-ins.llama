@@ -1,0 +1,4 @@
+extern fn printf(fmt *u8) s32
+extern fn malloc(bytes_size u64) *void
+extern fn memset(buffer *void, value s32, bytes_size u64) *void
+extern fn free(buffer *void) void

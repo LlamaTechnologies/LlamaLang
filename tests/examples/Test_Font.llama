@@ -1,0 +1,16 @@
+#load "std.llama"
+
+Vec3 struct {
+  x F64; y F64; z F64
+}
+
+#main
+fn MyProgram(argc S32, argv **U8) S32 {
+  print("oO08 1ilIL ~->__ %$#* [] {} ()")
+  
+  is_ok bool = getIsOk(argc, argv)
+  has_no_warnings bool = getWarnings()
+
+  ret is_ok && has_no_warnings
+}
+

@@ -1,0 +1,14 @@
+#load "built-ins.llama"
+
+fn main() s32 {
+    condition bool = true
+    if condition == false {
+        printf(10)
+    } elif condition == true {
+        printf(5)
+    } else {
+        printf(20)
+    }
+    printf(15)
+    ret 0
+}

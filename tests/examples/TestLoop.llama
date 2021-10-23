@@ -1,0 +1,40 @@
+#load "built-ins.llama"
+
+fn main() s32 {
+  //whileLoop()
+  rangeLoop()
+  ret 0
+}
+
+fn whileLoop() void {
+  num s32 = -1
+    
+  // print only odd nums
+  loop true {
+    num++
+
+    if num % 2 == 0 {
+      continue
+    }
+    
+    printf(num)
+      
+    if num > 10 {
+      break
+    }
+  }
+}
+
+fn rangeLoop() void {
+    i s32 = ---
+    
+    // print only even nums
+    loop i=0 : 10 ; 2 {
+        printf(i)
+    }
+
+    // print only odd nums
+    loop i=1 : 10 ; 2 {
+        printf(i)
+    }
+}

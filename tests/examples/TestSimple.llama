@@ -1,0 +1,9 @@
+f s32 = 9
+
+fn add(x s32, y s32) s32 {
+    ret x + y
+}
+
+fn main() s32 {
+    ret add(5, f)
+}

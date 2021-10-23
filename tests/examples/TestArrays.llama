@@ -1,0 +1,12 @@
+#load "built-ins.llama"
+
+fn main(argc s32, argv **u8) s32 {
+    my_var1 s32 = -5
+    my_var2 s32 = 25
+    my_var3 s32 = 35_285
+    my_array *s32 = [3]{my_var1, my_var2, my_var3}
+    printf(my_array[0])
+    printf(my_array[1])
+    printf(my_array[2])
+    ret 0
+}
