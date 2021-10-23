@@ -240,26 +240,6 @@ TEST(ParserHappyParseUnaryExprTests, PreIncIdentifierTest) {
   delete value_node;
 }
 
-TEST(ParserHappyParseUnaryExprTests, PostIncIdentifierTest) {
-  std::vector<Error> errors;
-  Lexer lexer("myVar++", "file/directory", "PostIncIdentifierTest", errors);
-  lexer.tokenize();
-
-  Parser parser(errors);
-  const AstNode *value_node = parser.parse_unary_expr(lexer);
-
-  ASSERT_EQ(errors.size(), 0L);
-  ASSERT_NE(value_node, nullptr);
-  ASSERT_EQ(value_node->node_type, AstNodeType::AST_UNARY_EXPR);
-
-  const AstUnaryExpr *unary_expr = value_node->unary_expr();
-  ASSERT_EQ(unary_expr->expr->parent, value_node);
-  ASSERT_EQ(unary_expr->op, UnaryExprType::INC);
-  ASSERT_EQ(unary_expr->expr->symbol()->token->id, TokenId::IDENTIFIER);
-
-  delete value_node;
-}
-
 TEST(ParserHappyParseUnaryExprTests, PreIncFuncCallTest) {
   std::vector<Error> errors;
   Lexer lexer("++myFunc()", "file/directory", "PreIncFuncCallTest", errors);
@@ -317,7 +297,7 @@ TEST(ParserHappyParseUnaryExprTests, AddressOfTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myVar2", "file/directory", "Mul2IdentifierAndDecTest", errors);
+  Lexer lexer("--myVar * myVar2", "file/directory", "Mul2IdentifierAndDecTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -343,7 +323,7 @@ TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndDecTest) {
 
 TEST(ParserHappyParseMulExprTests, Mul2IdentifierAndFuncCallTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar-- * myFunc()", "file/directory", "Mul2IdentifierAndFuncCallTest", errors);
+  Lexer lexer("--myVar * myFunc()", "file/directory", "Mul2IdentifierAndFuncCallTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);
@@ -526,7 +506,7 @@ TEST(ParserHappyParseMulExprTests, Mul2NumbersAndcharTest) {
 
 TEST(ParserHappyParseAddExprTests, Add2IdentifierAndIncTest) {
   std::vector<Error> errors;
-  Lexer lexer("myVar++ + myVar2", "file/directory", "Add2IdentifierAndIncTest", errors);
+  Lexer lexer("++myVar + myVar2", "file/directory", "Add2IdentifierAndIncTest", errors);
   lexer.tokenize();
 
   Parser parser(errors);

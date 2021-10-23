@@ -324,6 +324,7 @@ enum class UnaryExprType
   BIT_INV,     // ~   primaryExpr
   ADDRESS_OF,  // &   primaryExpr
   DEREFERENCE, // *   primaryExpr
+  ACCESS,      // primaryExpr
   RET          // ret Expr
 };
 
@@ -331,10 +332,12 @@ const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept;
 
 struct AstUnaryExpr : public AstNode {
   UnaryExprType op;
-  AstNode *expr = nullptr;
+  u64 access_index;
+  AstNode *expr;
 
   AstUnaryExpr(size_t in_line, size_t in_column, std::string_view in_file_name)
-      : AstNode(AstNodeType::AST_UNARY_EXPR, in_line, in_column, in_file_name) {}
+      : AstNode(AstNodeType::AST_UNARY_EXPR, in_line, in_column, in_file_name), op(UnaryExprType::INC),
+        access_index(0L), expr(nullptr) {}
 
   virtual ~AstUnaryExpr();
 };

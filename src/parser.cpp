@@ -1327,6 +1327,21 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
   return root_node;
 }
 
+inline static void _ignore_plus_token(const Lexer &lexer) {
+  while (true) {
+    if (lexer.get_next_token().id != TokenId::PLUS) {
+      lexer.get_back();
+      return;
+    }
+  }
+}
+
+inline static void _op_on_undef_token(std::vector<Error> &errors, const Token &op_token, const Lexer &lexer,
+                                      u64 lexer_rollbacks) {
+  for (u64 i = 0; i < lexer_rollbacks; ++i) { lexer.get_back(); }
+  _parse_error(errors, op_token, ERROR_UNEXPECTED_UNDEF_AFTER, lexer.get_token_value(op_token));
+}
+
 /*
  * Parses unary expresions
  * unaryExpr
@@ -1336,13 +1351,9 @@ AstNode *Parser::parse_term_expr(const Lexer &lexer) noexcept {
  *   ;
  */
 AstNode *Parser::parse_unary_expr(const Lexer &lexer) noexcept {
-consume_plus:
-  const Token &unary_op_token = lexer.get_next_token();
-  if (unary_op_token.id == TokenId::PLUS) {
-    // ignore plus token
-    goto consume_plus;
-  }
+  _ignore_plus_token(lexer);
 
+  const Token &unary_op_token = lexer.get_next_token();
   if (unary_op_token.id == TokenId::_EOF) {
     const Token &prev_token = lexer.get_previous_token();
     _parse_error(errors, prev_token, ERROR_UNEXPECTED_EOF_AFTER, lexer.get_token_value(prev_token));
@@ -1351,69 +1362,108 @@ consume_plus:
 
   // TODO(pablo96): Add an assign in the inc/dec operations
 
-  // op primary_expr
-  if (MATCH(&unary_op_token, TokenId::NOT, TokenId::BIT_NOT, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS, TokenId::MINUS,
-            TokenId::AMPERSAND, TokenId::MUL)) {
-    {
-      const Token &next_token = lexer.get_next_token();
-      if (next_token.id == TokenId::UNDEF) {
-        lexer.get_back(); // next_token
-        lexer.get_back(); // unary_op_token
+  switch (unary_op_token.id) {
+  case TokenId::NOT:
+  case TokenId::BIT_NOT:
+  case TokenId::PLUS_PLUS:
+  case TokenId::MINUS_MINUS:
+  case TokenId::MINUS:
+  case TokenId::AMPERSAND:
+  case TokenId::MUL: {
+    // cant use an unary operator on '---'
+    const Token &next_token = lexer.get_next_token();
+    if (next_token.id == TokenId::UNDEF) {
+      _op_on_undef_token(errors, unary_op_token, lexer, 2L);
+      return nullptr;
+    }
+    lexer.get_back();
+  } break;
+  default:
+    break;
+  }
 
-        _parse_error(errors, unary_op_token, ERROR_UNEXPECTED_UNDEF_AFTER, lexer.get_token_value(unary_op_token));
-        return nullptr;
-      }
+  UnaryExprType unary_op;
+  u64 index_value = 0L;
+  AstNode *primary_expr = nullptr;
 
-      if (unary_op_token.id == TokenId::MINUS && next_token.id != TokenId::IDENTIFIER) {
-        lexer.get_back(); // next_token
-        lexer.get_back(); // unary_op_token
-        return parse_primary_expr(lexer);
-      }
-      lexer.get_back(); // next_token
+  switch (unary_op_token.id) {
+  case TokenId::NOT:
+  case TokenId::BIT_NOT:
+  case TokenId::PLUS_PLUS:
+  case TokenId::MINUS_MINUS:
+  case TokenId::AMPERSAND:
+  case TokenId::MUL: {
+    unary_op = _get_unary_op(unary_op_token);
+    primary_expr = parse_primary_expr(lexer);
+  } break;
+  case TokenId::IDENTIFIER: {
+    // it is a potential access expression
+    lexer.get_back();
+    primary_expr = parse_primary_expr(lexer);
+    if (!primary_expr)
+      break;
+
+    const Token &next_token = lexer.get_next_token();
+    if (next_token.id != TokenId::L_BRACKET) {
+      // just a primary expr
+      lexer.get_back();
+      return primary_expr;
     }
 
-    AstNode *primary_expr = parse_primary_expr(lexer);
-    if (!primary_expr) {
-      // TODO(pablo96): error in algebraic_expr => sync parsing
-      // if this happens to be
-      // ++ERROR_TOKEN
-      // then we need to see if we can start over from the next token
-      // for that we need to go back a step up into algebraic
+    // TODO(pablo96): TEMP -> allow only const valus as indeces
+    const Token &index_token = lexer.get_next_token();
+    if (index_token.id != TokenId::INT_LIT) {
+      _parse_error(errors, index_token, "INDEX_NOT_CONSTANT");
       return nullptr;
     }
 
-    AstUnaryExpr *node =
-      new AstUnaryExpr(unary_op_token.start_line, unary_op_token.start_column, unary_op_token.file_name);
-    primary_expr->parent = node;
-    node->op = _get_unary_op(unary_op_token);
-    node->expr = primary_expr;
-    return node;
+    const Token &r_bracket = lexer.get_next_token();
+    if (r_bracket.id != TokenId::R_BRACKET) {
+      _parse_error(errors, r_bracket, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE,
+                   std::string(lexer.get_token_value(r_bracket)).c_str());
+      return nullptr;
+    }
+
+    unary_op = UnaryExprType::ACCESS;
+    index_value = strtoull(index_token.int_lit.number, nullptr, (s32)index_token.int_lit.base);
+  } break;
+  case TokenId::MINUS: {
+    // if it is: '-' NUMBER
+    // then return primary expr
+
+    const Token &next_token = lexer.get_next_token();
+    if (next_token.id != TokenId::IDENTIFIER) {
+      lexer.get_back(); // next_token
+      lexer.get_back(); // unary_op_token
+      return parse_primary_expr(lexer);
+    }
+
+    // Not our token
+    lexer.get_back(); // next_token
+    primary_expr = parse_primary_expr(lexer);
+
+  } break;
+  default:
+    lexer.get_back();
+    return parse_primary_expr(lexer);
   }
 
-  lexer.get_back();
-  AstNode *primary_expr = parse_primary_expr(lexer);
-  if (primary_expr == nullptr) {
+  if (!primary_expr) {
     // TODO(pablo96): error in algebraic_expr => sync parsing
+    // if this happens to be
+    // ++ERROR_TOKEN
+    // then we need to see if we can start over from the next token
+    // for that we need to go back a step up into algebraic
     return nullptr;
   }
 
-  const Token &token = lexer.get_next_token();
-  // primary_expr op
-  if (MATCH(&token, TokenId::PLUS_PLUS, TokenId::MINUS_MINUS)) {
-    if (_is_before_undef(lexer, this->errors, primary_expr)) {
-      delete primary_expr;
-      return nullptr;
-    }
-
-    AstUnaryExpr *node = new AstUnaryExpr(token.start_line, token.start_column, token.file_name);
-    primary_expr->parent = node;
-    node->expr = primary_expr;
-    node->op = _get_unary_op(token);
-    return node;
-  }
-  lexer.get_back();
-
-  return primary_expr;
+  AstUnaryExpr *unary_node =
+    new AstUnaryExpr(unary_op_token.start_line, unary_op_token.start_column, unary_op_token.file_name);
+  primary_expr->parent = unary_node;
+  unary_node->op = unary_op;
+  unary_node->access_index = index_value;
+  unary_node->expr = primary_expr;
+  return unary_node;
 }
 
 bool _is_after_undef(const Lexer &lexer, std::vector<Error> &in_errors, AstNode *in_node,

@@ -51,7 +51,7 @@ const std::string_view get_type_id_name_lower_case(AstTypeId in_type_id) noexcep
 static const std::unordered_map<UnaryExprType, const char *> unary_operators_symbols = {
   { UnaryExprType::INC, "++" },        { UnaryExprType::DEC, "--" },    { UnaryExprType::NEG, "-" },
   { UnaryExprType::NOT, "!" },         { UnaryExprType::BIT_INV, "~" }, { UnaryExprType::ADDRESS_OF, "&" },
-  { UnaryExprType::DEREFERENCE, "*" }, { UnaryExprType::RET, "ret" }
+  { UnaryExprType::DEREFERENCE, "*" }, { UnaryExprType::ACCESS, "[]" }, { UnaryExprType::RET, "ret" }
 };
 
 const std::string get_unary_op_symbol(const UnaryExprType op_type) noexcept {
