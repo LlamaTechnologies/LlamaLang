@@ -1443,6 +1443,34 @@ AstNode *Parser::parse_unary_expr(const Lexer &lexer) noexcept {
     primary_expr = parse_primary_expr(lexer);
 
   } break;
+  case TokenId::L_BRACKET: {
+    // set index_value
+    const Token &index_token = lexer.get_next_token();
+    if (index_token.id != TokenId::INT_LIT) {
+      _parse_error(errors, index_token, "LlamaLang only support integer literals as index values for now.");
+      return nullptr;
+    }
+
+    // eat R_Bracket
+    const Token &rbracket_token = lexer.get_next_token();
+    if (rbracket_token.id != TokenId::R_BRACKET) {
+      _parse_error(errors, index_token, ERROR_EXPECTED_CLOSING_BRAKET_BEFORE, lexer.get_token_value(rbracket_token));
+      return nullptr;
+    }
+
+    const Token &next_token = lexer.get_next_token();
+    if (next_token.id == TokenId::L_CURLY) {
+      // is const array!
+      lexer.get_back(); // next_token
+      lexer.get_back(); // r_bracket
+      lexer.get_back(); // index_token
+      lexer.get_back(); // l_bracket
+      return parse_primary_expr(lexer);
+    }
+
+    index_value = strtoull(index_token.int_lit.number, nullptr, (int)index_token.int_lit.base);
+    unary_op = UnaryExprType::ACCESS;
+  } break;
   default:
     lexer.get_back();
     return parse_primary_expr(lexer);
@@ -1922,7 +1950,6 @@ UnaryExprType _get_unary_op(const Token &token) noexcept {
 bool _is_type_start_token(const Token &token) noexcept {
   switch (token.id) {
   case TokenId::IDENTIFIER:
-  case TokenId::L_BRACKET:
   case TokenId::MUL:
     return true;
   default:

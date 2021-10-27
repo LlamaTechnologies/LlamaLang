@@ -317,6 +317,7 @@ TEST(ParserHappyVarDefStmntTests, ConstArrayInitializer) {
 
   delete value_node;
 }
+
 //==================================================================================
 //          PARSE ANY STATEMENT
 //==================================================================================
@@ -472,6 +473,28 @@ TEST(ParserHappyStmntTests, StatementRetEmptyStmnt) {
   auto value_node = node->unary_expr();
   ASSERT_EQ(value_node->op, UnaryExprType::RET);
   ASSERT_EQ(value_node->expr, nullptr);
+
+  delete value_node;
+}
+
+TEST(ParserHappyStmntTests, StatementPtrAccessor) {
+  std::vector<Error> errors;
+  Lexer lexer("ptr[0]", "file/directory", "StatementPtrAccessor", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  auto node = parser.parse_statement(lexer);
+
+  ASSERT_EQ(errors.size(), 0L);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node->node_type, AstNodeType::AST_UNARY_EXPR);
+
+  const AstUnaryExpr *value_node = node->unary_expr();
+  ASSERT_EQ(value_node->op, UnaryExprType::ACCESS);
+  ASSERT_NE(value_node->expr, nullptr);
+
+  const AstSymbol *symbol_node = value_node->expr->symbol();
+  ASSERT_EQ(symbol_node->node_type, AstNodeType::AST_SYMBOL);
 
   delete value_node;
 }
