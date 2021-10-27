@@ -1430,7 +1430,6 @@ AstNode *Parser::parse_unary_expr(const Lexer &lexer) noexcept {
   case TokenId::MINUS: {
     // if it is: '-' NUMBER
     // then return primary expr
-
     const Token &next_token = lexer.get_next_token();
     if (next_token.id != TokenId::IDENTIFIER) {
       lexer.get_back(); // next_token
@@ -1440,6 +1439,7 @@ AstNode *Parser::parse_unary_expr(const Lexer &lexer) noexcept {
 
     // Not our token
     lexer.get_back(); // next_token
+    unary_op = UnaryExprType::NEG;
     primary_expr = parse_primary_expr(lexer);
 
   } break;
