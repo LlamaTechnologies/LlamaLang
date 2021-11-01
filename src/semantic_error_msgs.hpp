@@ -15,7 +15,12 @@ constexpr const char *ERROR_UNDECLARED_FN = "undeclared function '%s'";
 constexpr const char *ERROR_ARGUMENT_COUNT_MISMATCH = "function takes %zu and %zu arguments are passed";
 constexpr const char *ERROR_SYMBOL_NOT_A_FN = "symbol '%s' is not a function";
 constexpr const char *ERROR_UNSUPORTED_UNARY_OP_STRUCT_EXPR = "unsuported operator %s on expresion of type struct";
-constexpr const char *ERROR_UNSUPPORTED_PARAM_INITIALIZER = "unsupported: param default initializer";
+constexpr const char *ERROR_UNSUPPORTED_PARAM_INITIALIZER = "unsupported param default initializer";
+constexpr const char *ERROR_UNSUPORTED_DEREFERENCE_ON_NOT_PTR = "unsupported dereference on a not pointer symbol";
+constexpr const char *ERRORS_ACCESS_OP_NOT_ON_IDENTIFIER =
+  "access operator only support identifiers. Constants are forbiden";
+constexpr const char *ERRORS_ACCESS_OP_NOT_ON_POINTER =
+  "access operator can only be used on identifiers of type pointer";
 constexpr const char *ERROR_EXPECTED_BOOL_EXPR = "expected boolean expression but got expression of type '%s'";
 constexpr const char *ERROR_CTRL_STMNT_INVALID_LOCATION =
   "invalid location '%s' for control statement (break/continue)";

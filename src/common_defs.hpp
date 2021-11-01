@@ -62,3 +62,5 @@ typedef double f64;
   #define LL_ASSERT(condition)
   #define LL_SASSERT(condition, msg)
 #endif
+
+#define LL_LIKELY(condition) __builtin_expect(!!(x), 1)

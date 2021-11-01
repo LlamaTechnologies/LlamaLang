@@ -1,5 +1,4 @@
 #pragma once
-constexpr const char *ERROR_UNEXPECTED_EOF_AFTER = "unexpected end of file after '%s'";
 constexpr const char *ERROR_EXPECTED_R_PAREN_AFTER = "expected ')' after '%s'";
 constexpr const char *ERROR_EXPECTED_NUMBER_IDENTIFIER_CHAR_TOKEN =
   "expected number, identifier or char instead of '%s'";
@@ -14,6 +13,8 @@ constexpr const char *ERROR_EXPECTED_ARRAY_SIZE_BUT_GOT = "expected array of siz
 constexpr const char *ERROR_EXPECTED_POSITIVE_ARRAY_SIZE = "expected array of positive size";
 constexpr const char *ERROR_EXPECTED_NO_ELEMENTS_AFTER_UNDEF = "expected no element after '---'";
 constexpr const char *ERROR_EXTERN_FN_HAS_BODY = "extern function declaration should not have a body.";
+constexpr const char *ERROR_UNEXPECTED_SEMI = "unexpected ';'";
+constexpr const char *ERROR_UNEXPECTED_EOF_AFTER = "unexpected end of file after '%s'";
 constexpr const char *ERROR_UNEXPECTED_EXTERN = "extern only goes behind a 'fn' token, received token '%s'";
 constexpr const char *ERROR_UNEXPECTED_HASH = "unexpected # before '%s'";
 constexpr const char *ERROR_UNEXPECTED_UNDEF_AFTER = "unexpected '---'(UNDEF) after '%s'";

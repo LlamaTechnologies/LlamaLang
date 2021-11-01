@@ -599,6 +599,98 @@ TEST(SemanticAssignments, InitPtrWithFilledConstArray) {
 }
 
 //==================================================================================
+//          SEMANTIC ARRAYS
+//==================================================================================
+
+TEST(SemanticArrays, ArrayElementInExpr) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *s32 = [4]{0, -25, 356, 4771}\n"
+                             "amount s32 = ptr[0] + ptr[1] + 52\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrWithEmptyConstArray", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstSourceCode *src_code = parser.parse(lexer);
+
+  const AstVarDef *ptr_def = src_code->children.at(0)->var_def();
+  const AstVarDef *amount_def = src_code->children.at(1)->var_def();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_amount_def = analizer.analize_var_def(amount_def);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_amount_def);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete src_code;
+}
+
+TEST(SemanticArrays, ArrayElementAssign) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "ptr *s32 = [4]{0, -25, 356, 4771}\n"
+                             "ptr[0] = 255\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrWithEmptyConstArray", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstVarDef *ptr_def = parser.parse_vardef_stmnt(lexer);
+  const AstBinaryExpr *ptr_assign = parser.parse_assign_stmnt(lexer);
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assignment = analizer.analize_expr(ptr_assign);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assignment);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete ptr_def;
+  delete ptr_assign;
+}
+
+TEST(SemanticArrays, ArrayOfArrays) {
+  TypesRepository types_repository = TypesRepository::get();
+
+  const char *src_code_str = "fn test() void {\n"
+                             "\tptr **s32 = [4][2]{nil, nil, nil, nil}\n"
+                             "\tptr[0] = [2]{255, -35784}\n"
+                             "}\n";
+
+  std::vector<Error> errors;
+  Lexer lexer(src_code_str, "internal/tests", "InitPtrWithEmptyConstArray", errors);
+  lexer.tokenize();
+
+  Parser parser(errors);
+  const AstFnDef *fn_def = parser.parse_function_def(lexer)->fn_def();
+  const AstVarDef *ptr_def = fn_def->block->statements.at(0)->var_def();
+  const AstBinaryExpr *ptr_assign = fn_def->block->statements.at(0)->binary_expr();
+
+  // given: analizer
+  SemanticAnalyzer analizer(errors);
+  bool is_valid_ptr_def = analizer.analize_var_def(ptr_def);
+  bool is_valid_ptr_assignment = analizer.analize_expr(ptr_assign);
+
+  // then:
+  ASSERT_TRUE(is_valid_ptr_def);
+  ASSERT_TRUE(is_valid_ptr_assignment);
+  ASSERT_EQ(errors.size(), 0L);
+
+  delete ptr_def;
+  delete ptr_assign;
+}
+
+//==================================================================================
 //          SEMANTIC FUNCTIONS
 //==================================================================================
 

@@ -238,5 +238,9 @@ AstConstValue::~AstConstValue() {
 }
 
 AstConstArray::~AstConstArray() {
+  for (AstConstArray *sub_array : this->sub_arrays) { delete sub_array; }
+}
+
+AstConstArrayExprList::~AstConstArrayExprList() {
   for (AstNode *elem : this->elements) { delete elem; }
 }

@@ -409,14 +409,43 @@ inline bool SemanticAnalyzer::_analize_call_expr(const AstFnCallExpr *in_fn_call
   return err_size_after == err_size_before;
 }
 
+inline bool is_forbiden_ret_expr(const AstNode *expr) {
+  switch (expr->node_type) {
+  case AstNodeType::AST_PARAM_DEF:
+    // if we parsed an expr as param def then we mess it up
+  case AstNodeType::AST_SOURCE_CODE:
+    // if we parsed an expr as source code then we mess it up
+    LL_UNREACHEABLE;
+  case AstNodeType::AST_CTRL_STMNT: // ret break | continue
+  case AstNodeType::AST_BLOCK:      // ret {...}
+  case AstNodeType::AST_VAR_DEF:    // ret myVar *Type
+  case AstNodeType::AST_FN_PROTO:   // ret fn myfn() Type
+  case AstNodeType::AST_FN_DEF:     // ret fn myfn() Type {}
+  case AstNodeType::AST_IF_STMNT:   // ret if condition {}
+  case AstNodeType::AST_LOOP_STMNT: // ret loop condition {}
+    return true;
+  case AstNodeType::AST_UNARY_EXPR: {
+    const AstUnaryExpr *unary_exp = expr->unary_expr();
+    return unary_exp->op == UnaryExprType::RET;
+  }
+  case AstNodeType::AST_BINARY_EXPR: {
+    const AstBinaryExpr *binary_exp = expr->binary_expr();
+    return binary_exp->bin_op == BinaryExprType::ASSIGN;
+  }
+  default:
+    return false;
+  }
+
+  LL_UNREACHEABLE;
+}
+
 inline bool SemanticAnalyzer::_analize_unary_expr(const AstUnaryExpr *in_unary_expr) {
-  if (in_unary_expr->op == UnaryExprType::RET && in_unary_expr->node_type == AstNodeType::AST_LOOP_STMNT) {
+  if (in_unary_expr->op == UnaryExprType::RET && is_forbiden_ret_expr(in_unary_expr->expr)) {
     add_semantic_error(this->errors, in_unary_expr, ERROR_RET_STMNT_INVALID_LOCATION, "direct loop");
     return false;
   }
 
   const AstType *expr_type = get_expr_type(this->errors, this->symbol_table, in_unary_expr->expr);
-
   if (!expr_type) {
     return false;
   }
@@ -447,6 +476,11 @@ inline bool SemanticAnalyzer::_analize_unary_expr(const AstUnaryExpr *in_unary_e
     return false;
   }
 
+  bool expr_is_ok = analize_expr(in_unary_expr->expr);
+  if (false == expr_is_ok) {
+    return false;
+  }
+
   if (in_unary_expr->op == UnaryExprType::DEREFERENCE) {
     // if it is a dereference of a unary expr
     // then can only be a dereference of a dereference
@@ -461,9 +495,29 @@ inline bool SemanticAnalyzer::_analize_unary_expr(const AstUnaryExpr *in_unary_e
       add_semantic_error(this->errors, in_unary_expr, ERROR_UNSUPORTED_DEREFERENCE_NOT_SYMBOL_EXPR);
       return false;
     }
+
+    // and the symbol should be a variable of ptr type
+    const AstType *expr_type = get_expr_type(errors, symbol_table, in_unary_expr->expr);
+    if (expr_type->type_info->type_id != AstTypeId::POINTER) {
+      add_semantic_error(this->errors, in_unary_expr, ERROR_UNSUPORTED_DEREFERENCE_ON_NOT_PTR);
+      return false;
+    }
   }
 
-  return analize_expr(in_unary_expr->expr);
+  if (in_unary_expr->op == UnaryExprType::ACCESS) {
+    if (in_unary_expr->expr->node_type != AstNodeType::AST_SYMBOL) {
+      add_semantic_error(errors, in_unary_expr, ERRORS_ACCESS_OP_NOT_ON_IDENTIFIER);
+      return false;
+    }
+
+    const AstType *expr_type = get_expr_type(errors, symbol_table, in_unary_expr->expr);
+    if (expr_type->type_info->type_id != AstTypeId::POINTER) {
+      add_semantic_error(errors, in_unary_expr, ERRORS_ACCESS_OP_NOT_ON_POINTER);
+      return false;
+    }
+  }
+
+  return true;
 }
 
 inline bool SemanticAnalyzer::_analize_binary_expr(const AstBinaryExpr *in_binary_expr) {
@@ -846,7 +900,7 @@ const AstType *_get_unary_expr_type(std::vector<Error> &errors, const Table *sym
     return ptr_type;
   }
 
-  if (in_unary_expr->op == UnaryExprType::DEREFERENCE) {
+  if (in_unary_expr->op == UnaryExprType::DEREFERENCE || in_unary_expr->op == UnaryExprType::ACCESS) {
     return expr_type->child_type;
   }
 

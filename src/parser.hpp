@@ -73,6 +73,8 @@ public:
 
   LL_NODISCARD AstConstArray *parse_const_array(const Lexer &lexer) noexcept;
 
+  LL_NODISCARD AstConstArrayExprList *parse_const_array_expr_list(const Lexer &lexer) noexcept;
+
   // returns AstSymbol | AstConstValue | AstFnCallExpr | AstBinaryExpr | AstUnaryExpr
   LL_NODISCARD AstNode *parse_expr(const Lexer &lexer) noexcept;
 
