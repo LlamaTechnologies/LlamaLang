@@ -1,7 +1,7 @@
 #include "scope.hpp"
 
-#include "ast_nodes.hpp"
-#include "common_defs.hpp"
+#include "../ast/ast_nodes.hpp"
+#include "../common_defs.hpp"
 
 Table *Table::create_child(const std::string &in_name, const AstFnProto *in_fn_proto) {
   auto child = new Table(in_name, in_fn_proto, this);

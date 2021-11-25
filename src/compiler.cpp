@@ -1,11 +1,11 @@
 #include "compiler.hpp"
 
-#include "console.hpp"
-#include "ir.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
-#include "semantic_analyzer.hpp"
-#include "src_code_repository.hpp"
+#include "code_gen/ir.hpp"
+#include "parser/parser.hpp"
+#include "semantics/semantic_analyzer.hpp"
+#include "semantics/src_code_repository.hpp"
+#include "tokenizer/tokenizer.hpp"
+#include "utils/console.hpp"
 
 inline static void _print_errors(const std::vector<Error> &errors);
 inline static bool _recursive_file_analysis_and_ir(SemanticAnalyzer &in_analyzer, GeneratorInterface *in_generator,
@@ -19,26 +19,28 @@ bool compiler::compile(const std::string &in_input_directory, const std::string 
 
   std::vector<Error> errors;
 
-  Lexer lexer(in_source_code, in_input_directory, in_source_name, errors);
-  lexer.tokenize();
+  /*
+    Tokenizer lexer(in_source_code, in_input_directory, in_source_name, errors);
+    lexer.tokenize();
 
-  if (!errors.empty()) {
-    console::write_line("LEXER");
-    _print_errors(errors);
-    return false;
-  }
+    if (!errors.empty()) {
+      console::write_line("LEXER");
+      _print_errors(errors);
+      return false;
+    }
 
-  Parser parser(errors);
-  AstSourceCode *const source_code_node = parser.parse(lexer);
+    Parser parser(errors);
+    AstSourceCode *const source_code_node = parser.parse(lexer);
 
-  if (!errors.empty()) {
-    console::write_line("PARSER");
-    _print_errors(errors);
-    return false;
-  }
+    if (!errors.empty()) {
+      console::write_line("PARSER");
+      _print_errors(errors);
+      return false;
+    }
 
-  LlvmIrGenerator generator(in_output_directory, in_executable_name);
-  return compile_node(&generator, errors, source_code_node);
+    LlvmIrGenerator generator(in_output_directory, in_executable_name);
+    return compile_node(&generator, errors, source_code_node);
+  */
 }
 
 bool compiler::compile_node(GeneratorInterface *in_generator, std::vector<Error> &errors,

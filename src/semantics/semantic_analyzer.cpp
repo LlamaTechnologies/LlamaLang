@@ -1,8 +1,8 @@
 #include "semantic_analyzer.hpp"
 
+#include "../common_defs.hpp"
+#include "../ast/ast_nodes.hpp"
 #include "Types.hpp"
-#include "ast_nodes.hpp"
-#include "common_defs.hpp"
 #include "semantic_error_msgs.hpp"
 
 #include <stdarg.h>

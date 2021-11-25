@@ -1,10 +1,10 @@
 #include "ir.hpp"
 
-#include "ast_nodes.hpp"
-#include "builtins.hpp"
-#include "common_defs.hpp"
-#include "console.hpp"
-#include "lexer.hpp"
+#include "../common_defs.hpp"
+#include "../utils/console.hpp"
+#include "../ast/ast_nodes.hpp"
+#include "../semantics/builtins.hpp"
+#include "../tokenizer/lexer.hpp"
 
 #include <iostream>
 #include <llvm/Bitcode/BitcodeWriter.h>

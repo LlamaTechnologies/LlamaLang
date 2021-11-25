@@ -1,7 +1,7 @@
 #include "ast_nodes.hpp"
 
-#include "Types.hpp"
-#include "lexer.hpp"
+#include "../semantics/Types.hpp"
+#include "../tokenizer/Tokenizer.hpp"
 
 #include <algorithm>
 

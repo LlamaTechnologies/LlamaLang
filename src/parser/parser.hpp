@@ -1,29 +1,10 @@
 #pragma once
-#include "common_defs.hpp"
-
+#include "../common_defs.hpp"
+#include "../tokenizer/tokenizer_fwd.hpp"
+#include "../ast/ast_fwd.hpp"
 #include <string>
 #include <vector>
 
-enum class TokenId;
-class Lexer;
-struct Token;
-struct Error;
-struct AstNode;
-struct AstSourceCode;
-struct AstDirective;
-struct AstFnDef;
-struct AstFnProto;
-struct AstIfStmnt;
-struct AstLoopStmnt;
-struct AstBlock;
-struct AstParamDef;
-struct AstVarDef;
-struct AstType;
-struct AstBinaryExpr;
-struct AstUnaryExpr;
-struct AstFnCallExpr;
-struct AstCtrlStmnt;
-struct FileInput;
 
 bool match(const Token *token, ...) noexcept;
 #define MATCH(token, ...) match(token, __VA_ARGS__, TokenId(size_t(TokenId::_EOF) + 1))

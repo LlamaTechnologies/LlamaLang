@@ -1,11 +1,11 @@
 #include "parser.hpp"
 
-#include "Types.hpp"
-#include "ast_nodes.hpp"
-#include "file_utils.hpp"
-#include "lexer.hpp"
+#include "../ast/ast_nodes.hpp"
+#include "../utils/file_utils.hpp"
+#include "../tokenizer/tokenizer.hpp"
 #include "parse_error_msgs.hpp"
-#include "src_code_repository.hpp"
+#include "../semantics/types.hpp"
+#include "../semantics/src_code_repository.hpp"
 
 #include <cassert>
 #include <stdarg.h>

@@ -1,6 +1,6 @@
 #pragma once
 #include "error.hpp"
-#include "ir.hpp"
+#include "code_gen/ir.hpp"
 
 #include <string>
 #include <vector>

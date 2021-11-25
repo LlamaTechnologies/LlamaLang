@@ -1,6 +1,6 @@
 #pragma once
-#include "common_defs.hpp"
-#include "ir.hpp"
+#include "../common_defs.hpp"
+#include "../code_gen/ir.hpp"
 
 #include <string>
 #include <unordered_map>

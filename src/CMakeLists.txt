@@ -8,19 +8,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 # set llang sources
 set(LLAMALANG_SRC
-ast_nodes.hpp
-ast_nodes.cpp
-
-builtins.hpp
-builtins.cpp
-
 common_defs.hpp
 common_defs.cpp
 
 compiler.hpp
 compiler.cpp
-
-console.hpp
 
 driver.hpp
 driver.cpp
@@ -28,35 +20,45 @@ driver.cpp
 error.hpp
 error.cpp
 
-file_utils.hpp
-file_utils.cpp
-
-ir.hpp
-ir.cpp
-
-lexer.hpp
-lexer.cpp
-
 main.cpp
 
-parse_error_msgs.hpp
+commons/defer_stmnt.hpp
 
-parser.hpp
-parser.cpp
+utils/console.hpp
+utils/file_utils.hpp
+utils/file_utils.cpp
 
-scope.hpp
-scope.cpp
+ast/ast_fwd.hpp
+ast/ast_nodes.hpp
+ast/ast_nodes.cpp
 
-semantic_analyzer.hpp
-semantic_analyzer.cpp
+tokenizer/token.hpp
+tokenizer/tokenizer.hpp
+tokenizer/tokenizer_fwd.hpp
+tokenizer/tokenizer.cpp
 
-semantic_error_msgs.hpp
+parser/parse_error_msgs.hpp
+parser/parser.hpp
+parser/parser.cpp
 
-src_code_repository.hpp
-src_code_repository.cpp
+code_gen/ir.hpp
+code_gen/ir.cpp
 
-types.hpp
-types.cpp
+semantics/builtins.hpp
+semantics/builtins.cpp
+semantics/scope.hpp
+semantics/scope.cpp
+semantics/semantic_analyzer.hpp
+semantics/semantic_analyzer.cpp
+semantics/semantic_error_msgs.hpp
+semantics/src_code_repository.hpp
+semantics/src_code_repository.cpp
+semantics/types.hpp
+semantics/types.cpp
+
+platform.hpp
+platform/linux.cpp
+platform/windows.cpp
 )
 
 # Engine executable name

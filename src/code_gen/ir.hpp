@@ -1,5 +1,5 @@
 #pragma once
-#include "ast_nodes.hpp"
+#include "../ast/ast_nodes.hpp"
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Value.h>

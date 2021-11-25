@@ -5,7 +5,7 @@
  * This is used to store parsed source code files from #load
  **/
 
-#include "ast_nodes.hpp"
+#include "../ast/ast_nodes.hpp"
 
 #include <string_view>
 #include <unordered_map>

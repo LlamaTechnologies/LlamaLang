@@ -1,7 +1,6 @@
 #pragma once
 
 // define platforms
-
 #ifdef _WIN32
   #define LL_WIN32
 #elif defined(__unix__)
@@ -25,12 +24,22 @@
   #define __func__ __FUNCTION__
 #endif
 
+// define builds
 #ifdef _DEBUG
   #define LL_DEBUG
 #endif
 
-#define LL_NODISCARD [[nodiscard]]
-#define LL_FALLTHROUGH [[fallthrough]];
+// define easy c++
+#ifndef LL_NODISCARD
+  #define LL_NODISCARD [[nodiscard]]
+  #define LL_FALLTHROUGH [[fallthrough]];
+#endif
+
+#ifndef LL_GLOBAL
+  #define LL_LOCAL static
+  #define LL_GLOBAL static
+  #define LL_INTERNAL_FN static
+#endif
 
 // define primitives
 typedef unsigned char u8;
@@ -41,6 +50,7 @@ typedef signed short s16;
 
 typedef unsigned long u32;
 typedef signed long s32;
+typedef u32 rune;
 
 typedef unsigned long long u64;
 typedef signed long long s64;
@@ -48,6 +58,7 @@ typedef signed long long s64;
 typedef float f32;
 typedef double f64;
 
+// define asserts
 [[noreturn]] void panic(const char *format, ...);
 
 #define LL_UNREACHEABLE \
@@ -62,3 +73,7 @@ typedef double f64;
   #define LL_ASSERT(condition)
   #define LL_SASSERT(condition, msg)
 #endif
+
+#define SET_BIT(index) 1 << index
+
+#include "commons/defer_stmnt.hpp"

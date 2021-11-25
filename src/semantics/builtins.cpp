@@ -1,6 +1,6 @@
 #include "builtins.hpp"
 
-#include "ast_nodes.hpp"
+#include "../ast/ast_nodes.hpp"
 #include "types.hpp"
 
 static BuiltInsRepository *repository = nullptr;

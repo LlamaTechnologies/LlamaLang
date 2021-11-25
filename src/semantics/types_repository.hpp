@@ -1,7 +1,8 @@
 #pragma once
-#include "ast_nodes.hpp"
+#include "../ast/ast_nodes.hpp"
 
 #include <string>
+#include <unordered_map>
 
 struct TypesRepository {
   static TypesRepository &get();
